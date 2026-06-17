@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — Listings Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #0D1B2A;
+    --blue:   #2563EB;
+    --blue-2: #E0F2FE;
+    --green:  #22C55E;
+    --red:    #DC2626;
+    --gray:   #F3F4F6;
+    --line:   #E6E8EC;
+    --muted:  #6B7280;
+    --text:   #0D1B2A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: "Poppins", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif;
+    background: var(--gray); color: var(--text);
+  }
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 22px; background: #fff; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .brand-text .title { font-weight: 700; font-size: 18px; line-height: 1.1; }
+  .brand-text .sub { font-size: 12px; color: var(--muted); }
+  header .spacer { margin-left: auto; }
+  a.link { color: var(--blue); text-decoration: none; font-size: 13px; font-weight: 600; }
+  a.link:hover { text-decoration: underline; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 22px 18px 60px; }
+  .bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .bar h1 { font-size: 20px; margin: 0; }
+  .count { font-size: 13px; color: var(--muted); }
+  .bar .spacer { margin-left: auto; }
+
+  .btn {
+    border: none; border-radius: 12px; padding: 10px 16px; font: inherit;
+    font-weight: 600; font-size: 14px; cursor: pointer; background: var(--blue);
+    color: #fff; transition: background .15s, opacity .15s;
+  }
+  .btn:hover { background: #1d4fd7; }
+  .btn.ghost { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--blue); background: #f7faff; }
+  .btn.danger { background: var(--red); }
+  .btn.danger:hover { background: #b91c1c; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  /* Cards / grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 16px;
+    padding: 14px 16px; box-shadow: 0 2px 8px rgba(13,27,42,.04);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .card .id { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: .04em; }
+  .card .name { font-weight: 600; font-size: 16px; }
+  .card .meta { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .card .price { font-weight: 700; font-size: 15px; color: var(--navy); }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    background: var(--blue-2); color: #0b4fae;
+  }
+  .tag.rent { background: #dcfce7; color: #166534; }
+  .tag.sale { background: #fef3c7; color: #92400e; }
+  .tag.off  { background: #fee2e2; color: #991b1b; }
+  .card .actions { display: flex; gap: 8px; margin-top: 4px; }
+  .card .actions .btn { padding: 7px 12px; font-size: 13px; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(13,27,42,.5);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 30px 14px; overflow-y: auto; z-index: 20;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 18px; width: 100%; max-width: 620px;
+    box-shadow: 0 24px 60px rgba(13,27,42,.28); overflow: hidden;
+  }
+  .modal h2 { margin: 0; padding: 18px 22px; font-size: 18px; border-bottom: 1px solid var(--line); }
+  .form-body { padding: 18px 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  input, select, textarea {
+    border: 1px solid var(--line); background: var(--gray); border-radius: 10px;
+    padding: 10px 12px; font: inherit; font-size: 14px; outline: none; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--blue); background: #fff; }
+  textarea { resize: vertical; min-height: 60px; }
+  .hint { font-size: 11px; color: var(--muted); }
+  .checkbox { flex-direction: row; align-items: center; gap: 8px; }
+  .checkbox input { width: auto; }
+  .modal footer {
+    display: flex; align-items: center; gap: 10px; padding: 14px 22px;
+    border-top: 1px solid var(--line);
+  }
+  .modal footer .spacer { margin-left: auto; }
+  .err {
+    color: var(--red); font-size: 13px; font-weight: 500; margin: 0 22px 4px;
+    display: none;
+  }
+  .err.show { display: block; }
+  .empty { text-align: center; color: var(--muted); padding: 50px 10px; }
+  .rtl { direction: rtl; text-align: right; }
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">
+    <svg viewBox="0 0 64 64" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 56 V28 L32 10 L54 28 V56" stroke="#0D1B2A" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="24" y="34" width="7" height="7" rx="1.5" fill="#2563EB"/>
+      <rect x="33" y="34" width="7" height="7" rx="1.5" fill="#2563EB"/>
+      <rect x="24" y="43" width="7" height="7" rx="1.5" fill="#2563EB"/>
+      <rect x="33" y="43" width="7" height="7" rx="1.5" fill="#2563EB"/>
+    </svg>
+  </span>
+  <div class="brand-text">
+    <div class="title" id="brandTitle">Homzy</div>
+    <div class="sub">Listings admin</div>
+  </div>
+  <span class="spacer"></span>
+  <a class="link" href="/">← Back to chat</a>
+</header>
+
+<main>
+  <div class="bar">
+    <h1>Properties</h1>
+    <span class="count" id="count"></span>
+    <span class="spacer"></span>
+    <button class="btn" id="addBtn">+ Add property</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none">No listings yet — add your first property.</div>
+</main>
+
+<!-- Add / edit modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add property</h2>
+    <p class="err" id="formErr"></p>
+    <form id="form">
+      <div class="form-body">
+        <div class="field">
+          <label>Purpose</label>
+          <select name="purpose" id="purpose">
+            <option value="rent">Rent</option>
+            <option value="sale">Sale</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Type</label>
+          <select name="type">
+            <option value="apartment">Apartment</option>
+            <option value="villa">Villa</option>
+            <option value="townhouse">Townhouse</option>
+            <option value="studio">Studio</option>
+            <option value="office">Office</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Compound / name (EN) *</label>
+          <input name="compound_en" placeholder="e.g. Westown Residences" required />
+        </div>
+        <div class="field">
+          <label>اسم الكمبوند (AR)</label>
+          <input name="compound_ar" class="rtl" placeholder="مثال: ويستاون" />
+        </div>
+        <div class="field">
+          <label>Area (EN)</label>
+          <input name="area_en" placeholder="e.g. Sheikh Zayed" />
+        </div>
+        <div class="field">
+          <label>المنطقة (AR)</label>
+          <input name="area_ar" class="rtl" placeholder="مثال: الشيخ زايد" />
+        </div>
+        <div class="field">
+          <label id="priceLabel">Price (EGP)</label>
+          <input name="price" type="number" min="1" step="1" placeholder="e.g. 25000" required />
+        </div>
+        <div class="field">
+          <label>Bedrooms <span class="hint">(0 = studio)</span></label>
+          <input name="bedrooms" type="number" min="0" step="1" value="0" />
+        </div>
+        <div class="field">
+          <label>Bathrooms</label>
+          <input name="bathrooms" type="number" min="0" step="1" value="1" />
+        </div>
+        <div class="field">
+          <label>Size (sqm)</label>
+          <input name="size_sqm" type="number" min="0" step="1" value="0" />
+        </div>
+        <div class="field full">
+          <label>Finishing</label>
+          <input name="finishing" placeholder="e.g. fully finished" />
+        </div>
+        <div class="field">
+          <label>Payment plan (EN)</label>
+          <textarea name="payment_plan_en" placeholder="e.g. 1-year contract, 2 months deposit"></textarea>
+        </div>
+        <div class="field">
+          <label>خطة الدفع (AR)</label>
+          <textarea name="payment_plan_ar" class="rtl" placeholder="مثال: عقد سنة، تأمين شهرين"></textarea>
+        </div>
+        <div class="field">
+          <label>Highlights (EN) <span class="hint">one per line</span></label>
+          <textarea name="highlights_en" placeholder="Bright corner unit&#10;Covered parking"></textarea>
+        </div>
+        <div class="field">
+          <label>أبرز المميزات (AR) <span class="hint">سطر لكل ميزة</span></label>
+          <textarea name="highlights_ar" class="rtl" placeholder="وحدة ناصية&#10;جراج مغطى"></textarea>
+        </div>
+        <div class="field full checkbox">
+          <input type="checkbox" name="available" id="available" checked />
+          <label for="available" style="color:var(--text)">Available (show to clients)</label>
+        </div>
+      </div>
+      <footer>
+        <button type="button" class="btn danger" id="deleteBtn" style="display:none">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn" id="saveBtn">Save</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<script>
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const countEl = document.getElementById('count');
+  const overlay = document.getElementById('overlay');
+  const form = document.getElementById('form');
+  const formErr = document.getElementById('formErr');
+  const modalTitle = document.getElementById('modalTitle');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const priceLabel = document.getElementById('priceLabel');
+
+  let listings = [];
+  let editingId = null;       // null = creating
+  let authRequired = false;
+  let token = sessionStorage.getItem('homzy_admin_token') || '';
+
+  const isArabic = (t) => /[؀-ۿ]/.test(t || '');
+  const fmtPrice = (l) => {
+    const n = Number(l.price || 0).toLocaleString('en-US');
+    return l.purpose === 'rent' ? `EGP ${n} / month` : `EGP ${n}`;
+  };
+
+  function authHeaders() {
+    return token ? { 'X-Admin-Token': token } : {};
+  }
+
+  async function load() {
+    const data = await (await fetch('/api/listings')).json();
+    listings = data.listings || [];
+    authRequired = !!data.auth_required;
+    render();
+  }
+
+  function render() {
+    grid.innerHTML = '';
+    countEl.textContent = listings.length
+      ? `${listings.length} ${listings.length === 1 ? 'property' : 'properties'}` : '';
+    empty.style.display = listings.length ? 'none' : 'block';
+    listings.forEach(l => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const beds = (l.type === 'studio' || l.bedrooms === 0) ? 'Studio' : `${l.bedrooms} bed`;
+      const nameRtl = isArabic(l.compound_en) ? ' rtl' : '';
+      card.innerHTML = `
+        <div class="id">${l.id}</div>
+        <div class="name${nameRtl}">${esc(l.compound_en || '(no name)')}</div>
+        <div class="tags">
+          <span class="tag ${l.purpose}">${l.purpose}</span>
+          <span class="tag">${esc(l.type)}</span>
+          ${l.available === false ? '<span class="tag off">hidden</span>' : ''}
+        </div>
+        <div class="meta">${esc(l.area_en || '—')} · ${beds} · ${l.size_sqm || 0} sqm</div>
+        <div class="price">${fmtPrice(l)}</div>
+        <div class="actions">
+          <button class="btn ghost" data-edit="${l.id}">Edit</button>
+        </div>`;
+      card.querySelector('[data-edit]').onclick = () => openEdit(l.id);
+      grid.appendChild(card);
+    });
+  }
+
+  function esc(s) {
+    const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML;
+  }
+
+  function ensureToken() {
+    if (authRequired && !token) {
+      const t = prompt('Admin token required to make changes:');
+      if (t) { token = t.trim(); sessionStorage.setItem('homzy_admin_token', token); }
+    }
+  }
+
+  function openCreate() {
+    editingId = null;
+    modalTitle.textContent = 'Add property';
+    deleteBtn.style.display = 'none';
+    form.reset();
+    form.available.checked = true;
+    showError('');
+    updatePriceLabel();
+    overlay.classList.add('show');
+  }
+
+  function openEdit(id) {
+    const l = listings.find(x => x.id === id);
+    if (!l) return;
+    editingId = id;
+    modalTitle.textContent = `Edit ${id}`;
+    deleteBtn.style.display = 'inline-block';
+    showError('');
+    form.purpose.value = l.purpose || 'rent';
+    form.type.value = l.type || 'apartment';
+    form.compound_en.value = l.compound_en || '';
+    form.compound_ar.value = l.compound_ar || '';
+    form.area_en.value = l.area_en || '';
+    form.area_ar.value = l.area_ar || '';
+    form.price.value = l.price || '';
+    form.bedrooms.value = l.bedrooms ?? 0;
+    form.bathrooms.value = l.bathrooms ?? 1;
+    form.size_sqm.value = l.size_sqm ?? 0;
+    form.finishing.value = l.finishing || '';
+    form.payment_plan_en.value = l.payment_plan_en || '';
+    form.payment_plan_ar.value = l.payment_plan_ar || '';
+    form.highlights_en.value = (l.highlights_en || []).join('\n');
+    form.highlights_ar.value = (l.highlights_ar || []).join('\n');
+    form.available.checked = l.available !== false;
+    updatePriceLabel();
+    overlay.classList.add('show');
+  }
+
+  function close() { overlay.classList.remove('show'); }
+
+  function updatePriceLabel() {
+    priceLabel.textContent = form.purpose.value === 'rent'
+      ? 'Monthly rent (EGP)' : 'Sale price (EGP)';
+  }
+
+  function showError(msg) {
+    formErr.textContent = msg;
+    formErr.classList.toggle('show', !!msg);
+  }
+
+  function collect() {
+    return {
+      purpose: form.purpose.value,
+      type: form.type.value,
+      compound_en: form.compound_en.value,
+      compound_ar: form.compound_ar.value,
+      area_en: form.area_en.value,
+      area_ar: form.area_ar.value,
+      price: form.price.value,
+      bedrooms: form.bedrooms.value,
+      bathrooms: form.bathrooms.value,
+      size_sqm: form.size_sqm.value,
+      finishing: form.finishing.value,
+      payment_plan_en: form.payment_plan_en.value,
+      payment_plan_ar: form.payment_plan_ar.value,
+      highlights_en: form.highlights_en.value.split('\n').map(s => s.trim()).filter(Boolean),
+      highlights_ar: form.highlights_ar.value.split('\n').map(s => s.trim()).filter(Boolean),
+      available: form.available.checked,
+    };
+  }
+
+  async function save(e) {
+    e.preventDefault();
+    ensureToken();
+    saveBtn.disabled = true;
+    showError('');
+    const url = editingId ? `/api/listings/${editingId}` : '/api/listings';
+    const method = editingId ? 'PUT' : 'POST';
+    try {
+      const r = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        body: JSON.stringify(collect()),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.detail || `Request failed (${r.status})`);
+      }
+      close();
+      await load();
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      saveBtn.disabled = false;
+    }
+  }
+
+  async function remove() {
+    if (!editingId) return;
+    if (!confirm(`Delete listing ${editingId}? This can't be undone.`)) return;
+    ensureToken();
+    try {
+      const r = await fetch(`/api/listings/${editingId}`, { method: 'DELETE', headers: authHeaders() });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.detail || `Delete failed (${r.status})`);
+      }
+      close();
+      await load();
+    } catch (err) {
+      showError(err.message);
+    }
+  }
+
+  document.getElementById('addBtn').onclick = openCreate;
+  document.getElementById('cancelBtn').onclick = close;
+  deleteBtn.onclick = remove;
+  form.purpose.onchange = updatePriceLabel;
+  form.addEventListener('submit', save);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+
+  // Pick up the brand name from the same health endpoint the chat uses.
+  fetch('/api/health').then(r => r.json()).then(h => {
+    if (h.brand) document.getElementById('brandTitle').textContent = h.brand;
+  }).catch(() => {});
+
+  load();
+</script>
+</body>
+</html>

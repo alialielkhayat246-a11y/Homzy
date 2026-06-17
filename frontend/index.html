@@ -49,6 +49,8 @@
   .status.ai { background: var(--green); }
   .status.template { background: #E8A33D; }
   .status.offline { background: #9aa1ac; }
+  .admin-link { font-size: 11px; color: var(--muted); text-decoration: none; }
+  .admin-link:hover { color: var(--blue); }
 
   /* Chat log */
   #log {
@@ -135,6 +137,7 @@
       <div class="sub" id="brandSub">Your Home Guide</div>
     </div>
     <div class="status" id="status">…</div>
+    <a class="admin-link" href="/admin" title="Manage listings" style="margin-left:10px">⚙︎</a>
   </header>
 
   <div id="log"></div>

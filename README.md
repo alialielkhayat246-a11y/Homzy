@@ -3,8 +3,8 @@
 A bilingual (Arabic / English) AI "broker" that understands a client's needs and
 pitches **matching properties from your real listings** — never invented prices.
 
-This is **Phase 1**: the brain + a simple chat screen you can test on this PC.
-Phase 2 = upload/edit listings panel. Phase 3 = the Android/iOS mobile app.
+This is **Phase 1** (the brain + chat screen) plus **Phase 2** (a built-in admin
+panel to add/edit/delete your listings). Phase 3 = the Android/iOS mobile app.
 
 > **Continuing the project, or picking it up on another device?**
 > Read **[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md)** for the full plan,
@@ -61,6 +61,13 @@ No paid API is used anywhere. Your Anthropic/Claude key is **not** required.
 
 After editing `data/listings.json`, just restart `run.bat`.
 
+### Or use the admin panel (no JSON editing)
+
+Open <http://127.0.0.1:8000/admin> (or click the ⚙︎ in the chat header) to add,
+edit, and delete properties in a form — bilingual fields included. Changes save
+straight to `data/listings.json` and the broker picks them up immediately, no
+restart needed. To password-protect the panel, set `ADMIN_TOKEN` in `.env`.
+
 ---
 
 ## How "never invent a price" is guaranteed
@@ -85,6 +92,7 @@ Homzy/
 │  └─ config.py     settings from .env
 ├─ data/listings.json   your properties (sample data — replace with real)
 ├─ frontend/index.html  the chat screen
+├─ frontend/admin.html  the listings admin panel (/admin)
 ├─ run.bat              one-click setup + launch
 └─ requirements.txt
 ```

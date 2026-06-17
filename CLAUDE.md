@@ -29,9 +29,15 @@ broker — not a form.
   layer + listings matching + the branded bilingual chat UI all work. In
   Preview mode (no engine) replies are templated but still grounded in real
   prices; with Ollama/Gemini it holds natural conversations.
+- **Phase 2 (listings admin panel) is built.** `/admin` (frontend/admin.html)
+  gives a bilingual add/edit/delete form over `data/listings.json`. Backend CRUD
+  lives in `listings.py` (validate/add/update/delete/next_id, atomic `_save`)
+  and `app.py` (`/api/listings` GET/POST/PUT/DELETE). Writes are gated by an
+  optional `ADMIN_TOKEN` (sent as the `X-Admin-Token` header). Edits hit the
+  in-memory cache + disk so the broker sees them with no restart.
 - Public repo: https://github.com/alialielkhayat246-a11y/Homzy (MIT).
 - `data/listings.json` is **sample placeholder data** — replace with real units.
-- Next up: Phase 2 (admin upload/edit panel) and Phase 3 (Flutter mobile app).
+- Next up: Phase 3 (Flutter mobile app).
 
 ## Where things are
 | Path | What it is |
@@ -44,6 +50,7 @@ broker — not a form.
 | `backend/config.py` | Settings from `.env` |
 | `data/listings.json` | Property inventory |
 | `frontend/index.html` | The chat UI (single file) |
+| `frontend/admin.html` | The listings admin panel (`/admin`, single file) |
 | `run.bat` | One-click setup + launch (Windows) |
 
 ## Run it (any device)
@@ -61,8 +68,8 @@ just double-click `run.bat`.)
 ## Immediate next actions (continue here)
 1. Turn on the AI engine (install Ollama, `ollama pull qwen2.5:7b`) and confirm
    the status pill goes green; run a bilingual test chat.
-2. Replace sample listings with Ali's real units.
-3. Start **Phase 2** — see `docs/PROJECT_PLAN.md` → Roadmap.
+2. Replace sample listings with Ali's real units — now doable via `/admin`.
+3. Start **Phase 3** (Flutter mobile app) — see `docs/PROJECT_PLAN.md` → Roadmap.
 
 ## Working norms
 - Test the broker pipeline before claiming a change works (a quick

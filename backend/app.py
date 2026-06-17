@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -70,4 +70,56 @@ async def chat(req: Request):
 async def reset(req: Request):
     body = await req.json()
     SESSIONS.pop(body.get("session_id", "default"), None)
+    return {"ok": True}
+
+
+# --------------------------------------------------------------------------
+# Phase 2 — listings admin panel
+#
+# CRUD over data/listings.json. Writes are gated by an optional ADMIN_TOKEN
+# (sent as the X-Admin-Token header); when it's blank the panel is open, which
+# is fine for local single-user use.
+# --------------------------------------------------------------------------
+@app.get("/admin")
+def admin_page():
+    return FileResponse(config.FRONTEND_DIR / "admin.html")
+
+
+def _require_admin(token: str | None) -> None:
+    if config.ADMIN_TOKEN and token != config.ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing admin token")
+
+
+@app.get("/api/listings")
+def list_listings():
+    """Full records — the admin panel needs every field to edit them."""
+    return {"listings": listings_mod.load(), "auth_required": bool(config.ADMIN_TOKEN)}
+
+
+@app.post("/api/listings")
+async def create_listing(req: Request, x_admin_token: str | None = Header(default=None)):
+    _require_admin(x_admin_token)
+    try:
+        return listings_mod.add(await req.json())
+    except listings_mod.ListingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.put("/api/listings/{listing_id}")
+async def edit_listing(listing_id: str, req: Request,
+                       x_admin_token: str | None = Header(default=None)):
+    _require_admin(x_admin_token)
+    try:
+        return listings_mod.update(listing_id, await req.json())
+    except listings_mod.ListingError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/api/listings/{listing_id}")
+def remove_listing(listing_id: str, x_admin_token: str | None = Header(default=None)):
+    _require_admin(x_admin_token)
+    try:
+        listings_mod.delete(listing_id)
+    except listings_mod.ListingError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     return {"ok": True}

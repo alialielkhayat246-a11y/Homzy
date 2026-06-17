@@ -43,6 +43,11 @@ GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-2.0-flash")
 BRAND_NAME = _get("BRAND_NAME", "Homzy")
 BROKER_NAME = _get("BROKER_NAME", "Nour")
 
+# --- Admin panel (Phase 2) ----------------------------------------------
+# Optional password for the listings admin panel. Leave empty for local,
+# single-user use; set it before exposing Homzy on a network.
+ADMIN_TOKEN = _get("ADMIN_TOKEN", "")
+
 # --- Behaviour -----------------------------------------------------------
 MAX_RESULTS = int(_get("MAX_RESULTS", "4"))
 LLM_TEMPERATURE = float(_get("LLM_TEMPERATURE", "0.6"))

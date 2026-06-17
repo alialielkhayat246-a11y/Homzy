@@ -170,11 +170,13 @@ Replace with Ali's real inventory (Phase 2 will add upload/edit tooling).
 - [ ] Turn on Ollama and run a live bilingual test (in progress on dev machine)
 - [ ] Replace sample listings with real data
 
-### ⬜ Phase 2 — Admin / data tooling
+### 🟡 Phase 2 — Admin / data tooling
 Goal: let Ali manage listings and the persona without touching code.
-- [ ] Admin page (`frontend/admin.html`) behind a simple passcode (`.env`).
-- [ ] CRUD endpoints for listings; persist back to `data/listings.json`
-      (or migrate to SQLite for scale). Call `listings.reload()` after writes.
+- [x] Admin page (`frontend/admin.html`) behind an optional passcode
+      (`ADMIN_TOKEN` in `.env`, sent as the `X-Admin-Token` header).
+- [x] CRUD endpoints for listings (`/api/listings` GET/POST/PUT/DELETE); persist
+      back to `data/listings.json` (atomic write). Cache is kept in sync so the
+      broker sees edits with no restart. (SQLite migration deferred to scale.)
 - [ ] **File upload + parse** → listings schema:
       Excel (`openpyxl`), PDF (`pdfplumber`), Word (`python-docx`). Map columns
       to the schema in section 7; show a preview/confirm before saving.
@@ -209,7 +211,8 @@ Goal: ship the brain as a real app matching the identity sheet.
 1. Read `CLAUDE.md` for the constraints.
 2. Finish the AI engine: install Ollama + `ollama pull qwen2.5:7b`, confirm the
    green "AI · ollama" status, run a bilingual test chat.
-3. Get Ali's real listings into `data/listings.json`.
-4. Start **Phase 2** (admin upload/edit panel) per section 9.
+3. Get Ali's real listings in via the `/admin` panel (Phase 2 — done).
+4. Finish Phase 2's **file upload/parse** (Excel/PDF/Word) or start **Phase 3**
+   (Flutter mobile app) per section 9.
 
 Keep it free, keep prices grounded in the data, keep the persona human.
