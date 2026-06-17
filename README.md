@@ -6,6 +6,11 @@ pitches **matching properties from your real listings** — never invented price
 This is **Phase 1**: the brain + a simple chat screen you can test on this PC.
 Phase 2 = upload/edit listings panel. Phase 3 = the Android/iOS mobile app.
 
+> **Continuing the project, or picking it up on another device?**
+> Read **[`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md)** for the full plan,
+> decisions, brand system, and the complete roadmap — and **[`CLAUDE.md`](CLAUDE.md)**
+> for the AI-assistant operating guide. The repo is self-contained: clone it and go.
+
 ---
 
 ## Quick start (easiest)
