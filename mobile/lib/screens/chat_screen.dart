@@ -1,0 +1,427 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+
+import '../api.dart';
+import '../theme.dart';
+import '../widgets/house_logo.dart';
+
+/// Detects Arabic so we can render RTL + Cairo, matching the web UI.
+bool _isArabic(String t) => RegExp(r'[؀-ۿ]').hasMatch(t);
+
+class _Msg {
+  _Msg(this.text, this.fromUser, {this.typing = false});
+  final String text;
+  final bool fromUser;
+  final bool typing;
+}
+
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final _messages = <_Msg>[];
+  final _controller = TextEditingController();
+  final _scroll = ScrollController();
+  final _sessionId =
+      'sess-${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(9999)}';
+
+  HealthInfo? _health;
+  bool _sending = false;
+  bool _greeted = false;
+
+  static const _chips = <(String, String)>[
+    ('🏠  I want to rent', "I'm looking to rent"),
+    ('🔑  I want to buy', "I'm looking to buy"),
+    ('📍  Sheikh Zayed', 'Show me options in Sheikh Zayed'),
+    ('🏙️  6th of October', 'Show me options in 6th of October'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final h = await HomzyApi.instance.health();
+    if (!mounted) return;
+    setState(() {
+      _health = h;
+      if (!_greeted) {
+        _greeted = true;
+        final broker = h?.broker ?? 'Nour';
+        final brand = h?.brand ?? 'Homzy';
+        _messages.add(_Msg(
+          "Hi! I'm $broker from $brand 👋\n"
+          "Looking to rent or buy? Tell me your budget, area and bedrooms and "
+          "I'll find the best matches.\n\n"
+          "أهلاً! أنا $broker من $brand 👋\n"
+          "بتدوّر على إيجار ولا تمليك؟ قوللي ميزانيتك، المنطقة، وعدد الغرف "
+          "وأجيبلك أنسب الوحدات.",
+          false,
+        ));
+      }
+    });
+  }
+
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _scroll.animateTo(_scroll.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut);
+      }
+    });
+  }
+
+  Future<void> _send(String text) async {
+    text = text.trim();
+    if (text.isEmpty || _sending) return;
+    _controller.clear();
+    setState(() {
+      _sending = true;
+      _messages.add(_Msg(text, true));
+      _messages.add(_Msg('', false, typing: true));
+    });
+    _scrollToEnd();
+
+    try {
+      final reply =
+          await HomzyApi.instance.chat(sessionId: _sessionId, message: text);
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((m) => m.typing);
+        _messages.add(_Msg(reply.reply, false));
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((m) => m.typing);
+        _messages.add(_Msg(e.message, false));
+      });
+    } finally {
+      if (mounted) setState(() => _sending = false);
+      _scrollToEnd();
+    }
+  }
+
+  Future<void> _editServer() async {
+    final field = TextEditingController(text: HomzyApi.instance.baseUrl);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('API server'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Base URL of the Homzy backend. Use 10.0.2.2 for the Android '
+              'emulator, or your PC\'s LAN IP for a real device.',
+              style: TextStyle(fontSize: 12, color: Brand.muted),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: field,
+              autocorrect: false,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                hintText: 'http://10.0.2.2:8000',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved == true) {
+      await HomzyApi.instance.setBaseUrl(field.text);
+      await _init();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showChips = _messages.length <= 1;
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 12,
+        title: Row(
+          children: [
+            const BrokerAvatar(size: 34),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_health?.broker ?? 'Nour',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w700)),
+                Text(
+                  _health == null
+                      ? 'connecting…'
+                      : (_health!.isAi
+                          ? 'AI · ${_health!.provider}'
+                          : 'Preview mode'),
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: _health?.isAi == true
+                          ? Brand.green
+                          : Brand.muted),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Server settings',
+            icon: const Icon(Icons.tune, color: Brand.muted),
+            onPressed: _editServer,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scroll,
+              padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+              itemCount: _messages.length + (showChips ? 1 : 0),
+              itemBuilder: (context, i) {
+                if (showChips && i == _messages.length) {
+                  return _ChipsRow(
+                      chips: _chips,
+                      onTap: _sending ? null : (p) => _send(p));
+                }
+                return _Bubble(msg: _messages[i]);
+              },
+            ),
+          ),
+          _Composer(
+            controller: _controller,
+            enabled: !_sending,
+            onSend: () => _send(_controller.text),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Bubble extends StatelessWidget {
+  const _Bubble({required this.msg});
+  final _Msg msg;
+
+  @override
+  Widget build(BuildContext context) {
+    if (msg.typing) return const _TypingBubble();
+    final rtl = _isArabic(msg.text);
+    final align = msg.fromUser ? Alignment.centerRight : Alignment.centerLeft;
+    final bubbleColor = msg.fromUser ? Brand.blue : Colors.white;
+    final textColor = msg.fromUser ? Colors.white : Brand.navy;
+
+    final bubble = Container(
+      constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.78),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: bubbleColor,
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(18),
+          topRight: const Radius.circular(18),
+          bottomLeft: Radius.circular(msg.fromUser ? 18 : 6),
+          bottomRight: Radius.circular(msg.fromUser ? 6 : 18),
+        ),
+        border: msg.fromUser ? null : Border.all(color: Brand.line),
+      ),
+      child: Text(
+        msg.text,
+        textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+        style: (rtl ? Brand.arabic() : const TextStyle()).copyWith(
+            color: textColor, fontSize: 15, height: 1.5),
+      ),
+    );
+
+    if (msg.fromUser) {
+      return Align(alignment: align, child: bubble);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(right: 8, bottom: 6),
+          child: BrokerAvatar(size: 30),
+        ),
+        Flexible(child: bubble),
+      ],
+    );
+  }
+}
+
+class _TypingBubble extends StatefulWidget {
+  const _TypingBubble();
+  @override
+  State<_TypingBubble> createState() => _TypingBubbleState();
+}
+
+class _TypingBubbleState extends State<_TypingBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(seconds: 1))
+        ..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(right: 8, bottom: 6),
+          child: BrokerAvatar(size: 30),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Brand.line),
+          ),
+          child: AnimatedBuilder(
+            animation: _c,
+            builder: (context, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (i) {
+                final t = ((_c.value + i * 0.2) % 1.0);
+                final opacity = 0.3 + 0.7 * (1 - (t - 0.5).abs() * 2).clamp(0, 1);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: Opacity(
+                    opacity: opacity.toDouble(),
+                    child: const CircleAvatar(
+                        radius: 3.5, backgroundColor: Color(0xFFC3C9D2)),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChipsRow extends StatelessWidget {
+  const _ChipsRow({required this.chips, required this.onTap});
+  final List<(String, String)> chips;
+  final void Function(String prompt)? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 38, top: 4),
+      child: Wrap(
+        spacing: 9,
+        runSpacing: 9,
+        children: chips
+            .map((c) => InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: onTap == null ? null : () => onTap!(c.$2),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Brand.line),
+                    ),
+                    child: Text(c.$1,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Brand.navy)),
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _Composer extends StatelessWidget {
+  const _Composer({
+    required this.controller,
+    required this.enabled,
+    required this.onSend,
+  });
+  final TextEditingController controller;
+  final bool enabled;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(
+          12, 10, 12, 10 + MediaQuery.of(context).padding.bottom * 0.3),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              enabled: enabled,
+              minLines: 1,
+              maxLines: 4,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => onSend(),
+              decoration: InputDecoration(
+                hintText: 'Type your message…  /  اكتب رسالتك…',
+                filled: true,
+                fillColor: Brand.gray,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Material(
+            color: enabled ? Brand.blue : Brand.muted,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: enabled ? onSend : null,
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Icon(Icons.send, color: Colors.white, size: 20),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

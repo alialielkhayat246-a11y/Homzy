@@ -183,13 +183,17 @@ Goal: let Ali manage listings and the persona without touching code.
 - [ ] Edit persona/brand fields and `MAX_RESULTS` from the panel.
 - [ ] (Optional) lightweight auth for the admin panel.
 
-### ⬜ Phase 3 — Mobile app (Flutter, Android + iOS)
+### 🟡 Phase 3 — Mobile app (Flutter, Android + iOS)
 Goal: ship the brain as a real app matching the identity sheet.
-- [ ] Flutter project (e.g. `mobile/`). Screens: splash/onboarding, home
-      dashboard (feature cards + "continue your journey"), chat, with the
-      bottom nav from the brand sheet.
-- [ ] Chat screen calls the FastAPI `/api/chat`; bilingual + RTL; quick-reply
-      chips; bot avatar; brand colors + Poppins/Cairo.
+- [x] Flutter project (`mobile/`). Screens: splash, home dashboard (feature
+      cards + "continue your journey"), chat, with the bottom nav from the brand
+      sheet (Home/Projects/Chat/Saved/Profile). Brand theme in `lib/theme.dart`;
+      house logo via CustomPaint. (Projects/Saved/Profile are placeholders.)
+- [x] Chat screen calls the FastAPI `/api/chat`; bilingual + RTL; quick-reply
+      chips; bot avatar; brand colors + Poppins/Cairo. Configurable API base URL
+      (`--dart-define=HOMZY_API=...` or the in-app server dialog).
+- [ ] Run/verify on an emulator + device (needs Flutter SDK; `flutter create .`
+      to generate native folders). Bundle fonts for offline if desired.
 - [ ] **Host the backend** (the app needs a reachable API): containerize the
       FastAPI app and deploy (a small VPS or a free-tier host); run Ollama or
       Gemini server-side. Document the base URL config.

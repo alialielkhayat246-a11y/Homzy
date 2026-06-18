@@ -35,9 +35,16 @@ broker — not a form.
   and `app.py` (`/api/listings` GET/POST/PUT/DELETE). Writes are gated by an
   optional `ADMIN_TOKEN` (sent as the `X-Admin-Token` header). Edits hit the
   in-memory cache + disk so the broker sees them with no restart.
+- **Phase 3 (Flutter mobile app) is scaffolded** in `mobile/` — splash, home
+  dashboard (status pill, "continue your journey", feature cards), bilingual +
+  RTL chat wired to `/api/chat`, and the Home/Projects/Chat/Saved/Profile bottom
+  nav. Brand-matched (navy/blue, Poppins/Cairo, CustomPaint house logo). Native
+  `android/`/`ios/` folders are NOT committed — run `flutter create .` in
+  `mobile/` to generate them. Not yet compiled (no Flutter SDK on the dev box).
 - Public repo: https://github.com/alialielkhayat246-a11y/Homzy (MIT).
 - `data/listings.json` is **sample placeholder data** — replace with real units.
-- Next up: Phase 3 (Flutter mobile app).
+- Next up: finish Phase 3 (run/verify the app, app icon, Projects/Saved/Profile,
+  backend hosting) — see `mobile/README.md` and `docs/PROJECT_PLAN.md` §9.
 
 ## Where things are
 | Path | What it is |
