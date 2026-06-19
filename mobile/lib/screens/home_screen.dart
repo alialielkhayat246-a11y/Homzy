@@ -187,7 +187,7 @@ class _FeatureGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = <_Feature>[
+    const items = <_Feature>[
       _Feature('Rent a home', Icons.vpn_key_outlined,
           "I'm looking to rent"),
       _Feature('Buy a property', Icons.home_work_outlined,
