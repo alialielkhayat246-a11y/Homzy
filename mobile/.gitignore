@@ -1,24 +1,47 @@
-# Flutter / Dart
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ / IDE
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter / Dart / Pub
 .dart_tool/
-.packages
-.pub-cache/
-.pub/
-build/
 .flutter-plugins
 .flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
 pubspec.lock
 
-# Generated native folders (recreate with `flutter create .`)
-# Kept out of source control for this scaffold; remove these lines if you
-# want to commit platform code after running `flutter create .`.
-android/
+# Android (commit source, ignore build output + local config)
+/android/.gradle/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/local.properties
+/android/key.properties
+/android/.kotlin/
+**/android/**/GeneratedPluginRegistrant.java
+
+# iOS / others left generated (recreate with `flutter create .`)
 ios/
 linux/
 macos/
 windows/
 web/
 
-# IDE
-.idea/
-.vscode/
-*.iml
+# Symbolication / obfuscation
+app.*.symbols
+app.*.map.json

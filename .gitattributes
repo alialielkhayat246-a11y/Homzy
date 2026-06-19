@@ -1,0 +1,4 @@
+# Keep shell scripts LF so they run on Linux CI runners
+*.sh text eol=lf
+mobile/android/gradlew text eol=lf
+*.bat text eol=crlf

@@ -1,0 +1,55 @@
+name: Build Android APK
+
+# Builds the Homzy Flutter app into an installable Android APK on GitHub's
+# cloud runners (local builds are blocked on the dev PC by an OS-level AF_UNIX
+# / JDK NIO issue). Download the APK from the run's "Artifacts" section.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/build-apk.yml"
+  workflow_dispatch:
+    inputs:
+      api_base:
+        description: "Backend base URL baked into the app (you can also change it in-app)"
+        required: false
+        default: "http://192.168.0.156:8000"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build debug APK
+        run: flutter build apk --debug --dart-define=HOMZY_API=${{ github.event.inputs.api_base || 'http://192.168.0.156:8000' }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: homzy-debug-apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
