@@ -15,7 +15,7 @@ on:
       api_base:
         description: "Backend base URL baked into the app (you can also change it in-app)"
         required: false
-        default: "http://192.168.0.156:8000"
+        default: "https://homzy-jet.vercel.app"
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
         run: flutter analyze
 
       - name: Build debug APK
-        run: flutter build apk --debug --dart-define=HOMZY_API=${{ github.event.inputs.api_base || 'http://192.168.0.156:8000' }}
+        run: flutter build apk --debug --dart-define=HOMZY_API=${{ github.event.inputs.api_base || 'https://homzy-jet.vercel.app' }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

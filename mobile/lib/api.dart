@@ -13,9 +13,11 @@ class HomzyApi {
   HomzyApi._();
   static final HomzyApi instance = HomzyApi._();
 
+  // Defaults to the live cloud backend so a fresh install just works.
+  // Override at build time with --dart-define=HOMZY_API=... or in-app (⚙).
   static const _defaultBase = String.fromEnvironment(
     'HOMZY_API',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://homzy-jet.vercel.app',
   );
   static const _prefsKey = 'homzy_api_base';
 
