@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../services/auth_service.dart';
+import '../services/chat_store.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
 
@@ -17,7 +19,10 @@ class _Msg {
 }
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, this.restored});
+
+  /// When opened from "Saved chats", the conversation to preload.
+  final SavedConversation? restored;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -33,6 +38,9 @@ class _ChatScreenState extends State<ChatScreen> {
   HealthInfo? _health;
   bool _sending = false;
   bool _greeted = false;
+  bool _saving = false;
+  String? _conversationId; // set after first save (or when restored)
+  bool _dirty = false; // unsaved changes since last save
 
   static const _chips = <(String, String)>[
     ('🏠  I want to rent', "I'm looking to rent"),
@@ -44,6 +52,14 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    final r = widget.restored;
+    if (r != null) {
+      _conversationId = r.id;
+      _greeted = true;
+      for (final m in r.messages) {
+        _messages.add(_Msg(m.content, m.role == 'user'));
+      }
+    }
     _init();
   }
 
@@ -97,6 +113,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.removeWhere((m) => m.typing);
         _messages.add(_Msg(reply.reply, false));
+        _dirty = true;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -108,6 +125,53 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) setState(() => _sending = false);
       _scrollToEnd();
     }
+  }
+
+  Future<void> _saveChat() async {
+    if (!AuthService.instance.isLoggedIn) {
+      _toast('Sign in to save chats.');
+      return;
+    }
+    final turns = _messages
+        .where((m) => !m.typing)
+        .map((m) => ChatMsg(m.fromUser ? 'user' : 'assistant', m.text))
+        .toList();
+    if (turns.length <= 1) {
+      _toast('Nothing to save yet — start chatting first.');
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      // Title = first thing the client asked.
+      final firstUser = _messages.firstWhere((m) => m.fromUser && !m.typing,
+          orElse: () => _Msg('Chat', true));
+      final title = firstUser.text.length > 40
+          ? '${firstUser.text.substring(0, 40)}…'
+          : firstUser.text;
+      final lang = _isArabic(firstUser.text) ? 'ar' : 'en';
+      final id = await ChatStore.instance.save(
+        id: _conversationId,
+        title: title.isEmpty ? 'Chat' : title,
+        language: lang,
+        messages: turns,
+      );
+      if (!mounted) return;
+      setState(() {
+        _conversationId = id;
+        _dirty = false;
+      });
+      _toast('Saved to your account ✓');
+    } catch (e) {
+      _toast('Could not save: $e');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   Future<void> _editServer() async {
@@ -186,6 +250,19 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Save chat',
+            icon: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Icon(
+                    _dirty ? Icons.bookmark_add : Icons.bookmark_added,
+                    color: _dirty ? Brand.blue : Brand.green,
+                  ),
+            onPressed: _saving ? null : _saveChat,
+          ),
           IconButton(
             tooltip: 'Server settings',
             icon: const Icon(Icons.tune, color: Brand.muted),

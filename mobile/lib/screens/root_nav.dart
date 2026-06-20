@@ -6,6 +6,7 @@ import 'chat_screen.dart';
 import 'home_screen.dart';
 import 'placeholder_screen.dart';
 import 'profile_screen.dart';
+import 'saved_screen.dart';
 
 /// App shell with the bottom navigation from the identity sheet:
 /// Home / Projects / Chat / Saved / Profile.
@@ -32,11 +33,7 @@ class _RootNavState extends State<RootNav> {
         message: 'Browse compounds and projects — coming soon.',
       ),
       const ChatScreen(),
-      const PlaceholderScreen(
-        title: 'Saved',
-        icon: Icons.bookmark_border,
-        message: 'Your saved properties will appear here.',
-      ),
+      const SavedScreen(),
       const ProfileScreen(),
     ];
 
