@@ -56,48 +56,62 @@ class OllamaClient:
 
 
 class GeminiClient:
-    """Google Gemini via the free AI Studio tier. Needs a free GEMINI_API_KEY."""
+    """Google Gemini via the free AI Studio tier. Needs a free GEMINI_API_KEY.
+
+    Talks to the REST API directly with `requests` (no heavy SDK) so it stays
+    light for serverless hosting (e.g. Vercel) and avoids the deprecated
+    google-generativeai package.
+    """
 
     name = "gemini"
+    _BASE = "https://generativelanguage.googleapis.com/v1beta"
 
     def __init__(self) -> None:
         if not config.GEMINI_API_KEY:
             raise LLMUnavailable("GEMINI_API_KEY is not set")
-        try:
-            import google.generativeai as genai
-        except Exception as exc:
-            raise LLMUnavailable(
-                "google-generativeai is not installed (pip install google-generativeai): " + str(exc)
-            )
-        genai.configure(api_key=config.GEMINI_API_KEY)
-        self._genai = genai
+        self.api_key = config.GEMINI_API_KEY
         self.model = config.GEMINI_MODEL
 
     def chat(self, messages: list[dict[str, str]], temperature: float = 0.6,
              force_json: bool = False) -> str:
+        import requests  # imported lazily so 'mock' mode needs no dependency
+
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
         contents = []
         for m in messages:
             if m["role"] == "system":
                 continue
             role = "user" if m["role"] == "user" else "model"
-            contents.append({"role": role, "parts": [m["content"]]})
+            contents.append({"role": role, "parts": [{"text": m["content"]}]})
+
         gen_cfg: dict[str, Any] = {"temperature": temperature}
         if force_json:
-            gen_cfg["response_mime_type"] = "application/json"
+            gen_cfg["responseMimeType"] = "application/json"
+        payload: dict[str, Any] = {"contents": contents, "generationConfig": gen_cfg}
+        if system:
+            payload["systemInstruction"] = {"parts": [{"text": system}]}
+
+        url = f"{self._BASE}/models/{self.model}:generateContent"
         try:
-            model = self._genai.GenerativeModel(
-                self.model,
-                system_instruction=system or None,
-                generation_config=gen_cfg,
+            resp = requests.post(
+                url,
+                headers={"x-goog-api-key": self.api_key,
+                         "Content-Type": "application/json"},
+                json=payload,
+                timeout=120,
             )
-            resp = model.generate_content(contents)
-            return (resp.text or "").strip()
+            resp.raise_for_status()
         except Exception as exc:
             raise LLMUnavailable(f"Gemini request failed: {exc}")
+        data = resp.json()
+        try:
+            parts = data["candidates"][0]["content"]["parts"]
+            return "".join(p.get("text", "") for p in parts).strip()
+        except (KeyError, IndexError):
+            return ""
 
     def available(self) -> bool:
-        return True
+        return bool(self.api_key)
 
 
 def get_client(provider: str | None = None):

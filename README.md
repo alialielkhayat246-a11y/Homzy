@@ -24,6 +24,26 @@ full, natural AI conversation, pick one of the two free engines below.
 
 ---
 
+## Deploy online (Vercel)
+
+The repo is Vercel-ready (`vercel.json` + `api/index.py` wrap the FastAPI app):
+
+1. Push this repo to GitHub (already done).
+2. On <https://vercel.com> → **Add New → Project → Import** this repo. Framework
+   preset: **Other**. Deploy. You get a public URL serving the web chat + API.
+3. **AI engine in the cloud:** Ollama can't run on Vercel, so the hosted app
+   defaults to template/preview mode. For real AI replies, add Project →
+   Settings → Environment Variables: `LLM_PROVIDER=gemini` and
+   `GEMINI_API_KEY=<free key from https://aistudio.google.com/apikey>`, then
+   redeploy.
+
+Caveats on Vercel: the filesystem is read-only, so admin-panel edits to
+`data/listings.json` won't persist, and in-memory chat sessions aren't durable
+across serverless instances. For persistent edits / durable sessions, host the
+container on Render / Railway / Fly.io, or back the listings with a database.
+
+---
+
 ## Turn on the AI brain (pick one — both free)
 
 ### Option A — Ollama (local, free, no key, private) — recommended

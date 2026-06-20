@@ -16,8 +16,15 @@ from . import broker, config, listings as listings_mod, llm
 app = FastAPI(title="Homzy Broker")
 
 # Brand assets (logo etc.) — drop files into frontend/assets/ and they're served.
-(config.FRONTEND_DIR / "assets").mkdir(parents=True, exist_ok=True)
-app.mount("/assets", StaticFiles(directory=config.FRONTEND_DIR / "assets"), name="assets")
+# The mkdir is best-effort: on a read-only host (e.g. Vercel) the dir is shipped
+# in the bundle and creating it would fail, so we tolerate that.
+_assets_dir = config.FRONTEND_DIR / "assets"
+try:
+    _assets_dir.mkdir(parents=True, exist_ok=True)
+except OSError:
+    pass
+if _assets_dir.is_dir():
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
 
 # In-memory sessions: fine for Phase 1 (single tester). Not persisted.
 SESSIONS: dict[str, dict[str, Any]] = {}

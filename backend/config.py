@@ -37,7 +37,8 @@ OLLAMA_HOST = _get("OLLAMA_HOST", "http://127.0.0.1:11434")
 OLLAMA_MODEL = _get("OLLAMA_MODEL", "qwen2.5:7b")
 
 GEMINI_API_KEY = _get("GEMINI_API_KEY", "")
-GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-2.0-flash")
+# gemini-flash-latest works on free-tier keys where gemini-2.0-flash is quota-0.
+GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-flash-latest")
 
 # --- Brand / persona -----------------------------------------------------
 BRAND_NAME = _get("BRAND_NAME", "Homzy")

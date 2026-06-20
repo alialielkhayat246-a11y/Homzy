@@ -1,0 +1,9 @@
+# Keep the Vercel deploy small: only the backend + web UI + data are needed.
+mobile/
+docs/
+.github/
+.venv/
+__pycache__/
+*.pyc
+run.bat
+CONTRIBUTING.md
