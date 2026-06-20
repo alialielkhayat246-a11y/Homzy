@@ -8,6 +8,7 @@ class Brand {
   static const blue = Color(0xFF2563EB); // primary accent
   static const blueLight = Color(0xFFE0F2FE);
   static const green = Color(0xFF22C55E); // success / AI status
+  static const red = Color(0xFFDC2626); // errors / destructive
   static const gray = Color(0xFFF3F4F6); // background
   static const line = Color(0xFFE6E8EC);
   static const muted = Color(0xFF6B7280);
