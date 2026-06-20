@@ -68,10 +68,25 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  void _googleSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Google sign-in is coming soon.'),
-    ));
+  Future<void> _google() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+      _info = null;
+    });
+    try {
+      await AuthService.instance.signInWithGoogle();
+      // Returns immediately after launching the browser; the AuthGate stream
+      // navigates once the deep-link callback completes the sign-in.
+    } on AuthException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _error = 'Google sign-in unavailable. Try email for now.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -158,7 +173,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
-                            onPressed: _busy ? null : _googleSoon,
+                            onPressed: _busy ? null : _google,
                             icon: const Icon(Icons.g_mobiledata, size: 26),
                             label: const Text('Continue with Google'),
                             style: OutlinedButton.styleFrom(

@@ -37,5 +37,16 @@ class AuthService {
     return _client.auth.signInWithPassword(email: email, password: password);
   }
 
+  /// Browser-based Google OAuth. Supabase handles the redirect back into the
+  /// app via the io.supabase.homzy://login-callback/ deep link (see the
+  /// Android manifest intent-filter). Requires the Google provider to be
+  /// enabled in the Supabase dashboard.
+  Future<bool> signInWithGoogle() {
+    return _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.homzy://login-callback/',
+    );
+  }
+
   Future<void> signOut() => _client.auth.signOut();
 }
