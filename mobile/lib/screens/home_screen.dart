@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final brand = _health?.brand ?? 'Homzy';
-    final broker = _health?.broker ?? 'Nour';
+    final broker = _health?.broker ?? 'Homzy';
 
     return Scaffold(
       body: SafeArea(
@@ -111,7 +111,7 @@ class _StatusPill extends StatelessWidget {
       text = 'offline';
     } else if (health!.isAi) {
       color = Brand.green;
-      text = 'AI · ${health!.provider}';
+      text = 'AI';
     } else {
       color = const Color(0xFFE8A33D);
       text = 'Preview';

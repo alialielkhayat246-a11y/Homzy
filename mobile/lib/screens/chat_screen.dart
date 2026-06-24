@@ -70,13 +70,12 @@ class _ChatScreenState extends State<ChatScreen> {
       _health = h;
       if (!_greeted) {
         _greeted = true;
-        final broker = h?.broker ?? 'Nour';
-        final brand = h?.brand ?? 'Homzy';
+        final broker = h?.broker ?? 'Homzy';
         _messages.add(_Msg(
-          "Hi! I'm $broker from $brand 👋\n"
+          "Hi! I'm $broker, your property advisor 👋\n"
           "Looking to rent or buy? Tell me your budget, area and bedrooms and "
           "I'll find the best matches.\n\n"
-          "أهلاً! أنا $broker من $brand 👋\n"
+          "أهلاً! أنا $broker، مستشارك العقاري 👋\n"
           "بتدوّر على إيجار ولا تمليك؟ قوللي ميزانيتك، المنطقة، وعدد الغرف "
           "وأجيبلك أنسب الوحدات.",
           false,
@@ -230,15 +229,13 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_health?.broker ?? 'Nour',
+                Text(_health?.broker ?? 'Homzy',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.w700)),
                 Text(
                   _health == null
                       ? 'connecting…'
-                      : (_health!.isAi
-                          ? 'AI · ${_health!.provider}'
-                          : 'Preview mode'),
+                      : (_health!.isAi ? 'AI' : 'Preview mode'),
                   style: TextStyle(
                       fontSize: 11,
                       color: _health?.isAi == true

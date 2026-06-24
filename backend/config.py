@@ -42,7 +42,7 @@ GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-flash-latest")
 
 # --- Brand / persona -----------------------------------------------------
 BRAND_NAME = _get("BRAND_NAME", "Homzy")
-BROKER_NAME = _get("BROKER_NAME", "Nour")
+BROKER_NAME = _get("BROKER_NAME", "Homzy")
 
 # --- Admin panel (Phase 2) ----------------------------------------------
 # Optional password for the listings admin panel. Leave empty for local,
