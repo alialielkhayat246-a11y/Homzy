@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../services/chat_store.dart';
 import '../theme.dart';
@@ -128,7 +129,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _saveChat() async {
     if (!AuthService.instance.isLoggedIn) {
-      _toast('Sign in to save chats.');
+      _toast(tr('sign_in_to_save'));
       return;
     }
     final turns = _messages
@@ -136,7 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
         .map((m) => ChatMsg(m.fromUser ? 'user' : 'assistant', m.text))
         .toList();
     if (turns.length <= 1) {
-      _toast('Nothing to save yet — start chatting first.');
+      _toast(tr('nothing_to_save'));
       return;
     }
     setState(() => _saving = true);
@@ -159,7 +160,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _conversationId = id;
         _dirty = false;
       });
-      _toast('Saved to your account ✓');
+      _toast(tr('saved_ok'));
     } catch (e) {
       _toast('Could not save: $e');
     } finally {
@@ -248,7 +249,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Save chat',
+            tooltip: tr('save_chat'),
             icon: _saving
                 ? const SizedBox(
                     width: 18,
@@ -261,7 +262,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: _saving ? null : _saveChat,
           ),
           IconButton(
-            tooltip: 'Server settings',
+            tooltip: tr('server_settings'),
             icon: const Icon(Icons.tune, color: Brand.muted),
             onPressed: _editServer,
           ),
@@ -469,7 +470,7 @@ class _Composer extends StatelessWidget {
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => onSend(),
               decoration: InputDecoration(
-                hintText: 'Type your message…  /  اكتب رسالتك…',
+                hintText: tr('chat_hint'),
                 filled: true,
                 fillColor: Brand.gray,
                 contentPadding:

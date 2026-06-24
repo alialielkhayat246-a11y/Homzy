@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
+import '../widgets/lang_toggle.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -15,7 +17,14 @@ class ProfileScreen extends StatelessWidget {
     final email = auth.email ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: Text(tr('profile')),
+        actions: const [
+          Padding(
+              padding: EdgeInsets.only(right: 12, left: 12),
+              child: Center(child: LangToggle())),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -32,16 +41,16 @@ class ProfileScreen extends StatelessWidget {
                 style: const TextStyle(color: Brand.muted, fontSize: 13)),
           ),
           const SizedBox(height: 28),
-          _tile(Icons.bookmark_border, 'Saved chats',
-              'Your conversations are synced to your account.'),
-          _tile(Icons.cloud_done_outlined, 'Cloud sync',
-              'Log in on any device to restore your data.'),
+          _tile(Icons.bookmark_border, tr('saved_chats'),
+              tr('saved_chats_sub')),
+          _tile(Icons.cloud_done_outlined, tr('cloud_sync'),
+              tr('cloud_sync_sub')),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: () => auth.signOut(),
             icon: const Icon(Icons.logout, color: Brand.red),
-            label: const Text('Sign out',
-                style: TextStyle(color: Brand.red)),
+            label: Text(tr('sign_out'),
+                style: const TextStyle(color: Brand.red)),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
               side: const BorderSide(color: Brand.line),

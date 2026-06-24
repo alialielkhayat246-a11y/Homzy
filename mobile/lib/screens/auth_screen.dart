@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
+import '../widgets/lang_toggle.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -102,15 +104,16 @@ class _AuthScreenState extends State<AuthScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const Align(
+                      alignment: Alignment.centerRight, child: LangToggle()),
+                  const SizedBox(height: 8),
                   const HouseLogo(size: 64),
                   const SizedBox(height: 12),
                   Text('Homzy',
                       style: GoogleFonts.poppins(
                           fontSize: 26, fontWeight: FontWeight.w700)),
                   Text(
-                    _isSignUp
-                        ? 'Create your account'
-                        : 'Welcome back — sign in',
+                    _isSignUp ? tr('create_account') : tr('welcome_back'),
                     style: const TextStyle(color: Brand.muted, fontSize: 14),
                   ),
                   const SizedBox(height: 24),
@@ -126,23 +129,23 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         children: [
                           if (_isSignUp) ...[
-                            _field(_name, 'Full name',
+                            _field(_name, tr('full_name'),
                                 icon: Icons.person_outline),
                             const SizedBox(height: 12),
                           ],
-                          _field(_email, 'Email',
+                          _field(_email, tr('email'),
                               icon: Icons.mail_outline,
                               keyboard: TextInputType.emailAddress,
                               validator: (v) =>
                                   (v == null || !v.contains('@'))
-                                      ? 'Enter a valid email'
+                                      ? tr('enter_valid_email')
                                       : null),
                           const SizedBox(height: 12),
-                          _field(_password, 'Password',
+                          _field(_password, tr('password'),
                               icon: Icons.lock_outline,
                               obscure: true,
                               validator: (v) => (v == null || v.length < 6)
-                                  ? 'At least 6 characters'
+                                  ? tr('password_min')
                                   : null),
                           if (_error != null) ...[
                             const SizedBox(height: 12),
@@ -168,14 +171,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2,
                                           color: Colors.white))
-                                  : Text(_isSignUp ? 'Sign up' : 'Sign in'),
+                                  : Text(_isSignUp
+                                      ? tr('sign_up')
+                                      : tr('sign_in')),
                             ),
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
                             onPressed: _busy ? null : _google,
                             icon: const Icon(Icons.g_mobiledata, size: 26),
-                            label: const Text('Continue with Google'),
+                            label: Text(tr('continue_google')),
                             style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                               side: const BorderSide(color: Brand.line),
@@ -198,9 +203,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               _info = null;
                             }),
                     child: Text(
-                      _isSignUp
-                          ? 'Already have an account? Sign in'
-                          : "New here? Create an account",
+                      _isSignUp ? tr('have_account') : tr('new_here'),
                       style: const TextStyle(color: Brand.blue),
                     ),
                   ),

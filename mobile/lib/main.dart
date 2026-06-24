@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'api.dart';
+import 'i18n.dart';
 import 'supabase_config.dart';
 import 'theme.dart';
 import 'screens/auth_screen.dart';
+import 'screens/onboarding_role_screen.dart';
 import 'screens/root_nav.dart';
 import 'screens/splash_screen.dart';
+import 'services/profile_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +17,7 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.publishableKey,
   );
+  await Lang.instance.load();
   await HomzyApi.instance.load();
   runApp(const HomzyApp());
 }
@@ -23,17 +27,24 @@ class HomzyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Homzy',
-      debugShowCheckedModeBanner: false,
-      theme: buildHomzyTheme(),
-      home: const AuthGate(),
+    return AnimatedBuilder(
+      animation: Lang.instance,
+      builder: (context, _) => MaterialApp(
+        title: 'Homzy',
+        debugShowCheckedModeBanner: false,
+        theme: buildHomzyTheme(),
+        builder: (context, child) => Directionality(
+          textDirection:
+              Lang.instance.isAr ? TextDirection.rtl : TextDirection.ltr,
+          child: child!,
+        ),
+        home: const AuthGate(),
+      ),
     );
   }
 }
 
-/// Shows the splash briefly, then routes to the app (if logged in) or the
-/// auth screen — and reacts to login/logout in real time.
+/// Splash → auth → (first run) role onboarding → app.
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
@@ -47,7 +58,6 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    // Brief splash so the brand shows and any session restores.
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => _ready = true);
     });
@@ -60,8 +70,45 @@ class _AuthGateState extends State<AuthGate> {
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
         final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) return const RootNav();
-        return const AuthScreen();
+        if (session == null) return const AuthScreen();
+        return const _OnboardingGate();
+      },
+    );
+  }
+}
+
+/// After login, send first-time users to role onboarding; everyone else
+/// straight into the app.
+class _OnboardingGate extends StatefulWidget {
+  const _OnboardingGate();
+
+  @override
+  State<_OnboardingGate> createState() => _OnboardingGateState();
+}
+
+class _OnboardingGateState extends State<_OnboardingGate> {
+  late Future<bool> _needs;
+
+  @override
+  void initState() {
+    super.initState();
+    _needs = ProfileService.instance.needsOnboarding();
+  }
+
+  void _reload() {
+    setState(() => _needs = ProfileService.instance.needsOnboarding());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _needs,
+      builder: (context, snap) {
+        if (!snap.hasData) return const SplashScreen();
+        if (snap.data == true) {
+          return OnboardingRoleScreen(onDone: _reload);
+        }
+        return const RootNav();
       },
     );
   }

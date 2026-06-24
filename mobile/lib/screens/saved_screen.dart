@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../i18n.dart';
 import '../services/chat_store.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
@@ -49,7 +50,7 @@ class _SavedScreenState extends State<SavedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved chats'),
+        title: Text(tr('saved_chats')),
         actions: [
           IconButton(
               icon: const Icon(Icons.refresh, color: Brand.muted),
@@ -66,15 +67,15 @@ class _SavedScreenState extends State<SavedScreen> {
             }
             final items = snap.data ?? [];
             if (items.isEmpty) {
-              return ListView(children: const [
-                SizedBox(height: 120),
-                Icon(Icons.bookmark_border, size: 56, color: Brand.muted),
-                SizedBox(height: 12),
+              return ListView(children: [
+                const SizedBox(height: 120),
+                const Icon(Icons.bookmark_border, size: 56, color: Brand.muted),
+                const SizedBox(height: 12),
                 Center(
                   child: Text(
-                    'No saved chats yet.\nTap the 🔖 in a chat to save it.',
+                    tr('no_saved'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Brand.muted),
+                    style: const TextStyle(color: Brand.muted),
                   ),
                 ),
               ]);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../i18n.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
 import 'home_screen.dart';
@@ -57,27 +58,27 @@ class _RootNavState extends State<RootNav> {
           height: 64,
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
-          destinations: const [
+          destinations: [
             NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home, color: Brand.blue),
-                label: 'Home'),
+                icon: const Icon(Icons.home_outlined),
+                selectedIcon: const Icon(Icons.home, color: Brand.blue),
+                label: tr('nav_home')),
             NavigationDestination(
-                icon: Icon(Icons.apartment_outlined),
-                selectedIcon: Icon(Icons.apartment, color: Brand.blue),
-                label: 'Projects'),
+                icon: const Icon(Icons.apartment_outlined),
+                selectedIcon: const Icon(Icons.apartment, color: Brand.blue),
+                label: tr('nav_projects')),
             NavigationDestination(
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble, color: Brand.blue),
-                label: 'Chat'),
+                icon: const Icon(Icons.chat_bubble_outline),
+                selectedIcon: const Icon(Icons.chat_bubble, color: Brand.blue),
+                label: tr('nav_chat')),
             NavigationDestination(
-                icon: Icon(Icons.bookmark_border),
-                selectedIcon: Icon(Icons.bookmark, color: Brand.blue),
-                label: 'Saved'),
+                icon: const Icon(Icons.bookmark_border),
+                selectedIcon: const Icon(Icons.bookmark, color: Brand.blue),
+                label: tr('nav_saved')),
             NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person, color: Brand.blue),
-                label: 'Profile'),
+                icon: const Icon(Icons.person_outline),
+                selectedIcon: const Icon(Icons.person, color: Brand.blue),
+                label: tr('nav_profile')),
           ],
         ),
       ),
