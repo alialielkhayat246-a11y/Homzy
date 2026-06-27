@@ -17,6 +17,7 @@ import json
 import os
 import re
 import sys
+import time
 from typing import Any
 
 import requests
@@ -64,7 +65,7 @@ Rules:
 - Do not merge two different messages into one listing."""
 
 
-def _gemini(messages_block: str) -> dict[str, Any]:
+def _gemini(messages_block: str, _retries: int = 4) -> dict[str, Any]:
     if not GEMINI_KEY:
         raise RuntimeError("GEMINI_API_KEY is not set")
     payload = {
@@ -72,13 +73,27 @@ def _gemini(messages_block: str) -> dict[str, Any]:
         "contents": [{"role": "user", "parts": [{"text": messages_block}]}],
         "generationConfig": {"temperature": 0.0, "responseMimeType": "application/json"},
     }
-    resp = requests.post(
-        _URL,
-        headers={"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"},
-        json=payload,
-        timeout=120,
-    )
-    resp.raise_for_status()
+    last_exc: Exception | None = None
+    for attempt in range(_retries):
+        try:
+            resp = requests.post(
+                _URL,
+                headers={"x-goog-api-key": GEMINI_KEY, "Content-Type": "application/json"},
+                json=payload,
+                timeout=120,
+            )
+            # Retry on overload / rate limit / transient server errors.
+            if resp.status_code in (429, 500, 502, 503, 504):
+                raise requests.exceptions.HTTPError(f"{resp.status_code}", response=resp)
+            resp.raise_for_status()
+            break
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+            if attempt == _retries - 1:
+                raise
+            wait = 3 * (2 ** attempt)  # 3s, 6s, 12s, 24s
+            print(f"  …Gemini busy ({exc}); retrying in {wait}s", file=sys.stderr)
+            time.sleep(wait)
     data = resp.json()
     try:
         text = "".join(
@@ -102,11 +117,17 @@ def extract_listings(messages: list[str]) -> list[dict[str, Any]]:
     """Run extraction over a list of raw messages, batched. Returns listings."""
     out: list[dict[str, Any]] = []
     clean = [m.strip() for m in messages if m and m.strip()]
-    for i in range(0, len(clean), BATCH_SIZE):
+    total = (len(clean) + BATCH_SIZE - 1) // BATCH_SIZE
+    for n, i in enumerate(range(0, len(clean), BATCH_SIZE), 1):
         batch = clean[i:i + BATCH_SIZE]
         block = "\n\n".join(f"--- MESSAGE {i + j + 1} ---\n{m}"
                             for j, m in enumerate(batch))
-        result = _gemini(block)
+        print(f"  batch {n}/{total}…", file=sys.stderr)
+        try:
+            result = _gemini(block)
+        except Exception as exc:  # don't lose the whole run over one bad batch
+            print(f"  ! batch {n} failed, skipping: {exc}", file=sys.stderr)
+            continue
         for item in result.get("listings", []):
             if isinstance(item, dict):
                 item.setdefault("currency", "EGP")
