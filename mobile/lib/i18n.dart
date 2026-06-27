@@ -89,6 +89,21 @@ const Map<String, Map<String, String>> _strings = {
   // Saved
   'no_saved': {'en': 'No saved chats yet.\nTap the 🔖 in a chat to save it.', 'ar': 'مفيش محادثات محفوظة.\nدوس على 🔖 في المحادثة عشان تحفظها.'},
 
+  // Projects / catalog
+  'projects_title': {'en': 'Projects', 'ar': 'المشاريع'},
+  'no_projects': {'en': 'No projects yet.', 'ar': 'مفيش مشاريع لسه.'},
+  'unit_types': {'en': 'Unit types & prices', 'ar': 'أنواع الوحدات والأسعار'},
+  'payment_plan': {'en': 'Payment', 'ar': 'طريقة الدفع'},
+  'about_developer': {'en': 'About the developer', 'ar': 'عن المطوّر'},
+  'track_record': {'en': 'Track record', 'ar': 'سابقة الأعمال'},
+  'amenities': {'en': 'Amenities', 'ar': 'المميزات'},
+  'brochure': {'en': 'Brochure', 'ar': 'البروشور'},
+  'video': {'en': 'Video', 'ar': 'فيديو'},
+  'delivery': {'en': 'Delivery', 'ar': 'التسليم'},
+  'down_payment': {'en': 'Down payment', 'ar': 'المقدم'},
+  'from_price': {'en': 'From', 'ar': 'يبدأ من'},
+  'ask_homzy': {'en': 'Ask Homzy about this', 'ar': 'اسأل Homzy عن ده'},
+
   // Onboarding (role)
   'onb_title': {'en': 'Tell us about you', 'ar': 'عرّفنا عن نفسك'},
   'onb_sub': {'en': 'This helps Homzy serve you better.', 'ar': 'ده بيساعد Homzy يخدمك أحسن.'},

@@ -5,8 +5,8 @@ import '../i18n.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
 import 'home_screen.dart';
-import 'placeholder_screen.dart';
 import 'profile_screen.dart';
+import 'projects_screen.dart';
 import 'saved_screen.dart';
 
 /// App shell with the bottom navigation from the identity sheet:
@@ -28,11 +28,7 @@ class _RootNavState extends State<RootNav> {
   Widget build(BuildContext context) {
     final pages = [
       HomeScreen(initialHealth: widget.initialHealth, onStartChat: _goToChat),
-      const PlaceholderScreen(
-        title: 'Projects',
-        icon: Icons.apartment_outlined,
-        message: 'Browse compounds and projects — coming soon.',
-      ),
+      const ProjectsScreen(),
       const ChatScreen(),
       const SavedScreen(),
       const ProfileScreen(),
