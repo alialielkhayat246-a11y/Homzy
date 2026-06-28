@@ -26,6 +26,12 @@ GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 _URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
+# Which LLM does the extraction: "gemini" (cloud, quota-limited) or "ollama"
+# (local, free, unlimited). Default gemini.
+INGEST_LLM = os.environ.get("INGEST_LLM", "gemini").lower()
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
+
 # Batch this many messages per Gemini call (keeps prompts small but cuts calls).
 BATCH_SIZE = int(os.environ.get("INGEST_BATCH", "12"))
 
@@ -113,6 +119,36 @@ def _gemini(messages_block: str, _retries: int = 4) -> dict[str, Any]:
         return {"listings": []}
 
 
+def _ollama(messages_block: str) -> dict[str, Any]:
+    payload = {
+        "model": OLLAMA_MODEL,
+        "messages": [
+            {"role": "system", "content": EXTRACT_SYSTEM},
+            {"role": "user", "content": messages_block},
+        ],
+        "stream": False,
+        "format": "json",
+        "options": {"temperature": 0.0},
+    }
+    resp = requests.post(f"{OLLAMA_HOST}/api/chat", json=payload, timeout=600)
+    resp.raise_for_status()
+    text = (resp.json().get("message") or {}).get("content", "")
+    try:
+        return json.loads(text)
+    except Exception:
+        start, end = text.find("{"), text.rfind("}")
+        if start != -1 and end != -1:
+            try:
+                return json.loads(text[start:end + 1])
+            except Exception:
+                return {"listings": []}
+        return {"listings": []}
+
+
+def _llm(block: str) -> dict[str, Any]:
+    return _ollama(block) if INGEST_LLM == "ollama" else _gemini(block)
+
+
 def extract_listings(messages: list[str]) -> list[dict[str, Any]]:
     """Run extraction over a list of raw messages, batched. Returns listings."""
     out: list[dict[str, Any]] = []
@@ -122,9 +158,11 @@ def extract_listings(messages: list[str]) -> list[dict[str, Any]]:
         batch = clean[i:i + BATCH_SIZE]
         block = "\n\n".join(f"--- MESSAGE {i + j + 1} ---\n{m}"
                             for j, m in enumerate(batch))
+        if n > 1:
+            time.sleep(float(os.environ.get("INGEST_DELAY", "4")))  # respect RPM
         print(f"  batch {n}/{total}…", file=sys.stderr)
         try:
-            result = _gemini(block)
+            result = _llm(block)
         except Exception as exc:  # don't lose the whole run over one bad batch
             print(f"  ! batch {n} failed, skipping: {exc}", file=sys.stderr)
             continue
@@ -166,6 +204,25 @@ def parse_whatsapp_export(text: str) -> list[str]:
     skip = ("<Media omitted>", "image omitted", "video omitted",
             "Messages and calls are end-to-end encrypted")
     return [m for m in messages if m and not any(s in m for s in skip)]
+
+
+# Keep only messages that look like a property listing (cuts huge chats down to
+# the few hundred real offers before spending Gemini calls).
+_PRICE_HINTS = (
+    "price", "total", "down payment", "downpayment", "installment", "quarterly",
+    "monthly", "egp", "م.م", "ج.م", "جنيه", "سعر", "مقدم", "تقسيط", "قسط",
+    "اقساط", "أقساط", "bua", "sqm", "متر", "م2", "م²", "delivery", "تسليم",
+    "bedroom", "bedrooms", "bd", "غرف", "غرفه", "غرفة",
+)
+
+
+def looks_like_listing(msg: str) -> bool:
+    low = msg.lower()
+    if not re.search(r"\d", low):
+        return False
+    hits = sum(1 for h in _PRICE_HINTS if h in low)
+    # needs a price-ish word AND some size/room/area signal -> at least 2 hints
+    return hits >= 2
 
 
 _DEMO = [
