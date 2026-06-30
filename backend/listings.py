@@ -10,7 +10,7 @@ import os
 import re
 from typing import Any
 
-from . import config
+from . import catalog, config
 
 _CACHE: list[dict[str, Any]] | None = None
 
@@ -66,7 +66,9 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     when any exist — while budget/bedroom fit is handled by ranking, not
     exclusion, so 'closest matches' surface honestly.
     """
-    items = [x for x in load() if x.get("available", True)]
+    # Pool = local listings file + the live Supabase catalog (real projects).
+    pool = list(load()) + catalog.listings()
+    items = [x for x in pool if x.get("available", True)]
 
     purpose = req.get("purpose")
     if purpose:

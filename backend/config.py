@@ -44,6 +44,10 @@ GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-flash-latest")
 BRAND_NAME = _get("BRAND_NAME", "Homzy")
 BROKER_NAME = _get("BROKER_NAME", "Homzy")
 
+# --- Supabase catalog (developers/projects/units feed the chat) ---------
+SUPABASE_URL = _get("SUPABASE_URL", "")
+SUPABASE_KEY = _get("SUPABASE_ANON_KEY", "")
+
 # --- Admin panel (Phase 2) ----------------------------------------------
 # Optional password for the listings admin panel. Leave empty for local,
 # single-user use; set it before exposing Homzy on a network.

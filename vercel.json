@@ -16,6 +16,8 @@
     "LLM_PROVIDER": "gemini",
     "GEMINI_MODEL": "gemini-flash-latest",
     "BROKER_NAME": "Homzy",
-    "BRAND_NAME": "Homzy"
+    "BRAND_NAME": "Homzy",
+    "SUPABASE_URL": "https://ceoqtkbpdxnkuptnnwjg.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlb3F0a2JwZHhua3VwdG5ud2pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NzQ1MjcsImV4cCI6MjA5NzU1MDUyN30.v1ET8MXndvrEjDi_s-b78vY5_E7HVQd4Dk3vjtyJ0jw"
   }
 }
