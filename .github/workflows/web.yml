@@ -33,6 +33,8 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Add web platform (generates web/ without touching lib/)
+        run: flutter create --platforms web --project-name homzy .
       - run: flutter pub get
       - name: Build web
         run: >
