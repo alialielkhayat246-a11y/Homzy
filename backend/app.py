@@ -8,12 +8,21 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import broker, config, listings as listings_mod, llm
 
 app = FastAPI(title="Homzy Broker")
+
+# Allow the web build (hosted on a different origin) to call the API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Brand assets (logo etc.) — drop files into frontend/assets/ and they're served.
 # The mkdir is best-effort: on a read-only host (e.g. Vercel) the dir is shipped

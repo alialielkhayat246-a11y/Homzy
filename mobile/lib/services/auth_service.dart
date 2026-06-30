@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Thin wrapper around Supabase Auth for Homzy.
@@ -44,7 +45,9 @@ class AuthService {
   Future<bool> signInWithGoogle() {
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'io.supabase.homzy://login-callback/',
+      // On web Supabase redirects back to the current origin; on mobile we use
+      // the app's deep-link scheme.
+      redirectTo: kIsWeb ? null : 'io.supabase.homzy://login-callback/',
     );
   }
 
