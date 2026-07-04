@@ -55,13 +55,18 @@ class HomzyApi {
   Future<ChatReply> chat({
     required String sessionId,
     required String message,
+    List<Map<String, String>> history = const [],
   }) async {
     try {
       final r = await http
           .post(
             _u('/api/chat'),
             headers: {'Content-Type': 'application/json; charset=utf-8'},
-            body: jsonEncode({'session_id': sessionId, 'message': message}),
+            body: jsonEncode({
+              'session_id': sessionId,
+              'message': message,
+              'history': history,
+            }),
           )
           .timeout(const Duration(seconds: 300));
       if (r.statusCode != 200) {

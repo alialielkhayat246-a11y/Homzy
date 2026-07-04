@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../api.dart';
 import '../i18n.dart';
@@ -74,11 +75,14 @@ class _ChatScreenState extends State<ChatScreen> {
         final broker = h?.broker ?? 'Homzy';
         _messages.add(_Msg(
           "Hi! I'm $broker, your property advisor 👋\n"
-          "Looking to rent or buy? Tell me your budget, area and bedrooms and "
-          "I'll find the best matches.\n\n"
+          "I cover new-launch projects across Egypt — New Cairo, the New "
+          "Capital, Sheikh Zayed, 6th of October, the North Coast and more, "
+          "plus a few international projects. Tell me your budget, area and "
+          "unit type and I'll find the best matches.\n\n"
           "أهلاً! أنا $broker، مستشارك العقاري 👋\n"
-          "بتدوّر على إيجار ولا تمليك؟ قوللي ميزانيتك، المنطقة، وعدد الغرف "
-          "وأجيبلك أنسب الوحدات.",
+          "عندي مشاريع في كل مصر — التجمع، العاصمة الإدارية، الشيخ زايد، "
+          "أكتوبر، الساحل الشمالي وغيرها، وكمان بعض المشاريع خارج مصر. قوللي "
+          "ميزانيتك، المنطقة، ونوع الوحدة وأجيبلك أنسب الاختيارات.",
           false,
         ));
       }
@@ -99,6 +103,11 @@ class _ChatScreenState extends State<ChatScreen> {
     text = text.trim();
     if (text.isEmpty || _sending) return;
     _controller.clear();
+    // conversation so far (so the AI remembers) — before adding this message
+    final history = _messages
+        .where((m) => !m.typing)
+        .map((m) => {'role': m.fromUser ? 'user' : 'assistant', 'content': m.text})
+        .toList();
     setState(() {
       _sending = true;
       _messages.add(_Msg(text, true));
@@ -107,14 +116,16 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToEnd();
 
     try {
-      final reply =
-          await HomzyApi.instance.chat(sessionId: _sessionId, message: text);
+      final reply = await HomzyApi.instance
+          .chat(sessionId: _sessionId, message: text, history: history);
       if (!mounted) return;
       setState(() {
         _messages.removeWhere((m) => m.typing);
         _messages.add(_Msg(reply.reply, false));
         _dirty = true;
       });
+      // keep saved chats up to date automatically (only if signed in)
+      if (AuthService.instance.isLoggedIn) _autoSave();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -127,37 +138,56 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  List<ChatMsg> _turns() => _messages
+      .where((m) => !m.typing)
+      .map((m) => ChatMsg(m.fromUser ? 'user' : 'assistant', m.text))
+      .toList();
+
+  Future<String?> _persist() async {
+    final turns = _turns();
+    if (turns.length <= 1) return null;
+    final firstUser = _messages.firstWhere((m) => m.fromUser && !m.typing,
+        orElse: () => _Msg('Chat', true));
+    final title = firstUser.text.length > 40
+        ? '${firstUser.text.substring(0, 40)}…'
+        : firstUser.text;
+    final lang = _isArabic(firstUser.text) ? 'ar' : 'en';
+    return ChatStore.instance.save(
+      id: _conversationId,
+      title: title.isEmpty ? 'Chat' : title,
+      language: lang,
+      messages: turns,
+    );
+  }
+
+  /// Silent auto-save after each exchange (keeps saved chats up to date).
+  Future<void> _autoSave() async {
+    try {
+      final id = await _persist();
+      if (id != null && mounted) {
+        setState(() {
+          _conversationId = id;
+          _dirty = false;
+        });
+      }
+    } catch (_) {/* best effort */}
+  }
+
   Future<void> _saveChat() async {
     if (!AuthService.instance.isLoggedIn) {
       _toast(tr('sign_in_to_save'));
       return;
     }
-    final turns = _messages
-        .where((m) => !m.typing)
-        .map((m) => ChatMsg(m.fromUser ? 'user' : 'assistant', m.text))
-        .toList();
-    if (turns.length <= 1) {
+    if (_turns().length <= 1) {
       _toast(tr('nothing_to_save'));
       return;
     }
     setState(() => _saving = true);
     try {
-      // Title = first thing the client asked.
-      final firstUser = _messages.firstWhere((m) => m.fromUser && !m.typing,
-          orElse: () => _Msg('Chat', true));
-      final title = firstUser.text.length > 40
-          ? '${firstUser.text.substring(0, 40)}…'
-          : firstUser.text;
-      final lang = _isArabic(firstUser.text) ? 'ar' : 'en';
-      final id = await ChatStore.instance.save(
-        id: _conversationId,
-        title: title.isEmpty ? 'Chat' : title,
-        language: lang,
-        messages: turns,
-      );
+      final id = await _persist();
       if (!mounted) return;
       setState(() {
-        _conversationId = id;
+        if (id != null) _conversationId = id;
         _dirty = false;
       });
       _toast(tr('saved_ok'));
@@ -300,6 +330,14 @@ class _Bubble extends StatelessWidget {
   const _Bubble({required this.msg});
   final _Msg msg;
 
+  void _copy(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: msg.text));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(Lang.instance.isAr ? 'اتنسخ ✓' : 'Copied ✓'),
+      duration: const Duration(seconds: 1),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (msg.typing) return const _TypingBubble();
@@ -331,8 +369,13 @@ class _Bubble extends StatelessWidget {
       ),
     );
 
+    final tappable = GestureDetector(
+      onLongPress: () => _copy(context),
+      child: bubble,
+    );
+
     if (msg.fromUser) {
-      return Align(alignment: align, child: bubble);
+      return Align(alignment: align, child: tappable);
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -341,7 +384,7 @@ class _Bubble extends StatelessWidget {
           padding: EdgeInsets.only(right: 8, bottom: 6),
           child: BrokerAvatar(size: 30),
         ),
-        Flexible(child: bubble),
+        Flexible(child: tappable),
       ],
     );
   }

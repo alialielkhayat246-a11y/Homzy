@@ -19,7 +19,7 @@ class CatalogService {
     var q = _db.from('projects').select(sel);
     if (search != null && search.trim().isNotEmpty) {
       final s = search.trim().replaceAll(',', ' ');
-      q = q.or('name.ilike.%$s%,area.ilike.%$s%');
+      q = q.or('name.ilike.%$s%,name_ar.ilike.%$s%,area.ilike.%$s%');
     }
     if (area != null && area.isNotEmpty) q = q.ilike('area', '%$area%');
     if (delivery != null && delivery.isNotEmpty) {

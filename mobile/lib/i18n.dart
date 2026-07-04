@@ -85,6 +85,15 @@ const Map<String, Map<String, String>> _strings = {
   'sign_out': {'en': 'Sign out', 'ar': 'تسجيل الخروج'},
   'role_user': {'en': 'Customer', 'ar': 'مستخدم'},
   'role_broker': {'en': 'Broker', 'ar': 'سمسار / بروكر'},
+  'my_account': {'en': 'My account', 'ar': 'حسابي'},
+  'edit_profile': {'en': 'Edit profile', 'ar': 'تعديل البيانات'},
+  'save': {'en': 'Save', 'ar': 'حفظ'},
+  'saved_done': {'en': 'Saved ✓', 'ar': 'اتحفظ ✓'},
+  'change_photo': {'en': 'Change photo', 'ar': 'تغيير الصورة'},
+  'delete_account': {'en': 'Delete account', 'ar': 'حذف الحساب'},
+  'delete_confirm': {'en': 'Permanently delete your account and all your data? This cannot be undone.', 'ar': 'تحذف حسابك وكل بياناتك نهائيًا؟ الإجراء ده مش هيتراجع.'},
+  'cancel': {'en': 'Cancel', 'ar': 'إلغاء'},
+  'open_saved_chats': {'en': 'My saved chats', 'ar': 'محادثاتي المحفوظة'},
 
   // Saved
   'no_saved': {'en': 'No saved chats yet.\nTap the 🔖 in a chat to save it.', 'ar': 'مفيش محادثات محفوظة.\nدوس على 🔖 في المحادثة عشان تحفظها.'},

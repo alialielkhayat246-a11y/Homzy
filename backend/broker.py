@@ -229,11 +229,27 @@ def _llm_reply(history: list[dict[str, str]], language: str,
 # --------------------------------------------------------------------------
 # Public entry point
 # --------------------------------------------------------------------------
-def handle_turn(session: dict[str, Any], message: str) -> dict[str, Any]:
+def handle_turn(session: dict[str, Any], message: str,
+                client_history: list[dict[str, str]] | None = None) -> dict[str, Any]:
     language = detect_language(message)
     session["language"] = language
-    history = session.setdefault("history", [])
     req = session.setdefault("requirements", {})
+
+    # If the client sends the conversation history (recommended — serverless
+    # instances don't share in-memory sessions), trust it so the AI remembers.
+    if client_history is not None:
+        session["history"] = [
+            {"role": m["role"], "content": m["content"]}
+            for m in client_history
+            if m.get("role") in ("user", "assistant") and m.get("content")
+        ]
+        # rebuild requirements from the whole conversation via heuristics
+        req = {}
+        for m in session["history"]:
+            if m["role"] == "user":
+                _merge(req, _heuristic_extract(m["content"]))
+        session["requirements"] = req
+    history = session.setdefault("history", [])
 
     history.append({"role": "user", "content": message})
 

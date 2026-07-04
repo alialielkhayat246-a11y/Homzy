@@ -47,6 +47,19 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  /// Open a brochure PDF inside the app (via Google's document viewer in an
+  /// in-app browser), so the client sees it without leaving Homzy.
+  Future<void> _openBrochure(String url) async {
+    final viewer =
+        'https://docs.google.com/viewer?embedded=true&url=${Uri.encodeComponent(url)}';
+    final uri = Uri.parse(viewer);
+    try {
+      await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+    } catch (_) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,7 +124,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                         Wrap(spacing: 10, runSpacing: 10, children: [
                           for (final b in d.brochures)
                             _mediaBtn(Icons.picture_as_pdf_outlined,
-                                tr('brochure'), () => _open(b.url)),
+                                tr('brochure'), () => _openBrochure(b.url)),
                           for (final v in d.videos)
                             _mediaBtn(Icons.play_circle_outline, tr('video'),
                                 () => _open(v.url)),
@@ -278,10 +291,40 @@ class _Gallery extends StatelessWidget {
     return PageView(
       children: [
         for (final u in urls)
-          Image.network(u,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: Brand.navy)),
+          GestureDetector(
+            onTap: () => _fullScreen(context, u),
+            child: Image.network(u,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: Brand.navy)),
+          ),
       ],
+    );
+  }
+
+  void _fullScreen(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              minScale: 0.8,
+              maxScale: 4,
+              child: Center(child: Image.network(url)),
+            ),
+            Positioned(
+              top: 40,
+              right: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

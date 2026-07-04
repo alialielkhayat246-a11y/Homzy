@@ -79,7 +79,10 @@ async def chat(req: Request):
     if not message:
         return JSONResponse({"error": "empty message"}, status_code=400)
     session = SESSIONS.setdefault(session_id, {})
-    return broker.handle_turn(session, message)
+    history = body.get("history")
+    if not isinstance(history, list):
+        history = None
+    return broker.handle_turn(session, message, client_history=history)
 
 
 @app.post("/api/reset")
