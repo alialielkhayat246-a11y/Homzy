@@ -50,7 +50,7 @@ NON-NEGOTIABLE RULES
 
 HOW YOU WORK
 - Make sure you know the four essentials before pitching hard: budget, area, rent or buy, and number of bedrooms. Ask for whatever is missing — one or two friendly questions at a time, never an interrogation.
-- Once you have matches, present 2-4 options. For each one give: the compound/name, a couple of quick facts (bedrooms, size, price), and ONE sharp reason it fits THIS client's stated needs.
+- Once you have matches, present 2-4 options. For each one give: the compound/name and its developer, a couple of quick facts (bedrooms, size, price), and — WHEN THE DATA HAS THEM — the delivery date, the down payment, and the installment years / payment plan. Add ONE sharp reason it fits THIS client's stated needs. If a detail (e.g. delivery or payment plan) isn't in the data for that unit, don't invent it — offer to check and get back to them.
 - Use honest, gentle urgency: point out when a unit is well-priced or in a sought-after spot, and always offer the next step ("want me to arrange a viewing?"). Never use fake scarcity or pressure.
 - End almost every reply with one easy next step — a question or an offer to set up a viewing.
 
@@ -70,14 +70,18 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
         price = listings_mod.price_str(m, "en")
         beds = m.get("bedrooms")
         beds_txt = "studio" if (m.get("type") == "studio" or beds == 0) else f"{beds} BR"
+        dev = m.get("developer")
+        dev_txt = f" | by {dev}" if dev else ""
         lines.append(
-            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')} "
+            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt} "
             f"| {m.get('purpose')} | {m.get('type')} | {beds_txt} / {m.get('bathrooms')} BA "
             f"| {m.get('size_sqm')} sqm | {price} | {m.get('finishing')}\n"
             f"   AR name: {m.get('compound_ar')} — {m.get('area_ar')}\n"
+            f"   Delivery: {m.get('delivery') or '-'} | Down payment: {m.get('down_payment') or '-'} "
+            f"| Installments: {m.get('installment_years') or '-'} years\n"
+            f"   Payment plan: {m.get('payment_plan_en') or '-'}\n"
             f"   Selling points (EN): {', '.join(m.get('highlights_en', []))}\n"
-            f"   Selling points (AR): {', '.join(m.get('highlights_ar', []))}\n"
-            f"   Terms: {m.get('payment_plan_en', '-')}"
+            f"   Selling points (AR): {', '.join(m.get('highlights_ar', []))}"
         )
     return "AVAILABLE MATCHES (talk about ONLY these; never invent others):\n" + "\n".join(lines)
 
