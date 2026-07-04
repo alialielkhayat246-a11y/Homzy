@@ -48,6 +48,10 @@ BROKER_NAME = _get("BROKER_NAME", "Homzy")
 SUPABASE_URL = _get("SUPABASE_URL", "")
 SUPABASE_KEY = _get("SUPABASE_ANON_KEY", "")
 
+# Run a second LLM call to extract search criteria. Off by default: the
+# heuristic extractor is enough and skipping this halves chat latency.
+LLM_EXTRACT = _get("LLM_EXTRACT", "0") == "1"
+
 # --- Admin panel (Phase 2) ----------------------------------------------
 # Optional password for the listings admin panel. Leave empty for local,
 # single-user use; set it before exposing Homzy on a network.

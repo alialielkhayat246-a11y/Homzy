@@ -221,8 +221,10 @@ def handle_turn(session: dict[str, Any], message: str) -> dict[str, Any]:
 
     # 1) heuristic from this message (always works, even with no AI engine)
     _merge(req, _heuristic_extract(message))
-    # 2) LLM extraction across the whole conversation (overrides when available)
-    _merge(req, _llm_extract(_history_to_text(history)))
+    # 2) optional LLM extraction across the whole conversation. Off by default
+    #    (one fewer LLM call per turn = faster replies).
+    if config.LLM_EXTRACT:
+        _merge(req, _llm_extract(_history_to_text(history)))
 
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)

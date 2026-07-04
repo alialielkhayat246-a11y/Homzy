@@ -6,14 +6,48 @@ class CatalogService {
   static final CatalogService instance = CatalogService._();
   SupabaseClient get _db => Supabase.instance.client;
 
-  Future<List<Project>> projects() async {
-    final rows = await _db
-        .from('projects')
-        .select('*, developer:developers(name, about, track_record, phone, website)')
-        .order('updated_at', ascending: false);
-    return (rows as List)
-        .map((r) => Project.fromJson(r as Map<String, dynamic>))
-        .toList();
+  Future<List<Project>> projects({
+    String? search,
+    String? area,
+    String? unitType,
+    String? delivery,
+  }) async {
+    final joinUnit = unitType != null && unitType.isNotEmpty;
+    final sel = joinUnit
+        ? '*, developer:developers(name, about, track_record, phone, website), unit_types!inner(type)'
+        : '*, developer:developers(name, about, track_record, phone, website)';
+    var q = _db.from('projects').select(sel);
+    if (search != null && search.trim().isNotEmpty) {
+      final s = search.trim().replaceAll(',', ' ');
+      q = q.or('name.ilike.%$s%,area.ilike.%$s%');
+    }
+    if (area != null && area.isNotEmpty) q = q.ilike('area', '%$area%');
+    if (delivery != null && delivery.isNotEmpty) {
+      q = q.ilike('delivery', '%$delivery%');
+    }
+    if (joinUnit) q = q.eq('unit_types.type', unitType);
+    final rows = await q.order('updated_at', ascending: false).limit(300);
+    // de-dupe (inner join can repeat a project)
+    final seen = <String>{};
+    final out = <Project>[];
+    for (final r in rows as List) {
+      final p = Project.fromJson(r as Map<String, dynamic>);
+      if (seen.add(p.id)) out.add(p);
+    }
+    return out;
+  }
+
+  /// Distinct area names for the filter dropdown.
+  Future<List<String>> areas() async {
+    final rows =
+        await _db.from('projects').select('area').not('area', 'is', null);
+    final set = <String>{};
+    for (final r in rows as List) {
+      final a = (r as Map)['area']?.toString();
+      if (a != null && a.trim().isNotEmpty) set.add(a.trim());
+    }
+    final list = set.toList()..sort();
+    return list;
   }
 
   Future<ProjectDetail> detail(String projectId) async {

@@ -30,6 +30,9 @@ class HomzyApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: Lang.instance,
       builder: (context, _) => MaterialApp(
+        // Key changes with the language so the whole tree (incl. const
+        // widgets) rebuilds and re-reads translated strings.
+        key: ValueKey('lang-${Lang.instance.code}'),
         title: 'Homzy',
         debugShowCheckedModeBanner: false,
         theme: buildHomzyTheme(),
