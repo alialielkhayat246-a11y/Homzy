@@ -22,7 +22,9 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   void _refresh() {
-    setState(() => _future = ChatStore.instance.list());
+    setState(() {
+      _future = ChatStore.instance.list();
+    });
   }
 
   Future<void> _open(SavedConversation c) async {

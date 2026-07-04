@@ -96,7 +96,9 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   }
 
   void _reload() {
-    setState(() => _needs = ProfileService.instance.needsOnboarding());
+    setState(() {
+      _needs = ProfileService.instance.needsOnboarding();
+    });
   }
 
   @override

@@ -22,7 +22,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   }
 
   void _refresh() =>
-      setState(() => _future = CatalogService.instance.projects());
+      setState(() {
+        _future = CatalogService.instance.projects();
+      });
 
   @override
   Widget build(BuildContext context) {
