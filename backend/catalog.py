@@ -48,6 +48,46 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
+           "installment_years,payment_plan,finishing,delivery,"
+           "project:projects!inner(name,area,description,developer:developers(name))")
+
+
+def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
+    """Query the catalog for units matching the request (fast: fetches only a
+    handful of rows instead of the whole catalog). Catalog is primary-market
+    'sale', so returns nothing for rent requests."""
+    if not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return []
+    if req.get("purpose") == "rent":
+        return []
+    try:
+        import requests
+
+        params: dict[str, str] = {
+            "select": _SELECT,
+            "limit": str(n),
+            "order": "price_from.asc.nullslast",
+        }
+        if req.get("area"):
+            params["project.area"] = f"ilike.*{req['area']}*"
+        if req.get("type"):
+            params["type"] = f"eq.{req['type']}"
+        if req.get("budget_max"):
+            params["price_from"] = f"lte.{int(req['budget_max'] * 1.3)}"
+        r = requests.get(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
+            params=params,
+            headers={"apikey": config.SUPABASE_KEY,
+                     "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+            timeout=8,
+        )
+        r.raise_for_status()
+        return [_to_listing(x) for x in r.json()]
+    except Exception:
+        return []
+
+
 def listings() -> list[dict[str, Any]]:
     """Catalog unit-types as listing rows (cached). Empty if not configured."""
     global _CACHE, _CACHE_AT

@@ -66,8 +66,9 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     when any exist — while budget/bedroom fit is handled by ranking, not
     exclusion, so 'closest matches' surface honestly.
     """
-    # Pool = local listings file + the live Supabase catalog (real projects).
-    pool = list(load()) + catalog.listings()
+    # Pool = local listings file + a filtered slice of the live Supabase catalog
+    # (only rows matching the request, so we don't pull the whole catalog).
+    pool = list(load()) + catalog.search(req, n * 6)
     items = [x for x in pool if x.get("available", True)]
 
     purpose = req.get("purpose")
