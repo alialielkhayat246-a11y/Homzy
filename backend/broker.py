@@ -52,9 +52,27 @@ def detect_language(text: str) -> str:
 _AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 
 _AREA_ALIASES = {
-    "Sheikh Zayed": ["sheikh zayed", "el sheikh zayed", "zayed", "الشيخ زايد", "شيخ زايد", "زايد"],
+    # more specific names first so e.g. "New Cairo" wins over a bare "Cairo"
+    "New Capital": ["new capital", "administrative capital", "capital gardens",
+                    "العاصمة الادارية", "العاصمة الإدارية", "العاصمة", "كابيتال"],
+    "New Cairo": ["new cairo", "5th settlement", "fifth settlement", "north teseen",
+                  "التجمع الخامس", "التجمع", "تجمع", "القاهرة الجديدة", "نيو كايرو"],
+    "Mostakbal City": ["mostakbal", "المستقبل", "مدينة المستقبل", "مستقبل سيتي"],
+    "New Zayed": ["new zayed", "زايد الجديدة", "الشيخ زايد الجديدة"],
+    "Sheikh Zayed": ["sheikh zayed", "el sheikh zayed", "الشيخ زايد", "شيخ زايد", "زايد"],
+    "October Gardens": ["october gardens", "حدائق اكتوبر", "حدائق أكتوبر"],
     "6th of October": ["6th of october", "6 october", "6th october", "october city",
                        "october", "أكتوبر", "اكتوبر", "السادس من اكتوبر", "٦ اكتوبر"],
+    "Ras El Hekma": ["ras el hekma", "ras elhekma", "راس الحكمة", "رأس الحكمة", "راس الحكمه"],
+    "North Coast": ["north coast", "sahel", "الساحل الشمالي", "الساحل", "ساحل"],
+    "New Alamein": ["alamein", "new alamein", "العلمين", "علمين"],
+    "Ain Sokhna": ["ain sokhna", "sokhna", "العين السخنة", "عين السخنة", "السخنة", "سخنة"],
+    "Galala": ["galala", "الجلالة"],
+    "Madinaty": ["madinaty", "مدينتي"],
+    "El Shorouk": ["shorouk", "الشروق"],
+    "El Obour": ["obour", "العبور"],
+    "New Mansoura": ["new mansoura", "المنصورة الجديدة"],
+    "Maadi": ["maadi", "المعادي"],
 }
 
 
