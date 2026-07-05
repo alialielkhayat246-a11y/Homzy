@@ -2,11 +2,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../api.dart';
 import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../services/chat_store.dart';
+import '../services/profile_service.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
 
@@ -14,10 +16,14 @@ import '../widgets/house_logo.dart';
 bool _isArabic(String t) => RegExp(r'[؀-ۿ]').hasMatch(t);
 
 class _Msg {
-  _Msg(this.text, this.fromUser, {this.typing = false});
+  _Msg(this.text, this.fromUser, {this.typing = false, this.rec});
   final String text;
   final bool fromUser;
   final bool typing;
+
+  /// A unit the broker recommended this turn — rendered as a card (photos +
+  /// brochure) below the bubble.
+  final Listing? rec;
 }
 
 class ChatScreen extends StatefulWidget {
@@ -73,16 +79,15 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!_greeted) {
         _greeted = true;
         final broker = h?.broker ?? 'Homzy';
+        final isBroker = ProfileService.instance.isBroker;
         _messages.add(_Msg(
-          "Hi! I'm $broker, your property advisor 👋\n"
-          "I cover new-launch projects across Egypt — New Cairo, the New "
-          "Capital, Sheikh Zayed, 6th of October, the North Coast and more, "
-          "plus a few international projects. Tell me your budget, area and "
-          "unit type and I'll find the best matches.\n\n"
-          "أهلاً! أنا $broker، مستشارك العقاري 👋\n"
-          "عندي مشاريع في كل مصر — التجمع، العاصمة الإدارية، الشيخ زايد، "
-          "أكتوبر، الساحل الشمالي وغيرها، وكمان بعض المشاريع خارج مصر. قوللي "
-          "ميزانيتك، المنطقة، ونوع الوحدة وأجيبلك أنسب الاختيارات.",
+          isBroker
+              ? "أهلاً $broker 👋 قوللي طلب عميلك بالتفصيل — إيجار ولا تمليك، "
+                  "الميزانية، المنطقة، عدد الغرف، ومحتاج يستلم دلوقتي ولا عادي "
+                  "بعد سنتين-تلاتة — وأنا أطلعلك أنسب وحدة تعرضها عليه مع البروشور والصور."
+              : "أهلاً! أنا $broker، مستشارك العقاري 👋 عشان أرشّحلك أنسب وحدة، "
+                  "هسألك كام سؤال سريع: بتدوّر على إيجار ولا تمليك؟ ميزانيتك تقريبًا؟ "
+                  "أنهي منطقة؟ كام غرفة؟ ومحتاج تستلم دلوقتي ولا عادي بعد سنتين-تلاتة؟",
           false,
         ));
       }
@@ -121,7 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() {
         _messages.removeWhere((m) => m.typing);
-        _messages.add(_Msg(reply.reply, false));
+        _messages.add(_Msg(reply.reply, false, rec: reply.recommendation));
         _dirty = true;
       });
       // keep saved chats up to date automatically (only if signed in)
@@ -377,7 +382,7 @@ class _Bubble extends StatelessWidget {
     if (msg.fromUser) {
       return Align(alignment: align, child: tappable);
     }
-    return Row(
+    final row = Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         const Padding(
@@ -387,7 +392,161 @@ class _Bubble extends StatelessWidget {
         Flexible(child: tappable),
       ],
     );
+    if (msg.rec == null) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row,
+        Padding(
+          padding: const EdgeInsets.only(left: 38, top: 2, bottom: 4),
+          child: _RecCard(rec: msg.rec!),
+        ),
+      ],
+    );
   }
+}
+
+/// The recommended unit — photos + key facts + a brochure button — shown under
+/// the broker's message so the client gets everything in one place.
+class _RecCard extends StatelessWidget {
+  const _RecCard({required this.rec});
+  final Listing rec;
+
+  Future<void> _openBrochure(String url) async {
+    final viewer =
+        'https://docs.google.com/viewer?embedded=true&url=${Uri.encodeComponent(url)}';
+    try {
+      await launchUrl(Uri.parse(viewer), mode: LaunchMode.inAppBrowserView);
+    } catch (_) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+    }
+  }
+
+  void _viewImage(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) => GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: InteractiveViewer(
+          minScale: 0.8,
+          maxScale: 4,
+          child: Center(child: Image.network(url)),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ar = Lang.instance.isAr;
+    final name = ar && rec.compoundAr.isNotEmpty ? rec.compoundAr : rec.compound;
+    final area = ar && rec.areaAr.isNotEmpty ? rec.areaAr : rec.area;
+    final price = ar ? rec.priceAr : rec.priceEn;
+    final imgs = rec.images.isNotEmpty
+        ? rec.images
+        : (rec.cover != null ? [rec.cover!] : const <String>[]);
+
+    return Container(
+      constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.82),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Brand.line),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (imgs.isNotEmpty)
+            SizedBox(
+              height: 150,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.zero,
+                itemCount: imgs.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 2),
+                itemBuilder: (context, i) => GestureDetector(
+                  onTap: () => _viewImage(context, imgs[i]),
+                  child: Image.network(
+                    imgs[i],
+                    width: imgs.length == 1
+                        ? MediaQuery.of(context).size.width * 0.82
+                        : 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Container(width: 200, color: Brand.cream),
+                  ),
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15)),
+                const SizedBox(height: 2),
+                Text(
+                  [if (rec.developer != null) rec.developer!, area]
+                      .where((e) => e.isNotEmpty)
+                      .join(' · '),
+                  style: const TextStyle(color: Brand.muted, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Text(price,
+                    style: const TextStyle(
+                        color: Brand.coral,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15)),
+                const SizedBox(height: 8),
+                Wrap(spacing: 6, runSpacing: 6, children: [
+                  if (rec.downPayment != null)
+                    _chip(Icons.payments_outlined,
+                        '${ar ? 'مقدم' : 'Down'} ${rec.downPayment}'),
+                  if (rec.delivery != null)
+                    _chip(Icons.event_outlined, rec.delivery!),
+                ]),
+                if (rec.brochureUrl != null) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openBrochure(rec.brochureUrl!),
+                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                      label: Text(ar ? 'افتح البروشور' : 'Open brochure'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Brand.navy,
+                        side: const BorderSide(color: Brand.line),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(IconData icon, String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        decoration: BoxDecoration(
+            color: Brand.cream, borderRadius: BorderRadius.circular(20)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 13, color: Brand.navy),
+          const SizedBox(width: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Brand.navy, fontSize: 11, fontWeight: FontWeight.w600)),
+        ]),
+      );
 }
 
 class _TypingBubble extends StatefulWidget {

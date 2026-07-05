@@ -135,12 +135,17 @@ class ChatReply {
     required this.language,
     required this.mode,
     required this.matches,
+    this.recommendation,
   });
 
   final String reply;
   final String language; // "ar" | "en"
   final String mode;
   final List<Listing> matches;
+
+  /// The single unit the broker recommended this turn (with photos + brochure),
+  /// or null while still gathering the client's needs.
+  final Listing? recommendation;
 
   factory ChatReply.fromJson(Map<String, dynamic> j) => ChatReply(
         reply: (j['reply'] ?? '').toString(),
@@ -149,6 +154,9 @@ class ChatReply {
         matches: ((j['matches'] as List?) ?? [])
             .map((m) => Listing.fromJson(m as Map<String, dynamic>))
             .toList(),
+        recommendation: j['recommendation'] is Map<String, dynamic>
+            ? Listing.fromJson(j['recommendation'] as Map<String, dynamic>)
+            : null,
       );
 }
 
@@ -166,6 +174,13 @@ class Listing {
     required this.sizeSqm,
     required this.priceEn,
     required this.priceAr,
+    this.developer,
+    this.downPayment,
+    this.delivery,
+    this.paymentPlan,
+    this.brochureUrl,
+    this.images = const [],
+    this.coverImage,
   });
 
   final String id;
@@ -179,6 +194,15 @@ class Listing {
   final int sizeSqm;
   final String priceEn;
   final String priceAr;
+  final String? developer;
+  final String? downPayment;
+  final String? delivery;
+  final String? paymentPlan;
+  final String? brochureUrl;
+  final List<String> images;
+  final String? coverImage;
+
+  String? get cover => coverImage ?? (images.isNotEmpty ? images.first : null);
 
   factory Listing.fromJson(Map<String, dynamic> j) => Listing(
         id: '${j['id'] ?? ''}',
@@ -196,5 +220,15 @@ class Listing {
             : int.tryParse('${j['size_sqm']}') ?? 0,
         priceEn: '${j['price_en'] ?? ''}',
         priceAr: '${j['price_ar'] ?? ''}',
+        developer: (j['developer'])?.toString(),
+        downPayment: (j['down_payment'])?.toString(),
+        delivery: (j['delivery'])?.toString(),
+        paymentPlan: (j['payment_plan'])?.toString(),
+        brochureUrl: (j['brochure_url'])?.toString(),
+        images: ((j['images'] as List?) ?? [])
+            .map((e) => e.toString())
+            .where((e) => e.isNotEmpty)
+            .toList(),
+        coverImage: (j['cover_image'])?.toString(),
       );
 }
