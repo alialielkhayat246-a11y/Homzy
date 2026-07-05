@@ -133,6 +133,9 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
         out["type"] = "townhouse"
     elif any(w in low for w in ["studio", "استوديو", "ستوديو"]):
         out["type"] = "studio"
+    elif any(w in low for w in ["hotel apartment", "hotel unit", "hotel",
+                                "شقة فندقية", "شقه فندقيه", "فندقية", "فندقيه", "فندقي"]):
+        out["type"] = "hotel apartment"
     elif any(w in low for w in ["apartment", "flat", "شقة", "شقه", "شقق"]):
         out["type"] = "apartment"
     elif any(w in low for w in ["office", "مكتب", "اداري", "إداري"]):

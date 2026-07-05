@@ -93,7 +93,8 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     if typ:
         # Type is a hard filter — never offer a shop-seeker an apartment (or a
         # villa-seeker an office). Better to return nothing and adjust honestly.
-        _RESIDENTIAL = {"apartment", "studio", "duplex", "penthouse"}
+        _RESIDENTIAL = {"apartment", "studio", "duplex", "penthouse",
+                        "hotel apartment"}
         exact = [x for x in items if x.get("type") == typ]
         if exact:
             items = exact
