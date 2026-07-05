@@ -16,7 +16,7 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const HouseLogo(size: 96, outline: Colors.white),
+            const HouseLogo(size: 96, outline: Colors.white, window: Brand.coral),
             const SizedBox(height: 20),
             Text(
               'Homzy',

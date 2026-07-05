@@ -4,13 +4,13 @@ import '../api.dart';
 import '../i18n.dart';
 import '../theme.dart';
 import 'chat_screen.dart';
+import 'favorites_screen.dart';
 import 'home_screen.dart';
-import 'profile_screen.dart';
-import 'projects_screen.dart';
-import 'saved_screen.dart';
+import 'more_screen.dart';
+import 'my_listings_screen.dart';
 
-/// App shell with the bottom navigation from the identity sheet:
-/// Home / Projects / Chat / Saved / Profile.
+/// App shell — the design's bottom navigation, plus the Homzy AI chat tab:
+/// Home / Favorites / Chat / My listings / More.
 class RootNav extends StatefulWidget {
   const RootNav({super.key, this.initialHealth});
   final HealthInfo? initialHealth;
@@ -28,10 +28,10 @@ class _RootNavState extends State<RootNav> {
   Widget build(BuildContext context) {
     final pages = [
       HomeScreen(initialHealth: widget.initialHealth, onStartChat: _goToChat),
-      const ProjectsScreen(),
+      const FavoritesScreen(),
       const ChatScreen(),
-      const SavedScreen(),
-      const ProfileScreen(),
+      const MyListingsScreen(),
+      const MoreScreen(),
     ];
 
     return Scaffold(
@@ -39,42 +39,42 @@ class _RootNavState extends State<RootNav> {
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           backgroundColor: Colors.white,
-          indicatorColor: Brand.blueLight,
+          indicatorColor: Brand.coralLight,
           labelTextStyle: WidgetStateProperty.resolveWith(
             (states) => TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: states.contains(WidgetState.selected)
-                  ? Brand.blue
+                  ? Brand.navy
                   : Brand.muted,
             ),
           ),
         ),
         child: NavigationBar(
-          height: 64,
+          height: 66,
           selectedIndex: _index,
           onDestinationSelected: (i) => setState(() => _index = i),
           destinations: [
             NavigationDestination(
                 icon: const Icon(Icons.home_outlined),
-                selectedIcon: const Icon(Icons.home, color: Brand.blue),
+                selectedIcon: const Icon(Icons.home, color: Brand.navy),
                 label: tr('nav_home')),
             NavigationDestination(
-                icon: const Icon(Icons.apartment_outlined),
-                selectedIcon: const Icon(Icons.apartment, color: Brand.blue),
-                label: tr('nav_projects')),
+                icon: const Icon(Icons.favorite_border),
+                selectedIcon: const Icon(Icons.favorite, color: Brand.coral),
+                label: tr('nav_favorites')),
             NavigationDestination(
                 icon: const Icon(Icons.chat_bubble_outline),
-                selectedIcon: const Icon(Icons.chat_bubble, color: Brand.blue),
+                selectedIcon: const Icon(Icons.chat_bubble, color: Brand.navy),
                 label: tr('nav_chat')),
             NavigationDestination(
-                icon: const Icon(Icons.bookmark_border),
-                selectedIcon: const Icon(Icons.bookmark, color: Brand.blue),
-                label: tr('nav_saved')),
+                icon: const Icon(Icons.assignment_outlined),
+                selectedIcon: const Icon(Icons.assignment, color: Brand.navy),
+                label: tr('nav_listings')),
             NavigationDestination(
-                icon: const Icon(Icons.person_outline),
-                selectedIcon: const Icon(Icons.person, color: Brand.blue),
-                label: tr('nav_profile')),
+                icon: const Icon(Icons.grid_view_outlined),
+                selectedIcon: const Icon(Icons.grid_view, color: Brand.navy),
+                label: tr('nav_more')),
           ],
         ),
       ),
