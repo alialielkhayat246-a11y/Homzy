@@ -75,3 +75,5 @@ flutter run --dart-define=HOMZY_API=http://192.168.1.20:8000
   returns — prices come from `data/listings.json`, never invented.
 - Next: app icon (navy house mark), Projects/Saved/Profile screens, and hosting
   the backend so the app works off your local PC (see docs/PROJECT_PLAN.md §9).
+
+<!-- redeploy trigger 1783292767 -->
