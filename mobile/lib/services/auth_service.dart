@@ -43,11 +43,16 @@ class AuthService {
   /// Android manifest intent-filter). Requires the Google provider to be
   /// enabled in the Supabase dashboard.
   Future<bool> signInWithGoogle() {
+    // On web, redirect back to the exact page the app is served from (e.g. the
+    // GitHub Pages URL) instead of the dashboard's default Site URL — otherwise
+    // a stale Site URL (localhost) breaks the OAuth return. On mobile we use the
+    // app's deep-link scheme.
+    final base = Uri.base;
+    final webRedirect = '${base.origin}${base.path}';
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      // On web Supabase redirects back to the current origin; on mobile we use
-      // the app's deep-link scheme.
-      redirectTo: kIsWeb ? null : 'io.supabase.homzy://login-callback/',
+      redirectTo:
+          kIsWeb ? webRedirect : 'io.supabase.homzy://login-callback/',
     );
   }
 
