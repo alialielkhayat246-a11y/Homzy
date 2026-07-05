@@ -43,14 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _run(String query) async {
     final q = query.trim();
-    if (q.isEmpty) return;
-    final p = await SharedPreferences.getInstance();
-    final list = [q, ..._recent.where((e) => e != q)].take(6).toList();
-    await p.setStringList('homzy_recent', list);
+    // Empty search browses all active listings; a term is saved as recent.
+    if (q.isNotEmpty) {
+      final p = await SharedPreferences.getInstance();
+      final list = [q, ..._recent.where((e) => e != q)].take(6).toList();
+      await p.setStringList('homzy_recent', list);
+      if (mounted) setState(() => _recent = list);
+    }
     if (!mounted) return;
-    setState(() => _recent = list);
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => SearchResultsScreen(query: q)));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => SearchResultsScreen(query: q.isEmpty ? null : q)));
   }
 
   @override
