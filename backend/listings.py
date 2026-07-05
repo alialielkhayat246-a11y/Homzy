@@ -10,7 +10,7 @@ import os
 import re
 from typing import Any
 
-from . import catalog, config
+from . import catalog, config, marketplace
 
 _CACHE: list[dict[str, Any]] | None = None
 
@@ -45,8 +45,13 @@ def price_str(listing: dict[str, Any], lang: str = "en") -> str:
     return money
 
 
-def _score(listing: dict[str, Any], budget_max, bedrooms) -> float:
-    """Lower is better. Ranks by budget fit, then bedroom closeness."""
+def _is_ready(listing: dict[str, Any]) -> bool:
+    d = str(listing.get("delivery") or "").lower()
+    return "ready" in d or "فوري" in d or "استلام فوري" in d
+
+
+def _score(listing: dict[str, Any], budget_max, bedrooms, delivery_pref=None) -> float:
+    """Lower is better. Ranks by budget fit, bedroom closeness, delivery fit."""
     s = 0.0
     price = listing.get("price") or 0
     if budget_max:
@@ -55,6 +60,9 @@ def _score(listing: dict[str, Any], budget_max, bedrooms) -> float:
         s += abs(price - budget_max) / max(budget_max, 1) * 0.2
     if bedrooms is not None:
         s += abs(int(listing.get("bedrooms", 0)) - int(bedrooms)) * 1.5
+    # If the client wants to move in now, push ready-to-move units up.
+    if delivery_pref == "ready" and not _is_ready(listing):
+        s += 3.0
     return s
 
 
@@ -66,9 +74,11 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     when any exist — while budget/bedroom fit is handled by ranking, not
     exclusion, so 'closest matches' surface honestly.
     """
-    # Pool = local listings file + a filtered slice of the live Supabase catalog
-    # (only rows matching the request, so we don't pull the whole catalog).
-    pool = list(load()) + catalog.search(req, n * 6)
+    # Pool = local sample file + the live byit catalog + broker-posted listings
+    # (each filtered to the request, so we never pull everything).
+    pool = (list(load())
+            + catalog.search(req, n * 6)
+            + marketplace.search(req, n * 3))
     items = [x for x in pool if x.get("available", True)]
 
     purpose = req.get("purpose")
@@ -96,16 +106,22 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
 
     budget_max = req.get("budget_max")
     bedrooms = req.get("bedrooms")
-    items = sorted(items, key=lambda x: _score(x, budget_max, bedrooms))
+    delivery_pref = req.get("delivery_pref")
+    items = sorted(items, key=lambda x: _score(x, budget_max, bedrooms, delivery_pref))
     return items[:n]
 
 
 def public(listing: dict[str, Any]) -> dict[str, Any]:
-    """Trimmed view for the UI (e.g. optional listing cards)."""
+    """Trimmed view for the UI — enough to render a rich recommendation card
+    (photos + brochure + payment terms) when the AI recommends a unit."""
     return {
         "id": listing.get("id"),
+        "project_id": listing.get("project_id"),
+        "listing_id": listing.get("listing_id"),
+        "source": listing.get("source"),
         "compound": listing.get("compound_en"),
         "compound_ar": listing.get("compound_ar"),
+        "developer": listing.get("developer"),
         "area": listing.get("area_en"),
         "area_ar": listing.get("area_ar"),
         "purpose": listing.get("purpose"),
@@ -114,6 +130,13 @@ def public(listing: dict[str, Any]) -> dict[str, Any]:
         "size_sqm": listing.get("size_sqm"),
         "price_en": price_str(listing, "en"),
         "price_ar": price_str(listing, "ar"),
+        "down_payment": listing.get("down_payment"),
+        "installment_years": listing.get("installment_years"),
+        "delivery": listing.get("delivery"),
+        "payment_plan": listing.get("payment_plan_en"),
+        "brochure_url": listing.get("brochure_url"),
+        "images": listing.get("images") or [],
+        "cover_image": listing.get("cover_image"),
     }
 
 

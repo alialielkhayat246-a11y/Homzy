@@ -18,20 +18,33 @@ _TTL = 300  # seconds
 
 def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
     proj = u.get("project") or {}
-    dev = (proj.get("developer") or {}).get("name")
+    dev = proj.get("developer") or {}
     price = u.get("price_from") or u.get("price_to")
     size = u.get("size_from") or u.get("size_to")
     hl = [h for h in (proj.get("description"), u.get("payment_plan")) if h]
     name = proj.get("name") or "Project"
+    name_ar = proj.get("name_ar") or name
+    media = proj.get("project_media") or []
+    brochure = next(
+        (m.get("url") for m in media if m.get("kind") == "brochure" and m.get("url")),
+        None)
+    images = [m.get("url") for m in media if m.get("kind") == "image" and m.get("url")]
+    cover = proj.get("cover_image_url")
+    if cover:
+        images = [cover] + [i for i in images if i != cover]
     return {
         "id": "TC-" + str(u.get("id", ""))[:8],
+        "project_id": proj.get("id"),
         "purpose": "sale",
         "type": u.get("type") or "apartment",
         "area_en": proj.get("area") or "",
         "area_ar": proj.get("area") or "",
         "compound_en": name,
-        "compound_ar": name,
-        "developer": dev,
+        "compound_ar": name_ar,
+        "developer": dev.get("name"),
+        "developer_phone": dev.get("phone"),
+        "developer_about": dev.get("about"),
+        "developer_track": dev.get("track_record"),
         "price": price,
         "currency": "EGP",
         "price_period": None,
@@ -46,13 +59,19 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
         "down_payment": u.get("down_payment"),
         "installment_years": u.get("installment_years"),
         "delivery": u.get("delivery"),
+        "brochure_url": brochure,
+        "images": images[:6],
+        "cover_image": cover or (images[0] if images else None),
+        "source": "catalog",
         "available": True,
     }
 
 
 _SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
            "installment_years,payment_plan,finishing,delivery,"
-           "project:projects!inner(name,area,description,developer:developers(name))")
+           "project:projects!inner(id,name,name_ar,area,description,cover_image_url,"
+           "project_media(kind,url),"
+           "developer:developers(name,phone,about,track_record))")
 
 
 def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:

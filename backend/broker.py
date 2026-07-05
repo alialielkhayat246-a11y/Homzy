@@ -147,6 +147,17 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
     elif any(w in low for w in ["office", "مكتب"]):
         out["type"] = "office"
 
+    # Delivery timing preference: move in now vs fine waiting a couple of years.
+    if any(w in low for w in ["استلام فوري", "فوري", "جاهز", "جاهزة", "دلوقتي",
+                              "حالا", "حالاً", "ready", "move in now", "immediately",
+                              "right now", "move now"]):
+        out["delivery_pref"] = "ready"
+    elif any(w in low for w in ["مش مستعجل", "مستعجلش", "عادي استنى", "ممكن استنى",
+                                "بعد سنتين", "بعد تلات", "بعد ٣", "تحت الانشاء",
+                                "off plan", "off-plan", "under construction",
+                                "can wait", "2 years", "3 years", "two years", "three years"]):
+        out["delivery_pref"] = "flexible"
+
     beds = _extract_bedrooms(text)
     if beds is not None:
         out["bedrooms"] = beds
@@ -203,7 +214,8 @@ def _history_to_text(history: list[dict[str, str]]) -> str:
 
 
 def _merge(req: dict[str, Any], found: dict[str, Any]) -> None:
-    for key in ("purpose", "type", "area", "bedrooms", "budget_max", "budget_min"):
+    for key in ("purpose", "type", "area", "bedrooms", "budget_max",
+                "budget_min", "delivery_pref"):
         val = found.get(key)
         if val not in (None, "", []):
             req[key] = val
@@ -272,10 +284,17 @@ def handle_turn(session: dict[str, Any], message: str,
 
     history.append({"role": "assistant", "content": reply})
 
+    # Once we know all five essentials and have a match, surface ONE structured
+    # recommendation so the app can render its photos + brochure below the reply.
+    recommendation = None
+    if not persona._missing(req) and matches:
+        recommendation = listings_mod.public(matches[0])
+
     return {
         "reply": reply,
         "language": language,
         "mode": mode,
         "requirements": req,
+        "recommendation": recommendation,
         "matches": [listings_mod.public(m) for m in matches],
     }
