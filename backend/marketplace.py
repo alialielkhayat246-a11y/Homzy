@@ -63,8 +63,8 @@ def search(req: dict[str, Any], n: int = 12) -> list[dict[str, Any]]:
             params["purpose"] = f"eq.{req['purpose']}"
         if req.get("type"):
             params["type"] = f"eq.{req['type']}"
-        if req.get("area"):
-            params["area"] = f"ilike.*{req['area']}*"
+        # Area is matched in Python (bilingual aliases) since listings store it
+        # in Arabic — filtering here by a canonical English name would miss them.
         if req.get("budget_max"):
             params["price"] = f"lte.{int(req['budget_max'] * 1.3)}"
         r = requests.get(

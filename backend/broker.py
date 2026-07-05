@@ -15,7 +15,7 @@ import json
 import re
 from typing import Any
 
-from . import config, listings as listings_mod, llm, persona
+from . import areas, config, listings as listings_mod, llm, persona
 
 # Cache the client object (cheap; chat() failures fall back to templates).
 _client: Any = None
@@ -81,16 +81,7 @@ def _norm(text: str) -> str:
 
 
 def _extract_area(text: str):
-    low = _norm(text).lower()
-    raw = _norm(text)
-    for canonical, aliases in _AREA_ALIASES.items():
-        for a in aliases:
-            if a.isascii():
-                if a in low:
-                    return canonical
-            elif a in raw:
-                return canonical
-    return None
+    return areas.extract(text)
 
 
 def _extract_bedrooms(text: str):

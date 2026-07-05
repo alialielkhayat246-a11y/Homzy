@@ -10,7 +10,7 @@ import os
 import re
 from typing import Any
 
-from . import catalog, config, marketplace
+from . import areas, catalog, config, marketplace
 
 _CACHE: list[dict[str, Any]] | None = None
 
@@ -63,6 +63,10 @@ def _score(listing: dict[str, Any], budget_max, bedrooms, delivery_pref=None) ->
     # If the client wants to move in now, push ready-to-move units up.
     if delivery_pref == "ready" and not _is_ready(listing):
         s += 3.0
+    # Prefer units brokers posted in the app over the reference catalog, so the
+    # broker's own inventory is what gets recommended when it fits.
+    if listing.get("source") == "marketplace":
+        s -= 4.0
     return s
 
 
@@ -93,14 +97,7 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
 
     area = req.get("area")
     if area:
-        a_low = str(area).lower()
-        filtered = [
-            x for x in items
-            if a_low in x.get("area_en", "").lower()
-            or a_low in x.get("compound_en", "").lower()
-            or str(area) in x.get("area_ar", "")
-            or str(area) in x.get("compound_ar", "")
-        ]
+        filtered = [x for x in items if areas.matches(x, area)]
         if filtered:
             items = filtered
 

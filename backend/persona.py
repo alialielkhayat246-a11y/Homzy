@@ -135,7 +135,8 @@ _ASK = {
 
 
 def _missing(req: dict[str, Any]) -> list[str]:
-    return [k for k in ESSENTIALS if not req.get(k)]
+    # Treat 0 as provided (a studio has 0 bedrooms).
+    return [k for k in ESSENTIALS if req.get(k) in (None, "")]
 
 
 def template_reply(language: str, req: dict[str, Any], matches: list[dict[str, Any]]) -> str:
