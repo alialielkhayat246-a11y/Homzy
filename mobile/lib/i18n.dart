@@ -225,6 +225,7 @@ const Map<String, Map<String, String>> _strings = {
   'menu_privacy': {'en': 'Privacy policy', 'ar': 'سياسة الخصوصية'},
 
   // Broker / user mode switch
+  'new_chat': {'en': 'New chat', 'ar': 'محادثة جديدة'},
   'broker_mode': {'en': 'Broker mode', 'ar': 'وضع البروكر'},
   'broker_mode_sub': {
     'en': 'List your own properties and manage them.',

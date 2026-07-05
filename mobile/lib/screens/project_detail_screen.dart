@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../i18n.dart';
 import '../services/catalog_service.dart';
 import '../theme.dart';
+import '../widgets/home_logo_button.dart';
 
 String _money(num? v) {
   if (v == null) return '—';
@@ -78,6 +79,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                 pinned: true,
                 backgroundColor: Brand.navy,
                 foregroundColor: Colors.white,
+                actions: const [
+                  Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      child: HomeLogoButton()),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: _Gallery(images: d.images, cover: p.coverImageUrl),
                 ),

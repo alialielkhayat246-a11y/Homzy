@@ -209,6 +209,28 @@ class _ChatScreenState extends State<ChatScreen> {
         .showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  /// Open a past conversation from the drawer (loads its full messages first).
+  Future<void> _openSaved(SavedConversation header) async {
+    Navigator.of(context).pop(); // close the drawer
+    final msgs = await ChatStore.instance.messages(header.id);
+    if (!mounted) return;
+    final full = SavedConversation(
+      id: header.id,
+      title: header.title,
+      language: header.language,
+      updatedAt: header.updatedAt,
+      messages: msgs,
+    );
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ChatScreen(restored: full)));
+  }
+
+  void _newChat() {
+    Navigator.of(context).pop();
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const ChatScreen()));
+  }
+
   Future<void> _editServer() async {
     final field = TextEditingController(text: HomzyApi.instance.baseUrl);
     final saved = await showDialog<bool>(
@@ -256,6 +278,10 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final showChips = _messages.length <= 1;
     return Scaffold(
+      drawer: _RecentChatsDrawer(
+        onOpen: _openSaved,
+        onNew: _newChat,
+      ),
       appBar: AppBar(
         titleSpacing: 12,
         title: Row(
@@ -664,22 +690,34 @@ class _Composer extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: controller,
-              enabled: enabled,
-              minLines: 1,
-              maxLines: 4,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
-              decoration: InputDecoration(
-                hintText: tr('chat_hint'),
+            // Enter sends; Shift+Enter inserts a newline (web/desktop keyboards).
+            child: Focus(
+              onKeyEvent: (node, event) {
+                if (event is KeyDownEvent &&
+                    event.logicalKey == LogicalKeyboardKey.enter &&
+                    !HardwareKeyboard.instance.isShiftPressed) {
+                  if (enabled) onSend();
+                  return KeyEventResult.handled;
+                }
+                return KeyEventResult.ignored;
+              },
+              child: TextField(
+                controller: controller,
+                enabled: enabled,
+                minLines: 1,
+                maxLines: 5,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                decoration: InputDecoration(
+                  hintText: tr('chat_hint'),
                 filled: true,
                 fillColor: Brand.gray,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
@@ -698,6 +736,79 @@ class _Composer extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Side drawer listing the user's past conversations to jump back into.
+class _RecentChatsDrawer extends StatelessWidget {
+  const _RecentChatsDrawer({required this.onOpen, required this.onNew});
+  final void Function(SavedConversation) onOpen;
+  final VoidCallback onNew;
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: Brand.cream,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+              child: Text(tr('saved_chats'),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: ListTile(
+                leading: const Icon(Icons.add_comment_outlined,
+                    color: Brand.coral),
+                title: Text(tr('new_chat')),
+                onTap: onNew,
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: FutureBuilder<List<SavedConversation>>(
+                future: ChatStore.instance.list(),
+                builder: (context, snap) {
+                  if (!snap.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final items = snap.data!;
+                  if (items.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(tr('no_saved'),
+                          style: const TextStyle(color: Brand.muted)),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    itemCount: items.length,
+                    itemBuilder: (context, i) {
+                      final c = items[i];
+                      return ListTile(
+                        leading: const Icon(Icons.chat_bubble_outline,
+                            color: Brand.navy, size: 20),
+                        title: Text(c.title,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          '${c.updatedAt.year}/${c.updatedAt.month}/${c.updatedAt.day}',
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onTap: () => onOpen(c),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

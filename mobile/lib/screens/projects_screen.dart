@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../i18n.dart';
 import '../services/catalog_service.dart';
 import '../theme.dart';
+import '../widgets/home_logo_button.dart';
 import 'project_detail_screen.dart';
 
 const _unitTypes = [
@@ -78,7 +79,15 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget build(BuildContext context) {
     final hasFilters = _search.isNotEmpty || _area != null || _type != null;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('projects_title'))),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(tr('projects_title')),
+        actions: const [
+          Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: HomeLogoButton()),
+        ],
+      ),
       body: Column(
         children: [
           // search + filters

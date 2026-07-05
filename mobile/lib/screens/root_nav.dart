@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../app_nav.dart';
 import '../i18n.dart';
 import '../services/profile_service.dart';
 import '../theme.dart';
@@ -8,7 +9,7 @@ import 'chat_screen.dart';
 import 'favorites_screen.dart';
 import 'more_screen.dart';
 import 'my_listings_screen.dart';
-import 'projects_browse_screen.dart';
+import 'projects_screen.dart';
 
 /// App shell. The home tab is the Homzy AI chat; "Projects" holds the search.
 /// Broker mode adds the "My listings" tab.
@@ -23,8 +24,6 @@ class RootNav extends StatefulWidget {
 }
 
 class _RootNavState extends State<RootNav> {
-  int _index = 0;
-
   @override
   void initState() {
     super.initState();
@@ -39,7 +38,7 @@ class _RootNavState extends State<RootNav> {
         final isBroker = role == 'broker';
         final pages = <Widget>[
           const ChatScreen(),
-          const ProjectsBrowseScreen(),
+          const ProjectsScreen(),
           const FavoritesScreen(),
           if (isBroker) const MyListingsScreen(),
           const MoreScreen(),
@@ -67,31 +66,35 @@ class _RootNavState extends State<RootNav> {
               selectedIcon: const Icon(Icons.grid_view, color: Brand.navy),
               label: tr('nav_more')),
         ];
-        if (_index >= pages.length) _index = pages.length - 1;
-
-        return Scaffold(
-          body: IndexedStack(index: _index, children: pages),
-          bottomNavigationBar: NavigationBarTheme(
-            data: NavigationBarThemeData(
-              backgroundColor: Colors.white,
-              indicatorColor: Brand.coralLight,
-              labelTextStyle: WidgetStateProperty.resolveWith(
-                (states) => TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: states.contains(WidgetState.selected)
-                      ? Brand.navy
-                      : Brand.muted,
+        return ValueListenableBuilder<int>(
+          valueListenable: AppNav.tab,
+          builder: (context, index, __) {
+            if (index >= pages.length) index = pages.length - 1;
+            return Scaffold(
+              body: IndexedStack(index: index, children: pages),
+              bottomNavigationBar: NavigationBarTheme(
+                data: NavigationBarThemeData(
+                  backgroundColor: Colors.white,
+                  indicatorColor: Brand.coralLight,
+                  labelTextStyle: WidgetStateProperty.resolveWith(
+                    (states) => TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: states.contains(WidgetState.selected)
+                          ? Brand.navy
+                          : Brand.muted,
+                    ),
+                  ),
+                ),
+                child: NavigationBar(
+                  height: 66,
+                  selectedIndex: index,
+                  onDestinationSelected: (i) => AppNav.tab.value = i,
+                  destinations: destinations,
                 ),
               ),
-            ),
-            child: NavigationBar(
-              height: 66,
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
-              destinations: destinations,
-            ),
-          ),
+            );
+          },
         );
       },
     );
