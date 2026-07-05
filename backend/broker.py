@@ -135,8 +135,14 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
         out["type"] = "studio"
     elif any(w in low for w in ["apartment", "flat", "شقة", "شقه", "شقق"]):
         out["type"] = "apartment"
-    elif any(w in low for w in ["office", "مكتب"]):
+    elif any(w in low for w in ["office", "مكتب", "اداري", "إداري"]):
         out["type"] = "office"
+    elif any(w in low for w in ["shop", "retail", "commercial", "محل", "تجاري", "متجر"]):
+        out["type"] = "shop"
+    elif any(w in low for w in ["clinic", "عيادة", "عياده"]):
+        out["type"] = "clinic"
+    elif any(w in low for w in ["pharmacy", "صيدلية", "صيدليه"]):
+        out["type"] = "pharmacy"
 
     # Delivery timing preference: move in now vs fine waiting a couple of years.
     if any(w in low for w in ["استلام فوري", "فوري", "جاهز", "جاهزة", "دلوقتي",
@@ -144,8 +150,10 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
                               "right now", "move now"]):
         out["delivery_pref"] = "ready"
     elif any(w in low for w in ["مش مستعجل", "مستعجلش", "عادي استنى", "ممكن استنى",
+                                "عادي استلم", "اي مدة", "أي مدة", "اي وقت", "أي وقت",
+                                "مش فارقة", "مش فارق", "مفيش مشكلة", "براحتك", "براحتى",
                                 "بعد سنتين", "بعد تلات", "بعد ٣", "تحت الانشاء",
-                                "off plan", "off-plan", "under construction",
+                                "off plan", "off-plan", "under construction", "anytime",
                                 "can wait", "2 years", "3 years", "two years", "three years"]):
         out["delivery_pref"] = "flexible"
 
@@ -270,7 +278,9 @@ def handle_turn(session: dict[str, Any], message: str,
     reply = _llm_reply(history, language, matches)
     mode = "ai"
     if reply is None:
-        reply = persona.template_reply(language, req, matches)
+        # Only greet on the very first turn so the fallback doesn't repeat itself.
+        greet = sum(1 for m in history if m["role"] == "user") <= 1
+        reply = persona.template_reply(language, req, matches, greet=greet)
         mode = "template"
 
     history.append({"role": "assistant", "content": reply})

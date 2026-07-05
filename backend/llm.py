@@ -65,6 +65,9 @@ class GeminiClient:
 
     name = "gemini"
     _BASE = "https://generativelanguage.googleapis.com/v1beta"
+    # Tried in order — if the primary is rate-limited (429/503), fall through to
+    # another free-tier model before giving up (they have separate quotas).
+    _FALLBACKS = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
 
     def __init__(self) -> None:
         if not config.GEMINI_API_KEY:
@@ -91,24 +94,37 @@ class GeminiClient:
         if system:
             payload["systemInstruction"] = {"parts": [{"text": system}]}
 
-        url = f"{self._BASE}/models/{self.model}:generateContent"
-        try:
-            resp = requests.post(
-                url,
-                headers={"x-goog-api-key": self.api_key,
-                         "Content-Type": "application/json"},
-                json=payload,
-                timeout=120,
-            )
-            resp.raise_for_status()
-        except Exception as exc:
-            raise LLMUnavailable(f"Gemini request failed: {exc}")
-        data = resp.json()
-        try:
-            parts = data["candidates"][0]["content"]["parts"]
-            return "".join(p.get("text", "") for p in parts).strip()
-        except (KeyError, IndexError):
-            return ""
+        models = [self.model] + [m for m in self._FALLBACKS if m != self.model]
+        last_err = "no model tried"
+        for model in models:
+            url = f"{self._BASE}/models/{model}:generateContent"
+            try:
+                resp = requests.post(
+                    url,
+                    headers={"x-goog-api-key": self.api_key,
+                             "Content-Type": "application/json"},
+                    json=payload,
+                    timeout=60,
+                )
+            except Exception as exc:
+                last_err = f"{model}: {exc}"
+                continue
+            if resp.status_code in (429, 500, 503):  # busy / quota — try next model
+                last_err = f"{model}: HTTP {resp.status_code}"
+                continue
+            if resp.status_code != 200:
+                last_err = f"{model}: HTTP {resp.status_code}"
+                continue
+            data = resp.json()
+            try:
+                parts = data["candidates"][0]["content"]["parts"]
+                text = "".join(p.get("text", "") for p in parts).strip()
+            except (KeyError, IndexError):
+                text = ""
+            if text:
+                return text
+            last_err = f"{model}: empty response"
+        raise LLMUnavailable(f"Gemini unavailable ({last_err})")
 
     def available(self) -> bool:
         return bool(self.api_key)

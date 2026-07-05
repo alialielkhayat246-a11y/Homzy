@@ -134,24 +134,37 @@ _ASK = {
 }
 
 
+_COMMERCIAL = ("shop", "office", "clinic", "pharmacy", "commercial")
+
+
 def _missing(req: dict[str, Any]) -> list[str]:
+    # Bedrooms only matter for homes — don't ask them for a shop/office/clinic.
+    ess = list(ESSENTIALS)
+    if req.get("type") in _COMMERCIAL:
+        ess = [k for k in ess if k != "bedrooms"]
     # Treat 0 as provided (a studio has 0 bedrooms).
-    return [k for k in ESSENTIALS if req.get(k) in (None, "")]
+    return [k for k in ess if req.get(k) in (None, "")]
 
 
-def template_reply(language: str, req: dict[str, Any], matches: list[dict[str, Any]]) -> str:
+def template_reply(language: str, req: dict[str, Any], matches: list[dict[str, Any]],
+                   greet: bool = False) -> str:
     ar = language == "ar"
     broker = config.BROKER_NAME
+    # Avoid "Homzy from Homzy" when the broker and brand share a name.
+    intro_ar = (f"أهلاً بيك! أنا {broker} "
+                + ("" if broker == config.BRAND_NAME else f"من {config.BRAND_NAME} ")
+                + "👋 ") if greet else ""
+    intro_en = (f"Hi! I'm {broker}"
+                + ("" if broker == config.BRAND_NAME else f" from {config.BRAND_NAME}")
+                + " 👋 ") if greet else ""
     missing = _missing(req)
 
     # Still gathering — ask for what's missing (one short line), don't pitch yet.
     if missing:
         qs = " ".join(_ASK[k][0 if ar else 1] for k in missing[:3])
         if ar:
-            return (f"أهلاً بيك! أنا {broker} من {config.BRAND_NAME} 👋 "
-                    f"عشان أرشّحلك أنسب وحدة: {qs}")
-        return (f"Welcome! I'm {broker} from {config.BRAND_NAME} 👋 "
-                f"To recommend the best fit: {qs}")
+            return f"{intro_ar}{'عشان أرشّحلك أنسب وحدة: ' if greet else ''}{qs}".strip()
+        return f"{intro_en}{'To recommend the best fit: ' if greet else ''}{qs}".strip()
 
     if not matches:
         if ar:
