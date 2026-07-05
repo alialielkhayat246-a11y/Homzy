@@ -66,8 +66,8 @@ class GeminiClient:
     name = "gemini"
     _BASE = "https://generativelanguage.googleapis.com/v1beta"
     # Tried in order — if the primary is rate-limited (429/503), fall through to
-    # another free-tier model before giving up (they have separate quotas).
-    _FALLBACKS = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"]
+    # another current free-tier model before giving up (separate quotas).
+    _FALLBACKS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"]
 
     def __init__(self) -> None:
         if not config.GEMINI_API_KEY:
