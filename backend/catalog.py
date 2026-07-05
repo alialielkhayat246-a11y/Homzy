@@ -43,6 +43,8 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
         "highlights_ar": hl,
         "payment_plan_en": u.get("payment_plan"),
         "payment_plan_ar": u.get("payment_plan"),
+        "down_payment": u.get("down_payment"),
+        "installment_years": u.get("installment_years"),
         "delivery": u.get("delivery"),
         "available": True,
     }
