@@ -63,10 +63,8 @@ def search(req: dict[str, Any], n: int = 12) -> list[dict[str, Any]]:
             params["purpose"] = f"eq.{req['purpose']}"
         if req.get("type"):
             params["type"] = f"eq.{req['type']}"
-        # Area is matched in Python (bilingual aliases) since listings store it
-        # in Arabic — filtering here by a canonical English name would miss them.
-        if req.get("budget_max"):
-            params["price"] = f"lte.{int(req['budget_max'] * 1.3)}"
+        # Area and budget are handled in Python (bilingual area aliases; budget
+        # as a ranking signal) so we never silently exclude the closest options.
         r = requests.get(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/listings",
             params=params,

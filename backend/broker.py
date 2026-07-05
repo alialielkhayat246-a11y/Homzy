@@ -105,6 +105,12 @@ def _extract_bedrooms(text: str):
 
 def _extract_budget(text: str):
     low = _norm(text).lower().replace(",", "")
+    # Strip down-payment mentions so a deposit ("مقدم مليون") is NOT read as the
+    # total budget — that was making everything look out of budget.
+    low = re.sub(
+        r"(مقدم|مقدّم|المقدم|down\s*payment|downpayment|deposit)\s*\d+(?:\.\d+)?"
+        r"\s*(?:m|mn|million|مليون|k|ألف|الف|thousand)?",
+        " ", low)
     amounts: list[float] = []
     for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(m|mn|million|مليون|k|ألف|الف|thousand)?", low):
         num = float(m.group(1))

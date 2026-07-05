@@ -95,8 +95,8 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
         # elsewhere instead of silently returning nothing.
         if req.get("type"):
             params["type"] = f"eq.{req['type']}"
-        if req.get("budget_max"):
-            params["price_from"] = f"lte.{int(req['budget_max'] * 1.3)}"
+        # Budget is applied as a ranking signal (listings._score), not a hard
+        # cut — so we always surface the closest options instead of "no match".
         r = requests.get(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
             params=params,
