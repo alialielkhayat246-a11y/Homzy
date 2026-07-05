@@ -46,9 +46,7 @@ class _ChatScreenState extends State<ChatScreen> {
   HealthInfo? _health;
   bool _sending = false;
   bool _greeted = false;
-  bool _saving = false;
   String? _conversationId; // set after first save (or when restored)
-  bool _dirty = false; // unsaved changes since last save
 
   static const _chips = <(String, String)>[
     ('🏠  I want to rent', "I'm looking to rent"),
@@ -127,7 +125,6 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.removeWhere((m) => m.typing);
         _messages.add(_Msg(reply.reply, false, rec: reply.recommendation));
-        _dirty = true;
       });
       // keep saved chats up to date automatically (only if signed in)
       if (AuthService.instance.isLoggedIn) _autoSave();
@@ -170,43 +167,9 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final id = await _persist();
       if (id != null && mounted) {
-        setState(() {
-          _conversationId = id;
-          _dirty = false;
-        });
+        setState(() => _conversationId = id);
       }
     } catch (_) {/* best effort */}
-  }
-
-  Future<void> _saveChat() async {
-    if (!AuthService.instance.isLoggedIn) {
-      _toast(tr('sign_in_to_save'));
-      return;
-    }
-    if (_turns().length <= 1) {
-      _toast(tr('nothing_to_save'));
-      return;
-    }
-    setState(() => _saving = true);
-    try {
-      final id = await _persist();
-      if (!mounted) return;
-      setState(() {
-        if (id != null) _conversationId = id;
-        _dirty = false;
-      });
-      _toast(tr('saved_ok'));
-    } catch (e) {
-      _toast('Could not save: $e');
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  void _toast(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   /// Open a past conversation from the drawer (loads its full messages first).
@@ -229,49 +192,6 @@ class _ChatScreenState extends State<ChatScreen> {
     Navigator.of(context).pop();
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => const ChatScreen()));
-  }
-
-  Future<void> _editServer() async {
-    final field = TextEditingController(text: HomzyApi.instance.baseUrl);
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('API server'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Base URL of the Homzy backend. Use 10.0.2.2 for the Android '
-              'emulator, or your PC\'s LAN IP for a real device.',
-              style: TextStyle(fontSize: 12, color: Brand.muted),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: field,
-              autocorrect: false,
-              keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
-                hintText: 'http://10.0.2.2:8000',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel')),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Save')),
-        ],
-      ),
-    );
-    if (saved == true) {
-      await HomzyApi.instance.setBaseUrl(field.text);
-      await _init();
-    }
   }
 
   @override
@@ -308,26 +228,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: tr('save_chat'),
-            icon: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Icon(
-                    _dirty ? Icons.bookmark_add : Icons.bookmark_added,
-                    color: _dirty ? Brand.blue : Brand.green,
-                  ),
-            onPressed: _saving ? null : _saveChat,
-          ),
-          IconButton(
-            tooltip: tr('server_settings'),
-            icon: const Icon(Icons.tune, color: Brand.muted),
-            onPressed: _editServer,
-          ),
-        ],
       ),
       body: Column(
         children: [

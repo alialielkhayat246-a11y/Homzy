@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../i18n.dart';
 import '../services/catalog_service.dart';
+import '../services/favorite_service.dart';
 import '../theme.dart';
 import '../widgets/home_logo_button.dart';
 import 'project_detail_screen.dart';
@@ -28,6 +29,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   String? _area;
   String? _type;
   List<String> _areas = [];
+  Set<String> _favIds = {};
 
   late Future<List<Project>> _future;
 
@@ -37,6 +39,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     _future = CatalogService.instance.projects();
     CatalogService.instance.areas().then((a) {
       if (mounted) setState(() => _areas = a);
+    });
+    FavoriteService.instance.projectIds().then((s) {
+      if (mounted) setState(() => _favIds = s);
+    });
+  }
+
+  Future<void> _toggleFav(String projectId) async {
+    final nowFav = await FavoriteService.instance.toggleProject(projectId);
+    if (!mounted) return;
+    setState(() {
+      if (nowFav) {
+        _favIds.add(projectId);
+      } else {
+        _favIds.remove(projectId);
+      }
     });
   }
 
@@ -186,8 +203,11 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                         padding: const EdgeInsets.fromLTRB(14, 6, 14, 16),
                         itemCount: items.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) =>
-                            _ProjectCard(project: items[i]),
+                        itemBuilder: (context, i) => _ProjectCard(
+                          project: items[i],
+                          isFav: _favIds.contains(items[i].id),
+                          onFav: () => _toggleFav(items[i].id),
+                        ),
                       ),
                     ),
                   ],
@@ -249,8 +269,11 @@ class _FilterDropdown extends StatelessWidget {
 }
 
 class _ProjectCard extends StatelessWidget {
-  const _ProjectCard({required this.project});
+  const _ProjectCard(
+      {required this.project, this.isFav = false, this.onFav});
   final Project project;
+  final bool isFav;
+  final VoidCallback? onFav;
 
   @override
   Widget build(BuildContext context) {
@@ -270,13 +293,40 @@ class _ProjectCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
-                aspectRatio: 16 / 8,
-                child: project.coverImageUrl != null
-                    ? Image.network(project.coverImageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const _CoverFallback())
-                    : const _CoverFallback(),
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 16 / 8,
+                    child: project.coverImageUrl != null
+                        ? Image.network(project.coverImageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => const _CoverFallback())
+                        : const _CoverFallback(),
+                  ),
+                  if (onFav != null)
+                    PositionedDirectional(
+                      top: 8,
+                      end: 8,
+                      child: Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: onFav,
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                                isFav
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 18,
+                                color: Brand.coral),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(14),

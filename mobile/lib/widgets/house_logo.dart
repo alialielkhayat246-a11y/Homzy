@@ -9,7 +9,7 @@ class HouseLogo extends StatelessWidget {
     super.key,
     this.size = 40,
     this.outline = Brand.navy,
-    this.window = Brand.blue,
+    this.window = Brand.coral,
   });
 
   final double size;
@@ -44,7 +44,8 @@ class BrokerAvatar extends StatelessWidget {
       ),
       padding: EdgeInsets.all(size * 0.22),
       child: CustomPaint(
-        painter: _HousePainter(outline: Colors.white, window: Brand.blue),
+        // Coral window pops against the navy circle (Brand.blue now aliases navy).
+        painter: _HousePainter(outline: Colors.white, window: Brand.coral),
       ),
     );
   }

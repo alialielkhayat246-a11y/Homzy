@@ -8,6 +8,27 @@ import '../services/listing_service.dart';
 import '../theme.dart';
 import '../widgets/listing_card.dart';
 
+/// Common Egyptian areas the seller can pick from (value stored is Arabic to
+/// match the catalog; English label shown in English mode).
+const _areaOptions = <(String, String)>[
+  ('التجمع الخامس', 'New Cairo'),
+  ('العاصمة الإدارية', 'New Capital'),
+  ('الشيخ زايد', 'Sheikh Zayed'),
+  ('٦ أكتوبر', '6th of October'),
+  ('زايد الجديدة', 'New Zayed'),
+  ('حدائق أكتوبر', 'October Gardens'),
+  ('مدينتي', 'Madinaty'),
+  ('مستقبل سيتي', 'Mostakbal City'),
+  ('الشروق', 'El Shorouk'),
+  ('العبور', 'El Obour'),
+  ('المعادي', 'Maadi'),
+  ('الساحل الشمالي', 'North Coast'),
+  ('رأس الحكمة', 'Ras El Hekma'),
+  ('العلمين الجديدة', 'New Alamein'),
+  ('العين السخنة', 'Ain Sokhna'),
+  ('المنصورة الجديدة', 'New Mansoura'),
+];
+
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
 
@@ -18,7 +39,7 @@ class AddListingScreen extends StatefulWidget {
 class _AddListingScreenState extends State<AddListingScreen> {
   final _title = TextEditingController();
   final _price = TextEditingController();
-  final _area = TextEditingController();
+  String? _area;
   final _address = TextEditingController();
   final _beds = TextEditingController();
   final _baths = TextEditingController();
@@ -32,7 +53,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
   @override
   void dispose() {
     for (final c in [
-      _title, _price, _area, _address, _beds, _baths, _size, _desc
+      _title, _price, _address, _beds, _baths, _size, _desc
     ]) {
       c.dispose();
     }
@@ -64,7 +85,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
         purpose: _purpose,
         type: _type,
         price: num.tryParse(_price.text.replaceAll(',', '').trim()),
-        area: _area.text.trim().isEmpty ? null : _area.text.trim(),
+        area: _area,
         address: _address.text.trim().isEmpty ? null : _address.text.trim(),
         bedrooms: int.tryParse(_beds.text.trim()),
         bathrooms: int.tryParse(_baths.text.trim()),
@@ -146,7 +167,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
           const SizedBox(height: 12),
           _dropdown(),
           const SizedBox(height: 12),
-          _field(_area, tr('choose_area')),
+          _areaDropdown(),
           const SizedBox(height: 12),
           _field(_price, tr('enter_price'),
               keyboard: TextInputType.number),
@@ -223,6 +244,19 @@ class _AddListingScreenState extends State<AddListingScreen> {
               ),
             ),
         ],
+      );
+
+  Widget _areaDropdown() => DropdownButtonFormField<String>(
+        initialValue: _area,
+        isExpanded: true,
+        decoration: InputDecoration(labelText: tr('choose_area')),
+        items: _areaOptions
+            .map((a) => DropdownMenuItem(
+                value: a.$1,
+                child: Text(Lang.instance.isAr ? a.$1 : a.$2,
+                    overflow: TextOverflow.ellipsis)))
+            .toList(),
+        onChanged: (v) => setState(() => _area = v),
       );
 
   Widget _dropdown() => DropdownButtonFormField<String>(

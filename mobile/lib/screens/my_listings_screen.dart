@@ -49,9 +49,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       appBar: AppBar(title: Text(tr('my_listings_title'))),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Brand.navy,
+        foregroundColor: Colors.white,
         onPressed: _add,
-        icon: const Icon(Icons.add),
-        label: Text(tr('add_new_listing')),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(tr('add_new_listing'),
+            style: const TextStyle(color: Colors.white)),
       ),
       body: Column(
         children: [

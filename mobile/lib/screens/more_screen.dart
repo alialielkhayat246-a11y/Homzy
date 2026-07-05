@@ -53,14 +53,16 @@ class _MoreScreenState extends State<MoreScreen> {
                   width: 60,
                   height: 60,
                   decoration:
-                      const BoxDecoration(shape: BoxShape.circle, color: Colors.white24),
+                      const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
                   clipBehavior: Clip.antiAlias,
+                  alignment: Alignment.center,
                   child: avatar != null
                       ? Image.network(avatar,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const BrokerAvatar(size: 40))
-                      : const BrokerAvatar(size: 40),
+                          width: 60,
+                          height: 60,
+                          errorBuilder: (_, __, ___) => const HouseLogo(size: 34))
+                      : const HouseLogo(size: 34),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -92,7 +94,7 @@ class _MoreScreenState extends State<MoreScreen> {
               () => _push(const MessagesScreen())),
           _tile(Icons.apartment_outlined, tr('menu_projects'),
               () => _push(const ProjectsScreen())),
-          _settingsTile(),
+          _languageTile(),
           _tile(Icons.description_outlined, tr('menu_terms'), () {}),
           _tile(Icons.privacy_tip_outlined, tr('menu_privacy'), () {}),
           _tile(Icons.logout, tr('sign_out'),
@@ -143,17 +145,18 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  Widget _settingsTile() => Container(
+  Widget _languageTile() => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
         decoration: BoxDecoration(
             color: Brand.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Brand.line)),
         child: ListTile(
-          leading: const Icon(Icons.settings_outlined, color: Brand.navy),
-          title: Text(tr('menu_settings'),
+          leading: const Icon(Icons.language, color: Brand.navy),
+          title: Text(tr('language'),
               style: const TextStyle(color: Brand.navy)),
           trailing: const LangToggle(),
+          onTap: () => Lang.instance.toggle(),
         ),
       );
 

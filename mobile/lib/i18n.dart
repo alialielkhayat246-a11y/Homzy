@@ -219,6 +219,7 @@ const Map<String, Map<String, String>> _strings = {
   'menu_profile': {'en': 'Profile', 'ar': 'الملف الشخصي'},
   'menu_my_data': {'en': 'My data', 'ar': 'بياناتي'},
   'menu_settings': {'en': 'App settings', 'ar': 'إعدادات التطبيق'},
+  'language': {'en': 'Language', 'ar': 'اللغة'},
   'menu_messages': {'en': 'Messages', 'ar': 'الرسائل'},
   'menu_projects': {'en': 'Compounds', 'ar': 'الكومباوندات'},
   'menu_terms': {'en': 'Terms & conditions', 'ar': 'الشروط والأحكام'},
