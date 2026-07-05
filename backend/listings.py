@@ -91,9 +91,18 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
 
     typ = req.get("type")
     if typ:
-        filtered = [x for x in items if x.get("type") == typ]
-        if filtered:
-            items = filtered
+        # Type is a hard filter — never offer a shop-seeker an apartment (or a
+        # villa-seeker an office). Better to return nothing and adjust honestly.
+        _RESIDENTIAL = {"apartment", "studio", "duplex", "penthouse"}
+        exact = [x for x in items if x.get("type") == typ]
+        if exact:
+            items = exact
+        elif typ in _RESIDENTIAL:
+            # Within homes, relax across similar residential types only.
+            items = [x for x in items if x.get("type") in _RESIDENTIAL] or items
+        else:
+            # Commercial / villa etc.: keep strictly to the requested type.
+            items = exact
 
     area = req.get("area")
     if area:

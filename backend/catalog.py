@@ -90,8 +90,9 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
             "limit": str(n),
             "order": "price_from.asc.nullslast",
         }
-        if req.get("area"):
-            params["project.area"] = f"ilike.*{req['area']}*"
+        # Area is matched (and relaxed) in Python via the shared alias helper,
+        # so a request in an area with no stock still surfaces the same type
+        # elsewhere instead of silently returning nothing.
         if req.get("type"):
             params["type"] = f"eq.{req['type']}"
         if req.get("budget_max"):
