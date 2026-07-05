@@ -21,14 +21,24 @@ class AuthService {
     required String email,
     required String password,
     String? fullName,
-  }) {
-    return _client.auth.signUp(
+  }) async {
+    final res = await _client.auth.signUp(
       email: email,
       password: password,
       data: (fullName != null && fullName.isNotEmpty)
           ? {'full_name': fullName}
           : null,
     );
+    // New accounts are auto-confirmed by a DB trigger (Supabase's built-in
+    // mailer isn't configured), so if sign-up didn't return a session, sign in
+    // right away — the user goes straight into the app, no email step.
+    if (_client.auth.currentSession == null) {
+      try {
+        await _client.auth
+            .signInWithPassword(email: email, password: password);
+      } catch (_) {/* surfaced on the next sign-in attempt */}
+    }
+    return res;
   }
 
   Future<AuthResponse> signIn({
