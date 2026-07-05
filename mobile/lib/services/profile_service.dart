@@ -10,10 +10,25 @@ class ProfileService {
   SupabaseClient get _db => Supabase.instance.client;
   String? get _uid => _db.auth.currentUser?.id;
 
+  /// Cached role from the last [get]/[role] call ('user' | 'broker'). Lets the
+  /// UI branch synchronously; brokers get the listings tools, users don't.
+  String? cachedRole;
+  bool get isBroker => cachedRole == 'broker';
+
   Future<Map<String, dynamic>?> get() async {
     final uid = _uid;
     if (uid == null) return null;
-    return await _db.from('profiles').select().eq('id', uid).maybeSingle();
+    final row =
+        await _db.from('profiles').select().eq('id', uid).maybeSingle();
+    if (row != null && row['role'] != null) cachedRole = '${row['role']}';
+    return row;
+  }
+
+  /// Resolve the role, defaulting to 'user' when unknown.
+  Future<String> role() async {
+    if (cachedRole != null) return cachedRole!;
+    final p = await get();
+    return cachedRole = ('${p?['role'] ?? 'user'}');
   }
 
   /// Update editable profile fields (only non-null values are written).

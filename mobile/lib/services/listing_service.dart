@@ -90,7 +90,59 @@ class ListingService {
 
   static const _sel = '*, listing_media(url, sort)';
 
-  /// Public browse of active listings, with optional filters.
+  // Normalise Arabic so أ/إ/آ/ا and ة/ه and ى/ي match, and drop tashkeel.
+  static String _norm(String s) => s
+      .replaceAll(RegExp('[ؐ-ًؚ-ٰٟ]'), '')
+      .replaceAll(RegExp('[أإآ]'), 'ا')
+      .replaceAll('ة', 'ه')
+      .replaceAll('ى', 'ي')
+      .toLowerCase()
+      .trim();
+
+  // Keyword → filter maps (Arabic + English) so "ايجار" == rent, "شقة" == apartment.
+  static const _purposeWords = {
+    'rent': ['ايجار', 'للايجار', 'ايجارات', 'rent', 'rental', 'lease'],
+    'sale': ['بيع', 'للبيع', 'تمليك', 'للتمليك', 'شراء', 'sale', 'buy', 'sell', 'own'],
+  };
+  static const _typeWords = {
+    'apartment': ['شقه', 'شقق', 'apartment', 'flat'],
+    'villa': ['فيلا', 'فيله', 'villa'],
+    'duplex': ['دوبلكس', 'duplex'],
+    'studio': ['استوديو', 'ستوديو', 'studio'],
+    'townhouse': ['تاون', 'townhouse', 'town'],
+    'twinhouse': ['توين', 'twinhouse', 'twin'],
+    'chalet': ['شاليه', 'chalet'],
+    'penthouse': ['بنتهاوس', 'penthouse'],
+  };
+
+  /// Pull purpose/type keywords out of a free-text query and return the
+  /// leftover words (for a location/name match). Bilingual + Arabic-normalised.
+  static ({String text, String? purpose, String? type}) _parse(String raw) {
+    final tokens = _norm(raw).split(RegExp(r'[\s,،]+')).where((t) => t.isNotEmpty).toList();
+    String? purpose, type;
+    final rest = <String>[];
+    for (final t in tokens) {
+      String? matched;
+      _purposeWords.forEach((k, ws) {
+        if (purpose == null && ws.any((w) => t == w || t.contains(w))) purpose = k;
+      });
+      if (purpose != null && _purposeWords[purpose]!.any((w) => t.contains(w))) {
+        matched = 'p';
+      }
+      _typeWords.forEach((k, ws) {
+        if (type == null && ws.any((w) => t == w || t.contains(w))) type = k;
+      });
+      if (matched == null && type != null && _typeWords[type]!.any((w) => t.contains(w))) {
+        matched = 't';
+      }
+      if (matched == null) rest.add(t);
+    }
+    return (text: rest.join(' ').trim(), purpose: purpose, type: type);
+  }
+
+  /// Public browse of active listings, with optional filters. When [search] is
+  /// given it is parsed for bilingual purpose/type keywords, so "شقة للايجار
+  /// في زايد" filters purpose=rent, type=apartment and text-matches "زايد".
   Future<List<Listing>> browse({
     String? search,
     String? area,
@@ -100,8 +152,13 @@ class ListingService {
   }) async {
     var q = _db.from('listings').select(_sel).eq('status', 'active');
     if (search != null && search.trim().isNotEmpty) {
-      final s = search.trim().replaceAll(',', ' ');
-      q = q.or('title.ilike.%$s%,area.ilike.%$s%,address.ilike.%$s%');
+      final p = _parse(search);
+      purpose ??= p.purpose;
+      type ??= p.type;
+      if (p.text.isNotEmpty) {
+        final s = p.text;
+        q = q.or('title.ilike.%$s%,area.ilike.%$s%,address.ilike.%$s%');
+      }
     }
     if (area != null && area.isNotEmpty) q = q.ilike('area', '%$area%');
     if (type != null && type.isNotEmpty) q = q.eq('type', type);
