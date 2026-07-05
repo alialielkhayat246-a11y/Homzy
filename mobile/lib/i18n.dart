@@ -220,7 +220,20 @@ const Map<String, Map<String, String>> _strings = {
   'menu_my_data': {'en': 'My data', 'ar': 'بياناتي'},
   'menu_settings': {'en': 'App settings', 'ar': 'إعدادات التطبيق'},
   'menu_messages': {'en': 'Messages', 'ar': 'الرسائل'},
-  'menu_projects': {'en': 'Compounds (byit)', 'ar': 'الكومباوندات'},
+  'menu_projects': {'en': 'Compounds', 'ar': 'الكومباوندات'},
   'menu_terms': {'en': 'Terms & conditions', 'ar': 'الشروط والأحكام'},
   'menu_privacy': {'en': 'Privacy policy', 'ar': 'سياسة الخصوصية'},
+
+  // Broker / user mode switch
+  'broker_mode': {'en': 'Broker mode', 'ar': 'وضع البروكر'},
+  'broker_mode_sub': {
+    'en': 'List your own properties and manage them.',
+    'ar': 'اعرض عقاراتك وتحكّم فيها.'
+  },
+  'mode_switched_broker': {'en': 'Broker mode on', 'ar': 'وضع البروكر اتفعّل'},
+  'mode_switched_user': {'en': 'User mode on', 'ar': 'وضع المستخدم اتفعّل'},
+  'browse_search_hint': {
+    'en': 'Search by area, type or keyword…',
+    'ar': 'ابحث بالمنطقة أو النوع أو كلمة…'
+  },
 };

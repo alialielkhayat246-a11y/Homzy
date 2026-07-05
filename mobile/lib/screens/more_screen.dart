@@ -85,6 +85,7 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          _modeTile(),
           _tile(Icons.person_outline, tr('menu_profile'),
               () => _push(const ProfileScreen())),
           _tile(Icons.chat_bubble_outline, tr('menu_messages'),
@@ -105,6 +106,42 @@ class _MoreScreenState extends State<MoreScreen> {
 
   void _push(Widget screen) => Navigator.of(context)
       .push(MaterialPageRoute(builder: (_) => screen));
+
+  Widget _modeTile() {
+    final isBroker = ProfileService.instance.isBroker;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      decoration: BoxDecoration(
+          color: Brand.card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Brand.line)),
+      child: SwitchListTile(
+        secondary: const Icon(Icons.badge_outlined, color: Brand.navy),
+        title: Text(tr('broker_mode'),
+            style: const TextStyle(color: Brand.navy)),
+        subtitle: Text(tr('broker_mode_sub'),
+            style: const TextStyle(color: Brand.muted, fontSize: 12)),
+        activeThumbColor: Brand.coral,
+        value: isBroker,
+        onChanged: (on) async {
+          try {
+            await ProfileService.instance.setMode(on ? 'broker' : 'user');
+            if (!mounted) return;
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(tr(on
+                    ? 'mode_switched_broker'
+                    : 'mode_switched_user'))));
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text('$e')));
+            }
+          }
+        },
+      ),
+    );
+  }
 
   Widget _settingsTile() => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),

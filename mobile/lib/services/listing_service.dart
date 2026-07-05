@@ -115,6 +115,35 @@ class ListingService {
     'penthouse': ['بنتهاوس', 'penthouse'],
   };
 
+  // Bilingual area groups so an English query matches an Arabic-stored area and
+  // vice-versa. Each list holds the raw forms as they appear in listing text.
+  static const _areaGroups = <List<String>>[
+    ['new cairo', '5th settlement', 'التجمع الخامس', 'التجمع', 'القاهرة الجديدة'],
+    ['sheikh zayed', 'zayed', 'الشيخ زايد', 'زايد'],
+    ['6 october', '6th october', 'october', 'اكتوبر', 'أكتوبر', '٦ اكتوبر'],
+    ['new capital', 'administrative capital', 'العاصمة الادارية', 'العاصمة'],
+    ['north coast', 'sahel', 'الساحل الشمالي', 'الساحل'],
+    ['madinaty', 'مدينتي'],
+    ['mostakbal', 'المستقبل'],
+    ['shorouk', 'الشروق'],
+    ['obour', 'العبور'],
+    ['maadi', 'المعادي'],
+    ['ain sokhna', 'sokhna', 'السخنة', 'العين السخنة'],
+    ['dreamland', 'dream land', 'دريم لاند'],
+  ];
+
+  /// If [text] names an area, return that area's full alias list (so we can
+  /// search all forms); otherwise just [text].
+  static List<String> _expandArea(String text) {
+    final n = _norm(text);
+    for (final g in _areaGroups) {
+      if (g.any((a) => _norm(a) == n || n.contains(_norm(a)) || _norm(a).contains(n))) {
+        return {text, ...g}.toList();
+      }
+    }
+    return [text];
+  }
+
   /// Pull purpose/type keywords out of a free-text query and return the
   /// leftover words (for a location/name match). Bilingual + Arabic-normalised.
   static ({String text, String? purpose, String? type}) _parse(String raw) {
@@ -156,8 +185,14 @@ class ListingService {
       purpose ??= p.purpose;
       type ??= p.type;
       if (p.text.isNotEmpty) {
-        final s = p.text;
-        q = q.or('title.ilike.%$s%,area.ilike.%$s%,address.ilike.%$s%');
+        // Match the term (and its area aliases) across title/area/address.
+        final conds = <String>[];
+        for (final t in _expandArea(p.text)) {
+          conds.add('title.ilike.%$t%');
+          conds.add('area.ilike.%$t%');
+          conds.add('address.ilike.%$t%');
+        }
+        q = q.or(conds.join(','));
       }
     }
     if (area != null && area.isNotEmpty) q = q.ilike('area', '%$area%');

@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Reads/writes the current user's profile row (role, phone, company, avatar).
@@ -15,12 +14,20 @@ class ProfileService {
   String? cachedRole;
   bool get isBroker => cachedRole == 'broker';
 
+  /// Notifies listeners (e.g. the nav shell) when the role/mode changes.
+  final ValueNotifier<String?> roleNotifier = ValueNotifier<String?>(null);
+
+  void _setRole(String? r) {
+    cachedRole = r;
+    roleNotifier.value = r;
+  }
+
   Future<Map<String, dynamic>?> get() async {
     final uid = _uid;
     if (uid == null) return null;
     final row =
         await _db.from('profiles').select().eq('id', uid).maybeSingle();
-    if (row != null && row['role'] != null) cachedRole = '${row['role']}';
+    if (row != null && row['role'] != null) _setRole('${row['role']}');
     return row;
   }
 
@@ -28,7 +35,17 @@ class ProfileService {
   Future<String> role() async {
     if (cachedRole != null) return cachedRole!;
     final p = await get();
-    return cachedRole = ('${p?['role'] ?? 'user'}');
+    final r = '${p?['role'] ?? 'user'}';
+    _setRole(r);
+    return r;
+  }
+
+  /// Switch between 'broker' and 'user' mode and persist it.
+  Future<void> setMode(String role) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Not signed in');
+    await _db.from('profiles').upsert({'id': uid, 'role': role});
+    _setRole(role);
   }
 
   /// Update editable profile fields (only non-null values are written).
@@ -101,5 +118,6 @@ class ProfileService {
       'company': company,
       'email': _db.auth.currentUser?.email,
     });
+    _setRole(role);
   }
 }
