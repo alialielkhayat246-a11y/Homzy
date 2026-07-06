@@ -36,6 +36,8 @@ jobs:
       - name: Add web platform (generates web/ without touching lib/)
         run: flutter create --platforms web --project-name homzy .
       - run: flutter pub get
+      - name: Generate launcher icons (favicon + PWA icons)
+        run: dart run flutter_launcher_icons
       - name: Build web
         run: >
           flutter build web --release
