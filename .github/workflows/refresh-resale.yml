@@ -1,0 +1,36 @@
+name: Refresh resale prices
+
+# Keeps the resale price benchmark fresh:
+#   • RE/MAX (our base source) — weekly
+#   • PropertyFinder (review / fallback) — monthly
+# Can also be run on demand from the Actions tab.
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"   # weekly, Sunday 03:00 UTC  -> RE/MAX
+    - cron: "0 3 1 * *"   # monthly, 1st 03:00 UTC     -> RE/MAX + PropertyFinder
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      # Publishable (anon) key — safe to ship; RLS + the SECURITY DEFINER RPC
+      # are what protect writes. Same key the app already uses.
+      SUPABASE_URL: https://ceoqtkbpdxnkuptnnwjg.supabase.co
+      SUPABASE_ANON_KEY: sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+
+      - name: Refresh RE/MAX (base source)
+        run: python tools/resale/fetch_remax.py
+
+      - name: Refresh PropertyFinder (monthly / on-demand review)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 3 1 * *'
+        env:
+          PAGES: "60"
+        run: python tools/resale/fetch_propertyfinder.py

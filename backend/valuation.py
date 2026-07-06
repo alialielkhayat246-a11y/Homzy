@@ -55,9 +55,10 @@ def _fetch_from(table: str, params: dict[str, str]) -> list[dict]:
     return r.json()
 
 
-def _resale_comps(area: str | None, type_: str | None) -> list[dict]:
-    """Real secondary-market asking prices (RE/MAX etc.) — normalised to the
-    common {price, size, name, area, type} comp shape."""
+def _resale_comps(area: str | None, type_: str | None,
+                  source: str | None = None) -> list[dict]:
+    """Secondary-market asking prices from one source (remax | propertyfinder),
+    normalised to the common {price, size, name, area, type} comp shape."""
     base = {
         "select": "price,size_sqm,type,area,region",
         "purpose": "eq.sale",
@@ -65,6 +66,8 @@ def _resale_comps(area: str | None, type_: str | None) -> list[dict]:
         "size_sqm": "gt.0",
         "limit": "400",
     }
+    if source:
+        base["source"] = f"eq.{source}"
 
     def run(with_area, with_type):
         p = dict(base)
@@ -144,13 +147,16 @@ def estimate(area: str | None, type_: str | None, size: float,
     if not size or size <= 0:
         return {"ok": False, "error": "size (m²) is required"}
 
-    # Prefer real resale asking prices (RE/MAX etc.); fall back to the primary
-    # catalog when there aren't enough resale comparables for this area/type.
-    resale = _resale_comps(area, type_)
-    ppsqm = _trim(_ppsqm(resale))
-    if len(ppsqm) >= 5:
-        rows, source, scope, relaxed = resale, "resale", "area+type", False
-    else:
+    # Source priority: RE/MAX (our own, the base) -> PropertyFinder (monthly
+    # review / fallback) -> primary catalog. Use the first with enough comps.
+    rows, ppsqm, source, scope, relaxed = [], [], "catalog", "area+type", False
+    for src in ("remax", "propertyfinder"):
+        cand = _resale_comps(area, type_, src)
+        pp = _trim(_ppsqm(cand))
+        if len(pp) >= 5:
+            rows, ppsqm, source = cand, pp, src
+            break
+    if not ppsqm:
         rows, scope, relaxed = _catalog_comps(area, type_)
         ppsqm = _trim(_ppsqm(rows))
         source = "catalog"

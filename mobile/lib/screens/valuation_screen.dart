@@ -194,9 +194,16 @@ class _ValuationScreenState extends State<ValuationScreen> {
             _pill('${r.nComps} ${tr('val_comps')}'),
           ]),
           const SizedBox(height: 8),
-          Text(r.source == 'resale' ? tr('val_src_resale') : tr('val_src_catalog'),
+          Text(
+              r.source == 'remax'
+                  ? tr('val_src_resale')
+                  : r.source == 'propertyfinder'
+                      ? tr('val_src_pf')
+                      : tr('val_src_catalog'),
               style: TextStyle(
-                  color: r.source == 'resale' ? Brand.green : Colors.white60,
+                  color: (r.source == 'remax' || r.source == 'propertyfinder')
+                      ? Brand.green
+                      : Colors.white60,
                   fontSize: 12,
                   fontWeight: FontWeight.w600)),
           const SizedBox(height: 14),

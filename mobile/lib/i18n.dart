@@ -248,6 +248,10 @@ const Map<String, Map<String, String>> _strings = {
     'en': 'Based on real resale asking prices (RE/MAX).',
     'ar': 'مبني على أسعار بيع فعلية (RE/MAX).'
   },
+  'val_src_pf': {
+    'en': 'Based on PropertyFinder resale prices.',
+    'ar': 'مبني على أسعار PropertyFinder (مراجعة).'
+  },
   'val_src_catalog': {
     'en': 'Based on primary-market catalog prices.',
     'ar': 'مبني على أسعار الكتالوج (بيع أوّلي).'
