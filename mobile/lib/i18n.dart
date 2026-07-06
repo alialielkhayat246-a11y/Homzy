@@ -220,6 +220,30 @@ const Map<String, Map<String, String>> _strings = {
   'menu_my_data': {'en': 'My data', 'ar': 'بياناتي'},
   'menu_settings': {'en': 'App settings', 'ar': 'إعدادات التطبيق'},
   'language': {'en': 'Language', 'ar': 'اللغة'},
+  'menu_valuation': {'en': 'Property valuation', 'ar': 'تقييم عقار'},
+
+  // Valuation
+  'val_title': {'en': 'Property valuation', 'ar': 'تقييم عقار'},
+  'val_sub': {
+    'en': 'Estimate a fair resale price from comparable units on the market.',
+    'ar': 'قدّر سعر بيع عادل لعقارك بناءً على وحدات مشابهة في السوق.'
+  },
+  'val_cta': {'en': 'Estimate price', 'ar': 'قدّر السعر'},
+  'val_estimate': {'en': 'Estimated price', 'ar': 'السعر التقديري'},
+  'val_range': {'en': 'Range', 'ar': 'النطاق'},
+  'val_comps': {'en': 'comparables', 'ar': 'وحدة مشابهة'},
+  'val_based_on': {'en': 'Based on units like:', 'ar': 'مبني على وحدات زي:'},
+  'val_disclaimer': {
+    'en': 'A market estimate from current asking prices — not an official appraisal.',
+    'ar': 'تقدير سوقي من الأسعار المعروضة حاليًا — مش تقييم رسمي.'
+  },
+  'val_need_size': {'en': 'Enter the size in m²', 'ar': 'اكتب المساحة بالمتر'},
+  'val_not_enough': {
+    'en': 'Not enough comparable units for this area/type yet.',
+    'ar': 'مفيش وحدات مشابهة كفاية للمنطقة/النوع ده لسه.'
+  },
+  'finishing_label': {'en': 'Finishing', 'ar': 'التشطيب'},
+  'optional': {'en': 'Optional', 'ar': 'اختياري'},
   'menu_messages': {'en': 'Messages', 'ar': 'الرسائل'},
   'menu_projects': {'en': 'Compounds', 'ar': 'الكومباوندات'},
   'menu_terms': {'en': 'Terms & conditions', 'ar': 'الشروط والأحكام'},

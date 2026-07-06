@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import broker, config, listings as listings_mod, llm
+from . import broker, config, listings as listings_mod, llm, valuation
 
 app = FastAPI(title="Homzy Broker")
 
@@ -83,6 +83,22 @@ async def chat(req: Request):
     if not isinstance(history, list):
         history = None
     return broker.handle_turn(session, message, client_history=history)
+
+
+@app.post("/api/estimate")
+async def estimate(req: Request):
+    """Resale price estimate for a unit from comparable catalog units."""
+    body = await req.json()
+    try:
+        size = float(body.get("size") or 0)
+    except (TypeError, ValueError):
+        size = 0
+    return valuation.estimate(
+        area=(body.get("area") or "").strip() or None,
+        type_=(body.get("type") or "").strip() or None,
+        size=size,
+        finishing=(body.get("finishing") or "").strip() or None,
+    )
 
 
 @app.post("/api/reset")

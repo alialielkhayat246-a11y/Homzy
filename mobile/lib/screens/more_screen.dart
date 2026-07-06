@@ -9,6 +9,7 @@ import '../widgets/lang_toggle.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'projects_screen.dart';
+import 'valuation_screen.dart';
 
 /// "More" tab — the profile hub from the design (navy header + menu).
 class MoreScreen extends StatefulWidget {
@@ -94,6 +95,8 @@ class _MoreScreenState extends State<MoreScreen> {
               () => _push(const MessagesScreen())),
           _tile(Icons.apartment_outlined, tr('menu_projects'),
               () => _push(const ProjectsScreen())),
+          _tile(Icons.calculate_outlined, tr('menu_valuation'),
+              () => _push(const ValuationScreen())),
           _languageTile(),
           _tile(Icons.description_outlined, tr('menu_terms'), () {}),
           _tile(Icons.privacy_tip_outlined, tr('menu_privacy'), () {}),
