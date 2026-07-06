@@ -32,6 +32,7 @@ class Estimate {
     this.ppsqm,
     this.nComps,
     this.scope,
+    this.source,
     this.relaxed = false,
     this.comps = const [],
     this.error,
@@ -44,6 +45,7 @@ class Estimate {
   final num? ppsqm;
   final int? nComps;
   final String? scope;
+  final String? source; // resale | catalog
   final bool relaxed;
   final List<Comp> comps;
   final String? error;
@@ -56,6 +58,7 @@ class Estimate {
         ppsqm: j['ppsqm'] as num?,
         nComps: j['n_comps'] as int?,
         scope: j['scope']?.toString(),
+        source: j['source']?.toString(),
         relaxed: j['relaxed'] == true,
         comps: ((j['comps'] as List?) ?? [])
             .map((c) => Comp.fromJson(c as Map<String, dynamic>))

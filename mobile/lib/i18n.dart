@@ -244,6 +244,14 @@ const Map<String, Map<String, String>> _strings = {
   },
   'finishing_label': {'en': 'Finishing', 'ar': 'التشطيب'},
   'optional': {'en': 'Optional', 'ar': 'اختياري'},
+  'val_src_resale': {
+    'en': 'Based on real resale asking prices (RE/MAX).',
+    'ar': 'مبني على أسعار بيع فعلية (RE/MAX).'
+  },
+  'val_src_catalog': {
+    'en': 'Based on primary-market catalog prices.',
+    'ar': 'مبني على أسعار الكتالوج (بيع أوّلي).'
+  },
   'menu_messages': {'en': 'Messages', 'ar': 'الرسائل'},
   'menu_projects': {'en': 'Compounds', 'ar': 'الكومباوندات'},
   'menu_terms': {'en': 'Terms & conditions', 'ar': 'الشروط والأحكام'},

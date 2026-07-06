@@ -41,44 +41,84 @@ def _fetch(params: dict[str, str]) -> list[dict[str, Any]]:
     return r.json()
 
 
-def _comps(area: str | None, type_: str | None) -> tuple[list[dict], str, bool]:
-    """Return (rows, scope_label, relaxed). Relaxes area→type-only when thin."""
+def _fetch_from(table: str, params: dict[str, str]) -> list[dict]:
+    import requests
+
+    r = requests.get(
+        config.SUPABASE_URL.rstrip("/") + f"/rest/v1/{table}",
+        params=params,
+        headers={"apikey": config.SUPABASE_KEY,
+                 "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def _resale_comps(area: str | None, type_: str | None) -> list[dict]:
+    """Real secondary-market asking prices (RE/MAX etc.) — normalised to the
+    common {price, size, name, area, type} comp shape."""
     base = {
-        "select": "price_from,size_from,type,"
-                  "project:projects!inner(name,area)",
-        "price_from": "gt.0",
-        "size_from": "gt.0",
+        "select": "price,size_sqm,type,area,region",
+        "purpose": "eq.sale",
+        "price": "gt.0",
+        "size_sqm": "gt.0",
         "limit": "400",
     }
 
-    def run(with_area: bool, with_type: bool):
+    def run(with_area, with_type):
+        p = dict(base)
+        if with_type and type_:
+            p["type"] = f"eq.{type_}"
+        if with_area and area:
+            p["area"] = f"ilike.*{area}*"
+        try:
+            return _fetch_from("resale_listings", p)
+        except Exception:
+            return []
+
+    rows = run(True, True)
+    if len(rows) < 5:
+        rows = run(True, False) if area else run(False, True)
+    return [{"price": r.get("price"), "size": r.get("size_sqm"),
+             "name": r.get("region") or r.get("area"), "area": r.get("area"),
+             "type": r.get("type")} for r in rows]
+
+
+def _catalog_comps(area: str | None, type_: str | None) -> tuple[list[dict], str, bool]:
+    """Primary-market catalog comps (fallback when resale is thin)."""
+    base = {
+        "select": "price_from,size_from,type,project:projects!inner(name,area)",
+        "price_from": "gt.0", "size_from": "gt.0", "limit": "400",
+    }
+
+    def run(with_area, with_type):
         p = dict(base)
         if with_type and type_:
             p["type"] = f"eq.{type_}"
         if with_area and area:
             p["project.area"] = f"ilike.*{area}*"
         try:
-            return _fetch(p)
+            return _fetch_from("unit_types", p)
         except Exception:
             return []
 
-    rows = run(True, True)
-    if len(rows) >= 5:
-        return rows, "area+type", False
-    # relax: same area, any type
-    rows = run(True, False)
-    if len(rows) >= 5:
-        return rows, "area", True
-    # relax: same type, any area
-    rows = run(False, True)
-    return rows, "type", True
+    rows, scope, relaxed = run(True, True), "area+type", False
+    if len(rows) < 5:
+        rows, scope, relaxed = run(True, False), "area", True
+    if len(rows) < 5:
+        rows, scope, relaxed = run(False, True), "type", True
+    return ([{"price": r.get("price_from"), "size": r.get("size_from"),
+              "name": (r.get("project") or {}).get("name"),
+              "area": (r.get("project") or {}).get("area"), "type": r.get("type")}
+             for r in rows], scope, relaxed)
 
 
 def _ppsqm(rows: list[dict]) -> list[float]:
     out = []
     for r in rows:
         try:
-            p = float(r["price_from"]); s = float(r["size_from"])
+            p = float(r["price"]); s = float(r["size"])
             if p > 0 and s > 0:
                 v = p / s
                 if 1000 <= v <= 500000:  # sanity bounds (EGP/m²)
@@ -104,8 +144,17 @@ def estimate(area: str | None, type_: str | None, size: float,
     if not size or size <= 0:
         return {"ok": False, "error": "size (m²) is required"}
 
-    rows, scope, relaxed = _comps(area, type_)
-    ppsqm = _trim(_ppsqm(rows))
+    # Prefer real resale asking prices (RE/MAX etc.); fall back to the primary
+    # catalog when there aren't enough resale comparables for this area/type.
+    resale = _resale_comps(area, type_)
+    ppsqm = _trim(_ppsqm(resale))
+    if len(ppsqm) >= 5:
+        rows, source, scope, relaxed = resale, "resale", "area+type", False
+    else:
+        rows, scope, relaxed = _catalog_comps(area, type_)
+        ppsqm = _trim(_ppsqm(rows))
+        source = "catalog"
+
     if len(ppsqm) < 3:
         return {"ok": False, "error": "not enough comparable units to estimate"}
 
@@ -121,19 +170,23 @@ def estimate(area: str | None, type_: str | None, size: float,
     high = max(est * 1.1, size * hi_ppsqm * adj)
 
     # a few example comparables (closest ppsqm to the median)
-    scored = sorted(rows, key=lambda r: abs(
-        (float(r["price_from"]) / float(r["size_from"])) - median)
-        if r.get("size_from") else 1e18)
-    comps = []
-    for r in scored[:5]:
-        proj = r.get("project") or {}
+    def _pps(r):
         try:
-            p = float(r["price_from"]); s = float(r["size_from"])
+            return float(r["price"]) / float(r["size"])
+        except (TypeError, ValueError, ZeroDivisionError):
+            return 1e18
+
+    comps = []
+    for r in sorted(rows, key=lambda r: abs(_pps(r) - median))[:5]:
+        try:
+            p = float(r["price"]); s = float(r["size"])
         except (TypeError, ValueError):
             continue
+        if s <= 0:
+            continue
         comps.append({
-            "name": proj.get("name"),
-            "area": proj.get("area"),
+            "name": r.get("name"),
+            "area": r.get("area"),
             "type": r.get("type"),
             "price": round(p),
             "size": round(s),
@@ -147,7 +200,8 @@ def estimate(area: str | None, type_: str | None, size: float,
         "high": round(high),
         "ppsqm": round(median),
         "n_comps": len(ppsqm),
-        "scope": scope,          # area+type | area | type
+        "source": source,        # resale | catalog
+        "scope": scope,
         "relaxed": relaxed,
         "comps": comps,
     }
