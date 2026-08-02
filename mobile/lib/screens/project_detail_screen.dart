@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n.dart';
 import '../services/catalog_service.dart';
+import '../services/share_helper.dart';
 import '../theme.dart';
 import '../widgets/home_logo_button.dart';
 
@@ -111,6 +112,27 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
                           _chip(Icons.event_outlined,
                               '${tr('delivery')}: ${p.delivery}'),
                       ]),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => shareOnWhatsApp(
+                            title: p.name,
+                            area: p.area,
+                            extra: p.developerName != null
+                                ? '🏗 ${p.developerName}'
+                                : null,
+                            brochureUrl: d.brochures.isNotEmpty
+                                ? d.brochures.first.url
+                                : null,
+                          ),
+                          icon: const Icon(Icons.share, size: 18),
+                          label: Text(tr('share_whatsapp')),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Brand.green,
+                              foregroundColor: Colors.white),
+                        ),
+                      ),
                       if (p.description != null) ...[
                         const SizedBox(height: 16),
                         Text(p.description!,

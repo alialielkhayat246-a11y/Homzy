@@ -18,6 +18,10 @@ class ProfileService {
   bool cachedAdmin = false;
   bool get isAdmin => cachedAdmin;
 
+  /// Cached name/phone for broker-branded sharing.
+  String? cachedName;
+  String? cachedPhone;
+
   /// Notifies listeners (e.g. the nav shell) when the role/mode changes.
   final ValueNotifier<String?> roleNotifier = ValueNotifier<String?>(null);
 
@@ -32,7 +36,11 @@ class ProfileService {
     final row =
         await _db.from('profiles').select().eq('id', uid).maybeSingle();
     if (row != null && row['role'] != null) _setRole('${row['role']}');
-    if (row != null) cachedAdmin = row['is_admin'] == true;
+    if (row != null) {
+      cachedAdmin = row['is_admin'] == true;
+      cachedName = row['full_name']?.toString();
+      cachedPhone = row['phone']?.toString();
+    }
     return row;
   }
 

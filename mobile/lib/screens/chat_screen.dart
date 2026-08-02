@@ -9,6 +9,7 @@ import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../services/chat_store.dart';
 import '../services/profile_service.dart';
+import '../services/share_helper.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
 
@@ -453,6 +454,24 @@ class _RecCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => shareOnWhatsApp(
+                      title: name,
+                      area: area,
+                      price: price,
+                      extra: rec.developer != null ? '🏗 ${rec.developer}' : null,
+                      brochureUrl: rec.brochureUrl,
+                    ),
+                    icon: const Icon(Icons.share, size: 18),
+                    label: Text(tr('share_whatsapp')),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Brand.green,
+                        foregroundColor: Colors.white),
+                  ),
+                ),
               ],
             ),
           ),

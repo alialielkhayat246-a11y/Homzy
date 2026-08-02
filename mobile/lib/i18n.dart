@@ -236,6 +236,7 @@ const Map<String, Map<String, String>> _strings = {
   'disc_projects': {'en': 'projects', 'ar': 'مشروع'},
   'disc_units': {'en': 'units', 'ar': 'وحدة'},
   'see_all': {'en': 'See all', 'ar': 'الكل'},
+  'share_whatsapp': {'en': 'Share on WhatsApp', 'ar': 'شارك على واتساب'},
 
   // Launches & offers
   'launches_title': {'en': 'Launches & offers', 'ar': 'لانشات وعروض'},
