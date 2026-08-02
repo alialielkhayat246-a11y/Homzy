@@ -7,6 +7,7 @@ import '../services/catalog_service.dart';
 import '../services/favorite_service.dart';
 import '../theme.dart';
 import '../widgets/home_logo_button.dart';
+import 'discover_screen.dart';
 import 'project_detail_screen.dart';
 
 const _unitTypes = [
@@ -15,7 +16,17 @@ const _unitTypes = [
 ];
 
 class ProjectsScreen extends StatefulWidget {
-  const ProjectsScreen({super.key});
+  const ProjectsScreen({
+    super.key,
+    this.initialArea,
+    this.initialDeveloperId,
+    this.title,
+  });
+
+  /// Pre-applied filters when opened from the Discover screen.
+  final String? initialArea;
+  final String? initialDeveloperId;
+  final String? title;
 
   @override
   State<ProjectsScreen> createState() => _ProjectsScreenState();
@@ -28,6 +39,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   String _search = '';
   String? _area;
   String? _type;
+  String? _developerId;
   List<String> _areas = [];
   Set<String> _favIds = {};
 
@@ -36,7 +48,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   @override
   void initState() {
     super.initState();
-    _future = CatalogService.instance.projects();
+    _area = widget.initialArea;
+    _developerId = widget.initialDeveloperId;
+    _future = CatalogService.instance.projects(
+        area: _area, developerId: _developerId);
     CatalogService.instance.areas().then((a) {
       if (mounted) setState(() => _areas = a);
     });
@@ -70,6 +85,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
         search: _search,
         area: _area,
         unitType: _type,
+        developerId: _developerId,
       );
     });
   }
@@ -97,10 +113,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final hasFilters = _search.isNotEmpty || _area != null || _type != null;
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(tr('projects_title')),
-        actions: const [
-          Padding(
+        automaticallyImplyLeading: widget.title != null,
+        title: Text(widget.title ?? tr('projects_title')),
+        actions: [
+          if (widget.title == null)
+            IconButton(
+              tooltip: tr('discover'),
+              icon: const Icon(Icons.explore_outlined, color: Brand.navy),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const DiscoverScreen())),
+            ),
+          const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: HomeLogoButton()),
         ],

@@ -6,11 +6,36 @@ class CatalogService {
   static final CatalogService instance = CatalogService._();
   SupabaseClient get _db => Supabase.instance.client;
 
+  /// City rollups (projects + units per area) for the Discover section.
+  Future<List<CityCount>> cities() async {
+    final rows = await _db
+        .from('v_city_counts')
+        .select()
+        .order('projects', ascending: false)
+        .limit(40);
+    return (rows as List)
+        .map((r) => CityCount.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Developer rollups (projects per developer).
+  Future<List<DeveloperCount>> developers() async {
+    final rows = await _db
+        .from('v_developer_counts')
+        .select()
+        .order('projects', ascending: false)
+        .limit(60);
+    return (rows as List)
+        .map((r) => DeveloperCount.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<List<Project>> projects({
     String? search,
     String? area,
     String? unitType,
     String? delivery,
+    String? developerId,
   }) async {
     final joinUnit = unitType != null && unitType.isNotEmpty;
     final sel = joinUnit
@@ -22,6 +47,9 @@ class CatalogService {
       q = q.or('name.ilike.%$s%,name_ar.ilike.%$s%,area.ilike.%$s%');
     }
     if (area != null && area.isNotEmpty) q = q.ilike('area', '%$area%');
+    if (developerId != null && developerId.isNotEmpty) {
+      q = q.eq('developer_id', developerId);
+    }
     if (delivery != null && delivery.isNotEmpty) {
       q = q.ilike('delivery', '%$delivery%');
     }
@@ -81,6 +109,35 @@ String? _s(dynamic v) => v == null ? null : '$v';
 num? _n(dynamic v) =>
     v == null ? null : (v is num ? v : num.tryParse('$v'));
 int? _i(dynamic v) => v == null ? null : (v is int ? v : int.tryParse('$v'));
+
+/// A city/area with its project + unit counts (Discover section).
+class CityCount {
+  CityCount({required this.area, required this.projects, required this.units});
+  final String area;
+  final int projects;
+  final int units;
+  factory CityCount.fromJson(Map<String, dynamic> j) => CityCount(
+        area: '${j['area'] ?? ''}',
+        projects: _i(j['projects']) ?? 0,
+        units: _i(j['units']) ?? 0,
+      );
+}
+
+/// A developer with its project count.
+class DeveloperCount {
+  DeveloperCount(
+      {required this.id, required this.name, this.logoUrl, required this.projects});
+  final String id;
+  final String name;
+  final String? logoUrl;
+  final int projects;
+  factory DeveloperCount.fromJson(Map<String, dynamic> j) => DeveloperCount(
+        id: '${j['id'] ?? ''}',
+        name: '${j['name'] ?? ''}',
+        logoUrl: _s(j['logo_url']),
+        projects: _i(j['projects']) ?? 0,
+      );
+}
 
 class Project {
   Project({

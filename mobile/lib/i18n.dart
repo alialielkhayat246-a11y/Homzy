@@ -222,6 +222,20 @@ const Map<String, Map<String, String>> _strings = {
   'language': {'en': 'Language', 'ar': 'اللغة'},
   'menu_valuation': {'en': 'Property valuation', 'ar': 'تقييم عقار'},
 
+  // Discover / Map
+  'discover': {'en': 'Discover', 'ar': 'استكشف'},
+  'map_title': {'en': 'Projects map', 'ar': 'خريطة المشاريع'},
+  'map_explore': {'en': 'Explore on the map', 'ar': 'استكشف على الخريطة'},
+  'map_explore_sub': {
+    'en': 'Browse projects across Egypt visually.',
+    'ar': 'تصفّح المشاريع في كل مصر على الخريطة.'
+  },
+  'disc_cities': {'en': 'Cities', 'ar': 'المدن'},
+  'disc_developers': {'en': 'Developers', 'ar': 'المطوّرون'},
+  'disc_launches': {'en': 'Latest launches', 'ar': 'أحدث اللانشات'},
+  'disc_projects': {'en': 'projects', 'ar': 'مشروع'},
+  'disc_units': {'en': 'units', 'ar': 'وحدة'},
+
   // Valuation
   'val_title': {'en': 'Property valuation', 'ar': 'تقييم عقار'},
   'val_sub': {
