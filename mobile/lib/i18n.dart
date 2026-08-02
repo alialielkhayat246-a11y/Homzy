@@ -269,6 +269,14 @@ const Map<String, Map<String, String>> _strings = {
   'co_contact': {'en': 'Contact broker', 'ar': 'تواصل مع البروكر'},
   'co_empty': {'en': 'No co-broking posts yet.', 'ar': 'مفيش طلبات لسه.'},
 
+  // Storefront
+  'storefront_title': {'en': 'My storefront', 'ar': 'متجري'},
+  'share_storefront': {'en': 'Share my storefront', 'ar': 'شارك متجري'},
+  'storefront_empty': {
+    'en': 'Add active listings to build your storefront.',
+    'ar': 'ضيف إعلانات نشطة عشان يظهر متجرك.'
+  },
+
   // Launches & offers
   'launches_title': {'en': 'Launches & offers', 'ar': 'لانشات وعروض'},
   'add_launch': {'en': 'Add launch / offer', 'ar': 'أضف لانش / عرض'},

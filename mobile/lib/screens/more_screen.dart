@@ -12,6 +12,7 @@ import 'launches_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'projects_screen.dart';
+import 'storefront_screen.dart';
 import 'valuation_screen.dart';
 
 /// "More" tab — the profile hub from the design (navy header + menu).
@@ -101,6 +102,8 @@ class _MoreScreenState extends State<MoreScreen> {
           _tile(Icons.calculate_outlined, tr('menu_valuation'),
               () => _push(const ValuationScreen())),
           if (ProfileService.instance.isBroker) ...[
+            _tile(Icons.storefront_outlined, tr('storefront_title'),
+                () => _push(const StorefrontScreen())),
             _tile(Icons.groups_outlined, tr('clients_title'),
                 () => _push(const ClientsScreen())),
             _tile(Icons.handshake_outlined, tr('cobroking_title'),
