@@ -238,6 +238,29 @@ const Map<String, Map<String, String>> _strings = {
   'see_all': {'en': 'See all', 'ar': 'الكل'},
   'share_whatsapp': {'en': 'Share on WhatsApp', 'ar': 'شارك على واتساب'},
 
+  // Clients (CRM)
+  'clients_title': {'en': 'My clients', 'ar': 'عملائي'},
+  'add_client': {'en': 'Add client', 'ar': 'أضف عميل'},
+  'no_clients': {'en': 'No clients yet.', 'ar': 'مفيش عملاء لسه.'},
+  'client_name': {'en': 'Client name', 'ar': 'اسم العميل'},
+  'client_name_required': {'en': 'Enter the client name', 'ar': 'اكتب اسم العميل'},
+  'client_phone': {'en': 'Phone', 'ar': 'التليفون'},
+  'client_budget': {'en': 'Budget', 'ar': 'الميزانية'},
+  'client_notes': {'en': 'Notes', 'ar': 'ملاحظات'},
+  'client_stage': {'en': 'Stage', 'ar': 'المرحلة'},
+  'client_brief': {'en': 'Requirements', 'ar': 'المطلوب'},
+  'client_matches': {'en': 'Matching units', 'ar': 'وحدات مطابقة'},
+  'no_matches_yet': {
+    'en': 'No matching units yet — new ones will show here.',
+    'ar': 'مفيش وحدات مطابقة لسه — الجديدة هتظهر هنا.'
+  },
+  'call': {'en': 'Call', 'ar': 'اتصال'},
+  'stage_new': {'en': 'New', 'ar': 'جديد'},
+  'stage_contacted': {'en': 'Contacted', 'ar': 'اتكلمت معاه'},
+  'stage_viewing': {'en': 'Viewing', 'ar': 'معاينة'},
+  'stage_closed': {'en': 'Closed', 'ar': 'تم'},
+  'stage_lost': {'en': 'Lost', 'ar': 'ملغي'},
+
   // Launches & offers
   'launches_title': {'en': 'Launches & offers', 'ar': 'لانشات وعروض'},
   'add_launch': {'en': 'Add launch / offer', 'ar': 'أضف لانش / عرض'},
