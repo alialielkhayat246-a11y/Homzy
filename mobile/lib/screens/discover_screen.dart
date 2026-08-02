@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../i18n.dart';
 import '../services/catalog_service.dart';
+import '../services/launch_service.dart';
 import '../theme.dart';
+import 'launches_screen.dart';
 import 'map_screen.dart';
 import 'project_detail_screen.dart';
 import 'projects_screen.dart';
@@ -19,6 +21,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   List<CityCount> _cities = [];
   List<DeveloperCount> _devs = [];
   List<Project> _launches = [];
+  List<Launch> _feed = [];
 
   @override
   void initState() {
@@ -28,6 +31,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     c.developers().then((v) => mounted ? setState(() => _devs = v) : null);
     c.projects().then((v) =>
         mounted ? setState(() => _launches = v.take(12).toList()) : null);
+    LaunchService.instance
+        .list(limit: 12)
+        .then((v) => mounted ? setState(() => _feed = v) : null);
   }
 
   void _open(Widget s) =>
@@ -98,16 +104,25 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ),
           ),
 
-          _sectionTitle(tr('disc_launches')),
+          _sectionTitle(tr('disc_launches'),
+              onSeeAll: () => _open(const LaunchesScreen())),
           SizedBox(
             height: 168,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _launches.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, i) => _launchCard(_launches[i]),
-            ),
+            child: _feed.isNotEmpty
+                ? ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _feed.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) => _feedCard(_feed[i]),
+                  )
+                : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _launches.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) => _launchCard(_launches[i]),
+                  ),
           ),
           const SizedBox(height: 20),
         ],
@@ -115,10 +130,68 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  Widget _sectionTitle(String t) => Padding(
+  Widget _sectionTitle(String t, {VoidCallback? onSeeAll}) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-        child: Text(t,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(t,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+            if (onSeeAll != null)
+              GestureDetector(
+                onTap: onSeeAll,
+                child: Text(tr('see_all'),
+                    style: const TextStyle(
+                        color: Brand.coral,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+              ),
+          ],
+        ),
+      );
+
+  Widget _feedCard(Launch l) => InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _open(const LaunchesScreen()),
+        child: SizedBox(
+          width: 220,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(
+                  height: 110,
+                  width: 220,
+                  child: l.imageUrl != null
+                      ? Image.network(l.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Container(color: Brand.navy))
+                      : Container(
+                          color: Brand.navy,
+                          alignment: Alignment.center,
+                          child: Text(l.isOffer ? tr('kind_offer') : tr('kind_launch'),
+                              style: const TextStyle(color: Colors.white54))),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(l.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13)),
+              Text(
+                  [l.developer, l.area]
+                      .where((e) => e != null && e.isNotEmpty)
+                      .join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Brand.muted, fontSize: 11)),
+            ],
+          ),
+        ),
       );
 
   Widget _cityCard(CityCount c) => InkWell(

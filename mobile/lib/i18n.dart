@@ -235,6 +235,24 @@ const Map<String, Map<String, String>> _strings = {
   'disc_launches': {'en': 'Latest launches', 'ar': 'أحدث اللانشات'},
   'disc_projects': {'en': 'projects', 'ar': 'مشروع'},
   'disc_units': {'en': 'units', 'ar': 'وحدة'},
+  'see_all': {'en': 'See all', 'ar': 'الكل'},
+
+  // Launches & offers
+  'launches_title': {'en': 'Launches & offers', 'ar': 'لانشات وعروض'},
+  'add_launch': {'en': 'Add launch / offer', 'ar': 'أضف لانش / عرض'},
+  'kind_launch': {'en': 'Launch', 'ar': 'لانش'},
+  'kind_offer': {'en': 'Offer', 'ar': 'عرض'},
+  'launch_title_field': {'en': 'Title', 'ar': 'العنوان'},
+  'launch_developer': {'en': 'Developer', 'ar': 'المطوّر'},
+  'launch_project': {'en': 'Project', 'ar': 'المشروع'},
+  'launch_desc': {'en': 'Details', 'ar': 'التفاصيل'},
+  'launch_link': {'en': 'Link (optional)', 'ar': 'رابط (اختياري)'},
+  'launch_publish': {'en': 'Publish', 'ar': 'نشر'},
+  'view_details': {'en': 'View details', 'ar': 'التفاصيل'},
+  'no_launches': {
+    'en': 'No launches or offers yet.',
+    'ar': 'مفيش لانشات أو عروض لسه.'
+  },
 
   // Valuation
   'val_title': {'en': 'Property valuation', 'ar': 'تقييم عقار'},

@@ -6,6 +6,7 @@ import '../services/profile_service.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
 import '../widgets/lang_toggle.dart';
+import 'launches_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'projects_screen.dart';
@@ -97,6 +98,8 @@ class _MoreScreenState extends State<MoreScreen> {
               () => _push(const ProjectsScreen())),
           _tile(Icons.calculate_outlined, tr('menu_valuation'),
               () => _push(const ValuationScreen())),
+          _tile(Icons.campaign_outlined, tr('launches_title'),
+              () => _push(const LaunchesScreen())),
           _languageTile(),
           _tile(Icons.description_outlined, tr('menu_terms'), () {}),
           _tile(Icons.privacy_tip_outlined, tr('menu_privacy'), () {}),
