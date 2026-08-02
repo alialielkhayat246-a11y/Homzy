@@ -14,6 +14,10 @@ class ProfileService {
   String? cachedRole;
   bool get isBroker => cachedRole == 'broker';
 
+  /// App owner — only admins may post to the launches/offers feed.
+  bool cachedAdmin = false;
+  bool get isAdmin => cachedAdmin;
+
   /// Notifies listeners (e.g. the nav shell) when the role/mode changes.
   final ValueNotifier<String?> roleNotifier = ValueNotifier<String?>(null);
 
@@ -28,6 +32,7 @@ class ProfileService {
     final row =
         await _db.from('profiles').select().eq('id', uid).maybeSingle();
     if (row != null && row['role'] != null) _setRole('${row['role']}');
+    if (row != null) cachedAdmin = row['is_admin'] == true;
     return row;
   }
 

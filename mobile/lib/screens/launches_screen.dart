@@ -18,11 +18,16 @@ class LaunchesScreen extends StatefulWidget {
 
 class _LaunchesScreenState extends State<LaunchesScreen> {
   late Future<List<Launch>> _future;
+  bool _isAdmin = ProfileService.instance.isAdmin;
 
   @override
   void initState() {
     super.initState();
     _future = LaunchService.instance.list();
+    // Confirm admin (only the owner may post to the feed).
+    ProfileService.instance.get().then((_) {
+      if (mounted) setState(() => _isAdmin = ProfileService.instance.isAdmin);
+    });
   }
 
   void _refresh() =>
@@ -38,7 +43,7 @@ class _LaunchesScreenState extends State<LaunchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('launches_title'))),
-      floatingActionButton: ProfileService.instance.isBroker
+      floatingActionButton: _isAdmin
           ? FloatingActionButton.extended(
               backgroundColor: Brand.navy,
               foregroundColor: Colors.white,
