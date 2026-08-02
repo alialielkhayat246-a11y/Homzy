@@ -261,6 +261,14 @@ const Map<String, Map<String, String>> _strings = {
   'stage_closed': {'en': 'Closed', 'ar': 'تم'},
   'stage_lost': {'en': 'Lost', 'ar': 'ملغي'},
 
+  // Co-broking board
+  'cobroking_title': {'en': 'Co-broking board', 'ar': 'لوحة الكوبروكينج'},
+  'co_add': {'en': 'Post', 'ar': 'أضف'},
+  'co_have': {'en': 'I have a unit', 'ar': 'عندي وحدة'},
+  'co_want': {'en': 'Looking for', 'ar': 'مطلوب'},
+  'co_contact': {'en': 'Contact broker', 'ar': 'تواصل مع البروكر'},
+  'co_empty': {'en': 'No co-broking posts yet.', 'ar': 'مفيش طلبات لسه.'},
+
   // Launches & offers
   'launches_title': {'en': 'Launches & offers', 'ar': 'لانشات وعروض'},
   'add_launch': {'en': 'Add launch / offer', 'ar': 'أضف لانش / عرض'},

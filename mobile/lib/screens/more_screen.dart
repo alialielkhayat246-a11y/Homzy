@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/house_logo.dart';
 import '../widgets/lang_toggle.dart';
 import 'clients_screen.dart';
+import 'cobroking_screen.dart';
 import 'launches_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
@@ -99,9 +100,12 @@ class _MoreScreenState extends State<MoreScreen> {
               () => _push(const ProjectsScreen())),
           _tile(Icons.calculate_outlined, tr('menu_valuation'),
               () => _push(const ValuationScreen())),
-          if (ProfileService.instance.isBroker)
+          if (ProfileService.instance.isBroker) ...[
             _tile(Icons.groups_outlined, tr('clients_title'),
                 () => _push(const ClientsScreen())),
+            _tile(Icons.handshake_outlined, tr('cobroking_title'),
+                () => _push(const CobrokingScreen())),
+          ],
           _tile(Icons.campaign_outlined, tr('launches_title'),
               () => _push(const LaunchesScreen())),
           _languageTile(),
