@@ -37,8 +37,9 @@ OLLAMA_HOST = _get("OLLAMA_HOST", "http://127.0.0.1:11434")
 OLLAMA_MODEL = _get("OLLAMA_MODEL", "qwen2.5:7b")
 
 GEMINI_API_KEY = _get("GEMINI_API_KEY", "")
-# gemini-flash-latest works on free-tier keys where gemini-2.0-flash is quota-0.
-GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-flash-latest")
+# gemini-2.5-flash: strongest reasoning on the free tier (llm.py falls back to
+# other free models if it's rate-limited).
+GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-2.5-flash")
 
 # --- Brand / persona -----------------------------------------------------
 BRAND_NAME = _get("BRAND_NAME", "Homzy")
@@ -48,9 +49,10 @@ BROKER_NAME = _get("BROKER_NAME", "Homzy")
 SUPABASE_URL = _get("SUPABASE_URL", "")
 SUPABASE_KEY = _get("SUPABASE_ANON_KEY", "")
 
-# Run a second LLM call to extract search criteria. Off by default: the
-# heuristic extractor is enough and skipping this halves chat latency.
-LLM_EXTRACT = _get("LLM_EXTRACT", "0") == "1"
+# Run a second LLM call to extract search criteria across the whole
+# conversation. On by default now (the stronger model understands nuance the
+# heuristics miss, e.g. "something cheap near services"), for better matches.
+LLM_EXTRACT = _get("LLM_EXTRACT", "1") == "1"
 
 # --- Admin panel (Phase 2) ----------------------------------------------
 # Optional password for the listings admin panel. Leave empty for local,
