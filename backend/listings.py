@@ -10,7 +10,7 @@ import os
 import re
 from typing import Any
 
-from . import areas, catalog, config, marketplace
+from . import areas, catalog, config, marketplace, resale
 
 _CACHE: list[dict[str, Any]] | None = None
 
@@ -78,16 +78,24 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     when any exist — while budget/bedroom fit is handled by ranking, not
     exclusion, so 'closest matches' surface honestly.
     """
-    # Pool = local sample file + the live byit catalog + broker-posted listings
-    # (each filtered to the request, so we never pull everything).
+    # Pool = local sample file + primary catalog (byit) + resale (RE/MAX /
+    # PropertyFinder) + broker-posted listings — each filtered to the request.
     pool = (list(load())
             + catalog.search(req, n * 6)
+            + resale.search(req, n * 4)
             + marketplace.search(req, n * 3))
     items = [x for x in pool if x.get("available", True)]
 
     purpose = req.get("purpose")
     if purpose:
         items = [x for x in items if x.get("purpose") == purpose]
+
+    # Primary (new-launch) vs resale (secondary) preference, when stated.
+    market_pref = req.get("market_pref")
+    if market_pref in ("primary", "resale"):
+        filtered = [x for x in items if x.get("market") == market_pref]
+        if filtered:
+            items = filtered
 
     typ = req.get("type")
     if typ:
@@ -126,6 +134,8 @@ def public(listing: dict[str, Any]) -> dict[str, Any]:
         "project_id": listing.get("project_id"),
         "listing_id": listing.get("listing_id"),
         "source": listing.get("source"),
+        "market": listing.get("market"),   # primary | resale
+        "url": listing.get("url"),
         "compound": listing.get("compound_en"),
         "compound_ar": listing.get("compound_ar"),
         "developer": listing.get("developer"),

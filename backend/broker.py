@@ -15,7 +15,7 @@ import json
 import re
 from typing import Any
 
-from . import areas, config, listings as listings_mod, llm, persona
+from . import areas, config, listings as listings_mod, llm, persona, valuation
 
 # Cache the client object (cheap; chat() failures fall back to templates).
 _client: Any = None
@@ -153,6 +153,17 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
     elif any(w in low for w in ["pharmacy", "صيدلية", "صيدليه"]):
         out["type"] = "pharmacy"
 
+    # Primary (from the developer) vs resale (secondary / ready from owner).
+    if any(w in low for w in ["resale", "ريسيل", "سوق ثانوي", "ثانوي", "اعادة بيع",
+                              "إعادة بيع", "من المالك", "من مالك", "من صاحبها",
+                              "وحدة جاهزة من", "ready resale"]):
+        out["market_pref"] = "resale"
+    elif any(w in low for w in ["primary", "بريماري", "من المطور", "من الشركة",
+                                "لانش", "launch", "new launch", "مشروع جديد",
+                                "اوف بلان", "أوف بلان", "off plan", "off-plan",
+                                "تقسيط على المطور"]):
+        out["market_pref"] = "primary"
+
     # Delivery timing preference: move in now vs fine waiting a couple of years.
     if any(w in low for w in ["استلام فوري", "فوري", "جاهز", "جاهزة", "دلوقتي",
                               "حالا", "حالاً", "ready", "move in now", "immediately",
@@ -223,7 +234,7 @@ def _history_to_text(history: list[dict[str, str]]) -> str:
 
 def _merge(req: dict[str, Any], found: dict[str, Any]) -> None:
     for key in ("purpose", "type", "area", "bedrooms", "budget_max",
-                "budget_min", "delivery_pref"):
+                "budget_min", "delivery_pref", "market_pref"):
         val = found.get(key)
         if val not in (None, "", []):
             req[key] = val
@@ -282,6 +293,18 @@ def handle_turn(session: dict[str, Any], message: str,
 
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)
+
+    # 3b) once we're about to recommend, position the top unit against ITS own
+    #     market (resale vs primary) so the broker can persuade with real data.
+    if matches and not persona._missing(req):
+        top = matches[0]
+        if not top.get("value_note"):
+            note = valuation.value_note(
+                top.get("area_en"), top.get("type"),
+                top.get("price"), top.get("size_sqm"),
+                market=top.get("market", "resale"))
+            if note:
+                top["value_note"] = note
 
     # 4) reply
     reply = _llm_reply(history, language, matches)

@@ -63,6 +63,7 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
         "images": images[:6],
         "cover_image": cover or (images[0] if images else None),
         "source": "catalog",
+        "market": "primary",   # new-launch / developer
         "available": True,
     }
 
@@ -95,8 +96,13 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
         # elsewhere instead of silently returning nothing.
         if req.get("type"):
             params["type"] = f"eq.{req['type']}"
-        # Budget is applied as a ranking signal (listings._score), not a hard
+        # Budget's UPPER side is a ranking signal (listings._score), not a hard
         # cut — so we always surface the closest options instead of "no match".
+        # But drop absurdly-cheap outliers (< half budget) so we never recommend
+        # a mispriced/tiny unit to a serious buyer.
+        bmax = req.get("budget_max")
+        if bmax:
+            params["price_from"] = f"gte.{int(bmax) // 2}"
         r = requests.get(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
             params=params,

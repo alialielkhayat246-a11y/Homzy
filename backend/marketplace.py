@@ -41,6 +41,7 @@ def _to_listing(r: dict[str, Any]) -> dict[str, Any]:
         "lat": r.get("lat"),
         "lng": r.get("lng"),
         "source": "marketplace",
+        "market": "resale",   # broker/owner-posted, ready units
         "available": True,
     }
 

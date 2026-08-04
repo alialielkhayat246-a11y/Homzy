@@ -140,6 +140,48 @@ def _trim(values: list[float]) -> list[float]:
     return v[k:-k]
 
 
+def median_ppsqm(area: str | None, type_: str | None,
+                 market: str = "resale") -> float | None:
+    """Median price/m² for an area+type in a given market — resale (RE/MAX +
+    PropertyFinder) or primary (the developer catalog). Used to position a
+    recommended unit against ITS OWN market for honest persuasion."""
+    if not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return None
+    if market == "primary":
+        rows, _, _ = _catalog_comps(area, type_)
+        pp = _trim(_ppsqm(rows))
+        return statistics.median(pp) if len(pp) >= 3 else None
+    for src in ("remax", "propertyfinder"):
+        pp = _trim(_ppsqm(_resale_comps(area, type_, src)))
+        if len(pp) >= 5:
+            return statistics.median(pp)
+    return None
+
+
+def value_note(area: str | None, type_: str | None, price, size,
+               market: str = "resale") -> str | None:
+    """A short, honest market-position note comparing a unit to its own market
+    ('~15% below the area resale average'), or None when we can't compare."""
+    try:
+        price = float(price); size = float(size)
+    except (TypeError, ValueError):
+        return None
+    if price <= 0 or size <= 0:
+        return None
+    med = median_ppsqm(area, type_, market)
+    if not med:
+        return None
+    ratio = (price / size) / med
+    if ratio < 0.6 or ratio > 1.6:
+        return None  # too far from market to be a credible comparison (likely an outlier)
+    label = "resale" if market == "resale" else "new-launch"
+    if ratio <= 0.9:
+        return f"about {round((1 - ratio) * 100)}% below the area {label} average price/m² — strong value"
+    if ratio >= 1.12:
+        return f"about {round((ratio - 1) * 100)}% above the area {label} average price/m² (premium)"
+    return f"in line with the area {label} average price/m²"
+
+
 def estimate(area: str | None, type_: str | None, size: float,
              finishing: str | None = None) -> dict[str, Any]:
     if not config.SUPABASE_URL or not config.SUPABASE_KEY:

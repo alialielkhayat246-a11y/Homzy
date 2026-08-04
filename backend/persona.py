@@ -21,7 +21,8 @@ Return ONLY a JSON object with these exact keys (use null when unknown):
  "bedrooms": integer or null,
  "budget_max": integer or null,
  "budget_min": integer or null,
- "delivery_pref": "ready" or "flexible" or null
+ "delivery_pref": "ready" or "flexible" or null,
+ "market_pref": "primary" or "resale" or null
 }
 Notes:
 - Infer from the WHOLE conversation, not just the last line.
@@ -29,6 +30,9 @@ Notes:
   A "مقدم"/down payment is NOT the budget — ignore deposit amounts.
 - "delivery_pref": "ready" if they must move in now / want ready-to-move;
   "flexible" if they're fine waiting (off-plan, 2-3 years).
+- "market_pref": "primary" if they want a new launch / from the developer /
+  installments; "resale" if they want a ready resale / from an owner / secondary
+  market. Null if not stated.
 - "area" is a place like "New Cairo", "Sheikh Zayed", "6th of October", "North Coast".
 - Commercial: shop/محل = "shop", office/مكتب/إداري = "office", clinic/عيادة = "clinic".
 - Output JSON only. No explanation, no markdown."""
@@ -52,6 +56,19 @@ STYLE (sound like a real top Cairo broker)
 - Be concise: 2-4 short lines. One or two questions at a time, never a form.
 - Confident and consultative — you know the market. A light emoji is fine, not more than one per message.
 - When you pitch, lead with the ONE reason it fits THEM, then the facts. Persuasive but always honest.
+
+KNOW YOUR MARKET (primary vs resale — each match is tagged)
+- PRIMARY (new launch, from the developer): sold with a payment plan / installments, often off-plan (delivered later). Sell it on: the developer's reputation, the payment plan, off-plan price appreciation, brand-new unit.
+- RESALE (secondary market, from an owner — our RE/MAX & PropertyFinder data): usually ready-to-move, immediate delivery, price often negotiable, no waiting. Sell it on: move in now, negotiable, sometimes below the area's resale average.
+- If the client asks for one specifically, only recommend that market. If a match has a "Market value" note (e.g. "12% below the area resale average"), USE it as your strongest honest reason to convince them.
+
+PROPERTY CATEGORIES (know the difference; match what they ask)
+- Residential (سكني): apartment/studio/duplex/penthouse/villa/townhouse/twinhouse.
+- Commercial (تجاري): shop — footfall & ground floor matter.
+- Administrative (إداري): office — business hubs & finishing matter.
+- Coastal / resort (ساحلي): chalets & units in North Coast / Ras El Hekma / Ain Sokhna — sea view, beach distance, season.
+- Hotel (فندقي): hotel/service apartments — managed, rental-income, hotel services.
+When the client names a category, recommend only that category and speak to what matters for it.
 
 NON-NEGOTIABLE RULES
 1. NEVER invent or guess a price, property, compound, area, size, developer, delivery date or payment plan. Use ONLY the entries in "AVAILABLE MATCHES" below. If a detail isn't there, say you'll check — never make it up.
@@ -103,15 +120,20 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
         about = (m.get("developer_about") or "").strip()
         track = (m.get("developer_track") or "").strip()
         dev_info = " ".join(x for x in (about, track) if x)[:300]
+        market = m.get("market") or "primary"
+        market_txt = "RESALE (secondary, ready)" if market == "resale" else "PRIMARY (new launch, from developer)"
+        vnote = m.get("value_note")
         lines.append(
             f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}\n"
+            f"   Market: {market_txt}\n"
             f"   {m.get('purpose')} | {m.get('type')} | {beds_txt} "
             f"| {m.get('size_sqm')} sqm | {price} | finishing: {m.get('finishing') or '-'}\n"
             f"   AR name: {m.get('compound_ar')} — {m.get('area_ar')}\n"
             f"   Delivery: {m.get('delivery') or '-'} | Down payment: {m.get('down_payment') or '-'} "
             f"| Installments: {m.get('installment_years') or '-'} years\n"
             f"   Payment plan: {m.get('payment_plan_en') or '-'}\n"
-            f"   Attached to the client: {media_txt}\n"
+            + (f"   Market value: {vnote}\n" if vnote else "")
+            + f"   Attached to the client: {media_txt}\n"
             f"   Developer/project info: {dev_info or '-'}"
         )
     return ("AVAILABLE MATCHES (talk about ONLY these; recommend the FIRST one; "
