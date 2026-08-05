@@ -564,7 +564,8 @@ function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>
 
 function normArea(a){
   return (a||'').toLowerCase().replace(/[^a-z0-9؀-ۿ ]/g,'')
-    .replace(/\b(th|of|el|al|new)\b/g,'').replace(/\s+/g,' ').trim();
+    .replace(/(\d)(st|nd|rd|th)/g,'$1')   // 6th -> 6
+    .replace(/\b(of|el|al|new)\b/g,'').replace(/\s+/g,' ').trim();
 }
 async function loadCities(){
   try{
