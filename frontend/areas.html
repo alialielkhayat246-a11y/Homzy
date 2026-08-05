@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — المناطق</title>
+<meta name="description" content="اتصفّح أهم مناطق مصر على Homzy بأعداد المشاريع والوحدات الحقيقية — التجمع، العاصمة الإدارية، زايد، الساحل الشمالي والمزيد." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%230B5563'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-ar="المناطق" data-en="Areas">المناطق</span>
+      <h1 data-ar="اتصفّح أهم مناطق مصر" data-en="Browse Egypt's top areas">اتصفّح أهم مناطق مصر</h1>
+      <p data-ar="آلاف المشاريع موزّعة على أقوى مناطق السوق — دوس على أي منطقة تشوف مشاريعها." data-en="Thousands of projects across the market's strongest areas — tap any area to see its projects.">آلاف المشاريع موزّعة على أقوى مناطق السوق — دوس على أي منطقة تشوف مشاريعها.</p>
+    </div>
+    <div class="grid-4" id="cityGrid">
+      <div class="ccard skeleton" style="height:96px"></div><div class="ccard skeleton" style="height:96px"></div>
+      <div class="ccard skeleton" style="height:96px"></div><div class="ccard skeleton" style="height:96px"></div>
+      <div class="ccard skeleton" style="height:96px"></div><div class="ccard skeleton" style="height:96px"></div>
+      <div class="ccard skeleton" style="height:96px"></div><div class="ccard skeleton" style="height:96px"></div>
+    </div>
+  </div>
+</section>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+  function normArea(a){return (a||'').toLowerCase().replace(/[^a-z0-9؀-ۿ ]/g,'').replace(/(\d)(st|nd|rd|th)/g,'$1').replace(/\b(of|el|al|new)\b/g,'').replace(/\s+/g,' ').trim();}
+  async function loadCities(){
+    try{
+      const raw=await HZ.sb('/v_city_counts?select=area,projects,units&order=projects.desc&limit=60');
+      const map=new Map();
+      raw.forEach(c=>{const k=normArea(c.area);const cur=map.get(k);
+        if(!cur)map.set(k,{area:c.area,projects:c.projects||0,units:c.units||0});
+        else{cur.projects+=c.projects||0;cur.units+=c.units||0; if((c.area||'').length>(cur.area||'').length)cur.area=c.area;}});
+      const rows=[...map.values()].sort((a,b)=>b.projects-a.projects).slice(0,24);
+      const g=document.getElementById('cityGrid'); g.innerHTML='';
+      rows.forEach(c=>{
+        const d=document.createElement('a'); d.className='ccard reveal in'; d.href='/app?area='+encodeURIComponent(c.area);
+        d.innerHTML=`<div class="nm">${HZ.esc(c.area)}</div><div class="co"><b>${(c.projects||0).toLocaleString()}</b> <span data-ar="مشروع" data-en="projects">مشروع</span> · ${(c.units||0).toLocaleString()} <span data-ar="وحدة" data-en="units">وحدة</span></div>`;
+        g.appendChild(d);
+      });
+      HZ.applyLang();
+    }catch(e){ document.getElementById('cityGrid').innerHTML='<div class="empty" data-ar="تعذّر تحميل المناطق." data-en="Could not load areas.">تعذّر تحميل المناطق.</div>'; HZ.applyLang(); }
+  }
+  loadCities();
+</script>
+</body>
+</html>

@@ -52,6 +52,27 @@ def browse_page():
     return FileResponse(config.FRONTEND_DIR / "app.html")
 
 
+# Marketing sections — each on its own page/link (shared shell in /assets).
+@app.get("/features")
+def features_page():
+    return FileResponse(config.FRONTEND_DIR / "features.html")
+
+
+@app.get("/areas")
+def areas_page():
+    return FileResponse(config.FRONTEND_DIR / "areas.html")
+
+
+@app.get("/brokers")
+def brokers_page():
+    return FileResponse(config.FRONTEND_DIR / "brokers.html")
+
+
+@app.get("/download")
+def download_page():
+    return FileResponse(config.FRONTEND_DIR / "download.html")
+
+
 @app.get("/api/health")
 def health():
     provider = config.LLM_PROVIDER

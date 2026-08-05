@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — التطبيق</title>
+<meta name="description" content="جرّب Homzy على الويب فورًا أو حمّل تطبيق أندرويد — مستشارك العقاري الذكي في جيبك." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%230B5563'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .dl-cards{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:30px;}
+  .dl-card{display:flex; align-items:center; gap:13px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 24px; min-width:240px; transition:transform .16s, box-shadow .16s, border-color .16s; cursor:pointer;}
+  .dl-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-sm); border-color:var(--navy);}
+  .dl-card .ic{font-size:32px;} .dl-card .tx{text-align:start;} .dl-card .tx small{display:block; font-size:12px; color:var(--muted);} .dl-card .tx b{font-size:16px;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+
+<section class="section" style="text-align:center">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-bottom:8px">
+      <span class="eyebrow" data-ar="التطبيق" data-en="The app">التطبيق</span>
+      <h1 data-ar="Homzy معاك في جيبك" data-en="Homzy in your pocket">Homzy معاك في جيبك</h1>
+      <p data-ar="جرّبه على الويب فورًا، أو حمّل تطبيق أندرويد، أو كلّم المستشار من غير أي تحميل." data-en="Try it on the web instantly, download the Android app, or chat with the advisor with no install.">جرّبه على الويب فورًا، أو حمّل تطبيق أندرويد، أو كلّم المستشار من غير أي تحميل.</p>
+    </div>
+    <div class="dl-cards reveal">
+      <a class="dl-card" href="https://alialielkhayat246-a11y.github.io/Homzy/" target="_blank" rel="noopener"><span class="ic">🌐</span><span class="tx"><small data-ar="افتحه على" data-en="Open on">افتحه على</small><b data-ar="نسخة الويب" data-en="Web app">نسخة الويب</b></span></a>
+      <a class="dl-card" href="https://github.com/alialielkhayat246-a11y/Homzy/actions/workflows/build-apk.yml" target="_blank" rel="noopener"><span class="ic">🤖</span><span class="tx"><small data-ar="حمّل" data-en="Download">حمّل</small><b data-ar="تطبيق أندرويد (APK)" data-en="Android app (APK)">تطبيق أندرويد (APK)</b></span></a>
+      <div class="dl-card" onclick="HZ.openChat()"><span class="ic">💬</span><span class="tx"><small data-ar="من غير تحميل" data-en="No install">من غير تحميل</small><b data-ar="جرّب الشات هنا" data-en="Try the chat here">جرّب الشات هنا</b></span></div>
+    </div>
+  </div>
+</section>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

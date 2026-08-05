@@ -4,313 +4,68 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Homzy — مستشارك العقاري الذكي في مصر</title>
-<meta name="description" content="Homzy مستشار عقاري ذكي بالعربي والإنجليزي: كلّم المساعد، قوله ميزانيتك ومنطقتك، وهو يرشّحلك أنسب الوحدات من مشاريع المطوّرين وسوق الـ resale — كل ده مبني على داتا حقيقية." />
+<meta name="description" content="Homzy مستشار عقاري ذكي بالعربي والإنجليزي: كلّم المساعد، قوله ميزانيتك ومنطقتك، وهو يرشّحلك أنسب الوحدات من مشاريع المطوّرين وسوق الـ resale — مبني على داتا حقيقية." />
 <meta property="og:title" content="Homzy — مستشارك العقاري الذكي" />
 <meta property="og:description" content="مساعد عقاري ذكي يفهم طلبك ويرشّحلك أنسب وحدة من 1697 مشروع و629 مطوّر — primary و resale." />
-<meta property="og:type" content="website" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%23FF686B'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%230B5563'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
 <style>
-  :root{
-    --navy:#0B1D36; --navy-2:#122744;
-    --coral:#FF686B; --coral-d:#F0484B; --coral-l:#FFE7E7;
-    --cream:#F7F2EE; --card:#FFFFFF;
-    --green:#22C55E; --amber:#F59E0B;
-    --muted:#6B7280; --line:#EBE5DE; --line-2:#E2DAD1;
-    --shadow:0 18px 50px rgba(11,29,54,.12);
-    --shadow-sm:0 6px 20px rgba(11,29,54,.08);
-    --r:18px;
-    --ff:"Cairo","Segoe UI",Tahoma,Arial,sans-serif;
-    --fd:"Poppins","Cairo",sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0; font-family:var(--ff); color:var(--navy);
-    background:var(--cream); line-height:1.6; overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3{line-height:1.2; margin:0; font-weight:800;}
-  p{margin:0;}
-  a{color:inherit; text-decoration:none;}
-  img{max-width:100%; display:block;}
-  .wrap{max-width:1160px; margin:0 auto; padding:0 22px;}
-  section{position:relative;}
-  .eyebrow{
-    display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px;
-    color:var(--coral-d); background:var(--coral-l); padding:6px 14px; border-radius:100px;
-    letter-spacing:.2px;
-  }
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:9px;
-    font-family:var(--ff); font-weight:700; font-size:15px; cursor:pointer;
-    padding:13px 22px; border-radius:14px; border:1.5px solid transparent;
-    transition:transform .12s ease, box-shadow .2s ease, background .2s ease;
-    white-space:nowrap;
-  }
-  .btn:active{transform:translateY(1px) scale(.99);}
-  .btn-coral{background:var(--coral); color:#fff; box-shadow:0 10px 24px rgba(255,104,107,.32);}
-  .btn-coral:hover{background:var(--coral-d);}
-  .btn-navy{background:var(--navy); color:#fff;}
-  .btn-navy:hover{background:var(--navy-2);}
-  .btn-ghost{background:#fff; color:var(--navy); border-color:var(--line-2);}
-  .btn-ghost:hover{border-color:var(--navy); }
-
-  /* ---------- Header ---------- */
-  header.nav{
-    position:sticky; top:0; z-index:60; background:rgba(247,242,238,.82);
-    backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid transparent;
-    transition:border-color .2s, background .2s;
-  }
-  header.nav.scrolled{border-color:var(--line); background:rgba(247,242,238,.92);}
-  .nav-in{display:flex; align-items:center; gap:18px; height:70px;}
-  .logo{display:flex; align-items:center; gap:11px; font-weight:800;}
-  .logo .mk{width:40px; height:40px; flex:none;}
-  .logo .nm{font-size:22px; letter-spacing:-.5px; font-family:var(--fd);}
-  .logo .nm b{color:var(--coral);}
-  nav.links{display:flex; gap:26px; margin-inline-start:14px;}
-  nav.links a{font-weight:600; font-size:15px; color:var(--navy); opacity:.82;}
-  nav.links a:hover{opacity:1; color:var(--coral-d);}
-  .nav-cta{margin-inline-start:auto; display:flex; align-items:center; gap:12px;}
-  .lang-btn{
-    font-family:var(--ff); font-weight:700; font-size:14px; cursor:pointer;
-    background:#fff; border:1.5px solid var(--line-2); border-radius:12px;
-    padding:9px 14px; color:var(--navy); display:inline-flex; align-items:center; gap:6px;
-  }
-  .lang-btn:hover{border-color:var(--navy);}
-  .menu-btn{display:none; background:#fff; border:1.5px solid var(--line-2); border-radius:12px; width:44px; height:44px; cursor:pointer; align-items:center; justify-content:center;}
-
-  /* ---------- Hero ---------- */
-  .hero{padding:64px 0 40px; position:relative;}
-  .hero::before{
-    content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
-    background:
-      radial-gradient(60% 50% at 85% 0%, rgba(255,104,107,.10), transparent 60%),
-      radial-gradient(50% 40% at 5% 20%, rgba(11,29,54,.05), transparent 60%);
-  }
+  .hero{padding:60px 0 40px; position:relative;}
+  .hero::before{content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(60% 50% at 85% 0%, rgba(11,85,99,.10), transparent 60%), radial-gradient(50% 40% at 5% 20%, rgba(11,29,54,.05), transparent 60%);}
   .hero-grid{position:relative; z-index:1; display:grid; grid-template-columns:1.08fr .92fr; gap:48px; align-items:center;}
   .hero h1{font-size:clamp(30px,4.6vw,52px); letter-spacing:-.5px;}
-  .hero h1 .hl{color:var(--coral); position:relative; white-space:nowrap;}
+  .hero h1 .hl{color:var(--teal); white-space:nowrap;}
   .hero .lead{font-size:clamp(16px,2vw,19px); color:#40506a; margin-top:20px; max-width:34em;}
   .hero-cta{display:flex; gap:14px; margin-top:30px; flex-wrap:wrap;}
   .hero-trust{display:flex; gap:26px; margin-top:34px; flex-wrap:wrap;}
-  .hero-trust .t{display:flex; flex-direction:column;}
-  .hero-trust .t b{font-size:24px; font-family:var(--fd); line-height:1;}
-  .hero-trust .t span{font-size:13px; color:var(--muted); margin-top:4px;}
-  .hero-trust .t b i{color:var(--coral); font-style:normal;}
-
-  /* ---------- Phone mockup ---------- */
+  .hero-trust .t b{font-size:24px; font-family:var(--fd); line-height:1;} .hero-trust .t span{font-size:13px; color:var(--muted); margin-top:4px; display:block;}
+  .hero-trust .t b i{color:var(--teal); font-style:normal;}
   .phone-stage{display:flex; justify-content:center; position:relative;}
-  .phone-stage .blob{position:absolute; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(255,104,107,.16),transparent 70%); z-index:0; top:8%;}
-  .phone{
-    position:relative; z-index:1; width:290px; background:var(--navy); border-radius:40px;
-    padding:12px; box-shadow:0 30px 70px rgba(11,29,54,.30); border:1px solid #1e3253;
-  }
-  .phone .screen{background:var(--cream); border-radius:30px; overflow:hidden; height:580px; display:flex; flex-direction:column;}
+  .phone-stage .blob{position:absolute; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(11,85,99,.14),transparent 70%); z-index:0; top:8%;}
+  .phone{position:relative; z-index:1; width:290px; background:var(--navy); border-radius:40px; padding:12px; box-shadow:0 30px 70px rgba(11,29,54,.30); border:1px solid #1e3253;}
+  .phone .screen{background:var(--cream); border-radius:30px; overflow:hidden; height:560px; display:flex; flex-direction:column;}
   .ph-top{display:flex; align-items:center; gap:9px; padding:14px 15px; background:#fff; border-bottom:1px solid var(--line);}
   .ph-top .a{width:34px; height:34px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; flex:none;}
-  .ph-top .nm{font-weight:800; font-size:15px;}
-  .ph-top .st{margin-inline-start:auto; font-size:10px; font-weight:700; color:#fff; background:var(--green); padding:3px 9px; border-radius:100px;}
-  .ph-body{flex:1; overflow:hidden; padding:15px 13px; display:flex; flex-direction:column; gap:11px; background:radial-gradient(120% 55% at 50% 0%,#fff 0%,var(--cream) 70%);}
-  .msg{max-width:82%; padding:10px 13px; font-size:13.5px; line-height:1.55; border-radius:16px; white-space:pre-wrap;}
-  .msg.bot{background:#fff; border:1px solid var(--line); border-bottom-inline-start-radius:5px; box-shadow:0 2px 6px rgba(11,29,54,.04);}
-  .msg.me{background:var(--coral); color:#fff; align-self:flex-end; border-bottom-inline-end-radius:5px;}
-  .rec-card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:11px; box-shadow:var(--shadow-sm);}
-  .rec-card .badge{display:inline-block; font-size:10px; font-weight:800; color:var(--coral-d); background:var(--coral-l); padding:3px 9px; border-radius:100px; margin-bottom:7px;}
-  .rec-card .t{font-weight:800; font-size:14px;}
-  .rec-card .a{font-size:12px; color:var(--muted); margin-top:2px;}
-  .rec-card .pr{font-weight:800; font-size:15px; color:var(--navy); margin-top:7px;}
-  .rec-card .meta{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
-  .rec-card .meta span{font-size:11px; background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:3px 8px; color:#40506a;}
-
-  /* ---------- Marquee stats band ---------- */
+  .ph-top .nm{font-weight:800; font-size:15px;} .ph-top .st{margin-inline-start:auto; font-size:10px; font-weight:700; color:#fff; background:var(--green); padding:3px 9px; border-radius:100px;}
+  .ph-body{flex:1; overflow:hidden; padding:15px 13px; display:flex; flex-direction:column; gap:11px;}
+  .pm{max-width:82%; padding:10px 13px; font-size:13.5px; line-height:1.55; border-radius:16px;}
+  .pm.bot{background:#fff; border:1px solid var(--line); border-bottom-inline-start-radius:5px;}
+  .pm.me{background:var(--teal); color:#fff; align-self:flex-end; border-bottom-inline-end-radius:5px;}
+  .pm-rec{background:#fff; border:1px solid var(--line); border-radius:16px; padding:11px; box-shadow:var(--shadow-sm);}
+  .pm-rec .bd{display:inline-block; font-size:10px; font-weight:800; color:var(--teal-d); background:var(--teal-l); padding:3px 9px; border-radius:100px; margin-bottom:7px;}
+  .pm-rec .t{font-weight:800; font-size:14px;} .pm-rec .a{font-size:12px; color:var(--muted); margin-top:2px;}
+  .pm-rec .pr{font-weight:800; font-size:15px; margin-top:7px;} .pm-rec .meta{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .pm-rec .meta span{font-size:11px; background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:3px 8px; color:#40506a;}
   .band{background:var(--navy); color:#fff; padding:26px 0;}
   .band-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px; text-align:center;}
-  .band-grid .s b{font-size:clamp(24px,3vw,34px); font-family:var(--fd); display:block; line-height:1;}
-  .band-grid .s b i{color:var(--coral); font-style:normal;}
+  .band-grid .s b{font-size:clamp(24px,3vw,34px); font-family:var(--fd); display:block; line-height:1;} .band-grid .s b i{color:var(--teal-on-navy); font-style:normal;}
   .band-grid .s span{font-size:13px; opacity:.75; margin-top:6px; display:block;}
-
-  /* ---------- Section head ---------- */
-  .sec{padding:74px 0;}
-  .sec-head{text-align:center; max-width:660px; margin:0 auto 44px;}
-  .sec-head h2{font-size:clamp(26px,3.4vw,38px); margin-top:14px;}
-  .sec-head p{color:#40506a; font-size:17px; margin-top:14px;}
-
-  /* ---------- Features ---------- */
-  .feat{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
-  .fcard{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:26px 22px; transition:transform .18s, box-shadow .18s, border-color .18s;}
-  .fcard:hover{transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent;}
-  .fic{width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:16px; background:var(--coral-l);}
-  .fcard h3{font-size:19px;}
-  .fcard p{color:#5b6b82; font-size:15px; margin-top:9px;}
-
-  /* ---------- Cities ---------- */
-  .cities{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
-  .ccard{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:6px; transition:transform .16s, box-shadow .16s;}
-  .ccard:hover{transform:translateY(-3px); box-shadow:var(--shadow-sm);}
-  .ccard .nm{font-weight:800; font-size:17px;}
-  .ccard .co{font-size:13px; color:var(--muted);}
-  .ccard .co b{color:var(--coral-d);}
-
-  /* ---------- Projects ---------- */
-  .projs{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
-  .pcard{background:var(--card); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; transition:transform .18s, box-shadow .18s;}
-  .pcard:hover{transform:translateY(-4px); box-shadow:var(--shadow);}
-  .pcard .img{height:180px; background:#e9e2da center/cover no-repeat; position:relative;}
-  .pcard .img .tag{position:absolute; top:12px; inset-inline-start:12px; background:rgba(11,29,54,.86); color:#fff; font-size:11px; font-weight:700; padding:5px 11px; border-radius:100px; backdrop-filter:blur(4px);}
-  .pcard .b{padding:16px 17px;}
-  .pcard .b .nm{font-weight:800; font-size:17px;}
-  .pcard .b .dv{font-size:13px; color:var(--muted); margin-top:3px;}
-  .pcard .b .ar{display:inline-flex; align-items:center; gap:5px; font-size:13px; color:var(--coral-d); font-weight:700; margin-top:10px;}
-  .skeleton{background:linear-gradient(100deg,#efe8e0 30%,#f6f1ea 50%,#efe8e0 70%); background-size:200% 100%; animation:sk 1.3s infinite;}
-  @keyframes sk{to{background-position:-200% 0;}}
-
-  /* ---------- Steps ---------- */
-  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; counter-reset:st;}
-  .step{position:relative; background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:28px 24px;}
-  .step .n{counter-increment:st; width:44px; height:44px; border-radius:12px; background:var(--navy); color:#fff; font-family:var(--fd); font-weight:800; font-size:19px; display:flex; align-items:center; justify-content:center; margin-bottom:16px;}
-  .step .n::before{content:counter(st);}
-  .step h3{font-size:19px;}
-  .step p{color:#5b6b82; font-size:15px; margin-top:9px;}
-
-  /* ---------- Broker CTA ---------- */
-  .broker{background:linear-gradient(135deg,var(--navy),var(--navy-2)); color:#fff; border-radius:26px; padding:52px 46px; display:grid; grid-template-columns:1.1fr .9fr; gap:36px; align-items:center; overflow:hidden; position:relative;}
-  .broker::after{content:""; position:absolute; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle,rgba(255,104,107,.22),transparent 70%); inset-inline-end:-60px; top:-60px;}
-  .broker h2{font-size:clamp(24px,3vw,34px); position:relative; z-index:1;}
-  .broker p{opacity:.82; margin-top:14px; font-size:16px; position:relative; z-index:1;}
-  .broker .tools{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; position:relative; z-index:1;}
-  .broker .tools span{font-size:13px; font-weight:600; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.16); padding:7px 13px; border-radius:100px;}
-  .broker .side{position:relative; z-index:1; display:flex; flex-direction:column; gap:12px;}
-  .broker .side .btn{width:100%;}
-
-  /* ---------- Download ---------- */
-  .dl{text-align:center;}
-  .dl-cards{display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:30px;}
-  .dl-card{display:flex; align-items:center; gap:13px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:15px 22px; min-width:220px; transition:transform .16s, box-shadow .16s, border-color .16s;}
-  .dl-card:hover{transform:translateY(-3px); box-shadow:var(--shadow-sm); border-color:var(--navy);}
-  .dl-card .ic{font-size:30px;}
-  .dl-card .tx{text-align:start;}
-  .dl-card .tx small{display:block; font-size:12px; color:var(--muted);}
-  .dl-card .tx b{font-size:16px;}
-
-  /* ---------- Footer ---------- */
-  footer{background:var(--navy); color:#fff; padding:52px 0 26px; margin-top:16px;}
-  .foot-grid{display:flex; justify-content:space-between; gap:30px; flex-wrap:wrap;}
-  .foot-brand{max-width:300px;}
-  .foot-brand p{opacity:.7; font-size:14px; margin-top:12px;}
-  .foot-col h4{font-size:14px; opacity:.6; font-weight:700; margin-bottom:12px; text-transform:uppercase; letter-spacing:.5px;}
-  .foot-col a{display:block; opacity:.85; font-size:15px; margin-bottom:9px;}
-  .foot-col a:hover{opacity:1; color:var(--coral);}
-  .foot-bottom{border-top:1px solid rgba(255,255,255,.12); margin-top:36px; padding-top:20px; display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; font-size:13px; opacity:.65;}
-
-  /* ---------- Chat widget ---------- */
-  .chat-fab{position:fixed; inset-inline-end:22px; bottom:22px; z-index:80; width:60px; height:60px; border-radius:50%; background:var(--coral); color:#fff; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(255,104,107,.42); display:flex; align-items:center; justify-content:center; transition:transform .16s;}
-  .chat-fab:hover{transform:scale(1.06);}
-  .chat-fab svg{width:28px; height:28px;}
-  .chat-panel{position:fixed; inset-inline-end:22px; bottom:94px; z-index:80; width:380px; max-width:calc(100vw - 32px); height:min(600px, calc(100vh - 130px)); background:#fff; border-radius:22px; box-shadow:0 24px 70px rgba(11,29,54,.32); display:none; flex-direction:column; overflow:hidden; border:1px solid var(--line);}
-  .chat-panel.open{display:flex; animation:pop .2s ease;}
-  @keyframes pop{from{opacity:0; transform:translateY(12px) scale(.98);} to{opacity:1; transform:none;}}
-  .cp-head{display:flex; align-items:center; gap:11px; padding:14px 16px; background:var(--navy); color:#fff;}
-  .cp-head .a{width:38px; height:38px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;}
-  .cp-head .nm{font-weight:800; font-size:16px; line-height:1.15;}
-  .cp-head .sub{font-size:11px; opacity:.7;}
-  .cp-head .x{margin-inline-start:auto; background:rgba(255,255,255,.14); border:none; color:#fff; width:32px; height:32px; border-radius:9px; cursor:pointer; font-size:18px;}
-  .cp-log{flex:1; overflow-y:auto; padding:16px 14px; display:flex; flex-direction:column; gap:12px; background:radial-gradient(120% 55% at 50% 0%,#fbf9f7,var(--cream) 70%);}
-  .cp-log .msg{max-width:85%;}
-  .cp-log .msg.bot{align-self:flex-start;}
-  .cp-log .msg.me{align-self:flex-end;}
-  .cp-log .rec-card{align-self:flex-start; max-width:90%;}
-  .cp-log .rec-card a.wa{display:inline-flex; align-items:center; gap:6px; margin-top:9px; font-size:12px; font-weight:700; color:#fff; background:var(--green); padding:6px 11px; border-radius:9px;}
-  .typing{display:flex; gap:4px; padding:12px 14px; background:#fff; border:1px solid var(--line); border-radius:16px; align-self:flex-start; width:fit-content;}
-  .typing i{width:7px; height:7px; border-radius:50%; background:#c3c9d2; animation:blink 1.3s infinite;}
-  .typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}
-  @keyframes blink{0%,80%,100%{opacity:.3;} 40%{opacity:1;}}
-  .cp-chips{display:flex; flex-wrap:wrap; gap:8px; padding:0 14px 8px;}
-  .cp-chips button{font-family:var(--ff); font-size:13px; font-weight:600; background:#fff; border:1px solid var(--line-2); border-radius:100px; padding:8px 13px; cursor:pointer; color:var(--navy);}
-  .cp-chips button:hover{border-color:var(--coral); color:var(--coral-d);}
-  .cp-form{display:flex; gap:9px; padding:12px 13px; border-top:1px solid var(--line); background:#fff;}
-  .cp-form input{flex:1; border:1px solid var(--line-2); background:var(--cream); border-radius:100px; padding:11px 16px; font-family:var(--ff); font-size:14px; outline:none;}
-  .cp-form input:focus{border-color:var(--coral); background:#fff;}
-  .cp-form button{width:44px; height:44px; flex:none; border:none; border-radius:50%; background:var(--coral); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .cp-form button:disabled{opacity:.5; cursor:default;}
-
-  /* ---------- Reveal ---------- */
-  .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease;}
-  .reveal.in{opacity:1; transform:none;}
-
-  /* ---------- Responsive ---------- */
-  @media(max-width:900px){
-    nav.links{display:none;}
-    .menu-btn{display:flex;}
-    .hero-grid{grid-template-columns:1fr; gap:36px;}
-    .phone-stage{order:-1;}
-    .feat,.projs,.steps{grid-template-columns:1fr 1fr;}
-    .cities{grid-template-columns:1fr 1fr;}
-    .broker{grid-template-columns:1fr; padding:38px 26px;}
-    .band-grid{grid-template-columns:1fr 1fr; gap:26px;}
-  }
-  @media(max-width:560px){
-    .feat,.projs,.steps,.cities{grid-template-columns:1fr;}
-    .hero{padding:40px 0 20px;}
-    .sec{padding:52px 0;}
-    .hero-trust{gap:20px;}
-    .mobile-menu.open{display:flex;}
-  }
-  .mobile-menu{display:none; flex-direction:column; gap:4px; padding:10px 22px 18px; background:var(--cream); border-bottom:1px solid var(--line);}
-  .mobile-menu a{padding:11px 6px; font-weight:600; border-bottom:1px solid var(--line);}
+  .explore{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .xcard{display:block; background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:26px 22px; transition:transform .18s, box-shadow .18s, border-color .18s;}
+  .xcard:hover{transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent;}
+  .xcard .fic{width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:16px; background:var(--teal-l);}
+  .xcard h3{font-size:19px;} .xcard p{color:#5b6b82; font-size:15px; margin-top:9px;}
+  .xcard .go{display:inline-flex; gap:6px; margin-top:12px; color:var(--teal-d); font-weight:700; font-size:14px;}
+  @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px;} .phone-stage{order:-1;} .explore{grid-template-columns:1fr 1fr;} .band-grid{grid-template-columns:1fr 1fr; gap:26px;} }
+  @media(max-width:560px){ .explore{grid-template-columns:1fr;} }
 </style>
 </head>
-<body>
+<body data-mode="client">
+<div id="hz-header"></div>
 
-<!-- ===== Header ===== -->
-<header class="nav" id="nav">
-  <div class="wrap nav-in">
-    <a href="#top" class="logo" aria-label="Homzy">
-      <svg class="mk" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <rect width="64" height="64" rx="16" fill="#0B1D36"/>
-        <path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-        <rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#FF686B"/>
-      </svg>
-      <span class="nm">Hom<b>zy</b></span>
-    </a>
-    <nav class="links">
-      <a href="#features" data-ar="المميزات" data-en="Features">المميزات</a>
-      <a href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</a>
-      <a href="#cities" data-ar="المناطق" data-en="Areas">المناطق</a>
-      <a href="#brokers" data-ar="للبروكرز" data-en="For brokers">للبروكرز</a>
-      <a href="#download" data-ar="التطبيق" data-en="App">التطبيق</a>
-    </nav>
-    <div class="nav-cta">
-      <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
-      <button class="btn btn-coral" onclick="openChat()" data-ar="جرّب المستشار" data-en="Try the advisor">جرّب المستشار</button>
-      <button class="menu-btn" onclick="document.getElementById('mmenu').classList.toggle('open')" aria-label="menu">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="#0B1D36" stroke-width="2" stroke-linecap="round"/></svg>
-      </button>
-    </div>
-  </div>
-  <div class="mobile-menu" id="mmenu">
-    <a href="#features" data-ar="المميزات" data-en="Features" onclick="document.getElementById('mmenu').classList.remove('open')">المميزات</a>
-    <a href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects" onclick="document.getElementById('mmenu').classList.remove('open')">تصفّح المشاريع</a>
-    <a href="#cities" data-ar="المناطق" data-en="Areas" onclick="document.getElementById('mmenu').classList.remove('open')">المناطق</a>
-    <a href="#brokers" data-ar="للبروكرز" data-en="For brokers" onclick="document.getElementById('mmenu').classList.remove('open')">للبروكرز</a>
-    <a href="#download" data-ar="التطبيق" data-en="App" onclick="document.getElementById('mmenu').classList.remove('open')">التطبيق</a>
-  </div>
-</header>
-
-<span id="top"></span>
-
-<!-- ===== Hero ===== -->
+<!-- Hero -->
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow">🏠 <span data-ar="مدعوم بالذكاء الاصطناعي" data-en="Powered by AI">مدعوم بالذكاء الاصطناعي</span></span>
       <h1 style="margin-top:18px" data-ar="مستشارك العقاري الذكي في <span class='hl'>مصر</span>" data-en="Your smart real-estate advisor in <span class='hl'>Egypt</span>">مستشارك العقاري الذكي في <span class="hl">مصر</span></h1>
-      <p class="lead" data-ar="كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية، من غير أسعار وهمية." data-en="Chat with Homzy in Arabic or English — tell it your budget, area and bedrooms, and it recommends the best-fit unit from developer projects (primary) and the resale market. All grounded in real data, no made-up prices.">كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية، من غير أسعار وهمية.</p>
+      <p class="lead" data-ar="كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية." data-en="Chat with Homzy in Arabic or English — tell it your budget, area and bedrooms, and it recommends the best-fit unit from developer projects (primary) and the resale market. All grounded in real data.">كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية.</p>
       <div class="hero-cta">
-        <button class="btn btn-coral" onclick="openChat()" data-ar="ابدأ محادثة مجانية" data-en="Start a free chat">ابدأ محادثة مجانية</button>
-        <a class="btn btn-ghost" href="#download" data-ar="حمّل التطبيق" data-en="Get the app">حمّل التطبيق</a>
+        <button class="btn btn-teal" onclick="HZ.openChat()" data-ar="ابدأ محادثة مجانية" data-en="Start a free chat">ابدأ محادثة مجانية</button>
+        <a class="btn btn-ghost" href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</a>
       </div>
       <div class="hero-trust">
         <div class="t"><b id="stProjects"><i>1,697</i></b><span data-ar="مشروع عقاري" data-en="projects">مشروع عقاري</span></div>
@@ -318,394 +73,61 @@
         <div class="t"><b><i>Primary</i> + Resale</b><span data-ar="داتا حقيقية" data-en="real data">داتا حقيقية</span></div>
       </div>
     </div>
-
-    <!-- Phone mockup -->
     <div class="phone-stage">
       <div class="blob"></div>
-      <div class="phone">
-        <div class="screen">
-          <div class="ph-top">
-            <div class="a">
-              <svg width="20" height="20" viewBox="0 0 64 64"><path d="M17 47V31l15-12 15 12v16" stroke="#fff" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#FF686B"/></svg>
-            </div>
-            <div>
-              <div class="nm">Homzy</div>
-            </div>
-            <div class="st" data-ar="متصل" data-en="online">متصل</div>
-          </div>
-          <div class="ph-body" id="phBody" dir="rtl">
-            <div class="msg bot">أهلاً بيك 👋 أنا Homzy، مستشارك العقاري. بتدوّر على إيجار ولا تمليك؟</div>
-            <div class="msg me">عايز شقة تمليك 3 غرف في التجمع الخامس، ميزانيتي حوالي 6 مليون</div>
-            <div class="msg bot">تمام! طلبك واضح. عندي وحدة resale جاهزة تناسبك جدًا 👇</div>
-            <div class="rec-card">
-              <span class="badge">RESALE · جاهزة للاستلام</span>
-              <div class="t">شقة 3 غرف — النرجس</div>
-              <div class="a">التجمع الخامس، القاهرة الجديدة</div>
-              <div class="pr">3,850,000 ج.م</div>
-              <div class="meta"><span>3 غرف</span><span>160 م²</span><span>استلام فوري</span></div>
-            </div>
-            <div class="msg bot">أقل من ميزانيتك وفي موقع ممتاز. أبعتلك الصور ونظبّط معاد معاينة؟</div>
-          </div>
+      <div class="phone"><div class="screen">
+        <div class="ph-top"><div class="a"><svg width="20" height="20" viewBox="0 0 64 64"><path d="M17 47V31l15-12 15 12v16" stroke="#fff" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#0B5563"/></svg></div><div class="nm">Homzy</div><div class="st" data-ar="متصل" data-en="online">متصل</div></div>
+        <div class="ph-body" dir="rtl">
+          <div class="pm bot">أهلاً بيك 👋 أنا Homzy. بتدوّر على إيجار ولا تمليك؟</div>
+          <div class="pm me">تمليك 3 غرف في التجمع، حوالي 6 مليون</div>
+          <div class="pm bot">تمام! عندي وحدة resale جاهزة تناسبك 👇</div>
+          <div class="pm-rec"><span class="bd">RESALE · جاهزة</span><div class="t">شقة 3 غرف — النرجس</div><div class="a">التجمع الخامس</div><div class="pr">3,850,000 ج.م</div><div class="meta"><span>3 غرف</span><span>160 م²</span><span>استلام فوري</span></div></div>
+          <div class="pm bot">أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟</div>
         </div>
-      </div>
+      </div></div>
     </div>
   </div>
 </section>
 
-<!-- ===== Stats band ===== -->
-<div class="band">
-  <div class="wrap band-grid">
-    <div class="s"><b id="bProjects"><i>1,697</i></b><span data-ar="مشروع من المطوّرين" data-en="developer projects">مشروع من المطوّرين</span></div>
-    <div class="s"><b id="bDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="real-estate developers">مطوّر عقاري</span></div>
-    <div class="s"><b><i>4,000+</i></b><span data-ar="وحدة resale (سوق ثانوي)" data-en="resale units (secondary)">وحدة resale (سوق ثانوي)</span></div>
-    <div class="s"><b><i>24/7</i></b><span data-ar="مستشار ذكي متاح" data-en="AI advisor available">مستشار ذكي متاح</span></div>
-  </div>
-</div>
+<!-- Stats band -->
+<div class="band"><div class="wrap band-grid">
+  <div class="s"><b id="bProjects"><i>1,697</i></b><span data-ar="مشروع من المطوّرين" data-en="developer projects">مشروع من المطوّرين</span></div>
+  <div class="s"><b id="bDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
+  <div class="s"><b><i>4,000+</i></b><span data-ar="وحدة resale" data-en="resale units">وحدة resale</span></div>
+  <div class="s"><b><i>24/7</i></b><span data-ar="مستشار ذكي" data-en="AI advisor">مستشار ذكي</span></div>
+</div></div>
 
-<!-- ===== Features ===== -->
-<section class="sec" id="features">
+<!-- Explore (links to section pages) -->
+<section class="section">
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow" data-ar="ليه Homzy" data-en="Why Homzy">ليه Homzy</span>
-      <h2 data-ar="كل اللي تحتاجه للعقار في مكان واحد" data-en="Everything you need for property, in one place">كل اللي تحتاجه للعقار في مكان واحد</h2>
-      <p data-ar="مش مجرد بحث — مستشار بيفهمك ويقنعك بالأرقام الحقيقية." data-en="Not just search — an advisor that understands you and convinces with real numbers.">مش مجرد بحث — مستشار بيفهمك ويقنعك بالأرقام الحقيقية.</p>
+      <span class="eyebrow" data-ar="استكشف Homzy" data-en="Explore Homzy">استكشف Homzy</span>
+      <h2 data-ar="كل قسم في صفحته الخاصة" data-en="Every section on its own page">كل قسم في صفحته الخاصة</h2>
     </div>
-    <div class="feat">
-      <div class="fcard reveal"><div class="fic">🤖</div><h3 data-ar="مستشار AI ذكي" data-en="Smart AI advisor">مستشار AI ذكي</h3><p data-ar="يتكلم عامية مصرية وإنجليزي، يفهم طلبك ويرشّح أنسب وحدة — من غير ما يخترع أي سعر." data-en="Speaks Egyptian Arabic & English, understands your needs, and recommends the best fit — never invents a price.">يتكلم عامية مصرية وإنجليزي، يفهم طلبك ويرشّح أنسب وحدة — من غير ما يخترع أي سعر.</p></div>
-      <div class="fcard reveal"><div class="fic">🏗️</div><h3 data-ar="Primary و Resale" data-en="Primary & Resale">Primary و Resale</h3><p data-ar="يفرّق بين مشاريع المطوّرين الجديدة (primary) وسوق الوحدات الجاهزة (resale) ويرشّح على أساس اللي بتحبه." data-en="Distinguishes new developer launches (primary) from ready resale units, and recommends based on what you prefer.">يفرّق بين مشاريع المطوّرين الجديدة (primary) وسوق الوحدات الجاهزة (resale) ويرشّح على أساس اللي بتحبه.</p></div>
-      <div class="fcard reveal"><div class="fic">🛒</div><h3 data-ar="سوق العقارات" data-en="Marketplace">سوق العقارات</h3><p data-ar="وحدات معروضة من بروكرز حقيقيين مع صور وتفاصيل، وتقدر تتواصل معاهم على طول." data-en="Listings from real brokers with photos and details — reach out to them directly.">وحدات معروضة من بروكرز حقيقيين مع صور وتفاصيل، وتقدر تتواصل معاهم على طول.</p></div>
-      <div class="fcard reveal"><div class="fic">🗺️</div><h3 data-ar="خريطة ومناطق" data-en="Map & areas">خريطة ومناطق</h3><p data-ar="استكشف المشاريع على الخريطة واتصفّح أهم مناطق مصر: التجمع، العاصمة، زايد، الساحل." data-en="Explore projects on the map and browse Egypt's top areas: New Cairo, New Capital, Zayed, North Coast.">استكشف المشاريع على الخريطة واتصفّح أهم مناطق مصر: التجمع، العاصمة، زايد، الساحل.</p></div>
-      <div class="fcard reveal"><div class="fic">📣</div><h3 data-ar="لانشات وعروض" data-en="Launches & offers">لانشات وعروض</h3><p data-ar="فيد بأحدث اللانشات والعروض الحصرية، يتحدّث أول بأول عشان متفوّتش فرصة." data-en="A feed of the latest launches and exclusive offers, updated so you never miss out.">فيد بأحدث اللانشات والعروض الحصرية، يتحدّث أول بأول عشان متفوّتش فرصة.</p></div>
-      <div class="fcard reveal"><div class="fic">🧰</div><h3 data-ar="أدوات للبروكر" data-en="Broker tools">أدوات للبروكر</h3><p data-ar="CRM للعملاء، مشاركة واتساب مبراندة، تنبيهات مطابقة، متجر خاص للبروكر، ولوحة co-broking." data-en="Client CRM, branded WhatsApp share, match alerts, a broker storefront, and a co-broking board.">CRM للعملاء، مشاركة واتساب مبراندة، تنبيهات مطابقة، متجر خاص للبروكر، ولوحة co-broking.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Cities ===== -->
-<section class="sec" id="cities" style="background:#fff; border-block:1px solid var(--line);">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="eyebrow" data-ar="المناطق" data-en="Areas">المناطق</span>
-      <h2 data-ar="اتصفّح أهم مناطق مصر" data-en="Browse Egypt's top areas">اتصفّح أهم مناطق مصر</h2>
-      <p data-ar="آلاف المشاريع موزّعة على أقوى مناطق السوق." data-en="Thousands of projects across the market's strongest areas.">آلاف المشاريع موزّعة على أقوى مناطق السوق.</p>
-    </div>
-    <div class="cities" id="cityGrid">
-      <!-- filled from Supabase; skeletons meanwhile -->
-      <div class="ccard skeleton" style="height:96px"></div>
-      <div class="ccard skeleton" style="height:96px"></div>
-      <div class="ccard skeleton" style="height:96px"></div>
-      <div class="ccard skeleton" style="height:96px"></div>
+    <div class="explore">
+      <a class="xcard reveal" href="/features"><div class="fic">✨</div><h3 data-ar="المميزات" data-en="Features">المميزات</h3><p data-ar="مستشار AI، primary/resale، سوق العقارات، خرائط، لانشات، وأدوات البروكر." data-en="AI advisor, primary/resale, marketplace, maps, launches, and broker tools.">مستشار AI، primary/resale، سوق العقارات، خرائط، لانشات، وأدوات البروكر.</p><span class="go" data-ar="اعرف أكتر ←" data-en="Learn more →">اعرف أكتر ←</span></a>
+      <a class="xcard reveal" href="/areas"><div class="fic">🗺️</div><h3 data-ar="المناطق" data-en="Areas">المناطق</h3><p data-ar="اتصفّح أهم مناطق مصر بأعداد المشاريع الحقيقية." data-en="Browse Egypt's top areas with real project counts.">اتصفّح أهم مناطق مصر بأعداد المشاريع الحقيقية.</p><span class="go" data-ar="شوف المناطق ←" data-en="See areas →">شوف المناطق ←</span></a>
+      <a class="xcard reveal" href="/app"><div class="fic">🏗️</div><h3 data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</h3><p data-ar="مشاريع المطوّرين وسوق العقارات بفلاتر وتفاصيل وأسعار." data-en="Developer projects & the marketplace with filters, details and prices.">مشاريع المطوّرين وسوق العقارات بفلاتر وتفاصيل وأسعار.</p><span class="go" data-ar="افتح التصفّح ←" data-en="Open browse →">افتح التصفّح ←</span></a>
+      <a class="xcard reveal only-client" href="/brokers"><div class="fic">🧰</div><h3 data-ar="للبروكرز" data-en="For brokers">للبروكرز</h3><p data-ar="أدوات تخلّي شغلك أسهل: CRM، مشاركة مبراندة، co-broking." data-en="Tools that make your work easier: CRM, branded sharing, co-broking.">أدوات تخلّي شغلك أسهل: CRM، مشاركة مبراندة، co-broking.</p><span class="go" data-ar="أدوات البروكر ←" data-en="Broker tools →">أدوات البروكر ←</span></a>
+      <a class="xcard reveal" href="/download"><div class="fic">📱</div><h3 data-ar="التطبيق" data-en="The app">التطبيق</h3><p data-ar="جرّبه على الويب فورًا أو حمّل تطبيق أندرويد." data-en="Try it on the web instantly or download the Android app.">جرّبه على الويب فورًا أو حمّل تطبيق أندرويد.</p><span class="go" data-ar="حمّل / جرّب ←" data-en="Get / try →">حمّل / جرّب ←</span></a>
+      <a class="xcard reveal" href="javascript:HZ.openChat()"><div class="fic">💬</div><h3 data-ar="كلّم المستشار" data-en="Talk to the advisor">كلّم المستشار</h3><p data-ar="من غير تحميل — اسأل Homzy عن أي وحدة أو منطقة دلوقتي." data-en="No install — ask Homzy about any unit or area right now.">من غير تحميل — اسأل Homzy عن أي وحدة أو منطقة دلوقتي.</p><span class="go" data-ar="ابدأ الشات ←" data-en="Start chat →">ابدأ الشات ←</span></a>
     </div>
   </div>
 </section>
 
-<!-- ===== Projects ===== -->
-<section class="sec" id="projects">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="eyebrow" data-ar="المشاريع" data-en="Projects">المشاريع</span>
-      <h2 data-ar="مشاريع حقيقية من داتا Homzy" data-en="Real projects from Homzy's data">مشاريع حقيقية من داتا Homzy</h2>
-      <p data-ar="عيّنة مباشرة من الكتالوج — بتتحدّث تلقائيًا." data-en="A live sample from the catalog — updates automatically.">عيّنة مباشرة من الكتالوج — بتتحدّث تلقائيًا.</p>
-    </div>
-    <div class="projs" id="projGrid">
-      <div class="pcard skeleton" style="height:290px"></div>
-      <div class="pcard skeleton" style="height:290px"></div>
-      <div class="pcard skeleton" style="height:290px"></div>
-    </div>
-    <div style="text-align:center; margin-top:34px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
-      <a class="btn btn-coral" href="/app" data-ar="تصفّح كل المشاريع" data-en="Browse all projects">تصفّح كل المشاريع</a>
-      <button class="btn btn-ghost" onclick="openChat()" data-ar="اسأل المستشار" data-en="Ask the advisor">اسأل المستشار</button>
-    </div>
-  </div>
-</section>
-
-<!-- ===== How it works ===== -->
-<section class="sec" style="background:#fff; border-block:1px solid var(--line);">
-  <div class="wrap">
-    <div class="sec-head reveal">
-      <span class="eyebrow" data-ar="إزاي بيشتغل" data-en="How it works">إزاي بيشتغل</span>
-      <h2 data-ar="من سؤال لوحدة أحلامك في 3 خطوات" data-en="From a question to your unit in 3 steps">من سؤال لوحدة أحلامك في 3 خطوات</h2>
-    </div>
-    <div class="steps">
-      <div class="step reveal"><div class="n"></div><h3 data-ar="قوله محتاج إيه" data-en="Tell it what you need">قوله محتاج إيه</h3><p data-ar="إيجار ولا تمليك، المنطقة، عدد الغرف، والميزانية — بأي لغة." data-en="Rent or buy, area, bedrooms and budget — in any language.">إيجار ولا تمليك، المنطقة، عدد الغرف، والميزانية — بأي لغة.</p></div>
-      <div class="step reveal"><div class="n"></div><h3 data-ar="يرشّحلك الأنسب" data-en="It recommends the best fit">يرشّحلك الأنسب</h3><p data-ar="Homzy يطابق طلبك مع الداتا الحقيقية ويرشّح وحدة واحدة تناسبك بالأرقام." data-en="Homzy matches your request to real data and recommends one unit that fits, with numbers.">Homzy يطابق طلبك مع الداتا الحقيقية ويرشّح وحدة واحدة تناسبك بالأرقام.</p></div>
-      <div class="step reveal"><div class="n"></div><h3 data-ar="تتواصل وتعاين" data-en="Connect & view">تتواصل وتعاين</h3><p data-ar="تاخد الصور والتفاصيل، وتظبّط معاد معاينة أو تتواصل واتساب على طول." data-en="Get photos and details, then book a viewing or reach out on WhatsApp.">تاخد الصور والتفاصيل، وتظبّط معاد معاينة أو تتواصل واتساب على طول.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Broker CTA ===== -->
-<section class="sec" id="brokers">
-  <div class="wrap">
-    <div class="broker reveal">
-      <div>
-        <h2 data-ar="بروكر؟ Homzy شريكك في الشغل" data-en="A broker? Homzy is your work partner">بروكر؟ Homzy شريكك في الشغل</h2>
-        <p data-ar="اعرض وحداتك، اداري عملاءك، وشارك بلمسة واحدة — وكل ده مبراند باسمك." data-en="List your units, manage your clients, and share in one tap — all branded with your name.">اعرض وحداتك، اداري عملاءك، وشارك بلمسة واحدة — وكل ده مبراند باسمك.</p>
-        <div class="tools">
-          <span>CRM للعملاء</span><span>مشاركة واتساب مبراندة</span><span>تنبيهات مطابقة</span><span>متجر البروكر</span><span>Co-broking</span>
-        </div>
-      </div>
-      <div class="side">
-        <a class="btn btn-coral" href="#download" data-ar="سجّل كبروكر" data-en="Join as a broker">سجّل كبروكر</a>
-        <button class="btn btn-ghost" onclick="openChat()" data-ar="اعرف أكتر" data-en="Learn more">اعرف أكتر</button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Download ===== -->
-<section class="sec dl" id="download">
-  <div class="wrap">
-    <div class="sec-head reveal" style="margin-bottom:8px">
-      <span class="eyebrow" data-ar="التطبيق" data-en="The app">التطبيق</span>
-      <h2 data-ar="Homzy معاك في جيبك" data-en="Homzy in your pocket">Homzy معاك في جيبك</h2>
-      <p data-ar="جرّبه على الويب فورًا، أو حمّل تطبيق أندرويد." data-en="Try it on the web instantly, or download the Android app.">جرّبه على الويب فورًا، أو حمّل تطبيق أندرويد.</p>
-    </div>
-    <div class="dl-cards reveal">
-      <a class="dl-card" href="https://alialielkhayat246-a11y.github.io/Homzy/" target="_blank" rel="noopener">
-        <span class="ic">🌐</span><span class="tx"><small data-ar="افتحه على" data-en="Open on">افتحه على</small><b data-ar="نسخة الويب" data-en="Web app">نسخة الويب</b></span>
-      </a>
-      <a class="dl-card" href="https://github.com/alialielkhayat246-a11y/Homzy/actions/workflows/build-apk.yml" target="_blank" rel="noopener">
-        <span class="ic">🤖</span><span class="tx"><small data-ar="حمّل" data-en="Download">حمّل</small><b data-ar="تطبيق أندرويد (APK)" data-en="Android app (APK)">تطبيق أندرويد (APK)</b></span>
-      </a>
-      <button class="dl-card" style="border:1px solid var(--line); background:#fff; cursor:pointer;" onclick="openChat()">
-        <span class="ic">💬</span><span class="tx"><small data-ar="من غير تحميل" data-en="No install">من غير تحميل</small><b data-ar="جرّب الشات هنا" data-en="Try the chat here">جرّب الشات هنا</b></span>
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- ===== Footer ===== -->
-<footer>
-  <div class="wrap">
-    <div class="foot-grid">
-      <div class="foot-brand">
-        <a href="#top" class="logo" style="color:#fff">
-          <svg class="mk" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#122744"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#FF686B"/></svg>
-          <span class="nm">Hom<b style="color:var(--coral)">zy</b></span>
-        </a>
-        <p data-ar="مستشارك العقاري الذكي في مصر — بالعربي والإنجليزي، مبني على داتا حقيقية." data-en="Your smart real-estate advisor in Egypt — bilingual and grounded in real data.">مستشارك العقاري الذكي في مصر — بالعربي والإنجليزي، مبني على داتا حقيقية.</p>
-      </div>
-      <div class="foot-col">
-        <h4 data-ar="المنصة" data-en="Platform">المنصة</h4>
-        <a href="#features" data-ar="المميزات" data-en="Features">المميزات</a>
-        <a href="#projects" data-ar="المشاريع" data-en="Projects">المشاريع</a>
-        <a href="#cities" data-ar="المناطق" data-en="Areas">المناطق</a>
-        <a href="#download" data-ar="التطبيق" data-en="App">التطبيق</a>
-      </div>
-      <div class="foot-col">
-        <h4 data-ar="للبروكرز" data-en="For brokers">للبروكرز</h4>
-        <a href="#brokers" data-ar="انضم كبروكر" data-en="Join as broker">انضم كبروكر</a>
-        <a href="#brokers" data-ar="أدوات البروكر" data-en="Broker tools">أدوات البروكر</a>
-        <a href="/admin" data-ar="لوحة الإدارة" data-en="Admin">لوحة الإدارة</a>
-      </div>
-    </div>
-    <div class="foot-bottom">
-      <span>© <span id="yr"></span> Homzy</span>
-      <span data-ar="Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار." data-en="Homzy can make mistakes — verify important info before deciding.">Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.</span>
-    </div>
-  </div>
-</footer>
-
-<!-- ===== Chat widget ===== -->
-<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="chat">
-  <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" fill="#fff"/><circle cx="9" cy="11" r="1.3" fill="#FF686B"/><circle cx="13" cy="11" r="1.3" fill="#FF686B"/><circle cx="17" cy="11" r="1.3" fill="#FF686B"/></svg>
-</button>
-<div class="chat-panel" id="chatPanel" dir="rtl">
-  <div class="cp-head">
-    <div class="a"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M17 47V31l15-12 15 12v16" stroke="#0B1D36" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#FF686B"/></svg></div>
-    <div><div class="nm">Homzy</div><div class="sub" id="cpSub" data-ar="مستشارك العقاري" data-en="Your property advisor">مستشارك العقاري</div></div>
-    <button class="x" onclick="toggleChat()" aria-label="close">×</button>
-  </div>
-  <div class="cp-log" id="cpLog"></div>
-  <div class="cp-chips" id="cpChips"></div>
-  <form class="cp-form" id="cpForm">
-    <input id="cpInput" autocomplete="off" />
-    <button type="submit" id="cpSend" aria-label="send"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8Z" fill="currentColor"/></svg></button>
-  </form>
-</div>
-
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
 <script>
-/* ---------------- i18n toggle ---------------- */
-let LANG = 'ar';
-function applyLang(){
-  document.documentElement.lang = LANG;
-  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  document.querySelectorAll('[data-ar]').forEach(el=>{
-    el.innerHTML = el.getAttribute('data-'+LANG);
-  });
-  document.getElementById('langBtn').textContent = LANG === 'ar' ? 'EN' : 'ع';
-  document.getElementById('cpInput').placeholder = LANG === 'ar' ? 'اكتب رسالتك…' : 'Type your message…';
-  document.getElementById('chatPanel').dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  renderChips();
-}
-function toggleLang(){ LANG = LANG === 'ar' ? 'en' : 'ar'; applyLang(); }
-
-document.getElementById('yr').textContent = new Date().getFullYear();
-
-/* ---------------- Header scroll ---------------- */
-const navEl = document.getElementById('nav');
-addEventListener('scroll', ()=> navEl.classList.toggle('scrolled', scrollY > 8));
-
-/* ---------------- Reveal on scroll ---------------- */
-const io = new IntersectionObserver((es)=>{
-  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
-},{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-/* ---------------- Supabase live data ---------------- */
-const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
-const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
-async function sb(path){
-  const r = await fetch(SB_URL+'/rest/v1'+path,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
-  if(!r.ok) throw new Error('sb '+r.status);
-  return r.json();
-}
-function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-
-function normArea(a){
-  return (a||'').toLowerCase().replace(/[^a-z0-9؀-ۿ ]/g,'')
-    .replace(/(\d)(st|nd|rd|th)/g,'$1')   // 6th -> 6
-    .replace(/\b(of|el|al|new)\b/g,'').replace(/\s+/g,' ').trim();
-}
-async function loadCities(){
-  try{
-    const raw = await sb('/v_city_counts?select=area,projects,units&order=projects.desc&limit=25');
-    // Merge duplicate area spellings (e.g. "6th of October" + "6 October").
-    const map=new Map();
-    raw.forEach(c=>{
-      const k=normArea(c.area); const cur=map.get(k);
-      if(!cur){ map.set(k,{area:c.area,projects:c.projects||0,units:c.units||0}); }
-      else{ cur.projects+=c.projects||0; cur.units+=c.units||0;
-        if((c.area||'').length>(cur.area||'').length) cur.area=c.area; }
-    });
-    const rows=[...map.values()].sort((a,b)=>b.projects-a.projects).slice(0,8);
-    const g = document.getElementById('cityGrid'); g.innerHTML='';
-    rows.forEach(c=>{
-      const d=document.createElement('div'); d.className='ccard reveal in';
-      d.innerHTML = `<div class="nm">${esc(c.area)}</div><div class="co"><b>${(c.projects||0).toLocaleString()}</b> <span data-ar="مشروع" data-en="projects">مشروع</span> · ${(c.units||0).toLocaleString()} <span data-ar="وحدة" data-en="units">وحدة</span></div>`;
-      d.style.cursor='pointer'; d.onclick=()=>openChat('عايز أعرف المشاريع في '+c.area);
-      g.appendChild(d);
-    });
-    applyLang();
-  }catch(e){ document.getElementById('cities').style.display='none'; }
-}
-async function loadProjects(){
-  try{
-    const rows = await sb('/projects?select=id,name,name_ar,area,cover_image_url,developer:developers(name)&cover_image_url=not.is.null&order=updated_at.desc&limit=6');
-    const g = document.getElementById('projGrid'); g.innerHTML='';
-    rows.slice(0,6).forEach(p=>{
-      const dev = (p.developer && p.developer.name) ? p.developer.name : '';
-      const img = p.cover_image_url ? `background-image:url('${esc(p.cover_image_url)}')` : '';
-      const d=document.createElement('div'); d.className='pcard reveal in';
-      d.innerHTML = `<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}</div>
-        <div class="b"><div class="nm">${esc(p.name)}</div>${dev?`<div class="dv">${esc(dev)}</div>`:''}
-        <div class="ar">💬 <span data-ar="اسأل عنه" data-en="Ask about it">اسأل عنه</span></div></div>`;
-      d.style.cursor='pointer'; d.onclick=()=>openChat((LANG==='ar'?'عايز أعرف تفاصيل مشروع ':'Tell me about ')+p.name);
-      g.appendChild(d);
-    });
-    applyLang();
-  }catch(e){ document.getElementById('projects').style.display='none'; }
-}
-async function loadStats(){
-  try{
-    const head=(t)=>fetch(SB_URL+'/rest/v1/'+t+'?select=id&limit=1',{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,Prefer:'count=exact'}}).then(r=>{
-      const cr=r.headers.get('content-range')||'/0'; return parseInt(cr.split('/')[1]||'0',10);
-    });
-    const [pr,dv] = await Promise.all([head('projects'),head('developers')]);
-    if(pr){ document.querySelectorAll('#stProjects i,#bProjects i').forEach(e=>e.textContent=pr.toLocaleString()); }
-    if(dv){ document.querySelectorAll('#stDevs i,#bDevs i').forEach(e=>e.textContent=dv.toLocaleString()); }
-  }catch(e){}
-}
-
-/* ---------------- Chat widget ---------------- */
-const panel=document.getElementById('chatPanel');
-const fab=document.getElementById('chatFab');
-const cpLog=document.getElementById('cpLog');
-const cpForm=document.getElementById('cpForm');
-const cpInput=document.getElementById('cpInput');
-const cpSend=document.getElementById('cpSend');
-const sessionId='web-'+Math.random().toString(36).slice(2);
-let history=[]; let greeted=false;
-
-const isAr=(t)=>/[؀-ۿ]/.test(t||'');
-const CHIPS={
-  ar:[['🔑','عايز أشتري'],['🏠','عايز أأجّر'],['📍','مشاريع في التجمع الخامس'],['🏙️','شقة في الشيخ زايد']],
-  en:[['🔑','I want to buy'],['🏠','I want to rent'],['📍','Projects in New Cairo'],['🏙️','Apartment in Sheikh Zayed']]
-};
-function renderChips(){
-  const box=document.getElementById('cpChips'); if(!box) return; box.innerHTML='';
-  (CHIPS[LANG]||CHIPS.ar).forEach(([ic,txt])=>{
-    const b=document.createElement('button'); b.textContent=ic+' '+txt;
-    b.onclick=()=>{ box.innerHTML=''; sendMsg(txt); }; box.appendChild(b);
-  });
-}
-function addMsg(text,who){
-  const d=document.createElement('div'); d.className='msg '+who;
-  d.style.direction=isAr(text)?'rtl':'ltr'; d.style.textAlign=isAr(text)?'right':'left';
-  d.textContent=text; cpLog.appendChild(d); cpLog.scrollTop=cpLog.scrollHeight; return d;
-}
-function addRec(rec){
-  const ar=LANG==='ar';
-  const price = ar ? (rec.price_ar||rec.price_en||'') : (rec.price_en||rec.price_ar||'');
-  const market = rec.market==='resale' ? (ar?'RESALE · جاهزة':'RESALE · ready') : (ar?'PRIMARY · من المطوّر':'PRIMARY · new launch');
-  const name = ar ? (rec.compound_ar||rec.compound||'') : (rec.compound||rec.compound_ar||'');
-  const area = ar ? (rec.area_ar||rec.area||'') : (rec.area||rec.area_ar||'');
-  const beds = rec.bedrooms!=null ? `<span>${rec.bedrooms} ${ar?'غرف':'BR'}</span>`:'';
-  const size = rec.size_sqm ? `<span>${rec.size_sqm} ${ar?'م²':'m²'}</span>`:'';
-  const dev = rec.developer ? `<span>${esc(rec.developer)}</span>`:'';
-  const d=document.createElement('div'); d.className='rec-card'; d.dir=ar?'rtl':'ltr';
-  d.innerHTML = `<span class="badge">${market}</span>
-    <div class="t">${esc(name)}</div>${area?`<div class="a">${esc(area)}</div>`:''}
-    ${price?`<div class="pr">${esc(price)}</div>`:''}
-    <div class="meta">${beds}${size}${dev}</div>`;
-  cpLog.appendChild(d); cpLog.scrollTop=cpLog.scrollHeight;
-}
-function typing(){
-  const t=document.createElement('div'); t.className='typing'; t.innerHTML='<i></i><i></i><i></i>';
-  cpLog.appendChild(t); cpLog.scrollTop=cpLog.scrollHeight; return t;
-}
-async function sendMsg(text){
-  text=(text||'').trim(); if(!text) return;
-  document.getElementById('cpChips').innerHTML='';
-  addMsg(text,'me'); history.push({role:'user',content:text});
-  cpInput.value=''; cpSend.disabled=true;
-  const t=typing();
-  try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({session_id:sessionId,message:text,history})});
-    const data=await r.json(); t.remove();
-    const reply=data.reply||'(no reply)';
-    addMsg(reply,'bot'); history.push({role:'assistant',content:reply});
-    const recs=data.recommendations||(data.recommendation?[data.recommendation]:[]);
-    if(recs&&recs[0]) addRec(recs[0]);
-  }catch(e){
-    t.remove();
-    addMsg(LANG==='ar'?'في مشكلة في الاتصال — حاول تاني بعد شوية.':'Connection issue — please try again.','bot');
-  }finally{ cpSend.disabled=false; cpInput.focus(); }
-}
-cpForm.addEventListener('submit',e=>{e.preventDefault(); sendMsg(cpInput.value);});
-
-function greet(){
-  if(greeted) return; greeted=true;
-  addMsg(LANG==='ar'
-    ? 'أهلاً بيك! أنا Homzy، مستشارك العقاري 👋 بتدوّر على إيجار ولا تمليك؟ قوللي منطقتك وميزانيتك وعدد الغرف وأجيبلك أنسب وحدة.'
-    : "Hi! I'm Homzy, your property advisor 👋 Renting or buying? Tell me your area, budget and bedrooms and I'll find the best fit.",
-    'bot');
-  renderChips();
-}
-function openChat(prefill){
-  panel.classList.add('open'); fab.style.display='none'; greet();
-  if(prefill){ setTimeout(()=>sendMsg(prefill),250); } else cpInput.focus();
-}
-function toggleChat(){
-  if(panel.classList.contains('open')){ panel.classList.remove('open'); fab.style.display='flex'; }
-  else openChat();
-}
-
-/* ---------------- init ---------------- */
-applyLang();
-loadCities(); loadProjects(); loadStats();
+  // Reveal on scroll
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+  // Live counts
+  (async()=>{try{
+    const head=t=>fetch('https://ceoqtkbpdxnkuptnnwjg.supabase.co/rest/v1/'+t+'?select=id&limit=1',{headers:{apikey:'sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Authorization:'Bearer sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Prefer:'count=exact'}}).then(r=>parseInt((r.headers.get('content-range')||'/0').split('/')[1]||'0',10));
+    const [pr,dv]=await Promise.all([head('projects'),head('developers')]);
+    if(pr)document.querySelectorAll('#stProjects i,#bProjects i').forEach(e=>e.textContent=pr.toLocaleString());
+    if(dv)document.querySelectorAll('#stDevs i,#bDevs i').forEach(e=>e.textContent=dv.toLocaleString());
+  }catch(e){}})();
 </script>
 </body>
 </html>
