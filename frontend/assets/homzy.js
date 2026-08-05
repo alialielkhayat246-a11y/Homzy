@@ -270,8 +270,12 @@ async function sendMsg(text){
 function captureLead(text){
   const phone=(text.match(/(\+?2?01[0-9]{9})|(\b01[0-9]{9}\b)/)||[])[0];
   if(phone) chat.lead.phone=phone.replace(/\s/g,'');
-  const nmeq=text.match(/(?:اسمي|انا اسمي|أنا)\s+([^\d,،.\n]{2,30})/);
-  if(nmeq && !chat.lead.name) chat.lead.name=nmeq[1].trim();
+  const nmeq=text.match(/(?:اسمي|انا اسمي|أنا اسمي|my name is|i am|i'm)\s+([^\d,،.\n]{2,30})/i);
+  if(nmeq && !chat.lead.name){
+    // stop before "and my number / phone" style tails.
+    let nm=nmeq[1].trim().replace(/\s*(و?رقمي?|و?نمبر|ومعا?يا|and my|number|phone).*$/i,'').trim();
+    if(nm.length>=2) chat.lead.name=nm;
+  }
 }
 
 HZ.openChat = function(opts){
