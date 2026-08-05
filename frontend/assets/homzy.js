@@ -313,15 +313,19 @@ HZ.saveLead=function(){
   clearTimeout(leadTimer);
   leadTimer=setTimeout(async ()=>{
     try{
-      const row={ session_id:chat.sessionId, name:chat.lead.name||null, phone:chat.lead.phone||null,
-        context: chat.context? (chat.context.name+(chat.context.area?(' · '+chat.context.area):'')):null,
-        messages: chat.history, lang:HZ.lang, updated_at:new Date().toISOString() };
-      await HZ.sb('/web_leads?on_conflict=session_id',{
+      await HZ.sb('/rpc/upsert_web_lead',{
         method:'POST',
-        headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify(row)
+        headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({
+          p_session_id: chat.sessionId,
+          p_name: chat.lead.name||null,
+          p_phone: chat.lead.phone||null,
+          p_context: chat.context ? (chat.context.name+(chat.context.area?(' · '+chat.context.area):'')) : null,
+          p_messages: chat.history,
+          p_lang: HZ.lang
+        })
       });
-    }catch(e){ /* table may not exist yet; ignore */ }
+    }catch(e){ /* best-effort; ignore */ }
   }, 1500);
 };
 
