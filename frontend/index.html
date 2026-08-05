@@ -277,7 +277,7 @@
     </a>
     <nav class="links">
       <a href="#features" data-ar="المميزات" data-en="Features">المميزات</a>
-      <a href="#projects" data-ar="المشاريع" data-en="Projects">المشاريع</a>
+      <a href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</a>
       <a href="#cities" data-ar="المناطق" data-en="Areas">المناطق</a>
       <a href="#brokers" data-ar="للبروكرز" data-en="For brokers">للبروكرز</a>
       <a href="#download" data-ar="التطبيق" data-en="App">التطبيق</a>
@@ -292,7 +292,7 @@
   </div>
   <div class="mobile-menu" id="mmenu">
     <a href="#features" data-ar="المميزات" data-en="Features" onclick="document.getElementById('mmenu').classList.remove('open')">المميزات</a>
-    <a href="#projects" data-ar="المشاريع" data-en="Projects" onclick="document.getElementById('mmenu').classList.remove('open')">المشاريع</a>
+    <a href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects" onclick="document.getElementById('mmenu').classList.remove('open')">تصفّح المشاريع</a>
     <a href="#cities" data-ar="المناطق" data-en="Areas" onclick="document.getElementById('mmenu').classList.remove('open')">المناطق</a>
     <a href="#brokers" data-ar="للبروكرز" data-en="For brokers" onclick="document.getElementById('mmenu').classList.remove('open')">للبروكرز</a>
     <a href="#download" data-ar="التطبيق" data-en="App" onclick="document.getElementById('mmenu').classList.remove('open')">التطبيق</a>
@@ -412,8 +412,9 @@
       <div class="pcard skeleton" style="height:290px"></div>
       <div class="pcard skeleton" style="height:290px"></div>
     </div>
-    <div style="text-align:center; margin-top:34px">
-      <button class="btn btn-navy" onclick="openChat()" data-ar="اسأل المستشار عن مشروع معيّن" data-en="Ask the advisor about a project">اسأل المستشار عن مشروع معيّن</button>
+    <div style="text-align:center; margin-top:34px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap">
+      <a class="btn btn-coral" href="/app" data-ar="تصفّح كل المشاريع" data-en="Browse all projects">تصفّح كل المشاريع</a>
+      <button class="btn btn-ghost" onclick="openChat()" data-ar="اسأل المستشار" data-en="Ask the advisor">اسأل المستشار</button>
     </div>
   </div>
 </section>

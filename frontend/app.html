@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — تصفّح المشاريع والعقارات</title>
+<meta name="description" content="اتصفّح مشاريع المطوّرين وسوق العقارات على Homzy — فلترة بالمنطقة والنوع، تفاصيل الوحدات والأسعار وخطط التقسيط، وتواصل مباشر." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%23FF686B'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1D36; --navy-2:#122744;
+    --coral:#FF686B; --coral-d:#F0484B; --coral-l:#FFE7E7;
+    --cream:#F7F2EE; --card:#FFFFFF;
+    --green:#22C55E; --muted:#6B7280; --line:#EBE5DE; --line-2:#E2DAD1;
+    --shadow:0 18px 50px rgba(11,29,54,.14); --shadow-sm:0 6px 20px rgba(11,29,54,.08);
+    --ff:"Cairo","Segoe UI",Tahoma,Arial,sans-serif; --fd:"Poppins","Cairo",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:var(--ff); color:var(--navy); background:var(--cream); line-height:1.6; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3{margin:0; line-height:1.2; font-weight:800;}
+  p{margin:0;} a{color:inherit; text-decoration:none;} img{display:block; max-width:100%;}
+  .wrap{max-width:1200px; margin:0 auto; padding:0 20px;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--ff); font-weight:700; font-size:14px; cursor:pointer; padding:11px 18px; border-radius:12px; border:1.5px solid transparent; transition:transform .12s, background .2s, box-shadow .2s, border-color .2s; white-space:nowrap;}
+  .btn:active{transform:translateY(1px);}
+  .btn-coral{background:var(--coral); color:#fff;} .btn-coral:hover{background:var(--coral-d);}
+  .btn-navy{background:var(--navy); color:#fff;} .btn-navy:hover{background:var(--navy-2);}
+  .btn-ghost{background:#fff; color:var(--navy); border-color:var(--line-2);} .btn-ghost:hover{border-color:var(--navy);}
+  .btn-wa{background:var(--green); color:#fff;}
+
+  /* Header */
+  header.nav{position:sticky; top:0; z-index:50; background:rgba(247,242,238,.92); backdrop-filter:saturate(140%) blur(12px); border-bottom:1px solid var(--line);}
+  .nav-in{display:flex; align-items:center; gap:16px; height:64px;}
+  .logo{display:flex; align-items:center; gap:10px; font-weight:800;}
+  .logo .mk{width:36px; height:36px; flex:none;}
+  .logo .nm{font-size:20px; font-family:var(--fd);} .logo .nm b{color:var(--coral);}
+  .nav-cta{margin-inline-start:auto; display:flex; align-items:center; gap:10px;}
+  .lang-btn{font-family:var(--ff); font-weight:700; font-size:14px; cursor:pointer; background:#fff; border:1.5px solid var(--line-2); border-radius:11px; padding:8px 13px; color:var(--navy);}
+  .lang-btn:hover{border-color:var(--navy);}
+
+  /* Tabs */
+  .tabs{display:flex; gap:8px; padding:14px 0 0;}
+  .tab{font-family:var(--ff); font-weight:700; font-size:15px; cursor:pointer; padding:10px 20px; border-radius:100px; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
+  .tab.on{background:var(--navy); color:#fff; border-color:var(--navy);}
+
+  /* Filters */
+  .filters{display:flex; gap:10px; flex-wrap:wrap; padding:16px 0; align-items:center;}
+  .filters input, .filters select{font-family:var(--ff); font-size:14px; padding:11px 14px; border:1.5px solid var(--line-2); border-radius:12px; background:#fff; color:var(--navy); outline:none;}
+  .filters input:focus, .filters select:focus{border-color:var(--coral);}
+  .filters input[type=search]{flex:1; min-width:200px;}
+  .rescount{color:var(--muted); font-size:14px; margin-inline-start:auto;}
+
+  /* Grid */
+  .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding-bottom:30px;}
+  .pcard{background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; cursor:pointer; transition:transform .16s, box-shadow .16s;}
+  .pcard:hover{transform:translateY(-4px); box-shadow:var(--shadow);}
+  .pcard .img{height:160px; background:#e9e2da center/cover no-repeat; position:relative;}
+  .pcard .img .tag{position:absolute; top:10px; inset-inline-start:10px; background:rgba(11,29,54,.86); color:#fff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; backdrop-filter:blur(4px);}
+  .pcard .img .mk2{position:absolute; top:10px; inset-inline-end:10px; background:var(--coral); color:#fff; font-size:10px; font-weight:800; padding:4px 9px; border-radius:100px;}
+  .pcard .b{padding:14px 15px;}
+  .pcard .b .nm{font-weight:800; font-size:16px; line-height:1.3;}
+  .pcard .b .dv{font-size:13px; color:var(--muted); margin-top:3px;}
+  .pcard .b .row{display:flex; align-items:center; gap:6px; margin-top:9px; font-size:13px; color:#40506a; flex-wrap:wrap;}
+  .pcard .b .row .pill{background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:3px 9px; font-weight:600;}
+  .pcard .b .pr{margin-top:9px; font-weight:800; color:var(--coral-d); font-size:15px;}
+
+  .skeleton{background:linear-gradient(100deg,#efe8e0 30%,#f6f1ea 50%,#efe8e0 70%); background-size:200% 100%; animation:sk 1.3s infinite;}
+  @keyframes sk{to{background-position:-200% 0;}}
+  .empty{grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted);}
+  .loadmore{text-align:center; padding:0 0 50px;}
+
+  /* Detail overlay */
+  .overlay{position:fixed; inset:0; z-index:70; background:rgba(11,29,54,.55); backdrop-filter:blur(3px); display:none; align-items:stretch; justify-content:flex-start;}
+  .overlay.open{display:flex; animation:fade .2s;}
+  @keyframes fade{from{opacity:0;} to{opacity:1;}}
+  .drawer{background:var(--cream); width:min(560px,100%); height:100%; overflow-y:auto; box-shadow:var(--shadow); animation:slide .25s ease;}
+  html[dir=rtl] .overlay{justify-content:flex-start;}
+  @keyframes slide{from{transform:translateX(var(--sx,-30px)); opacity:.6;} to{transform:none; opacity:1;}}
+  .dhead{position:relative; height:220px; background:#e9e2da center/cover no-repeat;}
+  .dhead .close{position:absolute; top:14px; inset-inline-end:14px; width:38px; height:38px; border-radius:11px; background:rgba(255,255,255,.92); border:none; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center;}
+  .dhead .mk2{position:absolute; bottom:14px; inset-inline-start:14px; background:var(--coral); color:#fff; font-size:11px; font-weight:800; padding:5px 12px; border-radius:100px;}
+  .dbody{padding:20px;}
+  .dbody h2{font-size:23px;}
+  .dbody .sub{color:var(--muted); font-size:15px; margin-top:4px;}
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin:14px 0;}
+  .chips .c{background:#fff; border:1px solid var(--line); border-radius:10px; padding:6px 12px; font-size:13px; font-weight:600; color:#40506a;}
+  .dsec{background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px; margin-top:14px;}
+  .dsec h3{font-size:16px; margin-bottom:10px;}
+  .dsec p{color:#40506a; font-size:14px;}
+  .utable{width:100%; border-collapse:collapse; font-size:13px;}
+  .utable th{text-align:start; color:var(--muted); font-weight:700; padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  .utable td{padding:9px 8px; border-bottom:1px solid var(--line); color:#40506a;}
+  .utable tr:last-child td{border-bottom:none;}
+  .utable .pr{color:var(--coral-d); font-weight:800; white-space:nowrap;}
+  .gallery{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px;}
+  .gallery img{height:120px; border-radius:12px; flex:none; object-fit:cover; border:1px solid var(--line);}
+  .dactions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; position:sticky; bottom:0; background:linear-gradient(transparent,var(--cream) 30%); padding:14px 0 4px;}
+  .dactions .btn{flex:1; min-width:130px;}
+
+  /* Chat widget (shared) */
+  .chat-fab{position:fixed; inset-inline-end:20px; bottom:20px; z-index:60; width:58px; height:58px; border-radius:50%; background:var(--coral); color:#fff; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(255,104,107,.42); display:flex; align-items:center; justify-content:center; transition:transform .16s;}
+  .chat-fab:hover{transform:scale(1.06);} .chat-fab svg{width:27px; height:27px;}
+  .chat-panel{position:fixed; inset-inline-end:20px; bottom:88px; z-index:60; width:378px; max-width:calc(100vw - 30px); height:min(590px,calc(100vh - 120px)); background:#fff; border-radius:22px; box-shadow:0 24px 70px rgba(11,29,54,.32); display:none; flex-direction:column; overflow:hidden; border:1px solid var(--line);}
+  .chat-panel.open{display:flex;}
+  .cp-head{display:flex; align-items:center; gap:11px; padding:13px 15px; background:var(--navy); color:#fff;}
+  .cp-head .a{width:36px; height:36px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;}
+  .cp-head .nm{font-weight:800; font-size:15px;} .cp-head .sub{font-size:11px; opacity:.7;}
+  .cp-head .x{margin-inline-start:auto; background:rgba(255,255,255,.14); border:none; color:#fff; width:30px; height:30px; border-radius:9px; cursor:pointer; font-size:17px;}
+  .cp-log{flex:1; overflow-y:auto; padding:15px 13px; display:flex; flex-direction:column; gap:11px; background:var(--cream);}
+  .msg{max-width:85%; padding:10px 13px; font-size:13.5px; line-height:1.55; border-radius:16px; white-space:pre-wrap;}
+  .msg.bot{background:#fff; border:1px solid var(--line); align-self:flex-start; border-bottom-inline-start-radius:5px;}
+  .msg.me{background:var(--coral); color:#fff; align-self:flex-end; border-bottom-inline-end-radius:5px;}
+  .rec-card{align-self:flex-start; max-width:90%; background:#fff; border:1px solid var(--line); border-radius:15px; padding:11px; box-shadow:var(--shadow-sm);}
+  .rec-card .badge{display:inline-block; font-size:10px; font-weight:800; color:var(--coral-d); background:var(--coral-l); padding:3px 9px; border-radius:100px; margin-bottom:6px;}
+  .rec-card .t{font-weight:800; font-size:14px;} .rec-card .a{font-size:12px; color:var(--muted); margin-top:2px;}
+  .rec-card .pr{font-weight:800; font-size:15px; margin-top:6px;}
+  .rec-card .meta{display:flex; gap:7px; margin-top:7px; flex-wrap:wrap;}
+  .rec-card .meta span{font-size:11px; background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:3px 8px; color:#40506a;}
+  .typing{display:flex; gap:4px; padding:11px 13px; background:#fff; border:1px solid var(--line); border-radius:15px; align-self:flex-start; width:fit-content;}
+  .typing i{width:7px; height:7px; border-radius:50%; background:#c3c9d2; animation:blink 1.3s infinite;}
+  .typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.3;} 40%{opacity:1;}}
+  .cp-form{display:flex; gap:9px; padding:11px 12px; border-top:1px solid var(--line); background:#fff;}
+  .cp-form input{flex:1; border:1px solid var(--line-2); background:var(--cream); border-radius:100px; padding:10px 15px; font-family:var(--ff); font-size:14px; outline:none;}
+  .cp-form input:focus{border-color:var(--coral); background:#fff;}
+  .cp-form button{width:42px; height:42px; flex:none; border:none; border-radius:50%; background:var(--coral); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .cp-form button:disabled{opacity:.5;}
+
+  @media(max-width:1000px){ .grid{grid-template-columns:repeat(3,1fr);} }
+  @media(max-width:760px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:480px){ .grid{grid-template-columns:1fr;} .filters input[type=search]{min-width:100%;} }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a href="/" class="logo" aria-label="Homzy home">
+      <svg class="mk" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#FF686B"/></svg>
+      <span class="nm">Hom<b>zy</b></span>
+    </a>
+    <div class="nav-cta">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">EN</button>
+      <a class="btn btn-ghost" href="/" data-ar="الرئيسية" data-en="Home">الرئيسية</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab on" id="tabProjects" onclick="switchTab('projects')" data-ar="مشاريع المطوّرين" data-en="Developer projects">مشاريع المطوّرين</button>
+    <button class="tab" id="tabMarket" onclick="switchTab('market')" data-ar="سوق العقارات" data-en="Marketplace">سوق العقارات</button>
+  </div>
+
+  <!-- Projects filters -->
+  <div class="filters" id="projFilters">
+    <input type="search" id="q" placeholder="ابحث باسم المشروع أو المطوّر…" oninput="debouncedLoad()" />
+    <select id="fArea" onchange="loadProjects(true)"><option value="" data-ar="كل المناطق" data-en="All areas">كل المناطق</option></select>
+    <select id="fType" onchange="loadProjects(true)">
+      <option value="" data-ar="كل الأنواع" data-en="All types">كل الأنواع</option>
+      <option value="apartment" data-ar="شقة" data-en="Apartment">شقة</option>
+      <option value="duplex" data-ar="دوبلكس" data-en="Duplex">دوبلكس</option>
+      <option value="penthouse" data-ar="بنتهاوس" data-en="Penthouse">بنتهاوس</option>
+      <option value="studio" data-ar="استوديو" data-en="Studio">استوديو</option>
+      <option value="townhouse" data-ar="تاون هاوس" data-en="Townhouse">تاون هاوس</option>
+      <option value="villa" data-ar="فيلا" data-en="Villa">فيلا</option>
+      <option value="office" data-ar="مكتب إداري" data-en="Office">مكتب إداري</option>
+      <option value="clinic" data-ar="عيادة" data-en="Clinic">عيادة</option>
+      <option value="shop" data-ar="محل تجاري" data-en="Shop">محل تجاري</option>
+    </select>
+    <span class="rescount" id="projCount"></span>
+  </div>
+
+  <!-- Market filters -->
+  <div class="filters" id="marketFilters" style="display:none">
+    <input type="search" id="mq" placeholder="ابحث في السوق…" oninput="debouncedLoadMarket()" />
+    <select id="mPurpose" onchange="loadMarket()">
+      <option value="" data-ar="بيع وإيجار" data-en="Buy & rent">بيع وإيجار</option>
+      <option value="sale" data-ar="للبيع" data-en="For sale">للبيع</option>
+      <option value="rent" data-ar="للإيجار" data-en="For rent">للإيجار</option>
+    </select>
+    <span class="rescount" id="marketCount"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="loadmore" id="loadMoreWrap" style="display:none">
+    <button class="btn btn-navy" id="loadMoreBtn" onclick="loadProjects(false)" data-ar="عرض المزيد" data-en="Load more">عرض المزيد</button>
+  </div>
+</div>
+
+<!-- Detail drawer -->
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeDetail()">
+  <div class="drawer" id="drawer"></div>
+</div>
+
+<!-- Chat widget -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="chat">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" fill="#fff"/><circle cx="9" cy="11" r="1.3" fill="#FF686B"/><circle cx="13" cy="11" r="1.3" fill="#FF686B"/><circle cx="17" cy="11" r="1.3" fill="#FF686B"/></svg>
+</button>
+<div class="chat-panel" id="chatPanel" dir="rtl">
+  <div class="cp-head">
+    <div class="a"><svg width="21" height="21" viewBox="0 0 64 64"><path d="M17 47V31l15-12 15 12v16" stroke="#0B1D36" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#FF686B"/></svg></div>
+    <div><div class="nm">Homzy</div><div class="sub" data-ar="مستشارك العقاري" data-en="Your property advisor">مستشارك العقاري</div></div>
+    <button class="x" onclick="toggleChat()">×</button>
+  </div>
+  <div class="cp-log" id="cpLog"></div>
+  <form class="cp-form" id="cpForm"><input id="cpInput" autocomplete="off" /><button type="submit" id="cpSend"><svg width="17" height="17" viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8Z" fill="currentColor"/></svg></button></form>
+</div>
+
+<script>
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+async function sb(path){
+  const r=await fetch(SB_URL+'/rest/v1'+path,{headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}});
+  if(!r.ok) throw new Error('sb '+r.status); return r.json();
+}
+function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function money(n){ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString('en-US')+(LANG==='ar'?' ج.م':' EGP'); }
+const T={
+  ar:{from:'يبدأ من',beds:'غرف',br:'غرف',sqm:'م²',delivery:'التسليم',units:'الوحدات المتاحة',type:'النوع',size:'المساحة',price:'السعر',plan:'خطة السداد',dp:'المقدم',about:'عن المطوّر',amen:'المميزات',noproj:'مفيش نتائج بالمعايير دي — جرّب تغيّر الفلاتر.',brochure:'تحميل البروشور',whatsapp:'تواصل واتساب',ask:'اسأل المستشار عنه',dev:'المطوّر',studio:'استوديو'},
+  en:{from:'from',beds:'BR',br:'BR',sqm:'m²',delivery:'Delivery',units:'Available units',type:'Type',size:'Size',price:'Price',plan:'Payment plan',dp:'Down pmt',about:'About the developer',amen:'Amenities',noproj:'No results for these filters — try changing them.',brochure:'Download brochure',whatsapp:'WhatsApp',ask:'Ask the advisor',dev:'Developer',studio:'Studio'}
+};
+function t(k){return (T[LANG]||T.ar)[k];}
+
+/* ---- i18n ---- */
+let LANG='ar';
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.documentElement.dir=LANG==='ar'?'rtl':'ltr';
+  document.querySelectorAll('[data-ar]').forEach(el=>{
+    if(el.tagName==='OPTION'){ el.textContent=el.getAttribute('data-'+LANG); }
+    else el.innerHTML=el.getAttribute('data-'+LANG);
+  });
+  document.getElementById('langBtn').textContent=LANG==='ar'?'EN':'ع';
+  document.getElementById('q').placeholder=LANG==='ar'?'ابحث باسم المشروع أو المطوّر…':'Search by project or developer…';
+  document.getElementById('mq').placeholder=LANG==='ar'?'ابحث في السوق…':'Search the marketplace…';
+  document.getElementById('cpInput').placeholder=LANG==='ar'?'اكتب رسالتك…':'Type your message…';
+  document.getElementById('chatPanel').dir=LANG==='ar'?'rtl':'ltr';
+}
+function toggleLang(){LANG=LANG==='ar'?'en':'ar'; applyLang(); if(TAB==='projects') loadProjects(true); else loadMarket(); }
+
+/* ---- Tabs ---- */
+let TAB='projects';
+function switchTab(tab){
+  TAB=tab;
+  document.getElementById('tabProjects').classList.toggle('on',tab==='projects');
+  document.getElementById('tabMarket').classList.toggle('on',tab==='market');
+  document.getElementById('projFilters').style.display=tab==='projects'?'flex':'none';
+  document.getElementById('marketFilters').style.display=tab==='market'?'flex':'none';
+  if(tab==='projects') loadProjects(true); else loadMarket();
+}
+
+/* ---- Projects ---- */
+let projOffset=0; const PAGE=48; let projLoading=false;
+function skeletons(n){ document.getElementById('grid').innerHTML=Array.from({length:n}).map(()=>'<div class="pcard skeleton" style="height:260px"></div>').join(''); }
+async function loadAreas(){
+  try{
+    const rows=await sb('/v_city_counts?select=area,projects&order=projects.desc&limit=30');
+    const sel=document.getElementById('fArea');
+    rows.forEach(r=>{ if(!r.area) return; const o=document.createElement('option'); o.value=r.area; o.textContent=`${r.area} (${r.projects})`; sel.appendChild(o); });
+  }catch(e){}
+}
+async function loadProjects(reset){
+  if(projLoading) return; projLoading=true;
+  if(reset){ projOffset=0; skeletons(8); }
+  const q=document.getElementById('q').value.trim();
+  const area=document.getElementById('fArea').value;
+  const type=document.getElementById('fType').value;
+  let sel='id,name,name_ar,area,delivery,status,cover_image_url,developer:developers(name)';
+  if(type) sel+=',unit_types!inner(type)';
+  let path='/projects?select='+encodeURIComponent(sel);
+  if(q){ const s=q.replace(/,/g,' '); path+='&or=('+encodeURIComponent(`name.ilike.*${s}*,name_ar.ilike.*${s}*,area.ilike.*${s}*`)+')'; }
+  if(area) path+='&area=ilike.*'+encodeURIComponent(area)+'*';
+  if(type) path+='&unit_types.type=eq.'+encodeURIComponent(type);
+  path+='&order=updated_at.desc&limit='+PAGE+'&offset='+projOffset;
+  try{
+    const rows=await sb(path);
+    // de-dupe (inner join can repeat)
+    const seen=new Set(); const uniq=[];
+    rows.forEach(p=>{ if(!seen.has(p.id)){ seen.add(p.id); uniq.push(p); } });
+    const grid=document.getElementById('grid');
+    if(reset) grid.innerHTML='';
+    if(reset && uniq.length===0){ grid.innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
+    uniq.forEach(p=>grid.appendChild(projectCard(p)));
+    projOffset+=PAGE;
+    document.getElementById('loadMoreWrap').style.display=rows.length>=PAGE?'block':'none';
+    document.getElementById('projCount').textContent = LANG==='ar'
+      ? (reset? (grid.querySelectorAll('.pcard').length)+' مشروع' : '')
+      : (reset? (grid.querySelectorAll('.pcard').length)+' projects' : '');
+    if(reset){
+      document.getElementById('projCount').textContent = grid.querySelectorAll('.pcard').length + (LANG==='ar'?'+ مشروع':'+ projects');
+    }
+    applyLang();
+  }catch(e){ if(reset) document.getElementById('grid').innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
+  finally{ projLoading=false; }
+}
+function projectCard(p){
+  const d=document.createElement('div'); d.className='pcard';
+  const name=LANG==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
+  const dev=p.developer&&p.developer.name?p.developer.name:'';
+  const img=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+  const del=p.delivery?`<span class="pill">${esc(p.delivery)}</span>`:(p.status?`<span class="pill">${esc(p.status)}</span>`:'');
+  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2">Primary</span></div>
+    <div class="b"><div class="nm">${esc(name)}</div>${dev?`<div class="dv">${esc(dev)}</div>`:''}
+    <div class="row">${del}</div></div>`;
+  d.onclick=()=>openProject(p.id);
+  return d;
+}
+async function openProject(id){
+  const ov=document.getElementById('overlay'), dr=document.getElementById('drawer');
+  dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">…</div>';
+  ov.classList.add('open'); document.body.style.overflow='hidden';
+  try{
+    const p=(await sb('/projects?select=id,name,name_ar,area,description,delivery,status,amenities,cover_image_url,developer:developers(name,about,track_record,phone,website)&id=eq.'+id))[0];
+    const units=await sb('/unit_types?select=type,bedrooms,size_from,size_to,price_from,price_to,down_payment,installment_years,payment_plan,finishing,delivery&project_id=eq.'+id+'&order=price_from.asc&limit=40');
+    const media=await sb('/project_media?select=kind,url,caption&project_id=eq.'+id+'&limit=20');
+    dr.innerHTML=projectDetail(p,units,media);
+  }catch(e){ dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">تعذّر تحميل التفاصيل.</div>'; }
+}
+function unitTypeLabel(u){
+  const map={apartment:{ar:'شقة',en:'Apartment'},duplex:{ar:'دوبلكس',en:'Duplex'},penthouse:{ar:'بنتهاوس',en:'Penthouse'},studio:{ar:'استوديو',en:'Studio'},townhouse:{ar:'تاون هاوس',en:'Townhouse'},villa:{ar:'فيلا',en:'Villa'},office:{ar:'مكتب',en:'Office'},clinic:{ar:'عيادة',en:'Clinic'},shop:{ar:'محل',en:'Shop'}};
+  const m=map[u.type]; return m?m[LANG]:(u.type||'');
+}
+function projectDetail(p,units,media){
+  const name=LANG==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
+  const dev=p.developer||{};
+  const cover=p.cover_image_url|| (media.find(m=>m.kind==='image')||{}).url ||'';
+  const images=media.filter(m=>m.kind==='image'&&m.url);
+  const brochure=(media.find(m=>m.kind==='brochure')||{}).url;
+  const minPrice=units.map(u=>u.price_from).filter(x=>x).sort((a,b)=>a-b)[0];
+  const rows=units.map(u=>{
+    const beds=u.bedrooms!=null?(u.bedrooms===0?t('studio'):u.bedrooms+' '+t('br')):'—';
+    const size=u.size_from?(u.size_from+(u.size_to&&u.size_to!=u.size_from?('–'+u.size_to):'')+' '+t('sqm')):'—';
+    const pr=u.price_from?money(u.price_from):'—';
+    return `<tr><td>${esc(unitTypeLabel(u))}</td><td>${beds}</td><td>${size}</td><td class="pr">${pr}</td></tr>`;
+  }).join('');
+  const desc=LANG==='ar'?'':''; // description is usually EN in data
+  const wa=dev.phone?`<a class="btn btn-wa" target="_blank" rel="noopener" href="https://wa.me/${esc((dev.phone||'').replace(/[^0-9]/g,''))}?text=${encodeURIComponent((LANG==='ar'?'مهتم بمشروع ':'Interested in ')+name+' — Homzy')}">🟢 ${t('whatsapp')}</a>`:'';
+  const broch=brochure?`<a class="btn btn-ghost" target="_blank" rel="noopener" href="${esc(brochure)}">📄 ${t('brochure')}</a>`:'';
+  return `
+  <div class="dhead" style="${cover?`background-image:url('${esc(cover)}')`:''}">
+    <button class="close" onclick="closeDetail()">×</button>
+    <span class="mk2">PRIMARY${p.area?' · '+esc(p.area):''}</span>
+  </div>
+  <div class="dbody">
+    <h2>${esc(name)}</h2>
+    <div class="sub">${dev.name?esc(dev.name):''}${p.area?' · '+esc(p.area):''}</div>
+    <div class="chips">
+      ${p.delivery?`<span class="c">🗓️ ${t('delivery')}: ${esc(p.delivery)}</span>`:''}
+      ${p.status?`<span class="c">${esc(p.status)}</span>`:''}
+      ${minPrice?`<span class="c">💰 ${t('from')} ${money(minPrice)}</span>`:''}
+    </div>
+    ${p.description?`<div class="dsec"><p>${esc(p.description)}</p></div>`:''}
+    ${images.length?`<div class="dsec"><div class="gallery">${images.map(m=>`<img loading="lazy" src="${esc(m.url)}" alt="">`).join('')}</div></div>`:''}
+    ${units.length?`<div class="dsec"><h3>${t('units')}</h3>
+      <table class="utable"><thead><tr><th>${t('type')}</th><th>${t('beds')}</th><th>${t('size')}</th><th>${t('price')}</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      ${units[0]&&units[0].payment_plan?`<p style="margin-top:10px;color:#6B7280;font-size:13px">${t('plan')}: ${esc(units[0].payment_plan)}</p>`:''}</div>`:''}
+    ${(dev.about||dev.track_record)?`<div class="dsec"><h3>${t('about')}</h3><p>${esc(dev.about||'')} ${esc(dev.track_record||'')}</p></div>`:''}
+    ${p.amenities?`<div class="dsec"><h3>${t('amen')}</h3><p>${esc(p.amenities)}</p></div>`:''}
+    <div class="dactions">
+      ${wa}${broch}
+      <button class="btn btn-navy" onclick="closeDetail();openChat((LANG==='ar'?'عايز أعرف تفاصيل ':'Tell me about ')+${JSON.stringify(name)})">💬 ${t('ask')}</button>
+    </div>
+  </div>`;
+}
+
+/* ---- Marketplace ---- */
+let marketLoading=false;
+async function loadMarket(){
+  if(marketLoading) return; marketLoading=true; skeletons(8);
+  const q=document.getElementById('mq').value.trim();
+  const purpose=document.getElementById('mPurpose').value;
+  let path='/listings?select=id,title,description,purpose,type,price,area,address,bedrooms,bathrooms,size_sqm,listing_media(url,sort)&status=eq.active&order=created_at.desc&limit=60';
+  if(purpose) path+='&purpose=eq.'+purpose;
+  if(q){ const s=q.replace(/,/g,' '); path+='&or=('+encodeURIComponent(`title.ilike.*${s}*,area.ilike.*${s}*,description.ilike.*${s}*`)+')'; }
+  try{
+    const rows=await sb(path);
+    const grid=document.getElementById('grid'); grid.innerHTML='';
+    if(rows.length===0){ grid.innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
+    rows.forEach(l=>grid.appendChild(listingCard(l)));
+    document.getElementById('marketCount').textContent=rows.length+(LANG==='ar'?' عرض':' listings');
+    document.getElementById('loadMoreWrap').style.display='none';
+    applyLang();
+  }catch(e){ document.getElementById('grid').innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
+  finally{ marketLoading=false; }
+}
+function listingCard(l){
+  const media=(l.listing_media||[]).map(m=>m.url).filter(Boolean);
+  const img=media[0]?`background-image:url('${esc(media[0])}')`:'';
+  const d=document.createElement('div'); d.className='pcard';
+  const beds=l.bedrooms?`<span class="pill">${l.bedrooms} ${t('br')}</span>`:'';
+  const size=l.size_sqm?`<span class="pill">${l.size_sqm} ${t('sqm')}</span>`:'';
+  const pur=l.purpose==='rent'?(LANG==='ar'?'إيجار':'Rent'):(LANG==='ar'?'بيع':'Sale');
+  d.innerHTML=`<div class="img" style="${img}">${l.area?`<span class="tag">${esc(l.area)}</span>`:''}<span class="mk2" style="background:${l.purpose==='rent'?'#2563EB':'#FF686B'}">${pur}</span></div>
+    <div class="b"><div class="nm">${esc(l.title||'')}</div>
+    <div class="row">${beds}${size}</div>
+    <div class="pr">${l.price?money(l.price)+(l.purpose==='rent'?(LANG==='ar'?' /شهر':' /mo'):''):''}</div></div>`;
+  d.onclick=()=>openListing(l);
+  return d;
+}
+function openListing(l){
+  const ov=document.getElementById('overlay'), dr=document.getElementById('drawer');
+  const media=(l.listing_media||[]).map(m=>m.url).filter(Boolean);
+  const cover=media[0]||'';
+  const pur=l.purpose==='rent'?(LANG==='ar'?'للإيجار':'For rent'):(LANG==='ar'?'للبيع':'For sale');
+  dr.innerHTML=`
+  <div class="dhead" style="${cover?`background-image:url('${esc(cover)}')`:''}">
+    <button class="close" onclick="closeDetail()">×</button>
+    <span class="mk2" style="background:#122744">RESALE · ${pur}</span>
+  </div>
+  <div class="dbody">
+    <h2>${esc(l.title||'')}</h2>
+    <div class="sub">${l.area?esc(l.area):''}${l.address?' · '+esc(l.address):''}</div>
+    <div class="chips">
+      ${l.price?`<span class="c">💰 ${money(l.price)}${l.purpose==='rent'?(LANG==='ar'?' /شهر':' /mo'):''}</span>`:''}
+      ${l.bedrooms?`<span class="c">🛏️ ${l.bedrooms} ${t('br')}</span>`:''}
+      ${l.size_sqm?`<span class="c">📐 ${l.size_sqm} ${t('sqm')}</span>`:''}
+      ${l.bathrooms?`<span class="c">🚿 ${l.bathrooms}</span>`:''}
+    </div>
+    ${l.description?`<div class="dsec"><p>${esc(l.description)}</p></div>`:''}
+    ${media.length>1?`<div class="dsec"><div class="gallery">${media.map(u=>`<img loading="lazy" src="${esc(u)}" alt="">`).join('')}</div></div>`:''}
+    <div class="dactions">
+      <button class="btn btn-navy" onclick="closeDetail();openChat((LANG==='ar'?'مهتم بعرض ':'Interested in ')+${JSON.stringify(l.title||'')})">💬 ${t('ask')}</button>
+    </div>
+  </div>`;
+  document.getElementById('overlay').classList.add('open'); document.body.style.overflow='hidden';
+}
+function closeDetail(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+
+/* ---- debounce ---- */
+let dt; function debouncedLoad(){ clearTimeout(dt); dt=setTimeout(()=>loadProjects(true),350); }
+let dm; function debouncedLoadMarket(){ clearTimeout(dm); dm=setTimeout(()=>loadMarket(),350); }
+
+/* ---- Chat widget ---- */
+const panel=document.getElementById('chatPanel'), fab=document.getElementById('chatFab');
+const cpLog=document.getElementById('cpLog'), cpForm=document.getElementById('cpForm'), cpInput=document.getElementById('cpInput'), cpSend=document.getElementById('cpSend');
+const sessionId='web-'+Math.random().toString(36).slice(2); let history=[]; let greeted=false;
+const isAr=(x)=>/[؀-ۿ]/.test(x||'');
+function addMsg(text,who){const d=document.createElement('div');d.className='msg '+who;d.style.direction=isAr(text)?'rtl':'ltr';d.style.textAlign=isAr(text)?'right':'left';d.textContent=text;cpLog.appendChild(d);cpLog.scrollTop=cpLog.scrollHeight;return d;}
+function addRec(rec){const ar=LANG==='ar';const price=ar?(rec.price_ar||rec.price_en||''):(rec.price_en||rec.price_ar||'');const market=rec.market==='resale'?(ar?'RESALE · جاهزة':'RESALE · ready'):(ar?'PRIMARY · من المطوّر':'PRIMARY · new launch');const name=ar?(rec.compound_ar||rec.compound||''):(rec.compound||rec.compound_ar||'');const area=ar?(rec.area_ar||rec.area||''):(rec.area||rec.area_ar||'');const beds=rec.bedrooms!=null?`<span>${rec.bedrooms} ${ar?'غرف':'BR'}</span>`:'';const size=rec.size_sqm?`<span>${rec.size_sqm} ${ar?'م²':'m²'}</span>`:'';const dev=rec.developer?`<span>${esc(rec.developer)}</span>`:'';const d=document.createElement('div');d.className='rec-card';d.dir=ar?'rtl':'ltr';d.innerHTML=`<span class="badge">${market}</span><div class="t">${esc(name)}</div>${area?`<div class="a">${esc(area)}</div>`:''}${price?`<div class="pr">${esc(price)}</div>`:''}<div class="meta">${beds}${size}${dev}</div>`;cpLog.appendChild(d);cpLog.scrollTop=cpLog.scrollHeight;}
+function typing(){const t=document.createElement('div');t.className='typing';t.innerHTML='<i></i><i></i><i></i>';cpLog.appendChild(t);cpLog.scrollTop=cpLog.scrollHeight;return t;}
+async function sendMsg(text){text=(text||'').trim();if(!text)return;addMsg(text,'me');history.push({role:'user',content:text});cpInput.value='';cpSend.disabled=true;const tp=typing();try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId,message:text,history})});const data=await r.json();tp.remove();const reply=data.reply||'(no reply)';addMsg(reply,'bot');history.push({role:'assistant',content:reply});const recs=data.recommendations||(data.recommendation?[data.recommendation]:[]);if(recs&&recs[0])addRec(recs[0]);}catch(e){tp.remove();addMsg(LANG==='ar'?'في مشكلة في الاتصال — حاول تاني.':'Connection issue — try again.','bot');}finally{cpSend.disabled=false;cpInput.focus();}}
+cpForm.addEventListener('submit',e=>{e.preventDefault();sendMsg(cpInput.value);});
+function greet(){if(greeted)return;greeted=true;addMsg(LANG==='ar'?'أهلاً! أنا Homzy 👋 قوللي بتدوّر على إيه (منطقة، ميزانية، عدد غرف) وأرشّحلك أنسب وحدة.':"Hi! I'm Homzy 👋 Tell me what you're after (area, budget, bedrooms) and I'll find the best fit.",'bot');}
+function openChat(prefill){panel.classList.add('open');fab.style.display='none';greet();if(prefill){setTimeout(()=>sendMsg(prefill),250);}else cpInput.focus();}
+function toggleChat(){if(panel.classList.contains('open')){panel.classList.remove('open');fab.style.display='flex';}else openChat();}
+
+/* ---- init ---- */
+applyLang(); loadAreas(); loadProjects(true);
+</script>
+</body>
+</html>

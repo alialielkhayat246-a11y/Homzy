@@ -44,6 +44,14 @@ def index():
     return FileResponse(config.FRONTEND_DIR / "index.html")
 
 
+@app.get("/app")
+@app.get("/browse")
+@app.get("/projects")
+def browse_page():
+    """Functional web browse page (developer projects + marketplace)."""
+    return FileResponse(config.FRONTEND_DIR / "app.html")
+
+
 @app.get("/api/health")
 def health():
     provider = config.LLM_PROVIDER
