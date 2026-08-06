@@ -138,9 +138,52 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
 .cp-form button{width:44px; height:44px; flex:none; border:none; border-radius:50%; background:var(--teal); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
 .cp-form button:disabled{opacity:.5; cursor:default;}
 
+/* ============================================================
+   Mobile app-like shell — bottom tab bar + "More" sheet.
+   Shown only on phones (<=900px); desktop keeps the top nav.
+   ============================================================ */
+.hz-tabbar{display:none;}
+.hz-sheet-bk{display:none;}
+@media(max-width:900px){
+  .hz-tabbar{
+    display:flex; position:fixed; inset-inline:0; bottom:0; z-index:70;
+    background:rgba(255,255,255,.96); backdrop-filter:saturate(140%) blur(12px);
+    border-top:1px solid var(--line); padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    justify-content:space-around; align-items:stretch;
+  }
+  .hz-tabbar a, .hz-tabbar button{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:none; border:none; cursor:pointer; font-family:var(--ff);
+    color:var(--muted); font-weight:700; font-size:11px; padding:6px 2px; text-decoration:none;
+  }
+  .hz-tabbar svg{width:23px; height:23px;}
+  .hz-tabbar .on{color:var(--teal);}
+  .hz-tabbar .tb-chat{color:var(--teal);}
+  .hz-tabbar .tb-chat-ic{width:44px; height:44px; margin-top:-16px; border-radius:50%; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(11,85,99,.4);}
+  .hz-tabbar .tb-chat-ic svg{width:24px; height:24px;}
+  /* keep content clear of the bar; hide the floating FAB (chat is in the bar) */
+  body{padding-bottom:66px;}
+  .chat-fab{display:none;}
+  /* full-screen chat on phones */
+  .chat-panel{inset-inline:0; bottom:0; top:0; width:100%; max-width:100%; height:100%; border-radius:0;}
+  /* the top-nav hamburger is replaced by the bottom bar */
+  .hz-menu-btn{display:none !important;} .hz-mobile{display:none !important;}
+}
+.hz-sheet-bk.open{display:block; position:fixed; inset:0; z-index:75; background:rgba(11,29,54,.45);}
+.hz-sheet{
+  position:fixed; inset-inline:0; bottom:0; z-index:76; background:#fff;
+  border-radius:22px 22px 0 0; padding:10px 16px calc(18px + env(safe-area-inset-bottom));
+  transform:translateY(100%); transition:transform .25s ease; box-shadow:0 -10px 40px rgba(11,29,54,.2);
+}
+.hz-sheet.open{transform:none;}
+.hz-sheet .handle{width:44px; height:5px; border-radius:5px; background:var(--line-2); margin:6px auto 12px;}
+.hz-sheet a{display:flex; align-items:center; gap:12px; padding:15px 8px; font-weight:700; font-size:16px; border-bottom:1px solid var(--line); color:var(--navy);}
+.hz-sheet a:last-child{border-bottom:none;}
+.hz-sheet a .ic{font-size:20px;}
+
 /* ---------- Responsive ---------- */
 @media(max-width:900px){
-  .hz-links{display:none;} .hz-menu-btn{display:flex;}
+  .hz-links{display:none;}
   .grid-3{grid-template-columns:1fr 1fr;} .grid-4{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:560px){

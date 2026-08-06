@@ -54,7 +54,7 @@ HZ.applyLang = function(){
   });
   document.querySelectorAll('[data-ph-ar]').forEach(el=>{ el.placeholder = el.getAttribute('data-ph-'+HZ.lang) || ''; });
   const lb = document.getElementById('hzLang'); if(lb) lb.textContent = HZ.lang==='ar' ? 'EN' : 'ع';
-  buildNavLinks();
+  buildNavLinks(); refreshTabbar();
   document.dispatchEvent(new CustomEvent('hz:lang', {detail:HZ.lang}));
 };
 HZ.toggleLang = function(){ HZ.lang = HZ.lang==='ar'?'en':'ar'; localStorage.setItem('hz_lang',HZ.lang); HZ.applyLang(); };
@@ -135,6 +135,44 @@ function buildFooter(){
     </div>
   </footer>`;
 }
+
+/* ---------- Mobile bottom tab bar + "More" sheet ---------- */
+const ICON={
+  home:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5V21H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  browse:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>',
+  areas:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>',
+};
+const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},more:{ar:'المزيد',en:'More'}};
+function tt(k){return TAB_T[k][HZ.lang];}
+function buildTabbar(){
+  if(document.getElementById('hzTabbar')) return;
+  const path=location.pathname;
+  const act=(k)=> (k==='home'&&path==='/')||(k==='browse'&&/^\/(app|browse|projects)/.test(path))||(k==='areas'&&path==='/areas') ? 'on':'';
+  const bar=document.createElement('nav'); bar.className='hz-tabbar'; bar.id='hzTabbar';
+  bar.innerHTML=`
+    <a href="/" class="${act('home')}">${ICON.home}<span>${tt('home')}</span></a>
+    <a href="/app" class="${act('browse')}">${ICON.browse}<span>${tt('browse')}</span></a>
+    <button class="tb-chat" onclick="HZ.openChat()"><span class="tb-chat-ic">${ICON.chat}</span><span>${tt('chat')}</span></button>
+    <a href="/areas" class="${act('areas')}">${ICON.areas}<span>${tt('areas')}</span></a>
+    <button onclick="HZ.toggleMore()">${ICON.more}<span>${tt('more')}</span></button>`;
+  document.body.appendChild(bar);
+  // "More" sheet
+  const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
+  const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
+  sheet.innerHTML=`<div class="handle"></div>
+    <a href="/features"><span class="ic">✨</span><span>${HZ.t('features')}</span></a>
+    <a href="/brokers"><span class="ic">🧰</span><span>${HZ.t('forBrokers')}</span></a>
+    <a href="/download"><span class="ic">📱</span><span>${HZ.t('app')}</span></a>
+    <a href="/admin"><span class="ic">⚙️</span><span>${HZ.t('admin')}</span></a>`;
+  document.body.appendChild(bk); document.body.appendChild(sheet);
+}
+HZ.toggleMore=function(){
+  const s=document.getElementById('hzSheet'), b=document.getElementById('hzSheetBk');
+  if(!s) return; const open=s.classList.toggle('open'); b.classList.toggle('open',open);
+};
+function refreshTabbar(){ const b=document.getElementById('hzTabbar'); if(b){ b.remove(); const s=document.getElementById('hzSheet'); if(s)s.remove(); const bk=document.getElementById('hzSheetBk'); if(bk)bk.remove(); buildTabbar(); } }
 
 /* ============================================================
    Chat widget — project-aware, persisted, lead-capturing.
@@ -337,7 +375,7 @@ HZ.saveLead=function(){
 function boot(){
   if(!chat) chat=newChatState();
   document.body.setAttribute('data-mode', HZ.mode);
-  buildHeader(); buildFooter(); buildChat();
+  buildHeader(); buildFooter(); buildChat(); buildTabbar();
   HZ.setMode(HZ.mode);
   HZ.applyLang();
 }
