@@ -69,15 +69,28 @@
   <!-- Auth gate (shown when logged out) -->
   <div id="gate" class="gate" style="display:none">
     <h2 id="gateTitle">دخول البروكر</h2>
-    <p id="gateSub">سجّل دخولك عشان تشوف الليدز وتشتريها.</p>
+    <p id="gateSub">سجّل دخولك برقم موبايلك عشان تشوف الليدز.</p>
     <div class="msg" id="gateMsg"></div>
-    <form id="authForm">
-      <input id="email" type="email" placeholder="الإيميل" autocomplete="email" required />
-      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" required minlength="6" />
-      <button class="btn btn-teal" id="authBtn" type="submit">دخول</button>
+
+    <!-- Step 1: phone (+ broker details when registering) -->
+    <form id="phoneForm">
+      <input id="phone" type="tel" inputmode="tel" placeholder="رقم الموبايل  (01xxxxxxxxx)" autocomplete="tel" required />
+      <div id="brokerFields" style="display:none; flex-direction:column; gap:12px;">
+        <input id="company" placeholder="اسم الشركة" autocomplete="organization" />
+        <input id="commreg" placeholder="رقم السجل التجاري" inputmode="numeric" />
+      </div>
+      <button class="btn btn-teal" id="sendBtn" type="submit">أرسل كود التأكيد</button>
     </form>
-    <div class="switch">
-      <span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">سجّل حساب جديد</a>
+
+    <!-- Step 2: OTP -->
+    <form id="otpForm" style="display:none">
+      <input id="otp" inputmode="numeric" placeholder="كود التأكيد (OTP)" autocomplete="one-time-code" required />
+      <button class="btn btn-teal" id="verifyBtn" type="submit">تأكيد ودخول</button>
+      <div class="switch"><a id="changePhone">غيّر الرقم</a></div>
+    </form>
+
+    <div class="switch" id="switchRow">
+      <span id="switchTxt">لسه معندكش حساب بروكر؟</span> <a id="switchLink">سجّل كبروكر</a>
     </div>
   </div>
 
@@ -133,47 +146,78 @@ const ar = () => (window.HZ ? HZ.lang : 'ar') === 'ar';
 const esc = s => (window.HZ? HZ.esc : (x=>x))(s);
 const $ = id => document.getElementById(id);
 
-/* ---------- auth ---------- */
-let mode = 'login';
+/* ---------- auth (phone + OTP) ---------- */
+let mode = 'login';         // 'login' | 'register'
+let pendingPhone = null;
+function gmsg(t, ok){ const el=$('gateMsg'); el.textContent=t; el.className='msg '+(ok?'ok':'err'); }
 function setMode(m){
   mode = m;
-  $('gateTitle').textContent = m==='login' ? (ar()?'دخول البروكر':'Broker login') : (ar()?'حساب بروكر جديد':'New broker account');
-  $('authBtn').textContent = m==='login' ? (ar()?'دخول':'Log in') : (ar()?'إنشاء حساب':'Create account');
-  $('switchTxt').textContent = m==='login' ? (ar()?'لسه معندكش حساب؟':"No account yet?") : (ar()?'عندك حساب؟':'Have an account?');
-  $('switchLink').textContent = m==='login' ? (ar()?'سجّل حساب جديد':'Sign up') : (ar()?'سجّل دخول':'Log in');
-  $('password').autocomplete = m==='login'?'current-password':'new-password';
+  const reg = m==='register';
+  $('gateTitle').textContent = reg ? (ar()?'تسجيل حساب بروكر':'Register as broker') : (ar()?'دخول البروكر':'Broker login');
+  $('gateSub').textContent = reg ? (ar()?'أدخل بيانات شركتك ورقم موبايلك.':'Enter your company details and phone.') : (ar()?'سجّل دخولك برقم موبايلك عشان تشوف الليدز.':'Log in with your phone to see the leads.');
+  $('brokerFields').style.display = reg ? 'flex' : 'none';
+  $('company').required = reg; $('commreg').required = reg;
+  $('sendBtn').textContent = ar()?'أرسل كود التأكيد':'Send code';
+  $('switchTxt').textContent = reg ? (ar()?'عندك حساب بروكر؟':'Have a broker account?') : (ar()?'لسه معندكش حساب بروكر؟':'No broker account yet?');
+  $('switchLink').textContent = reg ? (ar()?'سجّل دخول':'Log in') : (ar()?'سجّل كبروكر':'Register as broker');
+  // back to step 1
+  $('phoneForm').style.display=''; $('otpForm').style.display='none'; $('switchRow').style.display='';
 }
-$('switchLink').onclick = () => setMode(mode==='login'?'signup':'login');
-function gmsg(t, ok){ const el=$('gateMsg'); el.textContent=t; el.className='msg '+(ok?'ok':'err'); }
+$('switchLink').onclick = () => { gmsg('',true); setMode(mode==='login'?'register':'login'); };
+$('changePhone').onclick = () => { gmsg('',true); $('phoneForm').style.display=''; $('otpForm').style.display='none'; $('switchRow').style.display=''; };
 
-$('authForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const email=$('email').value.trim(), password=$('password').value;
-  $('authBtn').disabled=true;
-  try{
-    if(mode==='signup'){
-      const {error}=await sb.auth.signUp({email,password});
-      if(error) throw error;
-    }else{
-      const {error}=await sb.auth.signInWithPassword({email,password});
-      if(error) throw error;
-    }
-    // Reload once a session exists — a fresh load initialises the client with
-    // the persisted session cleanly (avoids the auth-lock race on first query).
-    const {data:{session}}=await sb.auth.getSession();
-    if(session){ location.reload(); return; }
-    gmsg(ar()?'تم إنشاء الحساب — راجع بريدك لتأكيد الإيميل، وبعدين سجّل دخول.':'Account created — confirm via email, then log in.', true);
-  }catch(err){ gmsg(translateAuthErr(err.message)); }
-  finally{ $('authBtn').disabled=false; }
-});
-function translateAuthErr(m){
-  if(!ar()) return m;
-  if(/Invalid login/i.test(m)) return 'الإيميل أو كلمة المرور غلط.';
-  if(/already registered|already exists/i.test(m)) return 'الإيميل ده مسجّل قبل كده — سجّل دخول.';
-  if(/at least 6/i.test(m)) return 'كلمة المرور لازم 6 أحرف على الأقل.';
+function normPhone(v){
+  let d=(v||'').replace(/[^\d+]/g,'');
+  if(d.startsWith('+')) return d;
+  if(d.startsWith('00')) return '+'+d.slice(2);
+  if(d.startsWith('0')) return '+20'+d.slice(1);      // 01xxxxxxxxx → +20…
+  if(d.startsWith('20')) return '+'+d;
+  return '+20'+d;
+}
+function otpErr(m){
+  if(/provider|not enabled|not configured|unsupported|sms|disabled/i.test(m||''))
+    return ar()?'خدمة الرسائل (OTP) لسه مش مفعّلة — هتشتغل بعد ربط مزوّد الرسائل.':'SMS/OTP is not enabled yet — it will work once an SMS provider is connected.';
+  if(/Signups not allowed|not found|user/i.test(m||''))
+    return ar()?'الرقم ده مش مسجّل — سجّل كبروكر الأول.':'This number is not registered — register as a broker first.';
+  if(/Invalid|expired|token/i.test(m||''))
+    return ar()?'الكود غلط أو منتهي — حاول تاني.':'Wrong or expired code — try again.';
   return m;
 }
-$('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); await refresh(); };
+
+$('phoneForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const phone=normPhone($('phone').value);
+  if(!/^\+\d{10,15}$/.test(phone)){ gmsg(ar()?'رقم موبايل غير صحيح.':'Invalid phone number.'); return; }
+  const opts={ shouldCreateUser: mode==='register' };
+  if(mode==='register'){
+    const company=$('company').value.trim(), commreg=$('commreg').value.trim();
+    if(!company||!commreg){ gmsg(ar()?'اكتب اسم الشركة والسجل التجاري.':'Enter company name and commercial registration.'); return; }
+    opts.data={ role:'broker', company, commercial_reg:commreg };
+  }
+  $('sendBtn').disabled=true;
+  try{
+    const {error}=await sb.auth.signInWithOtp({ phone, options:opts });
+    if(error) throw error;
+    pendingPhone=phone;
+    $('phoneForm').style.display='none'; $('otpForm').style.display=''; $('switchRow').style.display='none';
+    gmsg((ar()?'بعتنا كود لـ ':'Code sent to ')+phone, true);
+  }catch(err){ gmsg(otpErr(err.message)); }
+  finally{ $('sendBtn').disabled=false; }
+});
+
+$('otpForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const token=$('otp').value.trim();
+  $('verifyBtn').disabled=true;
+  try{
+    const {error}=await sb.auth.verifyOtp({ phone:pendingPhone, token, type:'sms' });
+    if(error) throw error;
+    location.reload();
+  }catch(err){ gmsg(otpErr(err.message)); }
+  finally{ $('verifyBtn').disabled=false; }
+});
+
+$('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.reload(); };
 
 /* ---------- data ---------- */
 async function loadPrice(){
@@ -271,9 +315,18 @@ async function refresh(){
   const {data:{session}}=await sb.auth.getSession();
   if(session){
     TOKEN = session.access_token;
+    let role=null, company=null;
+    try{ const {data}=await api('/profiles?select=role,company&id=eq.'+session.user.id); if(data&&data[0]){ role=data[0].role; company=data[0].company; } }catch(e){}
     $('gate').style.display='none'; $('market').style.display='';
-    $('whoami').textContent = session.user.email || '';
-    await loadBalance(); await loadLeads();
+    $('whoami').textContent = company || session.user.phone || '';
+    if(role==='broker'){
+      await loadBalance(); await loadLeads();
+    }else{
+      document.querySelectorAll('.walletbar .lbl, .walletbar .bal, .walletbar .btn-teal').forEach(el=>el.style.display='none');
+      $('leadGrid').innerHTML='<div class="empty2">'+(ar()
+        ?'الحساب ده مش مسجّل كبروكر. سجّل كبروكر (اسم الشركة + السجل التجاري) عشان تدخل سوق الليدز.'
+        :'This account is not registered as a broker. Register as a broker to access the leads market.')+'</div>';
+    }
   }else{
     $('market').style.display='none'; $('gate').style.display='';
     setMode('login');

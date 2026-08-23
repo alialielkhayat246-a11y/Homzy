@@ -47,8 +47,9 @@ header.hz-nav.scrolled{border-color:var(--line); background:rgba(247,242,238,.94
 .hz-links a{font-weight:600; font-size:15px; opacity:.82;}
 .hz-links a:hover,.hz-links a.active{opacity:1; color:var(--teal-d);}
 .hz-nav-cta{margin-inline-start:auto; display:flex; align-items:center; gap:10px;}
-/* Broker/client segmented toggle (fixed in header, all pages) */
-.hz-mode{display:inline-flex; background:#fff; border:1.5px solid var(--line-2); border-radius:100px; padding:3px; gap:2px;}
+/* Broker/client segmented toggle — shown ONLY for broker accounts (body.hz-broker) */
+.hz-mode{display:none; background:#fff; border:1.5px solid var(--line-2); border-radius:100px; padding:3px; gap:2px;}
+body.hz-broker .hz-mode{display:inline-flex;}
 .hz-mode button{font-family:var(--ff); font-weight:700; font-size:13px; cursor:pointer; border:none; background:transparent; color:var(--muted); padding:7px 14px; border-radius:100px; transition:background .18s,color .18s;}
 .hz-mode button.on{background:var(--navy); color:#fff;}
 body[data-mode=broker] .hz-mode button.b{background:var(--teal); color:#fff;}

@@ -375,6 +375,26 @@ HZ.saveLead=function(){
   }, 1500);
 };
 
+/* ---------- broker-account gate ----------
+   The client/broker switch shows ONLY for a signed-in broker account. We read
+   the Supabase session token (stored by supabase-js on the /leads page) and
+   check profiles.role — no second GoTrue client needed. */
+async function checkBrokerAccount(){
+  try{
+    const key=Object.keys(localStorage).find(k=>/sb-.*-auth-token/.test(k));
+    const tok=key?JSON.parse(localStorage.getItem(key)):null;
+    const jwt=tok&&tok.access_token, uid=tok&&tok.user&&tok.user.id;
+    if(!jwt||!uid) return notBroker();
+    const r=await fetch(SB_URL+'/rest/v1/profiles?select=role&id=eq.'+uid,
+      {headers:{apikey:SB_KEY, Authorization:'Bearer '+jwt}});
+    if(!r.ok) return notBroker();
+    const rows=await r.json();
+    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; }
+    else notBroker();
+  }catch(e){ notBroker(); }
+}
+function notBroker(){ document.body.classList.remove('hz-broker'); HZ.isBroker=false; if(HZ.mode!=='client') HZ.setMode('client'); }
+
 /* ---------- boot ---------- */
 function boot(){
   if(!chat) chat=newChatState();
@@ -382,6 +402,7 @@ function boot(){
   buildHeader(); buildFooter(); buildChat(); buildTabbar();
   HZ.setMode(HZ.mode);
   HZ.applyLang();
+  checkBrokerAccount();
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
