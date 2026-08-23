@@ -42,6 +42,7 @@ const T = {
   admin:{ar:'لوحة الإدارة',en:'Admin'}, join:{ar:'انضم كبروكر',en:'Join as broker'},
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
+  leads:{ar:'الليدز',en:'Leads'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -72,7 +73,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/features','features'],['/areas','areas'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/brokers','brokerTools'],['/app','browse'],['/app?list=1','listUnit'],['/download','app']],
+  broker:[['/','home'],['/leads','leads'],['/brokers','brokerTools'],['/app','browse'],['/download','app']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;
@@ -163,6 +164,7 @@ function buildTabbar(){
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   sheet.innerHTML=`<div class="handle"></div>
     <a href="/features"><span class="ic">✨</span><span>${HZ.t('features')}</span></a>
+    <a href="/leads"><span class="ic">🎯</span><span>${HZ.t('leads')}</span></a>
     <a href="/brokers"><span class="ic">🧰</span><span>${HZ.t('forBrokers')}</span></a>
     <a href="/download"><span class="ic">📱</span><span>${HZ.t('app')}</span></a>
     <a href="/admin"><span class="ic">⚙️</span><span>${HZ.t('admin')}</span></a>`;
@@ -296,6 +298,7 @@ async function sendMsg(text){
     const data=await r.json(); t.remove();
     const reply=data.reply||'(no reply)';
     addMsg(reply,'bot'); chat.history.push({role:'assistant',content:reply});
+    if(data.requirements) chat.req = data.requirements;   // structured needs for the lead
     const recs=data.recommendations||(data.recommendation?[data.recommendation]:[]);
     if(recs&&recs[0]) addRec(recs[0]);
     saveChat();
@@ -364,7 +367,8 @@ HZ.saveLead=function(){
           p_phone: chat.lead.phone||null,
           p_context: chat.context ? (chat.context.name+(chat.context.area?(' · '+chat.context.area):'')) : null,
           p_messages: chat.history,
-          p_lang: HZ.lang
+          p_lang: HZ.lang,
+          p_req: chat.req || null
         })
       });
     }catch(e){ /* best-effort; ignore */ }

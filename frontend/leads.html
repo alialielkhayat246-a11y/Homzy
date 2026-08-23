@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — سوق الليدز</title>
+<meta name="description" content="سوق العملاء المحتملين (Leads) لبروكرز Homzy — اتصفّح الليدز، وادفع لتكشف رقم العميل وتتواصل معاه." />
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1D36'/%3E%3Cpath d='M16 50V30L32 17l16 13v20' stroke='%23fff' stroke-width='4.5' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3Crect x='27' y='34' width='10' height='10' rx='2' fill='%230B5563'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .lead-hero{padding:26px 0 6px;}
+  .lead-hero h1{font-size:clamp(24px,3.4vw,32px);}
+  .lead-hero p{color:var(--muted); margin-top:8px; font-size:16px;}
+  .walletbar{display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 18px; margin:16px 0 8px; box-shadow:var(--shadow-sm);}
+  .walletbar .bal{font-family:var(--fd); font-weight:800; font-size:22px; color:var(--teal-d);}
+  .walletbar .lbl{color:var(--muted); font-size:13px;}
+  .walletbar .who{margin-inline-start:auto; color:var(--muted); font-size:13px;}
+  .lead-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; padding:10px 0 40px;}
+  .lcard{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:10px; transition:box-shadow .16s, transform .16s;}
+  .lcard:hover{box-shadow:var(--shadow); transform:translateY(-2px);}
+  .lcard .top{display:flex; align-items:center; gap:8px;}
+  .lcard .nm{font-weight:800; font-size:16px;}
+  .lcard .date{margin-inline-start:auto; font-size:12px; color:var(--muted);}
+  .lcard .chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .lcard .chips span{font-size:12px; font-weight:600; background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:4px 9px; color:#40506a;}
+  .lcard .ctx{font-size:13px; color:var(--muted);}
+  .lcard .ctx b{color:var(--navy);}
+  .phone-row{display:flex; align-items:center; gap:8px; background:var(--cream); border:1px dashed var(--line-2); border-radius:12px; padding:10px 13px; margin-top:2px;}
+  .phone-row .pn{font-family:var(--fd); font-weight:700; letter-spacing:.5px; direction:ltr;}
+  .phone-row.unlocked{background:var(--teal-l); border-style:solid; border-color:var(--teal);}
+  .lcard .act{display:flex; gap:8px; margin-top:auto;}
+  .lcard .act .btn{flex:1;}
+  .wa{background:var(--green)!important; color:#fff!important;}
+  .empty2{grid-column:1/-1; text-align:center; padding:50px 20px; color:var(--muted);}
+  /* auth gate */
+  .gate{max-width:420px; margin:30px auto; background:var(--card); border:1px solid var(--line); border-radius:20px; padding:28px 26px; box-shadow:var(--shadow);}
+  .gate h2{font-size:22px; text-align:center;}
+  .gate p{color:var(--muted); text-align:center; font-size:14px; margin-top:8px;}
+  .gate form{display:flex; flex-direction:column; gap:12px; margin-top:20px;}
+  .gate input{font-family:var(--ff); font-size:15px; padding:13px 15px; border:1.5px solid var(--line-2); border-radius:12px; background:var(--cream); color:var(--navy); outline:none;}
+  .gate input:focus{border-color:var(--teal); background:#fff;}
+  .gate .btn{width:100%;}
+  .gate .switch{text-align:center; margin-top:14px; font-size:14px; color:var(--muted);}
+  .gate .switch a{color:var(--teal-d); font-weight:700; cursor:pointer;}
+  .gate .msg{font-size:13px; text-align:center; padding:8px; border-radius:10px; display:none;}
+  .gate .msg.err{display:block; background:#FDECEC; color:#B4232A;}
+  .gate .msg.ok{display:block; background:var(--teal-l); color:var(--teal-d);}
+  .sheet-bd{position:fixed; inset:0; background:rgba(11,29,54,.5); z-index:90; display:none; align-items:center; justify-content:center; padding:20px;}
+  .sheet-bd.open{display:flex;}
+  .topup{background:var(--card); border-radius:20px; padding:26px; max-width:400px; width:100%; box-shadow:var(--shadow);}
+  .topup h3{font-size:20px;} .topup p{color:var(--muted); font-size:14px; margin-top:8px;}
+  .topup .btn{width:100%; margin-top:16px;}
+  @media(max-width:900px){ .lead-grid{grid-template-columns:1fr 1fr;} }
+  @media(max-width:560px){ .lead-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+
+<div class="wrap">
+  <div class="lead-hero">
+    <h1 data-ar="سوق الليدز" data-en="Leads marketplace">سوق الليدز</h1>
+    <p data-ar="عملاء محتملين كلّموا مستشار Homzy وسابوا أرقامهم. اتصفّح الطلب، وادفع تكشف الرقم وتتواصل." data-en="Real clients who chatted with Homzy and left their number. Browse the request, then pay to reveal the phone and reach out.">عملاء محتملين كلّموا مستشار Homzy وسابوا أرقامهم. اتصفّح الطلب، وادفع تكشف الرقم وتتواصل.</p>
+  </div>
+
+  <!-- Auth gate (shown when logged out) -->
+  <div id="gate" class="gate" style="display:none">
+    <h2 id="gateTitle">دخول البروكر</h2>
+    <p id="gateSub">سجّل دخولك عشان تشوف الليدز وتشتريها.</p>
+    <div class="msg" id="gateMsg"></div>
+    <form id="authForm">
+      <input id="email" type="email" placeholder="الإيميل" autocomplete="email" required />
+      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" required minlength="6" />
+      <button class="btn btn-teal" id="authBtn" type="submit">دخول</button>
+    </form>
+    <div class="switch">
+      <span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">سجّل حساب جديد</a>
+    </div>
+  </div>
+
+  <!-- Marketplace (shown when logged in) -->
+  <div id="market" style="display:none">
+    <div class="walletbar">
+      <span class="lbl" data-ar="رصيدك:" data-en="Your balance:">رصيدك:</span>
+      <span class="bal" id="balance">—</span>
+      <button class="btn btn-teal btn-sm" onclick="openTopup()" data-ar="اشحن رصيد" data-en="Top up">اشحن رصيد</button>
+      <span class="who" id="whoami"></span>
+      <button class="btn btn-ghost btn-sm" id="logoutBtn" data-ar="خروج" data-en="Log out">خروج</button>
+    </div>
+    <div class="lead-grid" id="leadGrid"></div>
+  </div>
+</div>
+
+<!-- Top-up sheet -->
+<div class="sheet-bd" id="topupSheet" onclick="if(event.target===this)closeTopup()">
+  <div class="topup">
+    <h3 data-ar="شحن الرصيد" data-en="Top up balance">شحن الرصيد</h3>
+    <p id="topupBody">الدفع الأونلاين (بطاقة/محفظة) هيتفعّل قريبًا عبر بوابة الدفع. لحد كده، تواصل مع Homzy لشحن رصيدك.</p>
+    <a class="btn btn-teal" id="topupWa" target="_blank" rel="noopener" data-ar="تواصل لشحن الرصيد" data-en="Contact to top up">تواصل لشحن الرصيد</a>
+    <button class="btn btn-ghost" onclick="closeTopup()" style="margin-top:8px;width:100%" data-ar="إغلاق" data-en="Close">إغلاق</button>
+  </div>
+</div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const ADMIN_WA=''; // Homzy top-up WhatsApp (digits only) — set to enable the button
+const sb = createClient(SB_URL, SB_KEY, { auth:{
+  persistSession:true, autoRefreshToken:true,
+  // Pass-through lock: some webviews expose a broken navigator.locks that
+  // deadlocks the first query after load. Running the fn without locking is safe here.
+  lock: async (_name, _timeout, fn) => await fn()
+}});
+let PRICE = 50;
+let TOKEN = null;   // current session access token (for direct REST calls)
+// Data goes through direct PostgREST with the session token — supabase-js's
+// query builder deadlocks on the auth lock in some webviews; auth still uses sb.
+async function api(path, opts={}){
+  const r = await fetch(SB_URL+'/rest/v1'+path, Object.assign({}, opts, {
+    headers: Object.assign({ apikey:SB_KEY, Authorization:'Bearer '+(TOKEN||SB_KEY),
+      'Content-Type':'application/json' }, opts.headers||{})
+  }));
+  const txt = await r.text();
+  return { ok:r.ok, status:r.status, data: txt ? JSON.parse(txt) : null };
+}
+const ar = () => (window.HZ ? HZ.lang : 'ar') === 'ar';
+const esc = s => (window.HZ? HZ.esc : (x=>x))(s);
+const $ = id => document.getElementById(id);
+
+/* ---------- auth ---------- */
+let mode = 'login';
+function setMode(m){
+  mode = m;
+  $('gateTitle').textContent = m==='login' ? (ar()?'دخول البروكر':'Broker login') : (ar()?'حساب بروكر جديد':'New broker account');
+  $('authBtn').textContent = m==='login' ? (ar()?'دخول':'Log in') : (ar()?'إنشاء حساب':'Create account');
+  $('switchTxt').textContent = m==='login' ? (ar()?'لسه معندكش حساب؟':"No account yet?") : (ar()?'عندك حساب؟':'Have an account?');
+  $('switchLink').textContent = m==='login' ? (ar()?'سجّل حساب جديد':'Sign up') : (ar()?'سجّل دخول':'Log in');
+  $('password').autocomplete = m==='login'?'current-password':'new-password';
+}
+$('switchLink').onclick = () => setMode(mode==='login'?'signup':'login');
+function gmsg(t, ok){ const el=$('gateMsg'); el.textContent=t; el.className='msg '+(ok?'ok':'err'); }
+
+$('authForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email=$('email').value.trim(), password=$('password').value;
+  $('authBtn').disabled=true;
+  try{
+    if(mode==='signup'){
+      const {error}=await sb.auth.signUp({email,password});
+      if(error) throw error;
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error) throw error;
+    }
+    // Reload once a session exists — a fresh load initialises the client with
+    // the persisted session cleanly (avoids the auth-lock race on first query).
+    const {data:{session}}=await sb.auth.getSession();
+    if(session){ location.reload(); return; }
+    gmsg(ar()?'تم إنشاء الحساب — راجع بريدك لتأكيد الإيميل، وبعدين سجّل دخول.':'Account created — confirm via email, then log in.', true);
+  }catch(err){ gmsg(translateAuthErr(err.message)); }
+  finally{ $('authBtn').disabled=false; }
+});
+function translateAuthErr(m){
+  if(!ar()) return m;
+  if(/Invalid login/i.test(m)) return 'الإيميل أو كلمة المرور غلط.';
+  if(/already registered|already exists/i.test(m)) return 'الإيميل ده مسجّل قبل كده — سجّل دخول.';
+  if(/at least 6/i.test(m)) return 'كلمة المرور لازم 6 أحرف على الأقل.';
+  return m;
+}
+$('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); await refresh(); };
+
+/* ---------- data ---------- */
+async function loadPrice(){
+  try{ const {data}=await api('/lead_market_config?select=price&id=eq.1'); if(data&&data[0]&&data[0].price!=null) PRICE=Number(data[0].price); }catch(e){}
+}
+async function loadBalance(){
+  try{
+    const {data}=await api('/broker_wallets?select=balance');
+    const bal = (data&&data[0]) ? Number(data[0].balance) : 0;
+    $('balance').textContent = bal.toLocaleString('en-US') + (ar()?' ج.م':' EGP');
+  }catch(e){ $('balance').textContent = '0'; }
+}
+const T={
+  ar:{buy:'اكشف الرقم', for:'مقابل', egp:'ج.م', wa:'واتساب', call:'اتصال', unlocked:'مكشوف', locked:'الرقم مقفول',
+    interest:'مهتم بـ', none:'مفيش ليدز متاحة دلوقتي.', purpose:{sale:'تمليك',rent:'إيجار'},
+    market:{primary:'primary',resale:'resale'}, beds:'غرف', budget:'ميزانية', broke:'رصيدك مش كفاية — اشحن الأول.'},
+  en:{buy:'Reveal number', for:'for', egp:'EGP', wa:'WhatsApp', call:'Call', unlocked:'Unlocked', locked:'Number locked',
+    interest:'Interested in', none:'No leads available right now.', purpose:{sale:'Buy',rent:'Rent'},
+    market:{primary:'primary',resale:'resale'}, beds:'BR', budget:'Budget', broke:'Not enough balance — top up first.'}
+};
+const t = k => (T[ar()?'ar':'en'])[k];
+
+function reqChips(r){
+  if(!r) return '';
+  const L = ar()?'ar':'en'; const out=[];
+  if(r.purpose) out.push(T[L].purpose[r.purpose]||r.purpose);
+  if(r.type) out.push(esc(r.type));
+  if(r.bedrooms!=null) out.push(r.bedrooms+' '+t('beds'));
+  if(r.area) out.push(esc(r.area));
+  if(r.budget_max) out.push(t('budget')+': '+Number(r.budget_max).toLocaleString('en-US'));
+  if(r.market_pref) out.push(T[L].market[r.market_pref]||r.market_pref);
+  return out.map(x=>`<span>${x}</span>`).join('');
+}
+function fmtDate(d){ try{return new Date(d).toLocaleDateString(ar()?'ar-EG':'en-GB');}catch(e){return '';} }
+
+async function loadLeads(){
+  const grid=$('leadGrid');
+  grid.innerHTML='<div class="empty2">…</div>';
+  let data;
+  try{
+    const res=await api('/leads_market?select=*&order=created_at.desc&limit=200');
+    if(!res.ok) throw new Error('status '+res.status);
+    data=res.data;
+  }catch(e){
+    grid.innerHTML=`<div class="empty2">${ar()?'تعذّر التحميل — ':'Load failed — '}<a href="javascript:location.reload()">${ar()?'حدّث الصفحة':'reload'}</a></div>`;
+    return;
+  }
+  if(!data||!data.length){ grid.innerHTML=`<div class="empty2">${t('none')}</div>`; return; }
+  grid.innerHTML='';
+  data.forEach(ld=> grid.appendChild(leadCard(ld)));
+}
+function leadCard(ld){
+  const d=document.createElement('div'); d.className='lcard';
+  const name = ld.name || (ar()?'عميل':'Client');
+  const ctx = ld.context ? `<div class="ctx">${t('interest')}: <b>${esc(ld.context)}</b></div>` : '';
+  const unlocked = ld.unlocked;
+  const phoneRow = unlocked
+    ? `<div class="phone-row unlocked"><span>🟢</span><span class="pn">${esc(ld.phone)}</span></div>
+       <div class="act">
+         <a class="btn btn-sm wa" target="_blank" rel="noopener" href="https://wa.me/${(''+ld.phone).replace(/[^0-9]/g,'')}">🟢 ${t('wa')}</a>
+         <a class="btn btn-sm btn-ghost" href="tel:${esc(ld.phone)}">📞 ${t('call')}</a>
+       </div>`
+    : `<div class="phone-row"><span>🔒</span><span class="pn">${esc(ld.phone||'—')}</span></div>
+       <div class="act"><button class="btn btn-sm btn-teal buy">${t('buy')} · ${PRICE} ${t('egp')}</button></div>`;
+  d.innerHTML = `<div class="top"><span class="nm">${esc(name)}</span><span class="date">${fmtDate(ld.created_at)}</span></div>
+    <div class="chips">${reqChips(ld.req)}</div>${ctx}${phoneRow}`;
+  if(!unlocked){
+    d.querySelector('.buy').onclick = async (ev)=>{
+      const btn=ev.currentTarget; btn.disabled=true; btn.textContent='…';
+      try{
+        const res=await api('/rpc/unlock_lead',{method:'POST',body:JSON.stringify({p_session:ld.session_id})});
+        if(!res.ok){ const m=(res.data&&res.data.message)||''; throw new Error(m||('status '+res.status)); }
+        await loadBalance(); await loadLeads();
+      }catch(err){
+        btn.disabled=false; btn.textContent=`${t('buy')} · ${PRICE} ${t('egp')}`;
+        alert(/insufficient/i.test(err.message)? t('broke') : (err.message||'error'));
+      }
+    };
+  }
+  return d;
+}
+
+/* ---------- top-up ---------- */
+window.openTopup=()=>{
+  const s=$('topupSheet'); const wa=$('topupWa');
+  if(ADMIN_WA){ wa.style.display=''; wa.href=`https://wa.me/${ADMIN_WA}?text=${encodeURIComponent('عايز أشحن رصيد Homzy leads')}`; }
+  else wa.style.display='none';
+  s.classList.add('open');
+};
+window.closeTopup=()=>$('topupSheet').classList.remove('open');
+
+/* ---------- session ---------- */
+async function refresh(){
+  await loadPrice();
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){
+    TOKEN = session.access_token;
+    $('gate').style.display='none'; $('market').style.display='';
+    $('whoami').textContent = session.user.email || '';
+    await loadBalance(); await loadLeads();
+  }else{
+    $('market').style.display='none'; $('gate').style.display='';
+    setMode('login');
+  }
+}
+sb.auth.onAuthStateChange(()=>{});
+document.addEventListener('hz:lang', ()=>{ setMode(mode); if($('market').style.display!=='none'){ loadBalance(); loadLeads(); } });
+refresh();
+</script>
+</body>
+</html>

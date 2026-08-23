@@ -73,6 +73,12 @@ def download_page():
     return FileResponse(config.FRONTEND_DIR / "download.html")
 
 
+@app.get("/leads")
+def leads_page():
+    """Broker leads marketplace (browse leads, pay to reveal the phone)."""
+    return FileResponse(config.FRONTEND_DIR / "leads.html")
+
+
 @app.get("/api/health")
 def health():
     provider = config.LLM_PROVIDER
