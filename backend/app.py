@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from . import broker, config, listings as listings_mod, llm, valuation
@@ -77,6 +77,40 @@ def download_page():
 def leads_page():
     """Broker leads marketplace (browse leads, pay to reveal the phone)."""
     return FileResponse(config.FRONTEND_DIR / "leads.html")
+
+
+# ---------------------------------------------------------------------------
+# SEO: robots.txt + sitemap.xml (public marketing pages only).
+# ---------------------------------------------------------------------------
+SEO_BASE = "https://homzy-jet.vercel.app"
+_PUBLIC_PATHS = ["/", "/features", "/areas", "/app", "/brokers", "/download"]
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /leads\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n"
+        f"Sitemap: {SEO_BASE}/sitemap.xml\n"
+    )
+    return Response(body, media_type="text/plain")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    urls = "".join(
+        f"<url><loc>{SEO_BASE}{p}</loc>"
+        f"<changefreq>{'daily' if p in ('/', '/app', '/areas') else 'weekly'}</changefreq>"
+        f"<priority>{'1.0' if p == '/' else '0.8'}</priority></url>"
+        for p in _PUBLIC_PATHS
+    )
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+           f"{urls}</urlset>")
+    return Response(xml, media_type="application/xml")
 
 
 @app.get("/api/health")
