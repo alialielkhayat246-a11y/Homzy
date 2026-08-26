@@ -291,19 +291,51 @@ async function sendMsg(text){
   captureLead(text);
   input.value=''; send.disabled=true; saveChat();
   const t=typing();
-  try{
-    const body={ session_id:chat.sessionId, message:text, history:chat.history };
-    if(chat.context) body.context = chat.context;   // backend may use it; harmless if ignored
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const data=await r.json(); t.remove();
-    const reply=data.reply||'(no reply)';
-    addMsg(reply,'bot'); chat.history.push({role:'assistant',content:reply});
-    if(data.requirements) chat.req = data.requirements;   // structured needs for the lead
-    const recs=data.recommendations||(data.recommendation?[data.recommendation]:[]);
-    if(recs&&recs[0]) addRec(recs[0]);
+  const body={ session_id:chat.sessionId, message:text, history:chat.history };
+  if(chat.context) body.context = chat.context;
+  const finish=(reply,done)=>{
+    chat.history.push({role:'assistant',content:reply});
+    if(done){
+      if(done.requirements) chat.req=done.requirements;
+      const rec=(done.recommendations&&done.recommendations[0])||done.recommendation;
+      if(rec) addRec(rec);
+    }
     saveChat();
+  };
+  try{
+    const r=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!r.ok||!r.body) throw new Error('no stream');
+    const reader=r.body.getReader(), dec=new TextDecoder();
+    let buf='', reply='', bubble=null, done=null;
+    for(;;){
+      const {value,done:d}=await reader.read(); if(d) break;
+      buf+=dec.decode(value,{stream:true});
+      let nl;
+      while((nl=buf.indexOf('\n'))>=0){
+        const line=buf.slice(0,nl).trim(); buf=buf.slice(nl+1);
+        if(!line) continue;
+        let evt; try{ evt=JSON.parse(line); }catch(e){ continue; }
+        if(evt.type==='token'){
+          if(!bubble){ if(t.parentNode)t.remove(); bubble=addMsg('','bot'); }
+          reply+=evt.text; bubble.textContent=reply;
+          bubble.style.direction=isAr(reply)?'rtl':'ltr'; bubble.style.textAlign=isAr(reply)?'right':'left';
+          const log=document.getElementById('hzCpLog'); log.scrollTop=log.scrollHeight;
+        } else if(evt.type==='done'){ done=evt; }
+      }
+    }
+    if(t.parentNode) t.remove();
+    if(reply===''){ throw new Error('empty stream'); }   // fall back below
+    finish(reply, done);
   }catch(e){
-    t.remove(); addMsg(HZ.lang==='ar'?'في مشكلة في الاتصال — حاول تاني بعد شوية.':'Connection issue — please try again.','bot');
+    // Fallback to the non-streaming endpoint (e.g. host buffered the stream).
+    try{
+      const r2=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const data=await r2.json(); if(t.parentNode) t.remove();
+      const reply=data.reply||'(no reply)'; addMsg(reply,'bot'); finish(reply, data);
+    }catch(e2){
+      if(t.parentNode) t.remove();
+      addMsg(HZ.lang==='ar'?'في مشكلة في الاتصال — حاول تاني بعد شوية.':'Connection issue — please try again.','bot');
+    }
   }finally{ send.disabled=false; input.focus(); }
 }
 

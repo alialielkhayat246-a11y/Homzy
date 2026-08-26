@@ -9,7 +9,9 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import (FileResponse, JSONResponse, Response,
+                               StreamingResponse)
+import json as _json
 from fastapi.staticfiles import StaticFiles
 
 from . import broker, config, listings as listings_mod, llm, valuation
@@ -152,6 +154,29 @@ async def chat(req: Request):
     if not isinstance(history, list):
         history = None
     return broker.handle_turn(session, message, client_history=history)
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(req: Request):
+    """Streaming version of /api/chat — emits newline-delimited JSON events
+    ({type: meta|token|done}) so the reply appears word-by-word."""
+    body = await req.json()
+    session_id = body.get("session_id", "default")
+    message = (body.get("message") or "").strip()
+    if not message:
+        return JSONResponse({"error": "empty message"}, status_code=400)
+    session = SESSIONS.setdefault(session_id, {})
+    history = body.get("history")
+    if not isinstance(history, list):
+        history = None
+
+    def gen():
+        for evt in broker.handle_turn_stream(session, message, client_history=history):
+            yield _json.dumps(evt, ensure_ascii=False) + "\n"
+
+    return StreamingResponse(gen(), media_type="application/x-ndjson",
+                             headers={"X-Accel-Buffering": "no",
+                                      "Cache-Control": "no-cache"})
 
 
 @app.post("/api/estimate")

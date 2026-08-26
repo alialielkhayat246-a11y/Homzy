@@ -6,6 +6,7 @@ all — the broker falls back to grounded templated replies.
 """
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from . import config
@@ -135,6 +136,73 @@ class GeminiClient:
                 return text
             last_err = f"{model}: empty response"
         raise LLMUnavailable(f"Gemini unavailable ({last_err})")
+
+    def _contents(self, messages):
+        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        contents = []
+        for m in messages:
+            if m["role"] == "system":
+                continue
+            role = "user" if m["role"] == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": m["content"]}]})
+        return system, contents
+
+    def stream(self, messages: list[dict[str, str]], temperature: float = 0.6,
+               max_tokens: int | None = None):
+        """Yield reply text chunks as the model generates them (SSE). Falls back
+        across models only BEFORE the first token; once streaming starts it
+        commits to that model."""
+        import requests
+
+        system, contents = self._contents(messages)
+        base_cfg: dict[str, Any] = {"temperature": temperature}
+        if max_tokens:
+            base_cfg["maxOutputTokens"] = max_tokens
+
+        models = [self.model] + [m for m in self._FALLBACKS if m != self.model]
+        last_err = "no model tried"
+        for model in models:
+            gen_cfg = dict(base_cfg)
+            if model.startswith("gemini-2.5"):
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
+            payload: dict[str, Any] = {"contents": contents, "generationConfig": gen_cfg}
+            if system:
+                payload["systemInstruction"] = {"parts": [{"text": system}]}
+            url = f"{self._BASE}/models/{model}:streamGenerateContent?alt=sse"
+            try:
+                resp = requests.post(
+                    url,
+                    headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"},
+                    json=payload, timeout=60, stream=True)
+            except Exception as exc:
+                last_err = f"{model}: {exc}"
+                continue
+            if resp.status_code != 200:
+                last_err = f"{model}: HTTP {resp.status_code}"
+                resp.close()
+                continue
+            got = False
+            for line in resp.iter_lines():
+                if not line:
+                    continue
+                s = line.decode("utf-8", "ignore")
+                if s.startswith("data:"):
+                    s = s[5:].strip()
+                if not s or s == "[DONE]":
+                    continue
+                try:
+                    data = json.loads(s)
+                    parts = data["candidates"][0]["content"]["parts"]
+                    text = "".join(p.get("text", "") for p in parts)
+                except (KeyError, IndexError, ValueError):
+                    continue
+                if text:
+                    got = True
+                    yield text
+            if got:
+                return
+            last_err = f"{model}: empty stream"
+        raise LLMUnavailable(f"Gemini stream unavailable ({last_err})")
 
     def available(self) -> bool:
         return bool(self.api_key)

@@ -260,8 +260,10 @@ def _llm_reply(history: list[dict[str, str]], language: str,
 # --------------------------------------------------------------------------
 # Public entry point
 # --------------------------------------------------------------------------
-def handle_turn(session: dict[str, Any], message: str,
-                client_history: list[dict[str, str]] | None = None) -> dict[str, Any]:
+def _prepare(session: dict[str, Any], message: str,
+             client_history: list[dict[str, str]] | None):
+    """Shared per-turn setup: language, requirements, matches. Appends the
+    user message to history and returns (language, history, req, matches)."""
     language = detect_language(message)
     session["language"] = language
     req = session.setdefault("requirements", {})
@@ -274,30 +276,25 @@ def handle_turn(session: dict[str, Any], message: str,
             for m in client_history
             if m.get("role") in ("user", "assistant") and m.get("content")
         ]
-        # rebuild requirements from the whole conversation via heuristics
         req = {}
         for m in session["history"]:
             if m["role"] == "user":
                 _merge(req, _heuristic_extract(m["content"]))
         session["requirements"] = req
     history = session.setdefault("history", [])
-
     history.append({"role": "user", "content": message})
 
     # 1) heuristic from this message (always works, even with no AI engine)
     _merge(req, _heuristic_extract(message))
-    # 2) LLM extraction across the whole conversation — but ONLY while an
-    #    essential is still missing. Once the heuristics have the core criteria,
-    #    we skip this call, so the recommendation turns are a single LLM round
-    #    trip (≈2× faster) instead of two.
+    # 2) LLM extraction — but ONLY while an essential is still missing, so the
+    #    recommendation turns are a single LLM round trip (≈2× faster).
     if config.LLM_EXTRACT and persona._missing(req):
         _merge(req, _llm_extract(_history_to_text(history)))
 
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)
 
-    # 3b) once we're about to recommend, position the top unit against ITS own
-    #     market (resale vs primary) so the broker can persuade with real data.
+    # 3b) position the top unit against ITS own market (resale vs primary).
     if matches and not persona._missing(req):
         top = matches[0]
         if not top.get("value_note"):
@@ -307,29 +304,75 @@ def handle_turn(session: dict[str, Any], message: str,
                 market=top.get("market", "resale"))
             if note:
                 top["value_note"] = note
+    return language, history, req, matches
 
-    # 4) reply
+
+def _recommendation(req, matches):
+    if not persona._missing(req) and matches:
+        return listings_mod.public(matches[0])
+    return None
+
+
+def handle_turn(session: dict[str, Any], message: str,
+                client_history: list[dict[str, str]] | None = None) -> dict[str, Any]:
+    language, history, req, matches = _prepare(session, message, client_history)
+
     reply = _llm_reply(history, language, matches)
     mode = "ai"
     if reply is None:
-        # Only greet on the very first turn so the fallback doesn't repeat itself.
         greet = sum(1 for m in history if m["role"] == "user") <= 1
         reply = persona.template_reply(language, req, matches, greet=greet)
         mode = "template"
 
     history.append({"role": "assistant", "content": reply})
-
-    # Once we know all five essentials and have a match, surface ONE structured
-    # recommendation so the app can render its photos + brochure below the reply.
-    recommendation = None
-    if not persona._missing(req) and matches:
-        recommendation = listings_mod.public(matches[0])
-
     return {
         "reply": reply,
         "language": language,
         "mode": mode,
         "requirements": req,
-        "recommendation": recommendation,
+        "recommendation": _recommendation(req, matches),
+        "matches": [listings_mod.public(m) for m in matches],
+    }
+
+
+def handle_turn_stream(session: dict[str, Any], message: str,
+                       client_history: list[dict[str, str]] | None = None):
+    """Same pipeline as handle_turn, but yields events so the reply streams
+    token-by-token. Events: {'type':'meta'|'token'|'done', ...}."""
+    language, history, req, matches = _prepare(session, message, client_history)
+    yield {"type": "meta", "language": language}
+
+    client = _client_or_none()
+    reply = None
+    if client is not None and hasattr(client, "stream"):
+        system = persona.broker_system(language, matches)
+        messages = [{"role": "system", "content": system}] + [
+            {"role": m["role"], "content": m["content"]} for m in history]
+        parts: list[str] = []
+        try:
+            for chunk in client.stream(messages, temperature=config.LLM_TEMPERATURE,
+                                       max_tokens=900):
+                parts.append(chunk)
+                yield {"type": "token", "text": chunk}
+            reply = "".join(parts) or None
+        except llm.LLMUnavailable:
+            reply = None
+
+    mode = "ai"
+    if reply is None:  # non-streaming engine, or streaming failed → one shot
+        reply = _llm_reply(history, language, matches)
+        if reply is None:
+            greet = sum(1 for m in history if m["role"] == "user") <= 1
+            reply = persona.template_reply(language, req, matches, greet=greet)
+            mode = "template"
+        yield {"type": "token", "text": reply}
+
+    history.append({"role": "assistant", "content": reply})
+    yield {
+        "type": "done",
+        "language": language,
+        "mode": mode,
+        "requirements": req,
+        "recommendation": _recommendation(req, matches),
         "matches": [listings_mod.public(m) for m in matches],
     }
