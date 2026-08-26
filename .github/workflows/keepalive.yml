@@ -1,0 +1,23 @@
+name: Supabase keep-alive
+
+# Free-tier Supabase projects pause after ~7 days of inactivity. This runs a
+# tiny daily query so the project stays active. Remove it once on a paid plan.
+on:
+  schedule:
+    - cron: "17 4 * * *"   # daily at 04:17 UTC (odd minute = more reliable on GH cron)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (real DB query keeps it awake)
+        run: |
+          KEY="sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb"
+          URL="https://ceoqtkbpdxnkuptnnwjg.supabase.co/rest/v1/projects?select=id&limit=1"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+            "$URL" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "Supabase responded: $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Keep-alive ping failed (HTTP $code)"; exit 1
+          fi
