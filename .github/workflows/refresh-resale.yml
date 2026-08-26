@@ -6,9 +6,9 @@ name: Refresh resale prices
 # Can also be run on demand from the Actions tab.
 
 on:
-  schedule:
-    - cron: "0 3 * * 0"   # weekly, Sunday 03:00 UTC  -> RE/MAX
-    - cron: "0 3 1 * *"   # monthly, 1st 03:00 UTC     -> RE/MAX + PropertyFinder
+  # Auto-refresh DISABLED (2026-08-26): the RE/MAX + PropertyFinder rows were
+  # test/benchmark data and have been cleared — brokers now list their own units.
+  # Kept runnable on demand only, in case a resale price benchmark is wanted later.
   workflow_dispatch:
 
 jobs:
