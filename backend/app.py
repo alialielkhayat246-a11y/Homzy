@@ -82,7 +82,7 @@ def leads_page():
 # ---------------------------------------------------------------------------
 # SEO: robots.txt + sitemap.xml (public marketing pages only).
 # ---------------------------------------------------------------------------
-SEO_BASE = "https://homzy-jet.vercel.app"
+SEO_BASE = "https://homzy-ai.com"
 _PUBLIC_PATHS = ["/", "/features", "/areas", "/app", "/brokers", "/download"]
 
 
