@@ -14,7 +14,7 @@
   ],
   "env": {
     "LLM_PROVIDER": "gemini",
-    "GEMINI_MODEL": "gemini-flash-latest",
+    "GEMINI_MODEL": "gemini-2.5-flash",
     "BROKER_NAME": "Homzy",
     "BRAND_NAME": "Homzy",
     "SUPABASE_URL": "https://ceoqtkbpdxnkuptnnwjg.supabase.co",

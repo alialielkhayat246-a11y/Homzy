@@ -218,7 +218,7 @@ def _llm_extract(history_text: str) -> dict[str, Any]:
         {"role": "user", "content": history_text},
     ]
     try:
-        raw = client.chat(messages, temperature=0.0, force_json=True)
+        raw = client.chat(messages, temperature=0.0, force_json=True, max_tokens=512)
     except llm.LLMUnavailable:
         return {}
     return _parse_json(raw)
@@ -251,7 +251,7 @@ def _llm_reply(history: list[dict[str, str]], language: str,
     system = persona.broker_system(language, matches)
     messages = [{"role": "system", "content": system}] + history
     try:
-        text = client.chat(messages, temperature=config.LLM_TEMPERATURE)
+        text = client.chat(messages, temperature=config.LLM_TEMPERATURE, max_tokens=900)
         return text or None
     except llm.LLMUnavailable:
         return None
@@ -286,9 +286,11 @@ def handle_turn(session: dict[str, Any], message: str,
 
     # 1) heuristic from this message (always works, even with no AI engine)
     _merge(req, _heuristic_extract(message))
-    # 2) optional LLM extraction across the whole conversation. Off by default
-    #    (one fewer LLM call per turn = faster replies).
-    if config.LLM_EXTRACT:
+    # 2) LLM extraction across the whole conversation — but ONLY while an
+    #    essential is still missing. Once the heuristics have the core criteria,
+    #    we skip this call, so the recommendation turns are a single LLM round
+    #    trip (≈2× faster) instead of two.
+    if config.LLM_EXTRACT and persona._missing(req):
         _merge(req, _llm_extract(_history_to_text(history)))
 
     # 3) find real listings

@@ -25,14 +25,17 @@ class OllamaClient:
         self.model = config.OLLAMA_MODEL
 
     def chat(self, messages: list[dict[str, str]], temperature: float = 0.6,
-             force_json: bool = False) -> str:
+             force_json: bool = False, max_tokens: int | None = None) -> str:
         import requests  # imported lazily so 'mock' mode needs no dependency
 
+        options: dict[str, Any] = {"temperature": temperature}
+        if max_tokens:
+            options["num_predict"] = max_tokens
         payload: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
             "stream": False,
-            "options": {"temperature": temperature},
+            "options": options,
         }
         if force_json:
             payload["format"] = "json"
@@ -76,7 +79,7 @@ class GeminiClient:
         self.model = config.GEMINI_MODEL
 
     def chat(self, messages: list[dict[str, str]], temperature: float = 0.6,
-             force_json: bool = False) -> str:
+             force_json: bool = False, max_tokens: int | None = None) -> str:
         import requests  # imported lazily so 'mock' mode needs no dependency
 
         system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
@@ -87,16 +90,23 @@ class GeminiClient:
             role = "user" if m["role"] == "user" else "model"
             contents.append({"role": role, "parts": [{"text": m["content"]}]})
 
-        gen_cfg: dict[str, Any] = {"temperature": temperature}
+        base_cfg: dict[str, Any] = {"temperature": temperature}
         if force_json:
-            gen_cfg["responseMimeType"] = "application/json"
-        payload: dict[str, Any] = {"contents": contents, "generationConfig": gen_cfg}
-        if system:
-            payload["systemInstruction"] = {"parts": [{"text": system}]}
+            base_cfg["responseMimeType"] = "application/json"
+        if max_tokens:
+            base_cfg["maxOutputTokens"] = max_tokens
 
         models = [self.model] + [m for m in self._FALLBACKS if m != self.model]
         last_err = "no model tried"
         for model in models:
+            gen_cfg = dict(base_cfg)
+            # 2.5 models "think" before answering, which adds latency we don't
+            # need for a broker chat — disable it so the smarter model stays fast.
+            if model.startswith("gemini-2.5"):
+                gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
+            payload: dict[str, Any] = {"contents": contents, "generationConfig": gen_cfg}
+            if system:
+                payload["systemInstruction"] = {"parts": [{"text": system}]}
             url = f"{self._BASE}/models/{model}:generateContent"
             try:
                 resp = requests.post(
