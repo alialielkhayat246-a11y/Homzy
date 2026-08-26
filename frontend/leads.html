@@ -72,21 +72,14 @@
     <p id="gateSub">سجّل دخولك برقم موبايلك عشان تشوف الليدز.</p>
     <div class="msg" id="gateMsg"></div>
 
-    <!-- Step 1: phone (+ broker details when registering) -->
-    <form id="phoneForm">
+    <form id="authForm">
       <input id="phone" type="tel" inputmode="tel" placeholder="رقم الموبايل  (01xxxxxxxxx)" autocomplete="tel" required />
+      <input id="password" type="password" placeholder="كلمة المرور" minlength="6" required />
       <div id="brokerFields" style="display:none; flex-direction:column; gap:12px;">
         <input id="company" placeholder="اسم الشركة" autocomplete="organization" />
         <input id="commreg" placeholder="رقم السجل التجاري" inputmode="numeric" />
       </div>
-      <button class="btn btn-teal" id="sendBtn" type="submit">أرسل كود التأكيد</button>
-    </form>
-
-    <!-- Step 2: OTP -->
-    <form id="otpForm" style="display:none">
-      <input id="otp" inputmode="numeric" placeholder="كود التأكيد (OTP)" autocomplete="one-time-code" required />
-      <button class="btn btn-teal" id="verifyBtn" type="submit">تأكيد ودخول</button>
-      <div class="switch"><a id="changePhone">غيّر الرقم</a></div>
+      <button class="btn btn-teal" id="authBtn" type="submit">دخول</button>
     </form>
 
     <div class="switch" id="switchRow">
@@ -146,77 +139,61 @@ const ar = () => (window.HZ ? HZ.lang : 'ar') === 'ar';
 const esc = s => (window.HZ? HZ.esc : (x=>x))(s);
 const $ = id => document.getElementById(id);
 
-/* ---------- auth (phone + OTP) ---------- */
+/* ---------- auth (phone + password, no OTP) ----------
+   Phone is mapped to a synthetic, auto-confirmed email under the hood
+   (p<digits>@homzy.app) so we get phone+password with zero SMS/OTP setup.
+   The real phone + broker details are stored on the profile via metadata. */
 let mode = 'login';         // 'login' | 'register'
-let pendingPhone = null;
 function gmsg(t, ok){ const el=$('gateMsg'); el.textContent=t; el.className='msg '+(ok?'ok':'err'); }
-function setMode(m){
-  mode = m;
-  const reg = m==='register';
-  $('gateTitle').textContent = reg ? (ar()?'تسجيل حساب بروكر':'Register as broker') : (ar()?'دخول البروكر':'Broker login');
-  $('gateSub').textContent = reg ? (ar()?'أدخل بيانات شركتك ورقم موبايلك.':'Enter your company details and phone.') : (ar()?'سجّل دخولك برقم موبايلك عشان تشوف الليدز.':'Log in with your phone to see the leads.');
-  $('brokerFields').style.display = reg ? 'flex' : 'none';
-  $('company').required = reg; $('commreg').required = reg;
-  $('sendBtn').textContent = ar()?'أرسل كود التأكيد':'Send code';
-  $('switchTxt').textContent = reg ? (ar()?'عندك حساب بروكر؟':'Have a broker account?') : (ar()?'لسه معندكش حساب بروكر؟':'No broker account yet?');
-  $('switchLink').textContent = reg ? (ar()?'سجّل دخول':'Log in') : (ar()?'سجّل كبروكر':'Register as broker');
-  // back to step 1
-  $('phoneForm').style.display=''; $('otpForm').style.display='none'; $('switchRow').style.display='';
-}
-$('switchLink').onclick = () => { gmsg('',true); setMode(mode==='login'?'register':'login'); };
-$('changePhone').onclick = () => { gmsg('',true); $('phoneForm').style.display=''; $('otpForm').style.display='none'; $('switchRow').style.display=''; };
-
 function normPhone(v){
-  let d=(v||'').replace(/[^\d+]/g,'');
-  if(d.startsWith('+')) return d;
-  if(d.startsWith('00')) return '+'+d.slice(2);
-  if(d.startsWith('0')) return '+20'+d.slice(1);      // 01xxxxxxxxx → +20…
-  if(d.startsWith('20')) return '+'+d;
-  return '+20'+d;
+  let d=(v||'').replace(/[^\d]/g,'');
+  if(d.startsWith('00')) d=d.slice(2);
+  if(d.startsWith('0')) d='20'+d.slice(1);            // 01xxxxxxxxx → 2010…
+  else if(!d.startsWith('20')) d='20'+d;
+  return d;                                            // digits only, E.164 without +
 }
-function otpErr(m){
-  if(/provider|not enabled|not configured|unsupported|sms|disabled/i.test(m||''))
-    return ar()?'خدمة الرسائل (OTP) لسه مش مفعّلة — هتشتغل بعد ربط مزوّد الرسائل.':'SMS/OTP is not enabled yet — it will work once an SMS provider is connected.';
-  if(/Signups not allowed|not found|user/i.test(m||''))
-    return ar()?'الرقم ده مش مسجّل — سجّل كبروكر الأول.':'This number is not registered — register as a broker first.';
-  if(/Invalid|expired|token/i.test(m||''))
-    return ar()?'الكود غلط أو منتهي — حاول تاني.':'Wrong or expired code — try again.';
+const phoneEmail = v => 'p'+normPhone(v)+'@homzy.app';
+function setMode(m){
+  mode=m; const reg=m==='register';
+  $('gateTitle').textContent = reg?(ar()?'تسجيل حساب بروكر':'Register as broker'):(ar()?'دخول البروكر':'Broker login');
+  $('gateSub').textContent = reg?(ar()?'أدخل بيانات شركتك ورقم موبايلك وكلمة مرور.':'Enter your company details, phone and a password.'):(ar()?'سجّل دخولك برقم موبايلك وكلمة المرور.':'Log in with your phone and password.');
+  $('brokerFields').style.display = reg?'flex':'none';
+  $('company').required=reg; $('commreg').required=reg;
+  $('authBtn').textContent = reg?(ar()?'إنشاء الحساب':'Create account'):(ar()?'دخول':'Log in');
+  $('switchTxt').textContent = reg?(ar()?'عندك حساب بروكر؟':'Have a broker account?'):(ar()?'لسه معندكش حساب بروكر؟':'No broker account yet?');
+  $('switchLink').textContent = reg?(ar()?'سجّل دخول':'Log in'):(ar()?'سجّل كبروكر':'Register as broker');
+}
+$('switchLink').onclick = ()=>{ gmsg('',true); setMode(mode==='login'?'register':'login'); };
+function authErr(m){
+  if(/Invalid login|credentials/i.test(m||'')) return ar()?'الرقم أو كلمة المرور غلط.':'Wrong phone or password.';
+  if(/already registered|already exists|User already/i.test(m||'')) return ar()?'الرقم ده مسجّل قبل كده — سجّل دخول.':'This number is already registered — log in.';
+  if(/at least 6|password/i.test(m||'')) return ar()?'كلمة المرور لازم 6 أحرف على الأقل.':'Password must be at least 6 characters.';
   return m;
 }
-
-$('phoneForm').addEventListener('submit', async (e)=>{
+$('authForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const phone=normPhone($('phone').value);
-  if(!/^\+\d{10,15}$/.test(phone)){ gmsg(ar()?'رقم موبايل غير صحيح.':'Invalid phone number.'); return; }
-  const opts={ shouldCreateUser: mode==='register' };
-  if(mode==='register'){
-    const company=$('company').value.trim(), commreg=$('commreg').value.trim();
-    if(!company||!commreg){ gmsg(ar()?'اكتب اسم الشركة والسجل التجاري.':'Enter company name and commercial registration.'); return; }
-    opts.data={ role:'broker', company, commercial_reg:commreg };
+  const phone=normPhone($('phone').value), password=$('password').value;
+  if(phone.length<11){ gmsg(ar()?'رقم موبايل غير صحيح.':'Invalid phone number.'); return; }
+  const email=phoneEmail($('phone').value);
+  if(mode==='register' && (!$('company').value.trim()||!$('commreg').value.trim())){
+    gmsg(ar()?'اكتب اسم الشركة والسجل التجاري.':'Enter company name and commercial registration.'); return;
   }
-  $('sendBtn').disabled=true;
+  $('authBtn').disabled=true;
   try{
-    const {error}=await sb.auth.signInWithOtp({ phone, options:opts });
-    if(error) throw error;
-    pendingPhone=phone;
-    $('phoneForm').style.display='none'; $('otpForm').style.display=''; $('switchRow').style.display='none';
-    gmsg((ar()?'بعتنا كود لـ ':'Code sent to ')+phone, true);
-  }catch(err){ gmsg(otpErr(err.message)); }
-  finally{ $('sendBtn').disabled=false; }
+    if(mode==='register'){
+      const {error}=await sb.auth.signUp({ email, password, options:{ data:{
+        role:'broker', phone, company:$('company').value.trim(), commercial_reg:$('commreg').value.trim() } } });
+      if(error) throw error;
+    }else{
+      const {error}=await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+    }
+    const {data:{session}}=await sb.auth.getSession();
+    if(session){ location.reload(); return; }
+    gmsg(ar()?'تم إنشاء الحساب — سجّل دخول.':'Account created — log in.', true); setMode('login');
+  }catch(err){ gmsg(authErr(err.message)); }
+  finally{ $('authBtn').disabled=false; }
 });
-
-$('otpForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const token=$('otp').value.trim();
-  $('verifyBtn').disabled=true;
-  try{
-    const {error}=await sb.auth.verifyOtp({ phone:pendingPhone, token, type:'sms' });
-    if(error) throw error;
-    location.reload();
-  }catch(err){ gmsg(otpErr(err.message)); }
-  finally{ $('verifyBtn').disabled=false; }
-});
-
 $('logoutBtn').onclick = async ()=>{ await sb.auth.signOut(); location.reload(); };
 
 /* ---------- data ---------- */
