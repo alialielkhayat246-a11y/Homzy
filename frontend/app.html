@@ -90,6 +90,41 @@
   .vmsg{margin-top:10px; font-size:13.5px; font-weight:700; line-height:1.6;}
   .vmsg.err{color:#B42318;} .vmsg.ok{color:#1E8E5A;}
   @media(max-width:480px){ .devgrid{grid-template-columns:1fr;} }
+
+  /* compare */
+  .cmpchk{position:absolute; bottom:12px; inset-inline-end:12px; display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.94); border:1.5px solid var(--line-2); color:var(--navy); font-family:var(--ff); font-weight:800; font-size:12px; padding:6px 11px; border-radius:100px; cursor:pointer; transition:all .15s; z-index:2;}
+  .cmpchk:hover{border-color:var(--teal);}
+  .cmpchk.on{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .cmptray{position:fixed; inset-inline:0; bottom:0; z-index:80; transform:translateY(120%); transition:transform .28s cubic-bezier(.2,.8,.2,1); pointer-events:none;}
+  .cmptray.show{transform:translateY(0); pointer-events:auto;}
+  .cmptray-in{max-width:1100px; margin:0 auto; background:var(--navy); color:#fff; border-radius:18px 18px 0 0; box-shadow:0 -12px 40px -18px rgba(0,0,0,.5); padding:12px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .cmp-thumbs{display:flex; gap:8px; flex:1; flex-wrap:wrap; min-width:0;}
+  .cmp-thumb{width:52px; height:52px; border-radius:11px; background:#26364d center/cover no-repeat; position:relative; border:2px solid rgba(255,255,255,.25); flex:none;}
+  .cmp-thumb button{position:absolute; top:-7px; inset-inline-end:-7px; width:20px; height:20px; border-radius:50%; border:none; background:#fff; color:var(--navy); font-weight:800; cursor:pointer; line-height:1; font-size:13px;}
+  .cmp-tray-actions{display:flex; gap:8px; align-items:center;}
+  .cmp-tray-actions .btn-ghost{background:transparent; border:1.5px solid rgba(255,255,255,.3); color:#fff;}
+  .cmp-tray-actions .btn-teal:disabled{opacity:.5; cursor:not-allowed;}
+  .cmp-flash{width:100%; text-align:center; font-weight:700; font-size:13px; color:#ffe; opacity:0; max-height:0; overflow:hidden; transition:all .2s;}
+  .cmp-flash.on{opacity:1; max-height:30px; padding-top:4px;}
+  .cmp-modal{background:var(--cream); width:min(920px,100%); max-height:92vh; margin:auto; border-radius:20px; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow); animation:fade .2s;}
+  .cmp-head{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line); background:#fff;}
+  .cmp-head h3{font-size:19px; color:var(--navy);}
+  .cmp-x{width:36px; height:36px; border-radius:10px; border:none; background:var(--cream); cursor:pointer; font-size:20px;}
+  .cmp-scroll{overflow:auto;}
+  .cmp-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .cmp-table th, .cmp-table td{padding:12px 12px; text-align:start; border-bottom:1px solid var(--line); vertical-align:top;}
+  .cmp-table tbody th{background:var(--cream); color:var(--muted); font-weight:700; white-space:nowrap; position:sticky; inset-inline-start:0; width:96px;}
+  .cmp-corner{position:sticky; inset-inline-start:0; background:#fff; z-index:2;}
+  .cmp-h{background:#fff; min-width:150px;}
+  .cmp-hc{display:flex; flex-direction:column; gap:7px; align-items:flex-start;}
+  .cmp-himg{width:100%; height:70px; border-radius:10px; background:#e9e2da center/cover no-repeat;}
+  .cmp-hn{font-weight:800; color:var(--navy); font-size:14px; line-height:1.3;}
+  .cmp-hview{border:1.5px solid var(--teal); background:transparent; color:var(--teal-d); font-family:var(--ff); font-weight:700; font-size:12px; padding:5px 12px; border-radius:8px; cursor:pointer;}
+  .cmp-table td.best{background:var(--teal-l); color:var(--teal-d); font-weight:800; position:relative;}
+  .cmp-table td.best::after{content:'★'; position:absolute; top:6px; inset-inline-end:8px; font-size:10px; color:var(--teal);}
+  .cmp-st{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:100px;}
+  .cmp-st.rdy{background:#DBF3E6; color:#1E8E5A;} .cmp-st.off{background:#E3EAF5; color:#0B5563;}
+  @media(max-width:520px){ .cmpchk span{display:none;} .cmp-thumb{width:44px; height:44px;} }
 </style>
 </head>
 <body data-mode="client">
@@ -157,6 +192,22 @@
 
 <div class="overlay" id="overlay" onclick="if(event.target===this) closeDetail()"><div class="drawer" id="drawer"></div></div>
 
+<!-- Compare tray (appears when projects are selected) -->
+<div class="cmptray" id="cmpTray">
+  <div class="cmptray-in">
+    <div class="cmp-thumbs" id="cmpThumbs"></div>
+    <div class="cmp-tray-actions">
+      <button class="btn btn-ghost btn-sm" id="cmpClearBtn" onclick="clearCompare()"></button>
+      <button class="btn btn-teal" id="cmpOpenBtn" onclick="openCompare()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Compare overlay -->
+<div class="overlay" id="cmpOverlay" onclick="if(event.target===this) closeCompare()">
+  <div class="cmp-modal" id="cmpModal"></div>
+</div>
+
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js"></script>
 <script>
@@ -164,9 +215,11 @@ const sb=HZ.sb, esc=HZ.esc;
 const money=n=>{ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString('en-US')+(HZ.lang==='ar'?' ج.م':' EGP'); };
 const L={
   ar:{beds:'غرف',br:'غرف',sqm:'م²',delivery:'التسليم',units:'الوحدات المتاحة',type:'النوع',size:'المساحة',price:'السعر',plan:'خطة السداد',from:'يبدأ من',about:'عن المطوّر',amen:'المميزات',noproj:'مفيش نتائج بالمعايير دي — جرّب تغيّر الفلاتر.',brochure:'تحميل البروشور',whatsapp:'تواصل واتساب',homzy:'اسأل Homzy عنه',studio:'استوديو',
-      down:'المقدم',install:'التقسيط',years:'سنة',reqview:'اطلب معاينة',othersby:'مشاريع تانية لنفس المطوّر',ph_name:'اسمك',ph_phone:'رقم موبايلك',ph_time:'الوقت المفضّل للمعاينة (اختياري)',ph_note:'أي ملاحظة (اختياري)',send:'ابعت الطلب',sending:'بيتبعت…',reqok:'تمام! وصلنا طلبك، وهنتواصل معاك في أقرب وقت لترتيب المعاينة.',reqerr:'حصل خطأ، جرّب تاني.',needphone:'اكتب اسمك ورقم موبايلك عشان نتواصل.',viewtitle:'اطلب معاينة للمشروع'},
+      down:'المقدم',install:'التقسيط',years:'سنة',reqview:'اطلب معاينة',othersby:'مشاريع تانية لنفس المطوّر',ph_name:'اسمك',ph_phone:'رقم موبايلك',ph_time:'الوقت المفضّل للمعاينة (اختياري)',ph_note:'أي ملاحظة (اختياري)',send:'ابعت الطلب',sending:'بيتبعت…',reqok:'تمام! وصلنا طلبك، وهنتواصل معاك في أقرب وقت لترتيب المعاينة.',reqerr:'حصل خطأ، جرّب تاني.',needphone:'اكتب اسمك ورقم موبايلك عشان نتواصل.',viewtitle:'اطلب معاينة للمشروع',
+      compare:'قارن',incompare:'في المقارنة',cmptitle:'مقارنة المشاريع',cmpclear:'مسح الكل',cmpopen:'قارن',cmppick:'اختار مشروعين على الأقل.',cmpmax:'أقصى ٤ مشاريع للمقارنة.',status:'الحالة',statusReady:'استلام فوري',statusOff:'تحت الإنشاء',dev:'المطوّر',area:'المنطقة',best:'الأفضل'},
   en:{beds:'BR',br:'BR',sqm:'m²',delivery:'Delivery',units:'Available units',type:'Type',size:'Size',price:'Price',plan:'Payment plan',from:'from',about:'About the developer',amen:'Amenities',noproj:'No results — try changing the filters.',brochure:'Download brochure',whatsapp:'WhatsApp',homzy:'Ask Homzy about it',studio:'Studio',
-      down:'Down payment',install:'Installments',years:'y',reqview:'Request a viewing',othersby:'More projects by the same developer',ph_name:'Your name',ph_phone:'Your phone',ph_time:'Preferred viewing time (optional)',ph_note:'Any note (optional)',send:'Send request',sending:'Sending…',reqok:'Done! We got your request and will contact you shortly to arrange the viewing.',reqerr:'Something went wrong, try again.',needphone:'Enter your name and phone so we can reach you.',viewtitle:'Request a viewing'}
+      down:'Down payment',install:'Installments',years:'y',reqview:'Request a viewing',othersby:'More projects by the same developer',ph_name:'Your name',ph_phone:'Your phone',ph_time:'Preferred viewing time (optional)',ph_note:'Any note (optional)',send:'Send request',sending:'Sending…',reqok:'Done! We got your request and will contact you shortly to arrange the viewing.',reqerr:'Something went wrong, try again.',needphone:'Enter your name and phone so we can reach you.',viewtitle:'Request a viewing',
+      compare:'Compare',incompare:'Comparing',cmptitle:'Compare projects',cmpclear:'Clear all',cmpopen:'Compare',cmppick:'Pick at least two projects.',cmpmax:'Up to 4 projects to compare.',status:'Status',statusReady:'Ready to move',statusOff:'Off-plan',dev:'Developer',area:'Area',best:'Best'}
 };
 const t=k=>(L[HZ.lang]||L.ar)[k];
 
@@ -256,7 +309,7 @@ function bedsLabel(p){
     :(p.beds_min===0?t('studio'):p.beds_min)+'–'+one(p.beds_max);
 }
 function projectCard(p){
-  const d=document.createElement('div'); d.className='pcard';
+  const d=document.createElement('div'); d.className='pcard'; d.dataset.id=p.id;
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
   const dev=p.developer_name||'';
   const img=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
@@ -268,7 +321,9 @@ function projectCard(p){
   const bl=bedsLabel(p); if(bl) chips.push(`<span class="pill">${bl}</span>`);
   if(p.installment_years_max) chips.push(`<span class="pill">${HZ.lang==='ar'?('تقسيط '+p.installment_years_max+' سنة'):(p.installment_years_max+'y plan')}</span>`);
   const delTxt=p.delivery?esc(p.delivery):(ready?(HZ.lang==='ar'?'جاهز':'ready'):'');
-  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span></div>
+  const inCmp=COMPARE.has(p.id);
+  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span>
+      <button class="cmpchk${inCmp?' on':''}" title="${t('compare')}">${inCmp?'✓':'⇄'}<span>${t('compare')}</span></button></div>
     <div class="b">
       <div class="nm">${esc(name)}</div>
       ${dev?`<div class="dv">${esc(dev)}</div>`:''}
@@ -278,9 +333,99 @@ function projectCard(p){
       <button class="det" data-ar="اطلب التفاصيل" data-en="Request details">اطلب التفاصيل</button>
     </div>`;
   d.querySelector('.det').onclick=(e)=>{ e.stopPropagation(); openProject(p.id); };
+  d.querySelector('.cmpchk').onclick=(e)=>{ e.stopPropagation(); toggleCompare(p, d); };
   d.onclick=()=>openProject(p.id);
   return d;
 }
+
+/* ---------- Compare (up to 4 projects side by side) ---------- */
+let COMPARE=new Map();               // id -> project object (from the RPC)
+const CMP_MAX=4;
+function toggleCompare(p, cardEl){
+  if(COMPARE.has(p.id)) COMPARE.delete(p.id);
+  else{
+    if(COMPARE.size>=CMP_MAX){ flashTray(t('cmpmax')); return; }
+    COMPARE.set(p.id, p);
+  }
+  // reflect on the card button
+  const btn=cardEl&&cardEl.querySelector('.cmpchk');
+  if(btn){ const on=COMPARE.has(p.id); btn.classList.toggle('on',on); btn.firstChild.textContent=on?'✓':'⇄'; }
+  updateCmpTray();
+}
+function updateCmpTray(){
+  const tray=document.getElementById('cmpTray');
+  const n=COMPARE.size;
+  tray.classList.toggle('show', n>0);
+  const thumbs=document.getElementById('cmpThumbs');
+  thumbs.innerHTML=[...COMPARE.values()].map(p=>{
+    const nm=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
+    const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+    return `<div class="cmp-thumb" style="${bg}" title="${esc(nm)}"><button onclick="removeCompare('${p.id}')">×</button></div>`;
+  }).join('');
+  document.getElementById('cmpClearBtn').textContent=t('cmpclear');
+  document.getElementById('cmpOpenBtn').textContent=t('cmpopen')+' ('+n+')';
+  document.getElementById('cmpOpenBtn').disabled=n<2;
+}
+function syncCardBtn(id){
+  const card=document.querySelector('#grid .pcard[data-id="'+id+'"]');
+  const btn=card&&card.querySelector('.cmpchk');
+  if(btn){ btn.classList.remove('on'); btn.firstChild.textContent='⇄'; }
+}
+function removeCompare(id){
+  COMPARE.delete(id);
+  syncCardBtn(id);
+  updateCmpTray();
+}
+function clearCompare(){
+  COMPARE.clear();
+  document.querySelectorAll('#grid .pcard .cmpchk.on').forEach(b=>{ b.classList.remove('on'); b.firstChild.textContent='⇄'; });
+  updateCmpTray();
+}
+let trayFlashT;
+function flashTray(msg){
+  const tray=document.getElementById('cmpTray');
+  const inner=tray.querySelector('.cmptray-in');
+  let f=document.getElementById('cmpFlash');
+  if(!f){ f=document.createElement('div'); f.id='cmpFlash'; f.className='cmp-flash'; inner.appendChild(f); }
+  f.textContent=msg; f.classList.add('on'); tray.classList.add('show');
+  clearTimeout(trayFlashT); trayFlashT=setTimeout(()=>{ f.classList.remove('on'); if(COMPARE.size===0) tray.classList.remove('show'); },1800);
+}
+function cmpRow(label, vals, bestIdx){
+  const tds=vals.map((v,i)=>`<td class="${bestIdx===i?'best':''}">${v}</td>`).join('');
+  return `<tr><th>${label}</th>${tds}</tr>`;
+}
+function openCompare(){
+  const items=[...COMPARE.values()];
+  if(items.length<2){ flashTray(t('cmppick')); return; }
+  const names=items.map(p=>HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar));
+  const heads=items.map((p,i)=>{
+    const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+    return `<th class="cmp-h"><div class="cmp-hc"><div class="cmp-himg" style="${bg}"></div><div class="cmp-hn">${esc(names[i])}</div><button class="cmp-hview" onclick="closeCompare();openProject('${p.id}')" data-ar="التفاصيل" data-en="Details">التفاصيل</button></div></th>`;
+  }).join('');
+  // value helpers
+  const prices=items.map(p=>p.price_from_min);
+  const bestPrice=prices.reduce((bi,v,i,a)=>(v!=null&&(a[bi]==null||v<a[bi]))?i:bi,0);
+  const insts=items.map(p=>p.installment_years_max||0);
+  const bestInst=insts.reduce((bi,v,i,a)=>v>a[bi]?i:bi,0);
+  const rows=[
+    cmpRow(t('area'), items.map(p=>esc(p.area||'—'))),
+    cmpRow(t('dev'), items.map(p=>esc(p.developer_name||'—'))),
+    cmpRow(t('from'), items.map(p=>p.price_from_min!=null?money(p.price_from_min):'—'), prices.some(x=>x!=null)?bestPrice:-1),
+    cmpRow(t('size'), items.map(p=>p.size_from_min!=null?(p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):'')+' '+t('sqm')):'—')),
+    cmpRow(t('beds'), items.map(p=>bedsLabel(p)||'—')),
+    cmpRow(t('down'), items.map(p=>esc(p.down_payment||'—'))),
+    cmpRow(t('install'), items.map(p=>p.installment_years_max?(p.installment_years_max+' '+t('years')):'—'), insts.some(x=>x>0)?bestInst:-1),
+    cmpRow(t('delivery'), items.map(p=>esc(p.delivery||'—'))),
+    cmpRow(t('status'), items.map(p=>{const r=p.status&&/ready|available/i.test(p.status); return `<span class="cmp-st ${r?'rdy':'off'}">${r?t('statusReady'):t('statusOff')}</span>`;})),
+  ].join('');
+  document.getElementById('cmpModal').innerHTML=`
+    <div class="cmp-head"><h3>${t('cmptitle')}</h3><button class="cmp-x" onclick="closeCompare()">×</button></div>
+    <div class="cmp-scroll"><table class="cmp-table"><thead><tr><th class="cmp-corner"></th>${heads}</tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+  const ov=document.getElementById('cmpOverlay');
+  ov.classList.add('open'); document.body.style.overflow='hidden';
+}
+function closeCompare(){ document.getElementById('cmpOverlay').classList.remove('open'); document.body.style.overflow=''; }
 async function openProject(id){
   const ov=document.getElementById('overlay'), dr=document.getElementById('drawer');
   dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">…</div>';
@@ -487,7 +632,7 @@ let dt; function debouncedLoad(){ clearTimeout(dt); dt=setTimeout(()=>loadProjec
 let dm; function debouncedLoadMarket(){ clearTimeout(dm); dm=setTimeout(()=>loadMarket(),350); }
 
 /* React to language changes from the shared toggle. */
-document.addEventListener('hz:lang',()=>{ if(TAB==='projects') loadProjects(true); else loadMarket(); });
+document.addEventListener('hz:lang',()=>{ if(TAB==='projects') loadProjects(true); else loadMarket(); if(COMPARE.size) updateCmpTray(); });
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
