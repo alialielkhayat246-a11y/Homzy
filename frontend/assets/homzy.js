@@ -30,6 +30,20 @@ HZ.sb = async function(path, opts){
 };
 HZ.esc = s => (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// Shared area-normalization KEY: folds near-duplicate area names to one bucket
+// so the Areas page and the browse filter agree (e.g. "New Zayed"/"Zayed",
+// "6th of October"/"6 October", "El Maadi"/"Maadi", "New Heliopolis"/"Heliopolis").
+// Strips ordinals + the "of/el/al/new" filler words, lowercases, collapses spaces.
+HZ.normArea = a => (a||'').toLowerCase()
+  .replace(/[^a-z0-9؀-ۿ ]/g,'')
+  .replace(/(\d)(st|nd|rd|th)/g,'$1')
+  .replace(/\b(of|el|al|new)\b/g,'')
+  // fold obvious transliteration twins of the same place
+  .replace(/\bnaser\b/g,'nasr')
+  .replace(/\bmokatam\b/g,'mokattam')
+  .replace(/\b(sedr|sudar)\b/g,'sudr')
+  .replace(/\s+/g,' ').trim();
+
 /* ---------- i18n ---------- */
 const T = {
   home:{ar:'الرئيسية',en:'Home'}, features:{ar:'المميزات',en:'Features'},

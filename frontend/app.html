@@ -142,13 +142,26 @@ function switchTab(tab){
 /* Projects */
 let projOffset=0; const PAGE=48; let projLoading=false;
 function skeletons(n){ document.getElementById('grid').innerHTML=Array.from({length:n}).map(()=>'<div class="pcard skeleton" style="height:260px"></div>').join(''); }
+let AREA_GROUPS={};   // display label -> { variants:[raw area strings], projects }
 async function loadAreas(){
   try{
-    const rows=await sb('/v_city_counts?select=area,projects&order=projects.desc&limit=30');
-    const sel=document.getElementById('fArea');
-    rows.forEach(r=>{ if(!r.area) return; const o=document.createElement('option'); o.value=r.area; o.textContent=`${r.area} (${r.projects})`; sel.appendChild(o); });
+    const rows=await sb('/v_city_counts?select=area,projects&order=projects.desc&limit=60');
+    // Merge near-duplicate area names (same buckets as the Areas page) so the
+    // filter shows ONE entry per area with the summed count — no "Zayed" and
+    // "New Zayed" as two options with split numbers.
+    const map=new Map();
+    rows.forEach(r=>{ if(!r.area) return; const k=HZ.normArea(r.area); const cur=map.get(k);
+      if(!cur) map.set(k,{label:r.area, variants:[r.area], projects:r.projects||0});
+      else{ cur.projects+=r.projects||0; cur.variants.push(r.area);
+        if((r.area||'').length>(cur.label||'').length) cur.label=r.area; } });
+    const groups=[...map.values()].sort((a,b)=>b.projects-a.projects).slice(0,30);
+    const sel=document.getElementById('fArea'); AREA_GROUPS={};
+    groups.forEach(g=>{ AREA_GROUPS[g.label]=g; const o=document.createElement('option');
+      o.value=g.label; o.textContent=`${g.label} (${g.projects})`; sel.appendChild(o); });
     const qa=new URLSearchParams(location.search).get('area');
-    if(qa){ sel.value=qa; }
+    if(qa){ sel.value=qa;
+      if(sel.value!==qa){ const k=HZ.normArea(qa); const g=groups.find(x=>HZ.normArea(x.label)===k); if(g) sel.value=g.label; }
+    }
   }catch(e){}
 }
 async function loadProjects(reset){
@@ -161,7 +174,15 @@ async function loadProjects(reset){
   if(type) sel+=',unit_types!inner(type)';
   let path='/projects?select='+encodeURIComponent(sel);
   if(q){ const s=q.replace(/,/g,' '); path+='&or=('+encodeURIComponent(`name.ilike.*${s}*,name_ar.ilike.*${s}*,area.ilike.*${s}*`)+')'; }
-  if(area) path+='&area=ilike.*'+encodeURIComponent(area)+'*';
+  if(area){
+    // Filter by ALL raw variants of the chosen area group (exact match), so the
+    // results match the count shown in the dropdown.
+    const g=AREA_GROUPS[area];
+    if(g&&g.variants&&g.variants.length){
+      const list=g.variants.map(v=>'"'+String(v).replace(/"/g,'')+'"').join(',');
+      path+='&area=in.('+encodeURIComponent(list)+')';
+    }else{ path+='&area=ilike.*'+encodeURIComponent(area)+'*'; }
+  }
   if(type) path+='&unit_types.type=eq.'+encodeURIComponent(type);
   path+='&order=updated_at.desc&limit='+PAGE+'&offset='+projOffset;
   try{

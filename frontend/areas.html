@@ -42,7 +42,7 @@
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js"></script>
 <script>
-  function normArea(a){return (a||'').toLowerCase().replace(/[^a-z0-9؀-ۿ ]/g,'').replace(/(\d)(st|nd|rd|th)/g,'$1').replace(/\b(of|el|al|new)\b/g,'').replace(/\s+/g,' ').trim();}
+  const normArea = a => HZ.normArea(a);   // shared with the browse filter (homzy.js)
   async function loadCities(){
     try{
       const raw=await HZ.sb('/v_city_counts?select=area,projects,units&order=projects.desc&limit=60');
