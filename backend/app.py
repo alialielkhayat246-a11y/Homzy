@@ -144,15 +144,18 @@ def robots_txt():
     return Response(body, media_type="text/plain")
 
 
-@app.get("/sitemap.xml")
-def sitemap_xml():
+import time as _time
+_SITEMAP_CACHE: dict[str, object] = {"xml": None, "at": 0.0}
+_SITEMAP_TTL = 3600  # 1h — the catalog rarely changes and crawlers refetch often
+
+
+def _build_sitemap() -> str:
     urls = "".join(
         f"<url><loc>{SEO_BASE}{p}</loc>"
         f"<changefreq>daily</changefreq>"
         f"<priority>1.0</priority></url>"
         for p in _PUBLIC_PATHS
     )
-    # Public per-project / per-listing pages (the crawlable deep content).
     try:
         deep = seo.sitemap_urls()
     except Exception:
@@ -161,10 +164,23 @@ def sitemap_xml():
         f"<url><loc>{loc}</loc><changefreq>{cf}</changefreq><priority>0.7</priority></url>"
         for loc, cf in deep
     )
-    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
-           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-           f"{urls}</urlset>")
-    return Response(xml, media_type="application/xml")
+    return ('<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            f"{urls}</urlset>")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    # Cache the rendered XML so Google's fetch is fast + reliable (building it
+    # pulls ~1000 rows from Supabase, which can be slow enough to trip a
+    # "temporary processing error" on every fetch).
+    now = _time.time()
+    xml = _SITEMAP_CACHE["xml"]
+    if not xml or now - float(_SITEMAP_CACHE["at"]) > _SITEMAP_TTL:
+        xml = _build_sitemap()
+        _SITEMAP_CACHE["xml"], _SITEMAP_CACHE["at"] = xml, now
+    return Response(xml, media_type="application/xml",
+                    headers={"Cache-Control": "public, max-age=3600"})
 
 
 # ---------------------------------------------------------------------------
