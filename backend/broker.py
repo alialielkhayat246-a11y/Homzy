@@ -105,6 +105,16 @@ def _extract_bedrooms(text: str):
 
 def _extract_budget(text: str):
     low = _norm(text).lower().replace(",", "")
+    # Strip phone numbers FIRST so a contact number is never read as a budget
+    # (e.g. "رقمي 01000000000" was becoming a 1,000,000,000 EGP budget).
+    #  1) a number that follows a phone-intent word, and
+    #  2) any bare run of 10+ digits (Egyptian mobiles are 11) — no residential
+    #     budget is written as 10+ raw digits.
+    low = re.sub(
+        r"(?:رقمي|رقمى|رقم|موبايل|موبيل|تليفون|تلفون|واتس|واتساب|phone|mobile|"
+        r"whatsapp|number|no\.?)\s*[:\-]?\s*\+?\d[\d\s\-]{6,}\d",
+        " ", low)
+    low = re.sub(r"\d{10,}", " ", low)
     # Strip down-payment mentions so a deposit ("مقدم مليون") is NOT read as the
     # total budget — that was making everything look out of budget.
     low = re.sub(
