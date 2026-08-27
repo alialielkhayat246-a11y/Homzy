@@ -116,6 +116,52 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
         return []
 
 
+_DEV_CACHE: dict[str, list[str]] = {}
+
+
+def developer_projects(developer: str | None, exclude: str | None = None,
+                       limit: int = 6) -> list[str]:
+    """Other projects by the same developer — "Name (Area)" strings — so the
+    advisor can speak to the developer's wider portfolio. Cached per developer."""
+    if not developer or not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return []
+    key = developer.strip().lower()
+    if key in _DEV_CACHE:
+        rows = _DEV_CACHE[key]
+    else:
+        try:
+            import requests
+
+            r = requests.get(
+                config.SUPABASE_URL.rstrip("/") + "/rest/v1/projects",
+                params={
+                    "select": "name,name_ar,area,developer:developers!inner(name)",
+                    "developer.name": f"eq.{developer}",
+                    "order": "updated_at.desc",
+                    "limit": "40",
+                },
+                headers={"apikey": config.SUPABASE_KEY,
+                         "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+                timeout=8,
+            )
+            r.raise_for_status()
+            seen: set[str] = set()
+            rows = []
+            for p in r.json():
+                nm = (p.get("name") or p.get("name_ar") or "").strip()
+                if not nm or nm.lower() in seen:
+                    continue
+                seen.add(nm.lower())
+                area = (p.get("area") or "").strip()
+                rows.append(f"{nm} ({area})" if area else nm)
+            _DEV_CACHE[key] = rows
+        except Exception:
+            return []
+    ex = (exclude or "").strip().lower()
+    out = [x for x in rows if not ex or not x.lower().startswith(ex)]
+    return out[:limit]
+
+
 def listings() -> list[dict[str, Any]]:
     """Catalog unit-types as listing rows (cached). Empty if not configured."""
     global _CACHE, _CACHE_AT

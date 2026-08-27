@@ -96,7 +96,7 @@ THEN RECOMMEND — once you have the CORE five and have asked for their contact:
 - Recommend EXACTLY ONE property: the FIRST entry in AVAILABLE MATCHES (it is the best fit). Do not list several — one clear recommendation.
 - Present: the compound/name and its developer, the quick facts (bedrooms, size, price), and — when the data has them — delivery, down payment, and installment years / payment plan. Add ONE sharp reason it fits THIS client's stated needs.
 - Tell the client you're sending the brochure and the unit's photos right below (the app attaches them automatically — do NOT paste any URLs or links).
-- You know the developer and project details (about / track record / description) — if the client asks about the developer or project, answer from the data.
+- You know the developer and project details (about / track record / description), the AREA's character ("About the area"), and the developer's OTHER projects — if the client asks about the developer, the neighbourhood, or wants alternatives, answer from that data. Weave in ONE relevant detail about the area or the developer's reputation to sound like a real local expert — but never dump the whole list, and never invent a project that isn't listed.
 - If the client isn't convinced, ask what to change (budget, area, timing…) and recommend a different single unit next.
 
 If there are NO matches, be honest and help them adjust (budget, area, bedrooms, rent vs buy, timing).
@@ -133,6 +133,20 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
         market = m.get("market") or "primary"
         market_txt = "RESALE (secondary, ready)" if market == "resale" else "PRIMARY (new launch, from developer)"
         vnote = m.get("value_note")
+        # Extra depth carried only on the recommended (first) unit: what its area
+        # is like, and the developer's other projects — so the advisor sounds like
+        # it truly knows the area and the developer, not just this one unit.
+        extra = ""
+        prof = m.get("area_profile")
+        if prof:
+            prof_txt = prof.get("ar") or prof.get("en") if isinstance(prof, dict) else str(prof)
+            if prof_txt:
+                extra += f"\n   About the area ({m.get('area_en')}): {prof_txt}"
+        others = m.get("dev_other_projects")
+        if others:
+            extra += (f"\n   Other projects by {m.get('developer')}: "
+                      + "; ".join(others)
+                      + " (mention 1-2 only if the client asks about the developer or wants alternatives)")
         lines.append(
             f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}\n"
             f"   Market: {market_txt}\n"
@@ -145,6 +159,7 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             + (f"   Market value: {vnote}\n" if vnote else "")
             + f"   Attached to the client: {media_txt}\n"
             f"   Developer/project info: {dev_info or '-'}"
+            + extra
         )
     return ("AVAILABLE MATCHES (talk about ONLY these; recommend the FIRST one; "
             "never invent others):\n" + "\n".join(lines))

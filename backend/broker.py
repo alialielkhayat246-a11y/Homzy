@@ -15,7 +15,7 @@ import json
 import re
 from typing import Any
 
-from . import areas, config, listings as listings_mod, llm, persona, valuation
+from . import areas, catalog, config, listings as listings_mod, llm, persona, valuation
 
 # Cache the client object (cheap; chat() failures fall back to templates).
 _client: Any = None
@@ -294,7 +294,9 @@ def _prepare(session: dict[str, Any], message: str,
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)
 
-    # 3b) position the top unit against ITS own market (resale vs primary).
+    # 3b) enrich the top unit so the advisor can speak with real depth: position
+    #     it against ITS own market, describe its AREA, and know the developer's
+    #     wider portfolio (other projects).
     if matches and not persona._missing(req):
         top = matches[0]
         if not top.get("value_note"):
@@ -304,6 +306,11 @@ def _prepare(session: dict[str, Any], message: str,
                 market=top.get("market", "resale"))
             if note:
                 top["value_note"] = note
+        if "area_profile" not in top:
+            top["area_profile"] = areas.profile(top.get("area_en") or top.get("area_ar"))
+        if "dev_other_projects" not in top:
+            top["dev_other_projects"] = catalog.developer_projects(
+                top.get("developer"), exclude=top.get("compound_en"))
     return language, history, req, matches
 
 
