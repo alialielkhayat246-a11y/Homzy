@@ -69,7 +69,7 @@ const T = {
   admin:{ar:'لوحة الإدارة',en:'Admin'}, join:{ar:'انضم كبروكر',en:'Join as broker'},
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
-  leads:{ar:'الليدز',en:'Leads'},
+  leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -100,7 +100,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/features','features'],['/areas','areas'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/leads','leads'],['/brokers','brokerTools'],['/app','browse'],['/download','app']],
+  broker:[['/','home'],['/my-listings','mylistings'],['/leads','leads'],['/app','browse'],['/download','app']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;

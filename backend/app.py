@@ -81,6 +81,14 @@ def leads_page():
     return FileResponse(config.FRONTEND_DIR / "leads.html")
 
 
+@app.get("/my-listings")
+def my_listings_page():
+    """Broker dashboard: post / edit / delete their own units (listings) with
+    photos. Auth + all CRUD run client-side against Supabase (RLS scopes every
+    row to owner_id = the signed-in broker)."""
+    return FileResponse(config.FRONTEND_DIR / "my-listings.html")
+
+
 @app.get("/inbox")
 def inbox_page():
     """Admin leads inbox — reads web_leads client-side with the admin's Google

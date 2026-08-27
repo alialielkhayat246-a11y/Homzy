@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — وحداتي</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .lx-top .brand{display:flex; align-items:center; gap:9px; font-family:"Poppins",sans-serif; font-weight:800; font-size:18px;}
+  .lx-top .brand svg{width:30px; height:30px;} .lx-top .brand b{color:var(--teal-on-navy,#5FD0DE);}
+  .lx-top .sp{flex:1;}
+  .lx-top button, .lx-top a{font-family:"Cairo",sans-serif; font-weight:700; font-size:13.5px; border-radius:10px; padding:8px 14px; cursor:pointer; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff; text-decoration:none;}
+  .lx-top button:hover{background:rgba(255,255,255,.16);}
+  .wrap{max-width:1040px; margin:0 auto; padding:22px 18px 80px;}
+
+  /* gate */
+  .gate{max-width:430px; margin:7vh auto; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:22px; padding:32px 28px; box-shadow:var(--shadow);}
+  .gate .lg{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:14px;}
+  .gate .lg svg{width:44px; height:44px;} .gate .lg b{font-family:"Poppins";font-weight:800;font-size:20px;color:var(--navy);}
+  .gate h1{text-align:center; font-size:21px; color:var(--navy); margin:0 0 6px;}
+  .gate .sub{text-align:center; color:var(--muted); font-size:14px; margin:0 0 20px; line-height:1.6;}
+  .fld{display:flex; flex-direction:column; margin-bottom:12px;}
+  .fld label{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:6px;}
+  .in{font-family:"Cairo",sans-serif; font-size:15px; padding:11px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; background:#fff; color:var(--navy); outline:none; width:100%; box-sizing:border-box;}
+  .in:focus{border-color:var(--teal);}
+  .msg{margin-top:10px; font-size:13.5px; font-weight:700; text-align:center; min-height:16px;}
+  .msg.err{color:#B42318;} .msg.ok{color:#1E8E5A;}
+  .switch{text-align:center; margin-top:14px; font-size:13.5px; color:var(--muted);}
+  .switch a{color:var(--teal-d); font-weight:800; cursor:pointer; text-decoration:none;}
+
+  /* dashboard */
+  .head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
+  .head h1{font-size:24px; color:var(--navy); margin:0;}
+  .head .n{color:var(--muted); font-size:14px; font-weight:600;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px;}
+  .ucard{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; overflow:hidden; box-shadow:0 10px 30px -24px rgba(11,29,54,.5); display:flex; flex-direction:column;}
+  .ucard .img{height:150px; background:#e9e2da center/cover no-repeat; position:relative;}
+  .ucard .st{position:absolute; top:10px; inset-inline-start:10px; font-size:11px; font-weight:800; padding:4px 11px; border-radius:100px;}
+  .st.on{background:#DBF3E6; color:#1E8E5A;} .st.off{background:#F0E9DA; color:#8A7C5F;}
+  .ucard .no-img{display:flex;align-items:center;justify-content:center;height:100%;color:#b8ac97;font-size:34px;}
+  .ucard .b{padding:13px 15px; display:flex; flex-direction:column; gap:5px; flex:1;}
+  .ucard .t{font-weight:800; font-size:15px; color:var(--navy); line-height:1.35;}
+  .ucard .pr{color:var(--teal-d); font-weight:800; font-size:15px;}
+  .ucard .mt{color:var(--muted); font-size:12.5px;}
+  .ucard .acts{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .ucard .acts button{flex:1; min-width:60px; font-family:"Cairo",sans-serif; font-weight:700; font-size:12.5px; border-radius:9px; padding:7px 8px; cursor:pointer; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
+  .ucard .acts button.pub{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .ucard .acts button.del{color:#B42318; border-color:#F0C9C4;}
+  .addcard{border:2px dashed var(--line-2,#D8CFC0); border-radius:16px; display:flex; align-items:center; justify-content:center; min-height:220px; cursor:pointer; color:var(--teal-d); font-weight:800; font-size:16px; background:rgba(255,255,255,.5);}
+  .addcard:hover{border-color:var(--teal); background:#fff;}
+  .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:40px;}
+
+  /* form modal */
+  .ov{position:fixed; inset:0; background:rgba(11,29,54,.55); backdrop-filter:blur(3px); display:none; z-index:90; padding:20px; overflow:auto;}
+  .ov.open{display:flex; align-items:flex-start; justify-content:center;}
+  .modal{background:var(--cream); width:min(640px,100%); border-radius:20px; margin:auto; box-shadow:var(--shadow); overflow:hidden;}
+  .modal .mh{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:#fff; border-bottom:1px solid var(--line);}
+  .modal .mh h3{font-size:19px; color:var(--navy); margin:0;} .modal .mx{width:34px;height:34px;border:none;background:var(--cream);border-radius:9px;font-size:19px;cursor:pointer;}
+  .modal .mb{padding:20px; display:flex; flex-direction:column; gap:13px; max-height:70vh; overflow:auto;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  select.in{appearance:none;}
+  textarea.in{resize:vertical; min-height:70px;}
+  .thumbs{display:flex; gap:8px; flex-wrap:wrap;}
+  .thumb{width:76px; height:76px; border-radius:10px; background:#e9e2da center/cover no-repeat; position:relative; border:1px solid var(--line);}
+  .thumb button{position:absolute; top:-6px; inset-inline-end:-6px; width:20px;height:20px;border-radius:50%;border:none;background:#B42318;color:#fff;cursor:pointer;font-size:12px;line-height:1;}
+  .upl{border:1.5px dashed var(--line-2); border-radius:12px; padding:16px; text-align:center; color:var(--teal-d); font-weight:700; cursor:pointer; font-size:14px;}
+  .upl input{display:none;}
+  .mf{display:flex; gap:10px; padding:16px 20px; background:#fff; border-top:1px solid var(--line);}
+  .mf .btn{flex:1;}
+  @media(max-width:560px){ .row2,.row3{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- gate -->
+<div id="gate" class="gate" style="display:none">
+  <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
+  <h1 id="gTitle">دخول البروكر</h1>
+  <p class="sub" id="gSub">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير وحداتك.</p>
+  <form id="authForm">
+    <div class="fld"><label>رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
+    <div class="fld"><label>كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" required /></div>
+    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%">دخول</button>
+    <div class="msg" id="gMsg"></div>
+  </form>
+  <div class="switch">عايز تعمل حساب بروكر (باسم شركتك)؟ <a href="/leads?register=1">سجّل من هنا</a></div>
+</div>
+
+<!-- dashboard -->
+<div id="app" style="display:none">
+  <div class="lx-top">
+    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>وحداتي</b></span>
+    <span class="sp"></span>
+    <a href="/leads">سوق الليدز</a>
+    <button onclick="signOut()">خروج</button>
+  </div>
+  <div class="wrap">
+    <div class="head">
+      <div><h1>وحداتي</h1><div class="n" id="count"></div></div>
+      <button class="btn btn-teal" onclick="openForm()">＋ أضف وحدة</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- form modal -->
+<div class="ov" id="formOv">
+  <div class="modal">
+    <div class="mh"><h3 id="fTitle">إضافة وحدة</h3><button class="mx" onclick="closeForm()">×</button></div>
+    <div class="mb">
+      <div class="row2">
+        <div class="fld"><label>الغرض</label><select class="in" id="fPurpose"><option value="sale">للبيع</option><option value="rent">للإيجار</option></select></div>
+        <div class="fld"><label>النوع</label><select class="in" id="fType">
+          <option value="apartment">شقة</option><option value="duplex">دوبلكس</option><option value="penthouse">بنتهاوس</option><option value="studio">استوديو</option><option value="townhouse">تاون هاوس</option><option value="villa">فيلا</option><option value="office">مكتب</option><option value="shop">محل</option><option value="clinic">عيادة</option>
+        </select></div>
+      </div>
+      <div class="fld"><label>عنوان الإعلان</label><input class="in" id="fTitleTxt" placeholder="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" maxlength="120" /></div>
+      <div class="row2">
+        <div class="fld"><label>المنطقة</label><input class="in" id="fArea" placeholder="التجمع الخامس" /></div>
+        <div class="fld"><label>العنوان التفصيلي (اختياري)</label><input class="in" id="fAddress" placeholder="الحي / الكمبوند" /></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>السعر (ج.م)</label><input class="in" id="fPrice" type="number" inputmode="numeric" placeholder="4500000" /></div>
+        <div class="fld"><label>المساحة (م²)</label><input class="in" id="fSize" type="number" inputmode="numeric" placeholder="160" /></div>
+      </div>
+      <div class="row3">
+        <div class="fld"><label>غرف</label><input class="in" id="fBeds" type="number" inputmode="numeric" placeholder="3" /></div>
+        <div class="fld"><label>حمامات</label><input class="in" id="fBaths" type="number" inputmode="numeric" placeholder="2" /></div>
+        <div class="fld"><label>الدور</label><input class="in" id="fFloor" type="number" inputmode="numeric" placeholder="4" /></div>
+      </div>
+      <div class="fld"><label>الوصف</label><textarea class="in" id="fDesc" placeholder="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…"></textarea></div>
+      <div class="fld"><label>الصور</label>
+        <div class="thumbs" id="fThumbs"></div>
+        <label class="upl">📷 اختار صور من جهازك<input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
+      </div>
+      <div class="fld"><label>الحالة</label><select class="in" id="fStatus"><option value="active">منشور (يظهر في السوق)</option><option value="draft">مسودة (مش ظاهر)</option></select></div>
+      <div class="msg" id="fMsg"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
+      <button class="btn btn-teal" id="saveBtn" onclick="saveListing()">حفظ الوحدة</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
+const $=id=>document.getElementById(id);
+let TOKEN=null, UID=null, LISTINGS=[], EDIT_ID=null, NEW_FILES=[], KEEP_MEDIA=[];
+
+const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>n==null?'':Number(n).toLocaleString('en-US')+' ج.م';
+function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
+const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
+
+async function api(path, opts){
+  const r=await fetch(SB_URL+'/rest/v1'+path, Object.assign({headers:{apikey:SB_KEY, Authorization:'Bearer '+(TOKEN||SB_KEY), 'Content-Type':'application/json'}}, opts||{}));
+  if(!r.ok){ throw new Error('sb '+r.status+' '+(await r.text())); }
+  const txt=await r.text(); return txt?JSON.parse(txt):null;
+}
+
+/* auth */
+$('authForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const phone=normPhone($('phone').value), password=$('password').value;
+  if(phone.length<11){ gmsg('رقم موبايل غير صحيح.'); return; }
+  $('authBtn').disabled=true;
+  try{
+    const {error}=await sb.auth.signInWithPassword({ email:phoneEmail($('phone').value), password });
+    if(error) throw error;
+    boot();
+  }catch(err){ gmsg(/Invalid login|credentials/i.test(err.message)?'الرقم أو كلمة المرور غلط.':err.message); }
+  finally{ $('authBtn').disabled=false; }
+});
+function gmsg(t,ok){ const e=$('gMsg'); e.textContent=t; e.className='msg '+(ok?'ok':'err'); }
+window.signOut=async ()=>{ await sb.auth.signOut(); location.reload(); };
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
+  TOKEN=session.access_token; UID=session.user.id;
+  $('gate').style.display='none'; $('app').style.display='block';
+  loadMine();
+}
+window.loadMine=async ()=>{
+  $('grid').innerHTML='<div class="empty">…بحمّل</div>';
+  try{
+    LISTINGS=await api('/listings?select=*,listing_media(url,sort)&owner_id=eq.'+UID+'&order=created_at.desc');
+    render();
+  }catch(e){ $('grid').innerHTML='<div class="empty">تعذّر تحميل وحداتك.</div>'; }
+};
+function render(){
+  $('count').textContent=LISTINGS.length?(LISTINGS.length+' وحدة'):'لسه مضفتش وحدات';
+  let html='<div class="addcard" onclick="openForm()">＋ أضف وحدة جديدة</div>';
+  html+=LISTINGS.map(l=>{
+    const media=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0));
+    const cover=media[0]&&media[0].url;
+    const on=l.status==='active';
+    return `<div class="ucard">
+      <div class="img" style="${cover?`background-image:url('${esc(cover)}')`:''}">
+        ${cover?'':'<div class="no-img">🏠</div>'}
+        <span class="st ${on?'on':'off'}">${on?'منشور':'مسودة'}</span>
+      </div>
+      <div class="b">
+        <div class="t">${esc(l.title||'وحدة')}</div>
+        <div class="pr">${l.price?money(l.price):'—'}${l.purpose==='rent'?' / شهر':''}</div>
+        <div class="mt">${esc(l.area||'')}${l.bedrooms?(' · '+l.bedrooms+' غرف'):''}${l.size_sqm?(' · '+l.size_sqm+' م²'):''}</div>
+        <div class="acts">
+          <button onclick="editListing('${l.id}')">✏️ تعديل</button>
+          <button class="pub" onclick="togglePub('${l.id}')">${on?'إخفاء':'نشر'}</button>
+          <button class="del" onclick="delListing('${l.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  $('grid').innerHTML=html;
+}
+
+/* form */
+window.openForm=()=>{ EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent='إضافة وحدة';
+  ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
+  $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='active';
+  $('fThumbs').innerHTML=''; fmsg(''); $('formOv').classList.add('open'); };
+window.closeForm=()=>{ $('formOv').classList.remove('open'); };
+window.editListing=(id)=>{
+  const l=LISTINGS.find(x=>x.id===id); if(!l) return;
+  EDIT_ID=id; NEW_FILES=[]; $('fTitle').textContent='تعديل الوحدة';
+  $('fPurpose').value=l.purpose||'sale'; $('fType').value=l.type||'apartment';
+  $('fTitleTxt').value=l.title||''; $('fArea').value=l.area||''; $('fAddress').value=l.address||'';
+  $('fPrice').value=l.price||''; $('fSize').value=l.size_sqm||''; $('fBeds').value=l.bedrooms||'';
+  $('fBaths').value=l.bathrooms||''; $('fFloor').value=l.floor||''; $('fDesc').value=l.description||'';
+  $('fStatus').value=l.status||'active';
+  KEEP_MEDIA=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0)).map(m=>m.url);
+  renderThumbs(); fmsg(''); $('formOv').classList.add('open');
+};
+function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':'err'); }
+window.pickImages=(e)=>{ for(const f of e.target.files) NEW_FILES.push(f); e.target.value=''; renderThumbs(); };
+function renderThumbs(){
+  const kept=KEEP_MEDIA.map((u,i)=>`<div class="thumb" style="background-image:url('${esc(u)}')"><button onclick="dropKept(${i})">×</button></div>`);
+  const nw=NEW_FILES.map((f,i)=>`<div class="thumb" style="background-image:url('${URL.createObjectURL(f)}')"><button onclick="dropNew(${i})">×</button></div>`);
+  $('fThumbs').innerHTML=kept.concat(nw).join('');
+}
+window.dropKept=(i)=>{ KEEP_MEDIA.splice(i,1); renderThumbs(); };
+window.dropNew=(i)=>{ NEW_FILES.splice(i,1); renderThumbs(); };
+
+window.saveListing=async ()=>{
+  const title=$('fTitleTxt').value.trim();
+  if(title.length<4){ fmsg('اكتب عنوان واضح للإعلان.'); return; }
+  const price=$('fPrice').value?Number($('fPrice').value):null;
+  const rec={
+    owner_id:UID, purpose:$('fPurpose').value, type:$('fType').value, title,
+    area:$('fArea').value.trim()||null, address:$('fAddress').value.trim()||null,
+    price, currency:'EGP', size_sqm:$('fSize').value?Number($('fSize').value):null,
+    bedrooms:$('fBeds').value?Number($('fBeds').value):null,
+    bathrooms:$('fBaths').value?Number($('fBaths').value):null,
+    floor:$('fFloor').value?Number($('fFloor').value):null,
+    description:$('fDesc').value.trim()||null, status:$('fStatus').value
+  };
+  $('saveBtn').disabled=true; fmsg('بحفظ…', true);
+  try{
+    let id=EDIT_ID;
+    if(EDIT_ID){
+      await api('/listings?id=eq.'+EDIT_ID, {method:'PATCH', body:JSON.stringify(rec)});
+    }else{
+      const rows=await api('/listings', {method:'POST', headers:{apikey:SB_KEY,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',Prefer:'return=representation'}, body:JSON.stringify(rec)});
+      id=rows[0].id;
+    }
+    // media: upload new files, then reconcile listing_media to KEEP_MEDIA + uploaded
+    const uploaded=[];
+    for(const f of NEW_FILES){
+      const path=UID+'/'+id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+(f.name.split('.').pop()||'jpg');
+      const {error}=await sb.storage.from('listings').upload(path, f, {upsert:false});
+      if(error) throw error;
+      uploaded.push(sb.storage.from('listings').getPublicUrl(path).data.publicUrl);
+    }
+    const finalUrls=KEEP_MEDIA.concat(uploaded);
+    // replace media rows for this listing
+    await api('/listing_media?listing_id=eq.'+id, {method:'DELETE'});
+    if(finalUrls.length){
+      await api('/listing_media', {method:'POST', body:JSON.stringify(finalUrls.map((u,i)=>({listing_id:id, url:u, sort:i})))});
+    }
+    closeForm(); loadMine();
+  }catch(e){ fmsg('حصل خطأ في الحفظ: '+(e.message||e)); }
+  finally{ $('saveBtn').disabled=false; }
+};
+
+window.togglePub=async (id)=>{
+  const l=LISTINGS.find(x=>x.id===id); if(!l) return;
+  const ns=l.status==='active'?'draft':'active';
+  try{ await api('/listings?id=eq.'+id, {method:'PATCH', body:JSON.stringify({status:ns})}); loadMine(); }catch(e){}
+};
+window.delListing=async (id)=>{
+  if(!confirm('متأكد إنك عايز تمسح الوحدة دي؟')) return;
+  try{ await api('/listing_media?listing_id=eq.'+id, {method:'DELETE'}); await api('/listings?id=eq.'+id, {method:'DELETE'}); loadMine(); }catch(e){ alert('تعذّر الحذف.'); }
+};
+
+boot();
+</script>
+</body>
+</html>
