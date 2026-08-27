@@ -81,6 +81,13 @@ def leads_page():
     return FileResponse(config.FRONTEND_DIR / "leads.html")
 
 
+@app.get("/inbox")
+def inbox_page():
+    """Admin leads inbox — reads web_leads client-side with the admin's Google
+    session; RLS restricts SELECT to profiles.is_admin, so non-admins see nothing."""
+    return FileResponse(config.FRONTEND_DIR / "leads-inbox.html")
+
+
 @app.get("/login")
 def login_page():
     """Client sign-in / sign-up gate. Everything past the public homepage

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — صندوق الليدز</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .lx-top .brand{display:flex; align-items:center; gap:10px; font-family:"Poppins",sans-serif; font-weight:800; font-size:18px;}
+  .lx-top .brand svg{width:30px; height:30px;}
+  .lx-top .brand b{color:var(--teal-on-navy,#5FD0DE);}
+  .lx-top .sp{flex:1;}
+  .lx-top button{font-family:"Cairo",sans-serif; font-weight:700; font-size:13.5px; border-radius:10px; padding:8px 14px; cursor:pointer; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff;}
+  .lx-top button:hover{background:rgba(255,255,255,.16);}
+  .wrap{max-width:1000px; margin:0 auto; padding:22px 18px 70px;}
+
+  /* gate */
+  .gate{max-width:420px; margin:8vh auto; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:22px; padding:34px 28px; text-align:center; box-shadow:var(--shadow);}
+  .gate svg{width:52px; height:52px; margin-bottom:14px;}
+  .gate h1{font-size:22px; color:var(--navy,#0B1D36); margin:0 0 8px;}
+  .gate p{color:var(--muted,#66717F); font-size:14.5px; line-height:1.7; margin:0 0 22px;}
+  .gbtn{display:inline-flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; padding:12px 20px; font-family:"Cairo",sans-serif; font-weight:800; font-size:15px; color:var(--navy,#0B1D36); cursor:pointer;}
+  .gbtn:hover{border-color:var(--navy,#0B1D36);}
+  .gbtn img{width:20px; height:20px;}
+  .gate .err{color:#B42318; font-weight:700; font-size:13.5px; margin-top:14px; min-height:16px;}
+
+  /* stats */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;}
+  .stat{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; padding:16px 18px;}
+  .stat .n{font-family:"Poppins",sans-serif; font-weight:800; font-size:26px; color:var(--navy,#0B1D36); line-height:1;}
+  .stat .l{color:var(--muted,#66717F); font-size:13px; margin-top:6px; font-weight:600;}
+  .stat.teal .n{color:var(--teal-d,#0B5563);}
+
+  .bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
+  .tabs{display:flex; gap:6px;}
+  .tab{font-family:"Cairo",sans-serif; font-weight:700; font-size:13.5px; cursor:pointer; padding:8px 15px; border-radius:100px; border:1.5px solid var(--line-2,#D8CFC0); background:#fff; color:var(--navy,#0B1D36);}
+  .tab.on{background:var(--navy,#0B1D36); color:#fff; border-color:var(--navy,#0B1D36);}
+  .bar input{flex:1; min-width:180px; font-family:"Cairo",sans-serif; font-size:14px; padding:10px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:11px; background:#fff; color:var(--navy,#0B1D36); outline:none;}
+  .bar input:focus{border-color:var(--teal,#0B5563);}
+
+  .lead{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; padding:15px 17px; margin-bottom:12px; box-shadow:0 8px 24px -20px rgba(11,29,54,.4);}
+  .lead .hd{display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+  .lead .who{flex:1; min-width:180px;}
+  .lead .nm{font-weight:800; font-size:16px; color:var(--navy,#0B1D36);}
+  .lead .ph{font-family:"Poppins",sans-serif; direction:ltr; unicode-bidi:isolate; color:var(--muted,#66717F); font-size:13.5px; margin-top:2px;}
+  .badge{font-size:11.5px; font-weight:800; padding:4px 11px; border-radius:100px; white-space:nowrap;}
+  .badge.view{background:#E7F0F0; color:#0B5563;}
+  .badge.chat{background:#EEEAF7; color:#5B4B9E;}
+  .lead .ctx{margin-top:10px; color:#40506a; font-size:14px; line-height:1.6;}
+  .lead .meta{margin-top:8px; display:flex; gap:14px; flex-wrap:wrap; color:var(--muted,#66717F); font-size:12.5px;}
+  .lead .acts{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .lead .acts a, .lead .acts button{font-family:"Cairo",sans-serif; font-weight:700; font-size:13px; border-radius:10px; padding:8px 14px; text-decoration:none; cursor:pointer; border:1.5px solid transparent;}
+  .a-wa{background:#25D366; color:#fff;} .a-wa:hover{filter:brightness(.95);}
+  .a-call{background:#fff; border-color:var(--line-2,#D8CFC0)!important; color:var(--navy,#0B1D36);}
+  .a-msgs{background:var(--cream,#F7F3EC); color:var(--navy,#0B1D36); border-color:var(--line,#E6DDCF)!important;}
+  .msgs{margin-top:12px; border-top:1px dashed var(--line,#E6DDCF); padding-top:12px; display:none; flex-direction:column; gap:7px;}
+  .msgs.open{display:flex;}
+  .msgs .m{font-size:13px; line-height:1.6; padding:7px 11px; border-radius:10px; max-width:85%;}
+  .msgs .m.user{background:var(--teal-l,#E7F0F0); align-self:flex-end;}
+  .msgs .m.assistant{background:#F1EEE7; align-self:flex-start;}
+  .empty{text-align:center; color:var(--muted,#66717F); padding:50px 16px;}
+  @media(max-width:560px){ .stats{grid-template-columns:1fr 1fr 1fr; gap:8px;} .stat{padding:12px;} .stat .n{font-size:20px;} }
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate" style="display:none">
+  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg>
+  <h1>صندوق الليدز</h1>
+  <p>الصفحة دي للأدمن بس. سجّل دخول بحساب جوجل بتاع Homzy عشان تشوف طلبات العملاء.</p>
+  <button class="gbtn" id="gBtn" onclick="signIn()">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC05LjMwMyw4Yy02LjYyNywwLTEyLTUuMzczLTEyLTEyYzAtNi42MjcsNS4zNzMtMTIsMTItMTJjMy4wNTksMCw1Ljg0MiwxLjE1NCw3Ljk2MSwzLjAzOWw1LjY1Ny01LjY1N0MzNC4wNDYsNi4wNTMsMjkuMjY4LDQsMjQsNEMxMi45NTUsNCw0LDEyLjk1NSw0LDI0YzAsMTEuMDQ1LDguOTU1LDIwLDIwLDIwYzExLjA0NSwwLDIwLTguOTU1LDIwLTIwQzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy0zLjIsMC01LjkxNC0yLjAzMy02Ljk1LTQuODdsLTYuNTIyLDUuMDI1QzEzLjA5OSwzOS4zLDE4LjE2Miw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4=" alt="" />
+    الدخول بجوجل
+  </button>
+  <div class="err" id="gErr"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="lx-top">
+    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>الليدز</b></span>
+    <span class="sp"></span>
+    <span id="whoami" style="font-size:13px;opacity:.85;"></span>
+    <button onclick="loadLeads()">↻ تحديث</button>
+    <button onclick="signOut()">خروج</button>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat teal"><div class="n" id="sView">0</div><div class="l">طلبات معاينة</div></div>
+      <div class="stat"><div class="n" id="sAll">0</div><div class="l">إجمالي الليدز</div></div>
+      <div class="stat"><div class="n" id="sToday">0</div><div class="l">النهارده</div></div>
+    </div>
+    <div class="bar">
+      <div class="tabs">
+        <button class="tab on" data-f="all" onclick="setFilter('all',this)">الكل</button>
+        <button class="tab" data-f="view" onclick="setFilter('view',this)">معاينات</button>
+        <button class="tab" data-f="chat" onclick="setFilter('chat',this)">شات</button>
+      </div>
+      <input id="search" placeholder="ابحث باسم / رقم / مشروع…" oninput="render()" />
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+const $=id=>document.getElementById(id);
+let TOKEN=null, LEADS=[], FILTER='all';
+
+const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function waPhone(p){ let d=(p||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
+function when(iso){ const dt=new Date(iso); const days=Math.floor((Date.now()-dt)/86400000);
+  const t=dt.toLocaleDateString('ar-EG',{day:'numeric',month:'short'})+' '+dt.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+  return t; }
+function isToday(iso){ const d=new Date(iso), n=new Date(); return d.toDateString()===n.toDateString(); }
+
+async function api(path){
+  const r=await fetch(SB_URL+'/rest/v1'+path,{headers:{apikey:SB_KEY, Authorization:'Bearer '+(TOKEN||SB_KEY)}});
+  if(!r.ok) throw new Error('sb '+r.status);
+  return r.json();
+}
+
+function showGate(msg){ $('app').style.display='none'; $('gate').style.display='block'; if(msg)$('gErr').textContent=msg; }
+function showApp(){ $('gate').style.display='none'; $('app').style.display='block'; }
+
+window.signIn=async ()=>{
+  $('gErr').textContent='';
+  const {error}=await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin+'/inbox' } });
+  if(error) $('gErr').textContent='تعذّر الدخول: '+error.message;
+};
+window.signOut=async ()=>{ await sb.auth.signOut(); location.reload(); };
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ showGate(); return; }
+  TOKEN=session.access_token;
+  // is this account an admin?
+  let prof=[];
+  try{ prof=await api('/profiles?select=full_name,is_admin&id=eq.'+session.user.id); }catch(e){}
+  if(!prof[0] || !prof[0].is_admin){ showGate('الحساب ده مش أدمن. لو المفروض يكون أدمن، بلّغني بإيميلك.'); await sb.auth.signOut(); return; }
+  $('whoami').textContent=prof[0].full_name||session.user.email||'';
+  showApp();
+  loadLeads();
+}
+
+window.loadLeads=async ()=>{
+  $('list').innerHTML='<div class="empty">…بحمّل</div>';
+  try{
+    LEADS=await api('/web_leads?select=session_id,name,phone,context,messages,lang,created_at,req&order=created_at.desc&limit=500');
+    const views=LEADS.filter(isViewing).length;
+    $('sAll').textContent=LEADS.length;
+    $('sView').textContent=views;
+    $('sToday').textContent=LEADS.filter(l=>isToday(l.created_at)).length;
+    render();
+  }catch(e){ $('list').innerHTML='<div class="empty">تعذّر تحميل الليدز.</div>'; }
+};
+function isViewing(l){ return l.req && l.req.type==='viewing_request'; }
+
+window.setFilter=(f,el)=>{ FILTER=f; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on')); el.classList.add('on'); render(); };
+
+window.render=()=>{
+  const q=($('search').value||'').trim().toLowerCase();
+  let rows=LEADS.slice();
+  if(FILTER==='view') rows=rows.filter(isViewing);
+  else if(FILTER==='chat') rows=rows.filter(l=>!isViewing(l));
+  if(q) rows=rows.filter(l=>((l.name||'')+' '+(l.phone||'')+' '+(l.context||'')+' '+(l.req?JSON.stringify(l.req):'')).toLowerCase().includes(q));
+  if(!rows.length){ $('list').innerHTML='<div class="empty">مفيش ليدز هنا لسه.</div>'; return; }
+  $('list').innerHTML=rows.map((l,i)=>{
+    const v=isViewing(l);
+    const req=l.req||{};
+    const wa=l.phone?waPhone(l.phone):'';
+    const msgs=Array.isArray(l.messages)?l.messages:[];
+    const proj=req.project||req.area||'';
+    const time=req.preferred_time?('⏰ '+esc(req.preferred_time)):'';
+    return `<div class="lead">
+      <div class="hd">
+        <div class="who">
+          <div class="nm">${esc(l.name||'—')}</div>
+          <div class="ph">${esc(l.phone||'—')}</div>
+        </div>
+        <span class="badge ${v?'view':'chat'}">${v?'🏠 طلب معاينة':'💬 شات'}</span>
+      </div>
+      <div class="ctx">${esc(l.context||(proj?('استفسار عن '+proj):'استفسار عام'))}</div>
+      <div class="meta"><span>🗓️ ${when(l.created_at)}</span>${time?('<span>'+time+'</span>'):''}${msgs.length?('<span>💬 '+msgs.length+' رسالة</span>'):''}</div>
+      <div class="acts">
+        ${l.phone?`<a class="a-wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(l.name||'')+'، معاك Homzy بخصوص '+(proj||'طلبك'))}">💬 واتساب</a>`:''}
+        ${l.phone?`<a class="a-call" href="tel:${esc((l.phone||'').replace(/\\s/g,''))}">📞 اتصال</a>`:''}
+        ${msgs.length?`<button class="a-msgs" onclick="this.closest('.lead').querySelector('.msgs').classList.toggle('open')">👁️ المحادثة</button>`:''}
+      </div>
+      ${msgs.length?`<div class="msgs">${msgs.map(m=>`<div class="m ${m.role==='assistant'?'assistant':'user'}">${esc(m.content||'')}</div>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+};
+
+sb.auth.onAuthStateChange((_e,_s)=>{});
+boot();
+</script>
+</body>
+</html>
