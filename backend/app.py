@@ -115,6 +115,30 @@ def sitemap_xml():
     return Response(xml, media_type="application/xml")
 
 
+# ---------------------------------------------------------------------------
+# Brand icons at stable root URLs. Google looks for /favicon.ico at the site
+# root to show the site's icon next to the search result, so it must be a real
+# crawlable file (a data: URI is ignored). Also serves the PWA manifest.
+# ---------------------------------------------------------------------------
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse(config.FRONTEND_DIR / "assets" / "favicon.ico",
+                        media_type="image/x-icon")
+
+
+@app.get("/apple-touch-icon.png")
+@app.get("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    return FileResponse(config.FRONTEND_DIR / "assets" / "apple-touch-icon.png",
+                        media_type="image/png")
+
+
+@app.get("/site.webmanifest")
+def webmanifest():
+    return FileResponse(config.FRONTEND_DIR / "site.webmanifest",
+                        media_type="application/manifest+json")
+
+
 @app.get("/api/health")
 def health():
     provider = config.LLM_PROVIDER
