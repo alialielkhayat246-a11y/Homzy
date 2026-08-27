@@ -43,6 +43,27 @@ HZ.rpc = async function(fn, args){
   return txt ? JSON.parse(txt) : null;
 };
 
+// The signed-in user's Supabase session (token + id), read from the token that
+// supabase-js persists in localStorage. Null when logged out.
+HZ.session = function(){
+  try{
+    const k = Object.keys(localStorage).find(x=>/sb-.*-auth-token/.test(x));
+    const t = k ? JSON.parse(localStorage.getItem(k)) : null;
+    if(t && t.access_token && (!t.expires_at || t.expires_at*1000 > Date.now()))
+      return { token:t.access_token, uid:(t.user&&t.user.id)||null };
+  }catch(e){}
+  return null;
+};
+// PostgREST call carrying the USER's JWT (so RLS applies to their own rows).
+HZ.sbAuth = async function(path, token, method, body, extra){
+  const h = {apikey:SB_KEY, Authorization:'Bearer '+(token||SB_KEY), 'Content-Type':'application/json'};
+  if(extra) Object.assign(h, extra);
+  const r = await fetch(SB_URL+'/rest/v1'+path, {method:method||'GET', headers:h, body:body?JSON.stringify(body):undefined});
+  if(!r.ok) throw new Error('sb '+r.status);
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+};
+
 // Shared area-normalization KEY: folds near-duplicate area names to one bucket
 // so the Areas page and the browse filter agree (e.g. "New Zayed"/"Zayed",
 // "6th of October"/"6 October", "El Maadi"/"Maadi", "New Heliopolis"/"Heliopolis").

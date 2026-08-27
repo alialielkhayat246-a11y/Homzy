@@ -125,6 +125,19 @@
   .cmp-st{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:100px;}
   .cmp-st.rdy{background:#DBF3E6; color:#1E8E5A;} .cmp-st.off{background:#E3EAF5; color:#0B5563;}
   @media(max-width:520px){ .cmpchk span{display:none;} .cmp-thumb{width:44px; height:44px;} }
+
+  /* saved searches */
+  .savebtn{font-family:var(--ff); font-weight:800; font-size:13.5px; cursor:pointer; background:#fff; border:1.5px solid var(--teal); color:var(--teal-d); border-radius:12px; padding:10px 15px; white-space:nowrap;}
+  .savebtn:hover{background:var(--teal-l);}
+  .savedbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:2px 0 14px;}
+  .savedbar:empty{display:none;}
+  .savedbar .lbl{font-size:12.5px; color:var(--muted); font-weight:700;}
+  .savedchip{display:inline-flex; align-items:center; gap:8px; background:#fff; border:1.5px solid var(--line-2); border-radius:100px; padding:6px 8px 6px 13px; cursor:pointer; font-family:var(--ff); font-size:13px; font-weight:700; color:var(--navy); transition:border-color .15s;}
+  .savedchip:hover{border-color:var(--teal);}
+  .savedchip .nb{background:#E23B3B; color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; border-radius:100px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px;}
+  .savedchip .nb.zero{background:var(--line-2); color:var(--muted);}
+  .savedchip .rm{border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:15px; line-height:1; padding:0 2px;}
+  .savedchip .rm:hover{color:#B42318;}
 </style>
 </head>
 <body data-mode="client">
@@ -171,8 +184,11 @@
       <option value="price_asc" data-ar="السعر: من الأقل" data-en="Price: low to high">السعر: من الأقل</option>
       <option value="price_desc" data-ar="السعر: من الأعلى" data-en="Price: high to low">السعر: من الأعلى</option>
     </select>
+    <button class="savebtn" id="saveSearchBtn" onclick="saveCurrentSearch()" data-ar="⭐ احفظ البحث" data-en="⭐ Save search">⭐ احفظ البحث</button>
     <span class="rescount" id="projCount"></span>
   </div>
+
+  <div class="savedbar" id="savedbar"></div>
 
   <div class="filters" id="marketFilters" style="display:none">
     <input type="search" id="mq" data-ph-ar="ابحث في السوق…" data-ph-en="Search the marketplace…" oninput="debouncedLoadMarket()" />
@@ -426,6 +442,99 @@ function openCompare(){
   ov.classList.add('open'); document.body.style.overflow='hidden';
 }
 function closeCompare(){ document.getElementById('cmpOverlay').classList.remove('open'); document.body.style.overflow=''; }
+
+/* ---------- Saved searches + in-app new-match alerts ---------- */
+let SAVED=[];
+function currentCriteria(){
+  const areaLabel=document.getElementById('fArea').value;
+  const g=areaLabel?AREA_GROUPS[areaLabel]:null;
+  return {
+    q:document.getElementById('q').value.trim()||null,
+    areaLabel:areaLabel||null,
+    areas:(g&&g.variants&&g.variants.length)?g.variants:(areaLabel?[areaLabel]:null),
+    beds:document.getElementById('fBeds').value||null,
+    budget:document.getElementById('fBudget').value||null,
+    ready:document.getElementById('fReady').value||null,
+    sort:document.getElementById('fSort').value||'recent'
+  };
+}
+function criteriaLabel(c){
+  const p=[];
+  if(c.areaLabel) p.push(c.areaLabel);
+  if(c.beds!=null) p.push(c.beds==='0'?t('studio'):(c.beds==='5'?'٥+ غرف':c.beds+' '+t('br')));
+  if(c.budget){ const [a,b]=c.budget.split('-'); const m=v=>Math.round(v/1000000); p.push((a?('من '+m(a)):'')+(b?(' حتى '+m(b)+'م'):(a?'+ مليون':''))); }
+  if(c.ready) p.push(c.ready==='ready'?'استلام فوري':'تحت الإنشاء');
+  if(c.q) p.push('«'+c.q+'»');
+  return p.join(' · ')||'كل المشاريع';
+}
+function applyCriteria(c){
+  document.getElementById('q').value=c.q||'';
+  document.getElementById('fBeds').value=c.beds||'';
+  document.getElementById('fBudget').value=c.budget||'';
+  document.getElementById('fReady').value=c.ready||'';
+  document.getElementById('fSort').value=c.sort||'recent';
+  // area: pick the matching option if present
+  const sel=document.getElementById('fArea');
+  sel.value=c.areaLabel||'';
+  if(c.areaLabel && sel.value!==c.areaLabel){ const o=[...sel.options].find(x=>x.value===c.areaLabel); if(!o){ const n=document.createElement('option'); n.value=c.areaLabel; n.textContent=c.areaLabel; sel.appendChild(n); } sel.value=c.areaLabel; if(c.areas) AREA_GROUPS[c.areaLabel]={label:c.areaLabel,variants:c.areas}; }
+  loadProjects(true);
+}
+async function saveCurrentSearch(){
+  const s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent('/app'); return; }
+  const c=currentCriteria();
+  const label=criteriaLabel(c);
+  try{
+    await HZ.sbAuth('/saved_searches', s.token, 'POST', {user_id:s.uid, label, criteria:c});
+    const btn=document.getElementById('saveSearchBtn');
+    const old=btn.textContent; btn.textContent=HZ.lang==='ar'?'✔ اتحفظ':'✔ Saved';
+    setTimeout(()=>{ btn.textContent=old; },1600);
+    loadSaved();
+  }catch(e){ /* ignore */ }
+}
+function budgetToRange(b){ if(!b) return [null,null]; const [a,x]=b.split('-'); return [a?+a:null, x?+x:null]; }
+async function loadSaved(){
+  const s=HZ.session(); if(!s){ document.getElementById('savedbar').innerHTML=''; return; }
+  try{
+    SAVED=await HZ.sbAuth('/saved_searches?select=*&user_id=eq.'+s.uid+'&order=created_at.desc', s.token)||[];
+  }catch(e){ SAVED=[]; }
+  // compute new-match counts in parallel (projects updated since last_checked)
+  await Promise.all(SAVED.map(async ss=>{
+    try{
+      const c=ss.criteria||{}; const [pMin,pMax]=budgetToRange(c.budget);
+      const rows=await HZ.rpc('search_projects',{p_q:c.q||null,p_areas:c.areas||null,p_min:pMin,p_max:pMax,p_beds:c.beds===''||c.beds==null?null:+c.beds,p_ready:c.ready||null,p_sort:'recent',p_limit:1,p_offset:0,p_since:ss.last_checked});
+      ss._new=(rows&&rows[0])?rows[0].total_count:0;
+    }catch(e){ ss._new=0; }
+  }));
+  renderSavedBar();
+}
+function renderSavedBar(){
+  const bar=document.getElementById('savedbar');
+  if(!SAVED.length){ bar.innerHTML=''; return; }
+  bar.innerHTML='<span class="lbl" data-ar="🔔 بحوثي المحفوظة:" data-en="🔔 My saved searches:">🔔 بحوثي المحفوظة:</span>'+
+    SAVED.map(ss=>{
+      const n=ss._new||0;
+      return `<span class="savedchip" onclick="applySaved('${ss.id}')" title="${esc(ss.label||'')}">
+        <span>${esc(ss.label||'بحث')}</span>
+        <span class="nb ${n?'':'zero'}">${n?('+'+n):'0'}</span>
+        <button class="rm" onclick="event.stopPropagation();deleteSaved('${ss.id}')">×</button>
+      </span>`;
+    }).join('');
+  HZ.applyLang();
+}
+async function applySaved(id){
+  const ss=SAVED.find(x=>x.id===id); if(!ss) return;
+  applyCriteria(ss.criteria||{});
+  // mark seen
+  const s=HZ.session();
+  if(s){ try{ await HZ.sbAuth('/saved_searches?id=eq.'+id, s.token, 'PATCH', {last_checked:new Date().toISOString()}); }catch(e){} ss.last_checked=new Date().toISOString(); ss._new=0; renderSavedBar(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function deleteSaved(id){
+  const s=HZ.session(); if(!s) return;
+  try{ await HZ.sbAuth('/saved_searches?id=eq.'+id, s.token, 'DELETE'); }catch(e){}
+  SAVED=SAVED.filter(x=>x.id!==id); renderSavedBar();
+}
 async function openProject(id){
   const ov=document.getElementById('overlay'), dr=document.getElementById('drawer');
   dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">…</div>';
@@ -636,7 +745,7 @@ document.addEventListener('hz:lang',()=>{ if(TAB==='projects') loadProjects(true
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
-loadAreas().then(()=>loadProjects(true));
+loadAreas().then(()=>{ loadProjects(true); loadSaved(); });
 </script>
 </body>
 </html>
