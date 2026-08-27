@@ -29,7 +29,9 @@
   .filters input[type=search]{flex:1; min-width:200px;}
   .rescount{color:var(--muted); font-size:14px; margin-inline-start:auto;}
   .infobar{background:var(--teal-l); color:var(--teal-d); border:1px solid var(--line); border-radius:12px; padding:11px 15px; font-size:14px; font-weight:600; margin-top:14px; display:none;}
-  .infobar.show{display:block;}
+  .infobar.show{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .infobar span{flex:1; min-width:200px;}
+  .btn-sm{padding:8px 16px; font-size:13.5px; white-space:nowrap;}
   .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding-bottom:20px;}
   .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:36px 16px;}
   .mkempty{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:20px; padding:48px 28px; max-width:620px; margin:8px auto 40px;}
@@ -74,7 +76,10 @@
     <button class="tab on" id="tabProjects" onclick="switchTab('projects')" data-ar="مشاريع المطوّرين" data-en="Developer projects">مشاريع المطوّرين</button>
     <button class="tab" id="tabMarket" onclick="switchTab('market')" data-ar="سوق العقارات" data-en="Marketplace">سوق العقارات</button>
   </div>
-  <div class="infobar" id="listInfo" data-ar="عايز تعرض وحدتك؟ نزّل تطبيق Homzy وسجّل كبروكر عشان تضيف وحداتك وتظهر في السوق." data-en="Want to list your unit? Download the Homzy app and register as a broker to add your units.">عايز تعرض وحدتك؟ نزّل تطبيق Homzy وسجّل كبروكر عشان تضيف وحداتك وتظهر في السوق.</div>
+  <div class="infobar" id="listInfo">
+    <span data-ar="عايز تعرض وحدتك؟ سجّل كبروكر (اسم الشركة + رقم موبايل) وابدأ تضيف وحداتك وتظهر في السوق." data-en="Want to list your unit? Register as a broker (company + phone) and start adding units to appear in the market.">عايز تعرض وحدتك؟ سجّل كبروكر (اسم الشركة + رقم موبايل) وابدأ تضيف وحداتك وتظهر في السوق.</span>
+    <a class="btn btn-teal btn-sm" href="/leads?register=1" data-ar="سجّل كبروكر" data-en="Register as broker">سجّل كبروكر</a>
+  </div>
 
   <div class="filters" id="projFilters">
     <input type="search" id="q" data-ph-ar="ابحث باسم المشروع أو المطوّر…" data-ph-en="Search by project or developer…" oninput="debouncedLoad()" />

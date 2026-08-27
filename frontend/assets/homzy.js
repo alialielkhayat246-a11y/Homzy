@@ -129,7 +129,7 @@ function buildFooter(){
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('forBrokers')}</h4>
-          <a href="/brokers">${HZ.t('join')}</a><a href="/brokers">${HZ.t('brokerTools')}</a><a href="/admin">${HZ.t('admin')}</a>
+          <a href="/leads?register=1">${HZ.t('join')}</a><a href="/brokers">${HZ.t('brokerTools')}</a><a href="/leads">${HZ.t('leads')}</a>
         </div>
       </div>
       <div class="hz-foot-bottom"><span>© ${new Date().getFullYear()} Homzy</span><span>${HZ.t('disclaimer')}</span></div>

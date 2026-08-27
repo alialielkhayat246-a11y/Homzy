@@ -306,7 +306,10 @@ async function refresh(){
     }
   }else{
     $('market').style.display='none'; $('gate').style.display='';
-    setMode('login');
+    // Deep-link: ?register=1 (or #register) opens straight on the sign-up form
+    // so "Register as a broker" buttons land on registration, not login.
+    const wantReg=/[?&]register=1/.test(location.search)||location.hash==='#register';
+    setMode(wantReg?'register':'login');
   }
 }
 sb.auth.onAuthStateChange(()=>{});
