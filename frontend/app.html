@@ -70,6 +70,24 @@
   .gallery img{height:120px; border-radius:12px; flex:none; object-fit:cover; border:1px solid var(--line);}
   .dactions{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; position:sticky; bottom:0; background:linear-gradient(transparent,var(--cream) 30%); padding:14px 0 4px;}
   .dactions .btn{flex:1; min-width:130px;}
+  .utscroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .utscroll .utable{min-width:560px;}
+  .plans{margin-top:10px; display:flex; flex-direction:column; gap:6px;}
+  .plans p{color:#40506a; font-size:12.5px; line-height:1.5; background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:7px 10px;}
+  .devlink{display:inline-block; margin-top:8px; color:var(--teal-d); font-size:13px; font-weight:700; text-decoration:none; word-break:break-all;}
+  .devgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .devchip{text-align:start; background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; cursor:pointer; font-family:var(--ff); transition:border-color .15s, transform .15s;}
+  .devchip:hover{border-color:var(--teal); transform:translateY(-2px);}
+  .devchip b{display:block; font-size:13.5px; color:var(--navy); line-height:1.3;}
+  .devchip span{display:block; font-size:12px; color:var(--muted); margin-top:2px;}
+  .viewbox{border:1.5px solid var(--teal); background:var(--teal-l);}
+  .viewbox .vin{width:100%; box-sizing:border-box; font-family:var(--ff); font-size:14px; padding:11px 13px; margin-bottom:9px; border:1.5px solid var(--line-2); border-radius:11px; background:#fff; color:var(--navy); outline:none;}
+  .viewbox .vin:focus{border-color:var(--teal);}
+  .viewbox textarea.vin{resize:vertical;}
+  .viewbox .btn{width:100%;}
+  .vmsg{margin-top:10px; font-size:13.5px; font-weight:700; line-height:1.6;}
+  .vmsg.err{color:#B42318;} .vmsg.ok{color:#1E8E5A;}
+  @media(max-width:480px){ .devgrid{grid-template-columns:1fr;} }
 </style>
 </head>
 <body data-mode="client">
@@ -143,8 +161,10 @@
 const sb=HZ.sb, esc=HZ.esc;
 const money=n=>{ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString('en-US')+(HZ.lang==='ar'?' ج.م':' EGP'); };
 const L={
-  ar:{beds:'غرف',br:'غرف',sqm:'م²',delivery:'التسليم',units:'الوحدات المتاحة',type:'النوع',size:'المساحة',price:'السعر',plan:'خطة السداد',from:'يبدأ من',about:'عن المطوّر',amen:'المميزات',noproj:'مفيش نتائج بالمعايير دي — جرّب تغيّر الفلاتر.',brochure:'تحميل البروشور',whatsapp:'تواصل واتساب',homzy:'اسأل Homzy عنه',studio:'استوديو'},
-  en:{beds:'BR',br:'BR',sqm:'m²',delivery:'Delivery',units:'Available units',type:'Type',size:'Size',price:'Price',plan:'Payment plan',from:'from',about:'About the developer',amen:'Amenities',noproj:'No results — try changing the filters.',brochure:'Download brochure',whatsapp:'WhatsApp',homzy:'Ask Homzy about it',studio:'Studio'}
+  ar:{beds:'غرف',br:'غرف',sqm:'م²',delivery:'التسليم',units:'الوحدات المتاحة',type:'النوع',size:'المساحة',price:'السعر',plan:'خطة السداد',from:'يبدأ من',about:'عن المطوّر',amen:'المميزات',noproj:'مفيش نتائج بالمعايير دي — جرّب تغيّر الفلاتر.',brochure:'تحميل البروشور',whatsapp:'تواصل واتساب',homzy:'اسأل Homzy عنه',studio:'استوديو',
+      down:'المقدم',install:'التقسيط',years:'سنة',reqview:'اطلب معاينة',othersby:'مشاريع تانية لنفس المطوّر',ph_name:'اسمك',ph_phone:'رقم موبايلك',ph_time:'الوقت المفضّل للمعاينة (اختياري)',ph_note:'أي ملاحظة (اختياري)',send:'ابعت الطلب',sending:'بيتبعت…',reqok:'تمام! وصلنا طلبك، وهنتواصل معاك في أقرب وقت لترتيب المعاينة.',reqerr:'حصل خطأ، جرّب تاني.',needphone:'اكتب اسمك ورقم موبايلك عشان نتواصل.',viewtitle:'اطلب معاينة للمشروع'},
+  en:{beds:'BR',br:'BR',sqm:'m²',delivery:'Delivery',units:'Available units',type:'Type',size:'Size',price:'Price',plan:'Payment plan',from:'from',about:'About the developer',amen:'Amenities',noproj:'No results — try changing the filters.',brochure:'Download brochure',whatsapp:'WhatsApp',homzy:'Ask Homzy about it',studio:'Studio',
+      down:'Down payment',install:'Installments',years:'y',reqview:'Request a viewing',othersby:'More projects by the same developer',ph_name:'Your name',ph_phone:'Your phone',ph_time:'Preferred viewing time (optional)',ph_note:'Any note (optional)',send:'Send request',sending:'Sending…',reqok:'Done! We got your request and will contact you shortly to arrange the viewing.',reqerr:'Something went wrong, try again.',needphone:'Enter your name and phone so we can reach you.',viewtitle:'Request a viewing'}
 };
 const t=k=>(L[HZ.lang]||L.ar)[k];
 
@@ -264,17 +284,25 @@ async function openProject(id){
   dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">…</div>';
   ov.classList.add('open'); document.body.style.overflow='hidden';
   try{
-    const p=(await sb('/projects?select=id,name,name_ar,area,description,delivery,status,amenities,cover_image_url,developer:developers(name,about,track_record,phone,website)&id=eq.'+id))[0];
+    const p=(await sb('/projects?select=id,developer_id,name,name_ar,area,description,delivery,status,amenities,cover_image_url,developer:developers(name,about,track_record,phone,website)&id=eq.'+id))[0];
     const units=await sb('/unit_types?select=type,bedrooms,size_from,size_to,price_from,price_to,down_payment,installment_years,payment_plan,finishing,delivery&project_id=eq.'+id+'&order=price_from.asc&limit=40');
     const media=await sb('/project_media?select=kind,url,caption&project_id=eq.'+id+'&limit=20');
-    dr.innerHTML=projectDetail(p,units,media);
+    // Other projects by the same developer (so the buyer can explore the portfolio).
+    let others=[];
+    if(p.developer_id){
+      try{ others=await sb('/projects?select=id,name,name_ar,area&developer_id=eq.'+p.developer_id+'&id=neq.'+id+'&area=not.is.null&order=updated_at.desc&limit=8'); }catch(_){}
+    }
+    dr.innerHTML=projectDetail(p,units,media,others);
+    HZ.applyLang();
   }catch(e){ dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">تعذّر تحميل التفاصيل.</div>'; }
 }
 function unitTypeLabel(u){
   const map={apartment:{ar:'شقة',en:'Apartment'},duplex:{ar:'دوبلكس',en:'Duplex'},penthouse:{ar:'بنتهاوس',en:'Penthouse'},studio:{ar:'استوديو',en:'Studio'},townhouse:{ar:'تاون هاوس',en:'Townhouse'},villa:{ar:'فيلا',en:'Villa'},office:{ar:'مكتب',en:'Office'},clinic:{ar:'عيادة',en:'Clinic'},shop:{ar:'محل',en:'Shop'}};
   const m=map[u.type]; return m?m[HZ.lang]:(u.type||'');
 }
-function projectDetail(p,units,media){
+let VIEW_CTX=null;   // project context for the active viewing-request form
+function projectDetail(p,units,media,others){
+  others=others||[];
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
   const dev=p.developer||{};
   const cover=p.cover_image_url||(media.find(m=>m.kind==='image')||{}).url||'';
@@ -285,10 +313,21 @@ function projectDetail(p,units,media){
     const beds=u.bedrooms!=null?(u.bedrooms===0?t('studio'):u.bedrooms+' '+t('br')):'—';
     const size=u.size_from?(u.size_from+(u.size_to&&u.size_to!=u.size_from?('–'+u.size_to):'')+' '+t('sqm')):'—';
     const pr=u.price_from?money(u.price_from):'—';
-    return `<tr><td>${esc(unitTypeLabel(u))}</td><td>${beds}</td><td>${size}</td><td class="pr">${pr}</td></tr>`;
+    const dp=u.down_payment?esc(u.down_payment):'—';
+    const inst=u.installment_years?(u.installment_years+' '+t('years')):'—';
+    const dl=u.delivery?esc(u.delivery):'—';
+    return `<tr><td>${esc(unitTypeLabel(u))}</td><td>${beds}</td><td>${size}</td><td class="pr">${pr}</td><td>${dp}</td><td>${inst}</td><td>${dl}</td></tr>`;
   }).join('');
+  // Distinct payment plans across the units (not just the first one).
+  const plans=[...new Set(units.map(u=>u.payment_plan).filter(Boolean))].slice(0,3);
   const broch=brochure?`<a class="btn btn-ghost" target="_blank" rel="noopener" href="${esc(brochure)}">📄 ${t('brochure')}</a>`:'';
-  // PRIMARY (developer project): NO WhatsApp — the Homzy advisor handles it, carrying the exact project context.
+  const othersHtml=others.length?`<div class="dsec"><h3>${t('othersby')}</h3><div class="devgrid">${
+    others.map(o=>{const nm=HZ.lang==='ar'?(o.name_ar||o.name):(o.name||o.name_ar);
+      return `<button class="devchip" onclick="openProject('${o.id}')"><b>${esc(nm)}</b>${o.area?`<span>${esc(o.area)}</span>`:''}</button>`;}).join('')
+  }</div></div>`:'';
+  // PRIMARY (developer project): NO WhatsApp — a viewing request captures the lead
+  // (name+phone+project) and the Homzy advisor / team follows up.
+  VIEW_CTX={project_id:p.id, name:name, area:p.area||'', developer:dev.name||''};
   const ctx=JSON.stringify({name:name, area:p.area||'', market:'primary'});
   return `
   <div class="dhead" style="${cover?`background-image:url('${esc(cover)}')`:''}">
@@ -306,16 +345,52 @@ function projectDetail(p,units,media){
     ${p.description?`<div class="dsec"><p>${esc(p.description)}</p></div>`:''}
     ${images.length?`<div class="dsec"><div class="gallery">${images.map(m=>`<img loading="lazy" src="${esc(m.url)}" alt="">`).join('')}</div></div>`:''}
     ${units.length?`<div class="dsec"><h3>${t('units')}</h3>
-      <table class="utable"><thead><tr><th>${t('type')}</th><th>${t('beds')}</th><th>${t('size')}</th><th>${t('price')}</th></tr></thead>
-      <tbody>${rows}</tbody></table>
-      ${units[0]&&units[0].payment_plan?`<p style="margin-top:10px;color:#6B7280;font-size:13px">${t('plan')}: ${esc(units[0].payment_plan)}</p>`:''}</div>`:''}
-    ${(dev.about||dev.track_record)?`<div class="dsec"><h3>${t('about')}</h3><p>${esc(dev.about||'')} ${esc(dev.track_record||'')}</p></div>`:''}
+      <div class="utscroll"><table class="utable"><thead><tr><th>${t('type')}</th><th>${t('beds')}</th><th>${t('size')}</th><th>${t('price')}</th><th>${t('down')}</th><th>${t('install')}</th><th>${t('delivery')}</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      ${plans.length?`<div class="plans">${plans.map(pl=>`<p>💳 ${esc(pl)}</p>`).join('')}</div>`:''}</div>`:''}
+    ${(dev.about||dev.track_record)?`<div class="dsec"><h3>${t('about')}${dev.name?' — '+esc(dev.name):''}</h3><p>${esc(dev.about||'')} ${esc(dev.track_record||'')}</p>${dev.website?`<a class="devlink" target="_blank" rel="noopener" href="${esc(dev.website)}">🌐 ${esc(dev.website)}</a>`:''}</div>`:''}
+    ${othersHtml}
     ${p.amenities?`<div class="dsec"><h3>${t('amen')}</h3><p>${esc(p.amenities)}</p></div>`:''}
+
+    <div class="dsec viewbox" id="viewBox">
+      <h3>📅 ${t('viewtitle')}</h3>
+      <div id="viewForm">
+        <input class="vin" id="vName" placeholder="${t('ph_name')}" />
+        <input class="vin" id="vPhone" type="tel" inputmode="tel" placeholder="${t('ph_phone')}" />
+        <input class="vin" id="vTime" placeholder="${t('ph_time')}" />
+        <textarea class="vin" id="vNote" rows="2" placeholder="${t('ph_note')}"></textarea>
+        <button class="btn btn-teal" id="vSend" onclick="submitViewing()">${t('send')}</button>
+        <div class="vmsg" id="vMsg"></div>
+      </div>
+    </div>
+
     <div class="dactions">
       <button class="btn btn-teal" onclick='closeDetail();HZ.openChat({context:${ctx.replace(/'/g,"&#39;")}})'>💬 ${t('homzy')}</button>
       ${broch}
     </div>
   </div>`;
+}
+async function submitViewing(){
+  const name=(document.getElementById('vName').value||'').trim();
+  const phone=(document.getElementById('vPhone').value||'').trim();
+  const time=(document.getElementById('vTime').value||'').trim();
+  const note=(document.getElementById('vNote').value||'').trim();
+  const msg=document.getElementById('vMsg');
+  if(name.length<2 || phone.replace(/\D/g,'').length<8){ msg.className='vmsg err'; msg.textContent=t('needphone'); return; }
+  const btn=document.getElementById('vSend'); btn.disabled=true; const old=btn.textContent; btn.textContent=t('sending');
+  const c=VIEW_CTX||{};
+  const ctxTxt=(HZ.lang==='ar'?'طلب معاينة':'Viewing request')+': '+(c.name||'')+(c.area?(' · '+c.area):'')+(c.developer?(' — '+c.developer):'');
+  const clientMsg=ctxTxt+(time?(HZ.lang==='ar'?(' — الوقت المفضّل: '+time):(' — preferred time: '+time)):'')+(note?(' — '+note):'');
+  try{
+    await HZ.rpc('upsert_web_lead',{
+      p_session_id:'view-'+Math.random().toString(36).slice(2),
+      p_name:name||null, p_phone:phone||null, p_context:ctxTxt,
+      p_messages:[{role:'user',content:clientMsg}],
+      p_lang:HZ.lang,
+      p_req:{type:'viewing_request', project_id:c.project_id||null, project:c.name||null, area:c.area||null, preferred_time:time||null, note:note||null}
+    });
+    document.getElementById('viewForm').innerHTML='<div class="vmsg ok">✅ '+t('reqok')+'</div>';
+  }catch(e){ msg.className='vmsg err'; msg.textContent=t('reqerr'); btn.disabled=false; btn.textContent=old; }
 }
 
 /* Marketplace (resale, broker-posted) */
