@@ -9,12 +9,12 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import (FileResponse, JSONResponse, Response,
-                               StreamingResponse)
+from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
+                               Response, StreamingResponse)
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
-from . import broker, config, listings as listings_mod, llm, valuation
+from . import broker, config, listings as listings_mod, llm, seo, valuation
 
 app = FastAPI(title="Homzy Broker")
 
@@ -88,6 +88,40 @@ def login_page():
     return FileResponse(config.FRONTEND_DIR / "login.html")
 
 
+# Public, crawlable per-project / per-listing pages (outside the login gate) so
+# broker + developer units can rank in Google; the contact action stays gated.
+@app.get("/project/{pid}")
+def project_page(pid: str):
+    try:
+        page = seo.render_project(pid)
+    except Exception:
+        page = None
+    if not page:
+        return HTMLResponse(_not_found_html(), status_code=404)
+    return HTMLResponse(page)
+
+
+@app.get("/listing/{lid}")
+def listing_page(lid: str):
+    try:
+        page = seo.render_listing(lid)
+    except Exception:
+        page = None
+    if not page:
+        return HTMLResponse(_not_found_html(), status_code=404)
+    return HTMLResponse(page)
+
+
+def _not_found_html() -> str:
+    return ('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">'
+            '<meta name="robots" content="noindex"><title>Homzy — غير موجود</title>'
+            '<link rel="icon" href="/favicon.ico">'
+            '<style>body{font-family:system-ui,Cairo,sans-serif;background:#F7F3EC;color:#0B1D36;'
+            'display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;text-align:center}'
+            'a{color:#0B5563;font-weight:800}</style></head><body><div><h1>الصفحة مش موجودة</h1>'
+            '<p>العقار ده مش متاح دلوقتي. <a href="/app">اتصفّح باقي المشاريع</a></p></div></body></html>')
+
+
 # ---------------------------------------------------------------------------
 # SEO: robots.txt + sitemap.xml (public marketing pages only).
 # ---------------------------------------------------------------------------
@@ -114,9 +148,18 @@ def robots_txt():
 def sitemap_xml():
     urls = "".join(
         f"<url><loc>{SEO_BASE}{p}</loc>"
-        f"<changefreq>{'daily' if p in ('/', '/app', '/areas') else 'weekly'}</changefreq>"
-        f"<priority>{'1.0' if p == '/' else '0.8'}</priority></url>"
+        f"<changefreq>daily</changefreq>"
+        f"<priority>1.0</priority></url>"
         for p in _PUBLIC_PATHS
+    )
+    # Public per-project / per-listing pages (the crawlable deep content).
+    try:
+        deep = seo.sitemap_urls()
+    except Exception:
+        deep = []
+    urls += "".join(
+        f"<url><loc>{loc}</loc><changefreq>{cf}</changefreq><priority>0.7</priority></url>"
+        for loc, cf in deep
     )
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
