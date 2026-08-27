@@ -111,7 +111,7 @@
 <div class="band"><div class="wrap band-grid">
   <div class="s"><b id="bProjects"><i>1,697</i></b><span data-ar="مشروع من المطوّرين" data-en="developer projects">مشروع من المطوّرين</span></div>
   <div class="s"><b id="bDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
-  <div class="s"><b><i>4,000+</i></b><span data-ar="وحدة resale" data-en="resale units">وحدة resale</span></div>
+  <div class="s"><b id="bUnits"><i>Primary</i> + Resale</b><span id="bUnitsLbl" data-ar="سوقين في مكان واحد" data-en="two markets, one place">سوقين في مكان واحد</span></div>
   <div class="s"><b><i>24/7</i></b><span data-ar="مستشار ذكي" data-en="AI advisor">مستشار ذكي</span></div>
 </div></div>
 
@@ -142,9 +142,17 @@
   // Live counts
   (async()=>{try{
     const head=t=>fetch('https://ceoqtkbpdxnkuptnnwjg.supabase.co/rest/v1/'+t+'?select=id&limit=1',{headers:{apikey:'sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Authorization:'Bearer sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Prefer:'count=exact'}}).then(r=>parseInt((r.headers.get('content-range')||'/0').split('/')[1]||'0',10));
-    const [pr,dv]=await Promise.all([head('projects'),head('developers')]);
+    const [pr,dv,un]=await Promise.all([head('projects'),head('developers'),head('listings').catch(()=>0)]);
     if(pr)document.querySelectorAll('#stProjects i,#bProjects i').forEach(e=>e.textContent=pr.toLocaleString());
     if(dv)document.querySelectorAll('#stDevs i,#bDevs i').forEach(e=>e.textContent=dv.toLocaleString());
+    // Only show a resale/marketplace number when it's REAL (>0). Otherwise keep
+    // the honest "Primary + Resale" concept — never advertise units we don't have.
+    if(un>0){
+      const b=document.getElementById('bUnits'),l=document.getElementById('bUnitsLbl');
+      if(b)b.innerHTML='<i>'+un.toLocaleString()+'</i>';
+      if(l){l.setAttribute('data-ar','وحدة معروضة');l.setAttribute('data-en','listed units');
+        l.textContent=(document.documentElement.lang==='en'?'listed units':'وحدة معروضة');}
+    }
   }catch(e){}})();
 </script>
 </body>

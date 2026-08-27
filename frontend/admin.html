@@ -265,7 +265,27 @@
   }
 
   async function load() {
-    const data = await (await fetch('/api/listings')).json();
+    let r = await fetch('/api/listings', { headers: authHeaders() });
+    // 401 = token wrong/missing → ask for it and retry once.
+    if (r.status === 401) {
+      const t = prompt('Admin token required to open the panel:');
+      if (t) { token = t.trim(); sessionStorage.setItem('homzy_admin_token', token); }
+      r = await fetch('/api/listings', { headers: authHeaders() });
+    }
+    if (r.status === 403) {   // disabled on this deployment (no token configured)
+      sessionStorage.removeItem('homzy_admin_token'); token = '';
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      empty.textContent = 'The admin panel is disabled on this deployment. Set an ADMIN_TOKEN environment variable to enable it.';
+      countEl.textContent = '';
+      return;
+    }
+    if (!r.ok) {
+      empty.style.display = 'block';
+      empty.textContent = 'Could not load the panel (' + r.status + '). Check the admin token and reload.';
+      return;
+    }
+    const data = await r.json();
     listings = data.listings || [];
     authRequired = !!data.auth_required;
     render();

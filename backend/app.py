@@ -215,13 +215,27 @@ def admin_page():
 
 
 def _require_admin(token: str | None) -> None:
-    if config.ADMIN_TOKEN and token != config.ADMIN_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid or missing admin token")
+    if config.ADMIN_TOKEN:
+        if token != config.ADMIN_TOKEN:
+            raise HTTPException(status_code=401, detail="Invalid or missing admin token")
+        return
+    # No token configured. Open locally (single-user dev), but FAIL CLOSED on a
+    # public host so an unconfigured deployment never exposes the inventory.
+    if config.IS_HOSTED:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin panel is disabled on this deployment. Set ADMIN_TOKEN to enable it.",
+        )
 
 
 @app.get("/api/listings")
-def list_listings():
-    """Full records — the admin panel needs every field to edit them."""
+def list_listings(x_admin_token: str | None = Header(default=None)):
+    """Full records — the admin panel needs every field to edit them.
+
+    Protected: on a public host this requires the admin token, so the internal
+    dashboard and inventory are never readable from the open URL.
+    """
+    _require_admin(x_admin_token)
     return {"listings": listings_mod.load(), "auth_required": bool(config.ADMIN_TOKEN)}
 
 

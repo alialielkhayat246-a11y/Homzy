@@ -31,6 +31,12 @@
   .infobar{background:var(--teal-l); color:var(--teal-d); border:1px solid var(--line); border-radius:12px; padding:11px 15px; font-size:14px; font-weight:600; margin-top:14px; display:none;}
   .infobar.show{display:block;}
   .grid{display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding-bottom:20px;}
+  .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:36px 16px;}
+  .mkempty{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:20px; padding:48px 28px; max-width:620px; margin:8px auto 40px;}
+  .mkempty .mke-ic{font-size:44px; line-height:1;}
+  .mkempty h3{margin:14px 0 8px; color:var(--navy,#0B1D36); font-size:22px;}
+  .mkempty p{color:var(--muted,#66717F); font-size:15.5px; line-height:1.7; max-width:44ch; margin:0 auto;}
+  .mkempty .mke-cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:22px;}
   .loadmore{text-align:center; padding:6px 0 50px;}
   @media(max-width:1000px){ .grid{grid-template-columns:repeat(3,1fr);} }
   @media(max-width:760px){ .grid{grid-template-columns:repeat(2,1fr);} }
@@ -239,6 +245,23 @@ function projectDetail(p,units,media){
 }
 
 /* Marketplace (resale, broker-posted) */
+// Useful empty state — the marketplace fills as brokers post units. Never leave
+// the user staring at "0 results": if they filtered, nudge them to loosen it;
+// otherwise explain the market is being activated and capture their request.
+function marketEmptyHTML(filtered){
+  const ar=HZ.lang==='ar';
+  if(filtered){
+    return '<div class="empty mkempty"><div class="mke-ic">🔍</div>'
+      +'<h3>'+(ar?'مفيش عروض بالمعايير دي':'No listings match these filters')+'</h3>'
+      +'<p>'+(ar?'جرّب توسّع المنطقة أو الميزانية، أو سيب طلبك للمستشار وهو يدوّرلك.':'Try widening the area or budget, or leave your request with the advisor.')+'</p>'
+      +'<div class="mke-cta"><button class="btn btn-teal" onclick="HZ.openChat()">'+(ar?'اكتب طلبك للمستشار':'Tell the advisor')+'</button></div></div>';
+  }
+  return '<div class="empty mkempty"><div class="mke-ic">🏗️</div>'
+    +'<h3>'+(ar?'سوق العقارات بيتفعّل قريبًا':'The marketplace is being activated')+'</h3>'
+    +'<p>'+(ar?'وحدات الـresale الحقيقية من البروكرز في الطريق. سيب طلبك للمستشار وأول ما تظهر وحدة مناسبة نبعتهالك — أو اتصفّح مشاريع المطوّرين دلوقتي.':'Real resale units from brokers are on the way. Leave your request with the advisor and we’ll ping you when a match appears — or browse developer projects now.')+'</p>'
+    +'<div class="mke-cta"><button class="btn btn-teal" onclick="HZ.openChat()">'+(ar?'اكتب طلبك للمستشار':'Tell the advisor')+'</button>'
+    +'<button class="btn btn-ghost" onclick="switchTab(\'projects\')">'+(ar?'تصفّح مشاريع المطوّرين':'Browse developer projects')+'</button></div></div>';
+}
 let marketLoading=false;
 async function loadMarket(){
   if(marketLoading) return; marketLoading=true; skeletons(8);
@@ -250,12 +273,12 @@ async function loadMarket(){
   try{
     const rows=await sb(path);
     const grid=document.getElementById('grid'); grid.innerHTML='';
-    if(rows.length===0) grid.innerHTML='<div class="empty">'+t('noproj')+'</div>';
+    if(rows.length===0) grid.innerHTML=marketEmptyHTML(!!(q||purpose));
     rows.forEach(l=>grid.appendChild(listingCard(l)));
     document.getElementById('marketCount').textContent=rows.length+(HZ.lang==='ar'?' عرض':' listings');
     document.getElementById('loadMoreWrap').style.display='none';
     HZ.applyLang();
-  }catch(e){ document.getElementById('grid').innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
+  }catch(e){ document.getElementById('grid').innerHTML=marketEmptyHTML(false); }
   finally{ marketLoading=false; }
 }
 function listingCard(l){

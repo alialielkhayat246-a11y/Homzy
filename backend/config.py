@@ -59,6 +59,12 @@ LLM_EXTRACT = _get("LLM_EXTRACT", "1") == "1"
 # single-user use; set it before exposing Homzy on a network.
 ADMIN_TOKEN = _get("ADMIN_TOKEN", "")
 
+# True on a serverless/public host (Vercel sets these). Used to FAIL CLOSED:
+# the admin panel is refused on a public deployment unless ADMIN_TOKEN is set,
+# so an unconfigured deploy can never expose read/write of the inventory.
+IS_HOSTED = bool(os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
+                 or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
 # --- Behaviour -----------------------------------------------------------
 MAX_RESULTS = int(_get("MAX_RESULTS", "4"))
 LLM_TEMPERATURE = float(_get("LLM_TEMPERATURE", "0.6"))
