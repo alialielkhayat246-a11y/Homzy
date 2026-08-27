@@ -30,6 +30,19 @@ HZ.sb = async function(path, opts){
 };
 HZ.esc = s => (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// Call a Postgres function (RPC). HZ.sb replaces the whole headers object, so
+// RPC needs its own POST helper that keeps the auth headers + JSON content-type.
+HZ.rpc = async function(fn, args){
+  const r = await fetch(SB_URL+'/rest/v1/rpc/'+fn, {
+    method:'POST',
+    headers:{apikey:SB_KEY, Authorization:'Bearer '+SB_KEY, 'Content-Type':'application/json'},
+    body: JSON.stringify(args||{})
+  });
+  if(!r.ok) throw new Error('rpc '+r.status);
+  const txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+};
+
 // Shared area-normalization KEY: folds near-duplicate area names to one bucket
 // so the Areas page and the browse filter agree (e.g. "New Zayed"/"Zayed",
 // "6th of October"/"6 October", "El Maadi"/"Maadi", "New Heliopolis"/"Heliopolis").

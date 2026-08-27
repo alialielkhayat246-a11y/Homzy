@@ -94,6 +94,11 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
 .pcard .b .row{display:flex; align-items:center; gap:6px; margin-top:9px; font-size:13px; color:#40506a; flex-wrap:wrap;}
 .pcard .b .row .pill{background:var(--cream); border:1px solid var(--line); border-radius:8px; padding:3px 9px; font-weight:600;}
 .pcard .b .pr{margin-top:9px; font-weight:800; color:var(--teal-d); font-size:15px;}
+.pcard .img .mk2.rdy{background:#1E8E5A;} .pcard .img .mk2.off{background:#0B5563;}
+.pcard .b .meta2{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; font-size:11.5px; color:var(--muted); flex-wrap:wrap;}
+.pcard .b .meta2 .del{font-weight:600; color:#40506a;}
+.pcard .b .det{margin-top:12px; width:100%; border:1.5px solid var(--teal); background:transparent; color:var(--teal-d); font-family:var(--ff); font-weight:800; font-size:13.5px; padding:9px 12px; border-radius:10px; cursor:pointer; transition:background .15s,color .15s;}
+.pcard .b .det:hover{background:var(--teal); color:#fff;}
 .skeleton{background:linear-gradient(100deg,#efe8e0 30%,#f6f1ea 50%,#efe8e0 70%); background-size:200% 100%; animation:sk 1.3s infinite;}
 @keyframes sk{to{background-position:-200% 0;}}
 .empty{grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted);}

@@ -84,17 +84,33 @@
   <div class="filters" id="projFilters">
     <input type="search" id="q" data-ph-ar="ابحث باسم المشروع أو المطوّر…" data-ph-en="Search by project or developer…" oninput="debouncedLoad()" />
     <select id="fArea" onchange="loadProjects(true)"><option value="" data-ar="كل المناطق" data-en="All areas">كل المناطق</option></select>
-    <select id="fType" onchange="loadProjects(true)">
-      <option value="" data-ar="كل الأنواع" data-en="All types">كل الأنواع</option>
-      <option value="apartment" data-ar="شقة" data-en="Apartment">شقة</option>
-      <option value="duplex" data-ar="دوبلكس" data-en="Duplex">دوبلكس</option>
-      <option value="penthouse" data-ar="بنتهاوس" data-en="Penthouse">بنتهاوس</option>
-      <option value="studio" data-ar="استوديو" data-en="Studio">استوديو</option>
-      <option value="townhouse" data-ar="تاون هاوس" data-en="Townhouse">تاون هاوس</option>
-      <option value="villa" data-ar="فيلا" data-en="Villa">فيلا</option>
-      <option value="office" data-ar="مكتب إداري" data-en="Office">مكتب إداري</option>
-      <option value="clinic" data-ar="عيادة" data-en="Clinic">عيادة</option>
-      <option value="shop" data-ar="محل تجاري" data-en="Shop">محل تجاري</option>
+    <select id="fBeds" onchange="loadProjects(true)">
+      <option value="" data-ar="كل الغرف" data-en="Any rooms">كل الغرف</option>
+      <option value="0" data-ar="استوديو" data-en="Studio">استوديو</option>
+      <option value="1" data-ar="غرفة" data-en="1 bed">غرفة</option>
+      <option value="2" data-ar="غرفتين" data-en="2 beds">غرفتين</option>
+      <option value="3" data-ar="٣ غرف" data-en="3 beds">٣ غرف</option>
+      <option value="4" data-ar="٤ غرف" data-en="4 beds">٤ غرف</option>
+      <option value="5" data-ar="٥+ غرف" data-en="5+ beds">٥+ غرف</option>
+    </select>
+    <select id="fBudget" onchange="loadProjects(true)">
+      <option value="" data-ar="أي ميزانية" data-en="Any budget">أي ميزانية</option>
+      <option value="-2000000" data-ar="حتى ٢ مليون" data-en="Up to 2M">حتى ٢ مليون</option>
+      <option value="2000000-4000000" data-ar="٢ – ٤ مليون" data-en="2 – 4M">٢ – ٤ مليون</option>
+      <option value="4000000-6000000" data-ar="٤ – ٦ مليون" data-en="4 – 6M">٤ – ٦ مليون</option>
+      <option value="6000000-10000000" data-ar="٦ – ١٠ مليون" data-en="6 – 10M">٦ – ١٠ مليون</option>
+      <option value="10000000-20000000" data-ar="١٠ – ٢٠ مليون" data-en="10 – 20M">١٠ – ٢٠ مليون</option>
+      <option value="20000000-" data-ar="أكتر من ٢٠ مليون" data-en="20M+">أكتر من ٢٠ مليون</option>
+    </select>
+    <select id="fReady" onchange="loadProjects(true)">
+      <option value="" data-ar="كل الحالات" data-en="Any status">كل الحالات</option>
+      <option value="ready" data-ar="استلام فوري" data-en="Ready to move">استلام فوري</option>
+      <option value="offplan" data-ar="تحت الإنشاء" data-en="Off-plan">تحت الإنشاء</option>
+    </select>
+    <select id="fSort" onchange="loadProjects(true)">
+      <option value="recent" data-ar="الأحدث" data-en="Newest">الأحدث</option>
+      <option value="price_asc" data-ar="السعر: من الأقل" data-en="Price: low to high">السعر: من الأقل</option>
+      <option value="price_desc" data-ar="السعر: من الأعلى" data-en="Price: high to low">السعر: من الأعلى</option>
     </select>
     <span class="rescount" id="projCount"></span>
   </div>
@@ -140,8 +156,8 @@ function switchTab(tab){
 }
 
 /* Projects */
-let projOffset=0; const PAGE=48; let projLoading=false;
-function skeletons(n){ document.getElementById('grid').innerHTML=Array.from({length:n}).map(()=>'<div class="pcard skeleton" style="height:260px"></div>').join(''); }
+let projOffset=0; const PAGE=12; let projLoading=false; let projTotal=0;
+function skeletons(n){ document.getElementById('grid').innerHTML=Array.from({length:n}).map(()=>'<div class="pcard skeleton" style="height:300px"></div>').join(''); }
 let AREA_GROUPS={};   // display label -> { variants:[raw area strings], projects }
 async function loadAreas(){
   try{
@@ -164,50 +180,78 @@ async function loadAreas(){
     }
   }catch(e){}
 }
+function budgetRange(){
+  const v=document.getElementById('fBudget').value; if(!v) return [null,null];
+  const [a,b]=v.split('-'); return [a?+a:null, b?+b:null];
+}
 async function loadProjects(reset){
   if(projLoading) return; projLoading=true;
-  if(reset){ projOffset=0; skeletons(8); }
+  if(reset){ projOffset=0; skeletons(6); }
   const q=document.getElementById('q').value.trim();
-  const area=document.getElementById('fArea').value;
-  const type=document.getElementById('fType').value;
-  let sel='id,name,name_ar,area,delivery,status,cover_image_url,developer:developers(name)';
-  if(type) sel+=',unit_types!inner(type)';
-  let path='/projects?select='+encodeURIComponent(sel);
-  if(q){ const s=q.replace(/,/g,' '); path+='&or=('+encodeURIComponent(`name.ilike.*${s}*,name_ar.ilike.*${s}*,area.ilike.*${s}*`)+')'; }
-  if(area){
-    // Filter by ALL raw variants of the chosen area group (exact match), so the
-    // results match the count shown in the dropdown.
-    const g=AREA_GROUPS[area];
-    if(g&&g.variants&&g.variants.length){
-      const list=g.variants.map(v=>'"'+String(v).replace(/"/g,'')+'"').join(',');
-      path+='&area=in.('+encodeURIComponent(list)+')';
-    }else{ path+='&area=ilike.*'+encodeURIComponent(area)+'*'; }
-  }
-  if(type) path+='&unit_types.type=eq.'+encodeURIComponent(type);
-  path+='&order=updated_at.desc&limit='+PAGE+'&offset='+projOffset;
+  const areaLabel=document.getElementById('fArea').value;
+  const beds=document.getElementById('fBeds').value;
+  const ready=document.getElementById('fReady').value;
+  const sort=document.getElementById('fSort').value||'recent';
+  const [pMin,pMax]=budgetRange();
+  // Expand the chosen area into all its raw variants so counts + results agree.
+  let areas=null;
+  if(areaLabel){ const g=AREA_GROUPS[areaLabel]; areas=(g&&g.variants&&g.variants.length)?g.variants:[areaLabel]; }
+  const args={ p_q:q||null, p_areas:areas, p_min:pMin, p_max:pMax,
+    p_beds:beds===''?null:+beds, p_ready:ready||null, p_sort:sort,
+    p_limit:PAGE, p_offset:projOffset };
   try{
-    const rows=await sb(path);
-    const seen=new Set(); const uniq=[];
-    rows.forEach(p=>{ if(!seen.has(p.id)){ seen.add(p.id); uniq.push(p); } });
+    const rows=(await HZ.rpc('search_projects', args))||[];
     const grid=document.getElementById('grid');
     if(reset) grid.innerHTML='';
-    if(reset && uniq.length===0) grid.innerHTML='<div class="empty">'+t('noproj')+'</div>';
-    uniq.forEach(p=>grid.appendChild(projectCard(p)));
-    projOffset+=PAGE;
-    document.getElementById('loadMoreWrap').style.display=rows.length>=PAGE?'block':'none';
-    document.getElementById('projCount').textContent=grid.querySelectorAll('.pcard').length+(HZ.lang==='ar'?'+ مشروع':'+ projects');
+    if(reset && rows.length===0) grid.innerHTML='<div class="empty">'+t('noproj')+'</div>';
+    rows.forEach(p=>grid.appendChild(projectCard(p)));
+    if(rows.length) projTotal=rows[0].total_count||0; else if(reset) projTotal=0;
+    projOffset+=rows.length;
+    document.getElementById('loadMoreWrap').style.display=(projOffset<projTotal)?'block':'none';
+    document.getElementById('projCount').textContent = projTotal
+      ? projTotal.toLocaleString('en-US')+(HZ.lang==='ar'?' مشروع':' projects') : '';
     HZ.applyLang();
   }catch(e){ if(reset) document.getElementById('grid').innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
   finally{ projLoading=false; }
 }
+function relTime(iso){
+  if(!iso) return ''; const dt=new Date(iso); const days=Math.floor((Date.now()-dt)/86400000);
+  const ar=HZ.lang==='ar';
+  if(days<=0) return ar?'اتحدّث النهارده':'updated today';
+  if(days===1) return ar?'اتحدّث امبارح':'updated yesterday';
+  if(days<30) return ar?`اتحدّث من ${days} يوم`:`updated ${days}d ago`;
+  const mo=Math.floor(days/30);
+  return ar?`اتحدّث من ${mo} شهر`:`updated ${mo}mo ago`;
+}
+function bedsLabel(p){
+  if(p.beds_min==null) return '';
+  const one=v=>v===0?t('studio'):v+' '+t('br');
+  return (p.beds_min===p.beds_max)?one(p.beds_min)
+    :(p.beds_min===0?t('studio'):p.beds_min)+'–'+one(p.beds_max);
+}
 function projectCard(p){
   const d=document.createElement('div'); d.className='pcard';
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
-  const dev=p.developer&&p.developer.name?p.developer.name:'';
+  const dev=p.developer_name||'';
   const img=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
-  const del=p.delivery?`<span class="pill">${esc(p.delivery)}</span>`:(p.status?`<span class="pill">${esc(p.status)}</span>`:'');
-  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2">Primary</span></div>
-    <div class="b"><div class="nm">${esc(name)}</div>${dev?`<div class="dv">${esc(dev)}</div>`:''}<div class="row">${del}</div></div>`;
+  const ready=p.status&&/ready|available/i.test(p.status);
+  const stTxt=ready?(HZ.lang==='ar'?'استلام فوري':'Ready'):(HZ.lang==='ar'?'تحت الإنشاء':'Off-plan');
+  const price=p.price_from_min!=null?`<div class="pr">${t('from')} ${money(p.price_from_min)}</div>`:'';
+  const chips=[];
+  if(p.size_from_min!=null){ const s=p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):''); chips.push(`<span class="pill">${s} ${t('sqm')}</span>`); }
+  const bl=bedsLabel(p); if(bl) chips.push(`<span class="pill">${bl}</span>`);
+  if(p.installment_years_max) chips.push(`<span class="pill">${HZ.lang==='ar'?('تقسيط '+p.installment_years_max+' سنة'):(p.installment_years_max+'y plan')}</span>`);
+  const delTxt=p.delivery?esc(p.delivery):(ready?(HZ.lang==='ar'?'جاهز':'ready'):'');
+  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span></div>
+    <div class="b">
+      <div class="nm">${esc(name)}</div>
+      ${dev?`<div class="dv">${esc(dev)}</div>`:''}
+      ${price}
+      <div class="row">${chips.join('')}</div>
+      <div class="meta2"><span class="del">${delTxt?('🔑 '+delTxt):''}</span><span class="upd">${relTime(p.updated_at)}</span></div>
+      <button class="det" data-ar="اطلب التفاصيل" data-en="Request details">اطلب التفاصيل</button>
+    </div>`;
+  d.querySelector('.det').onclick=(e)=>{ e.stopPropagation(); openProject(p.id); };
   d.onclick=()=>openProject(p.id);
   return d;
 }
