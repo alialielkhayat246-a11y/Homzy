@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate: everything past the homepage requires login */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search+location.hash));}}catch(e){location.replace('/login');}})();</script>
 <title>Homzy — المميزات</title>
 <meta name="description" content="مميزات Homzy: مستشار AI ذكي، تفرقة primary/resale، سوق العقارات، خرائط ومناطق، لانشات وعروض، وأدوات للبروكر." />
 <meta name="keywords" content="مستشار عقاري ذكي, ذكاء اصطناعي عقارات, primary resale, سوق عقارات, لانشات عقارية, عروض عقارية مصر" />

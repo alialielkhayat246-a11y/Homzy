@@ -82,7 +82,7 @@ HZ.applyLang = function(){
   });
   document.querySelectorAll('[data-ph-ar]').forEach(el=>{ el.placeholder = el.getAttribute('data-ph-'+HZ.lang) || ''; });
   const lb = document.getElementById('hzLang'); if(lb) lb.textContent = HZ.lang==='ar' ? 'EN' : 'ع';
-  buildNavLinks(); refreshTabbar();
+  buildNavLinks(); refreshTabbar(); setAuthBtn();
   document.dispatchEvent(new CustomEvent('hz:lang', {detail:HZ.lang}));
 };
 HZ.toggleLang = function(){ HZ.lang = HZ.lang==='ar'?'en':'ar'; localStorage.setItem('hz_lang',HZ.lang); HZ.applyLang(); };
@@ -129,6 +129,7 @@ function buildHeader(){
           <button class="b" data-m="broker" onclick="HZ.setMode('broker')">${HZ.t('broker')}</button>
         </div>
         <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()">EN</button>
+        <button class="hz-auth" id="hzAuth" onclick="HZ.authAction()"></button>
         <button class="hz-menu-btn" onclick="document.getElementById('hzMobile').classList.toggle('open')" aria-label="menu">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="#0B1D36" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
@@ -139,6 +140,33 @@ function buildHeader(){
   addEventListener('scroll',()=>{ const n=document.getElementById('hzNav'); if(n) n.classList.toggle('scrolled', scrollY>8); });
   document.getElementById('hzMobile').addEventListener('click',e=>{ if(e.target.tagName==='A') document.getElementById('hzMobile').classList.remove('open'); });
 }
+// ---- client auth state (login gate) ----
+// A logged-in visitor has a Supabase session token in localStorage. We don't
+// need supabase-js here: logout just clears that token and the head-guard on
+// protected pages sends the user back to /login.
+HZ.isLoggedIn = function(){
+  try{
+    const k=Object.keys(localStorage).find(x=>/sb-.*-auth-token/.test(x));
+    const t=k?JSON.parse(localStorage.getItem(k)):null;
+    return !!(t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now()));
+  }catch(e){ return false; }
+};
+HZ.logout = function(){
+  try{ Object.keys(localStorage).filter(x=>/sb-.*-auth-token/.test(x)).forEach(x=>localStorage.removeItem(x)); }catch(e){}
+  location.href='/';
+};
+HZ.authAction = function(){
+  if(HZ.isLoggedIn()) HZ.logout();
+  else location.href='/login?next='+encodeURIComponent(location.pathname+location.search);
+};
+function setAuthBtn(){
+  const b=document.getElementById('hzAuth'); if(!b) return;
+  const inn=HZ.isLoggedIn();
+  b.textContent = inn ? (HZ.lang==='ar'?'خروج':'Log out') : (HZ.lang==='ar'?'دخول':'Log in');
+  b.classList.toggle('out', inn);
+}
+HZ.refreshAuthBtn = setAuthBtn;
+
 function buildFooter(){
   const host=document.getElementById('hz-footer'); if(!host) return;
   host.innerHTML=`
@@ -380,6 +408,9 @@ function captureLead(text){
 
 HZ.openChat = function(opts){
   opts=opts||{};
+  // The advisor is a gated feature too — send guests to log in first, then come
+  // straight back (the homepage is the only place a guest can be).
+  if(!HZ.isLoggedIn()){ location.href='/login?next='+encodeURIComponent(location.pathname+location.search); return; }
   buildChat();
   // A project context resets to a focused conversation about that project.
   if(opts.context){

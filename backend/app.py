@@ -81,11 +81,20 @@ def leads_page():
     return FileResponse(config.FRONTEND_DIR / "leads.html")
 
 
+@app.get("/login")
+def login_page():
+    """Client sign-in / sign-up gate. Everything past the public homepage
+    requires a session (see the head guard on the protected pages)."""
+    return FileResponse(config.FRONTEND_DIR / "login.html")
+
+
 # ---------------------------------------------------------------------------
 # SEO: robots.txt + sitemap.xml (public marketing pages only).
 # ---------------------------------------------------------------------------
 SEO_BASE = "https://homzy-ai.com"
-_PUBLIC_PATHS = ["/", "/features", "/areas", "/app", "/brokers", "/download"]
+# Only the homepage is public now — the rest of the site sits behind the login
+# gate, so we don't advertise gated paths to crawlers (they'd just hit /login).
+_PUBLIC_PATHS = ["/"]
 
 
 @app.get("/robots.txt")

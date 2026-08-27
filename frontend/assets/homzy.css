@@ -55,6 +55,10 @@ body.hz-broker .hz-mode{display:inline-flex;}
 body[data-mode=broker] .hz-mode button.b{background:var(--teal); color:#fff;}
 .hz-lang{font-family:var(--ff); font-weight:700; font-size:14px; cursor:pointer; background:#fff; border:1.5px solid var(--line-2); border-radius:11px; padding:9px 13px; color:var(--navy);}
 .hz-lang:hover{border-color:var(--navy);}
+.hz-auth{font-family:var(--ff); font-weight:800; font-size:14px; cursor:pointer; background:var(--navy); border:1.5px solid var(--navy); border-radius:11px; padding:9px 15px; color:#fff;}
+.hz-auth:hover{background:#122744;}
+.hz-auth.out{background:#fff; color:var(--navy); border-color:var(--line-2);}
+.hz-auth.out:hover{border-color:var(--navy);}
 .hz-menu-btn{display:none; background:#fff; border:1.5px solid var(--line-2); border-radius:11px; width:44px; height:44px; cursor:pointer; align-items:center; justify-content:center;}
 .hz-mobile{display:none; flex-direction:column; padding:8px 22px 16px; background:var(--cream); border-bottom:1px solid var(--line);}
 .hz-mobile.open{display:flex;}

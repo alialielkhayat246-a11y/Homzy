@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — تسجيل الدخول</title>
+<meta name="description" content="سجّل دخولك إلى Homzy لتصفّح المشاريع والمناطق والتحدث مع المستشار العقاري." />
+<meta name="robots" content="noindex, follow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .authwrap{min-height:calc(100vh - 60px); display:flex; align-items:center; justify-content:center; padding:32px 18px;}
+  .authcard{background:var(--card,#fff); border:1px solid var(--line,#E6DDCF); border-radius:22px; box-shadow:var(--shadow); width:100%; max-width:420px; padding:30px 26px;}
+  .authcard .brand{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:6px;}
+  .authcard .brand img{width:40px; height:40px;}
+  .authcard .brand b{font-family:var(--ff-h,'Poppins'); font-size:22px; color:var(--navy,#0B1D36);}
+  .authcard h1{text-align:center; font-size:21px; color:var(--navy,#0B1D36); margin:10px 0 4px;}
+  .authcard .sub{text-align:center; color:var(--muted,#66717F); font-size:14px; margin-bottom:20px; line-height:1.6;}
+  .authcard .fld{display:none; flex-direction:column; margin-bottom:12px;}
+  .authcard .fld.on{display:flex;}
+  .authcard label{font-size:13px; font-weight:700; color:var(--navy,#0B1D36); margin-bottom:6px;}
+  .authcard input{font-family:var(--ff,'Cairo'); font-size:15px; padding:12px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; background:#fff; color:var(--navy,#0B1D36); outline:none;}
+  .authcard input:focus{border-color:var(--teal,#0B5563);}
+  .authcard .btn{width:100%; margin-top:6px; font-size:16px; padding:13px;}
+  .authcard .msg{margin-top:12px; font-size:13.5px; font-weight:700; text-align:center; line-height:1.6; min-height:18px;}
+  .authcard .msg.err{color:#B42318;} .authcard .msg.ok{color:#1E8E5A;}
+  .authcard .switch{text-align:center; margin-top:16px; font-size:14px; color:var(--muted,#66717F);}
+  .authcard .switch a{color:var(--teal-d,#0B5563); font-weight:800; cursor:pointer; text-decoration:none;}
+  .authcard .back{text-align:center; margin-top:18px;}
+  .authcard .back a{color:var(--muted,#66717F); font-size:13px; text-decoration:none;}
+  .brokerhint{margin-top:14px; padding:11px 13px; background:var(--teal-l,#E7F0F0); border:1px solid var(--line,#E6DDCF); border-radius:12px; font-size:12.5px; color:var(--teal-d,#0B5563); text-align:center; line-height:1.6;}
+</style>
+</head>
+<body data-mode="client">
+<div class="authwrap">
+  <div class="authcard">
+    <div class="brand"><img src="/assets/icon.svg" alt="Homzy" /><b>Hom<span style="color:var(--teal,#0B5563)">zy</span></b></div>
+    <h1 id="title">أهلاً بيك في Homzy</h1>
+    <p class="sub" id="sub">سجّل دخولك عشان تتصفّح المشاريع، المناطق، وتتكلم مع المستشار العقاري.</p>
+    <form id="authForm" autocomplete="on">
+      <div class="fld" id="fldName"><label for="name">الاسم</label><input id="name" type="text" autocomplete="name" placeholder="اسمك" /></div>
+      <div class="fld on"><label for="phone">رقم الموبايل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required /></div>
+      <div class="fld on"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="٦ أحرف على الأقل" required /></div>
+      <button class="btn btn-teal" id="authBtn" type="submit">دخول</button>
+      <div class="msg" id="msg"></div>
+    </form>
+    <div class="switch"><span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">اعمل حساب</a></div>
+    <div class="brokerhint">بروكر عقاري؟ <a href="/leads?register=1" style="color:inherit;font-weight:800;text-decoration:underline">سجّل من هنا</a> عشان تعرض وحداتك وتشتري ليدز.</div>
+    <div class="back"><a href="/">← رجوع للرئيسية</a></div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
+const $=id=>document.getElementById(id);
+
+// where to go after login — same-origin path only (no open redirect)
+function nextPath(){
+  const n=new URLSearchParams(location.search).get('next')||'';
+  return (n.startsWith('/') && !n.startsWith('//')) ? n : '/app';
+}
+// if already signed in, skip the page
+(async()=>{ const {data:{session}}=await sb.auth.getSession(); if(session) location.replace(nextPath()); })();
+
+function normPhone(v){
+  let d=(v||'').replace(/[^\d]/g,'');
+  if(d.startsWith('00')) d=d.slice(2);
+  if(d.startsWith('0')) d='20'+d.slice(1);
+  else if(!d.startsWith('20')) d='20'+d;
+  return d;
+}
+const phoneEmail = v => 'p'+normPhone(v)+'@homzy.app';
+
+let mode='login';
+function setMode(m){
+  mode=m; const reg=m==='register';
+  $('fldName').classList.toggle('on', reg);
+  $('name').required=reg;
+  $('title').textContent = reg?'اعمل حساب في Homzy':'أهلاً بيك في Homzy';
+  $('sub').textContent = reg?'اسمك ورقم موبايلك وكلمة مرور — وابدأ تتصفّح.':'سجّل دخولك عشان تتصفّح المشاريع، المناطق، وتتكلم مع المستشار العقاري.';
+  $('authBtn').textContent = reg?'اعمل حساب':'دخول';
+  $('password').autocomplete = reg?'new-password':'current-password';
+  $('switchTxt').textContent = reg?'عندك حساب؟':'لسه معندكش حساب؟';
+  $('switchLink').textContent = reg?'سجّل دخول':'اعمل حساب';
+  msg('');
+}
+$('switchLink').onclick=()=>setMode(mode==='login'?'register':'login');
+function msg(t,ok){ const el=$('msg'); el.textContent=t; el.className='msg '+(ok?'ok':(t?'err':'')); }
+function authErr(m){
+  if(/Invalid login|credentials/i.test(m||'')) return 'الرقم أو كلمة المرور غلط.';
+  if(/already registered|already exists|User already/i.test(m||'')) return 'الرقم ده مسجّل قبل كده — سجّل دخول.';
+  if(/at least 6|password/i.test(m||'')) return 'كلمة المرور لازم ٦ أحرف على الأقل.';
+  return m||'حصل خطأ، جرّب تاني.';
+}
+$('authForm').addEventListener('submit', async(e)=>{
+  e.preventDefault();
+  const phone=normPhone($('phone').value), password=$('password').value;
+  if(phone.length<11){ msg('رقم موبايل غير صحيح.'); return; }
+  if(mode==='register' && $('name').value.trim().length<2){ msg('اكتب اسمك.'); return; }
+  const email=phoneEmail($('phone').value);
+  $('authBtn').disabled=true;
+  try{
+    if(mode==='register'){
+      const {error}=await sb.auth.signUp({ email, password, options:{ data:{
+        role:'client', phone, name:$('name').value.trim() } } });
+      if(error) throw error;
+    }else{
+      const {error}=await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+    }
+    const {data:{session}}=await sb.auth.getSession();
+    if(session){ location.replace(nextPath()); return; }
+    msg('تم إنشاء الحساب — سجّل دخول.', true); setMode('login');
+  }catch(err){ msg(authErr(err.message)); }
+  finally{ $('authBtn').disabled=false; }
+});
+</script>
+</body>
+</html>
