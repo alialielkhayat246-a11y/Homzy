@@ -88,6 +88,7 @@ const T = {
   footTagline:{ar:'مستشارك العقاري الذكي في مصر — بالعربي والإنجليزي، مبني على داتا حقيقية.',en:'Your smart real-estate advisor in Egypt — bilingual, grounded in real data.'},
   platform:{ar:'المنصة',en:'Platform'}, forBrokers:{ar:'للبروكرز',en:'For brokers'},
   admin:{ar:'لوحة الإدارة',en:'Admin'}, join:{ar:'انضم كبروكر',en:'Join as broker'},
+  sell:{ar:'اعرض وحدتك',en:'List your unit'},
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
@@ -205,7 +206,7 @@ function buildFooter(){
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('forBrokers')}</h4>
-          <a href="/leads?register=1">${HZ.t('join')}</a><a href="/brokers">${HZ.t('brokerTools')}</a><a href="/leads">${HZ.t('leads')}</a>
+          <a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a>
         </div>
       </div>
       <div class="hz-foot-bottom"><span>© ${new Date().getFullYear()} Homzy</span><span>${HZ.t('disclaimer')}</span></div>

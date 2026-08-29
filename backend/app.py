@@ -89,6 +89,13 @@ def my_listings_page():
     return FileResponse(config.FRONTEND_DIR / "my-listings.html")
 
 
+@app.get("/sell")
+def sell_page():
+    """Public broker-acquisition landing ('list your unit on Homzy'). Shareable
+    + indexable; its CTAs go to /my-listings (which handles login/registration)."""
+    return FileResponse(config.FRONTEND_DIR / "sell.html")
+
+
 @app.get("/map")
 def map_page():
     """Interactive area map (Leaflet + OpenStreetMap). Gated like the rest of the
@@ -162,7 +169,7 @@ SEO_BASE = "https://homzy-ai.com"
 # Public, crawlable pages: the homepage + the areas hub (its cards link to the
 # per-area landing pages, which the sitemap also lists). The rest of the app
 # stays behind the login gate.
-_PUBLIC_PATHS = ["/", "/areas"]
+_PUBLIC_PATHS = ["/", "/areas", "/sell"]
 
 
 @app.get("/robots.txt")
