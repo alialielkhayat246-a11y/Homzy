@@ -35,23 +35,56 @@
   .authcard .back{text-align:center; margin-top:18px;}
   .authcard .back a{color:var(--muted,#66717F); font-size:13px; text-decoration:none;}
   .brokerhint{margin-top:14px; padding:11px 13px; background:var(--teal-l,#E7F0F0); border:1px solid var(--line,#E6DDCF); border-radius:12px; font-size:12.5px; color:var(--teal-d,#0B5563); text-align:center; line-height:1.6;}
+  .gbtn{width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; padding:13px; font-family:var(--ff,'Cairo'); font-weight:800; font-size:15.5px; color:var(--navy,#0B1D36); cursor:pointer;}
+  .gbtn:hover{border-color:var(--navy,#0B1D36); background:#fbfbfb;}
+  .gbtn img{width:20px; height:20px;}
+  .divider{display:flex; align-items:center; gap:12px; color:var(--muted,#66717F); font-size:12.5px; margin:18px 0 14px;}
+  .divider::before,.divider::after{content:""; flex:1; height:1px; background:var(--line,#E6DDCF);}
+  .pwtoggle{text-align:center; margin-top:4px;}
+  .pwtoggle a{color:var(--muted,#66717F); font-size:13px; cursor:pointer; text-decoration:underline;}
 </style>
 </head>
 <body data-mode="client">
 <div class="authwrap">
   <div class="authcard">
     <div class="brand"><img src="/assets/icon.svg" alt="Homzy" /><b>Hom<span style="color:var(--teal,#0B5563)">zy</span></b></div>
-    <h1 id="title">أهلاً بيك في Homzy</h1>
-    <p class="sub" id="sub">سجّل دخولك عشان تتصفّح المشاريع، المناطق، وتتكلم مع المستشار العقاري.</p>
-    <form id="authForm" autocomplete="on">
-      <div class="fld" id="fldName"><label for="name">الاسم</label><input id="name" type="text" autocomplete="name" placeholder="اسمك" /></div>
-      <div class="fld on"><label for="phone">رقم الموبايل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" required /></div>
-      <div class="fld on"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="٦ أحرف على الأقل" required /></div>
-      <button class="btn btn-teal" id="authBtn" type="submit">دخول</button>
-      <div class="msg" id="msg"></div>
-    </form>
-    <div class="switch"><span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">اعمل حساب</a></div>
-    <div class="brokerhint">بروكر عقاري؟ <a href="/leads?register=1" style="color:inherit;font-weight:800;text-decoration:underline">سجّل من هنا</a> عشان تعرض وحداتك وتشتري ليدز.</div>
+
+    <!-- ===== Auth view (Google + optional phone/password) ===== -->
+    <div id="authView">
+      <h1 id="title">أهلاً بيك في Homzy</h1>
+      <p class="sub" id="sub">سجّل دخولك عشان تتصفّح المشاريع والمناطق وتتكلم مع المستشار العقاري.</p>
+
+      <button class="gbtn" id="googleBtn" onclick="googleSignIn()">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC05LjMwMyw4Yy02LjYyNywwLTEyLTUuMzczLTEyLTEyYzAtNi42MjcsNS4zNzMtMTIsMTItMTJjMy4wNTksMCw1Ljg0MiwxLjE1NCw3Ljk2MSwzLjAzOWw1LjY1Ny01LjY1N0MzNC4wNDYsNi4wNTMsMjkuMjY4LDQsMjQsNEMxMi45NTUsNCw0LDEyLjk1NSw0LDI0YzAsMTEuMDQ1LDguOTU1LDIwLDIwLDIwYzExLjA0NSwwLDIwLTguOTU1LDIwLTIwQzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy0zLjIsMC01LjkxNC0yLjAzMy02Ljk1LTQuODdsLTYuNTIyLDUuMDI1QzEzLjA5OSwzOS4zLDE4LjE2Miw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4=" alt="" />
+        الدخول / التسجيل بجوجل
+      </button>
+
+      <div class="divider">أو برقم الموبايل</div>
+
+      <form id="authForm" autocomplete="on">
+        <div class="fld" id="fldName"><label for="name">الاسم</label><input id="name" type="text" autocomplete="name" placeholder="اسمك" /></div>
+        <div class="fld on"><label for="phone">رقم الموبايل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" /></div>
+        <div class="fld on"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="٦ أحرف على الأقل" /></div>
+        <button class="btn btn-ghost" id="authBtn" type="submit">دخول برقم الموبايل</button>
+        <div class="msg" id="msg"></div>
+      </form>
+      <div class="switch"><span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">اعمل حساب برقم الموبايل</a></div>
+      <div class="brokerhint">بروكر عقاري؟ <a href="/leads?register=1" style="color:inherit;font-weight:800;text-decoration:underline">سجّل من هنا</a> عشان تعرض وحداتك وتشتري ليدز.</div>
+    </div>
+
+    <!-- ===== Complete-profile view (after Google, phone required) ===== -->
+    <div id="completeView" style="display:none">
+      <h1>خطوة أخيرة 🎉</h1>
+      <p class="sub">اكتب اسمك ورقم موبايلك عشان نقدر نتواصل معاك ونبعتلك المشاريع المناسبة.</p>
+      <form id="completeForm">
+        <div class="fld on"><label for="cName">الاسم</label><input id="cName" type="text" autocomplete="name" placeholder="اسمك الكامل" /></div>
+        <div class="fld on"><label for="cPhone">رقم الموبايل</label><input id="cPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" /></div>
+        <button class="btn btn-teal" id="cBtn" type="submit">يلا نبدأ</button>
+        <div class="msg" id="cMsg"></div>
+      </form>
+      <div class="switch"><a onclick="signOutReset()">تسجيل الخروج</a></div>
+    </div>
+
     <div class="back"><a href="/">← رجوع للرئيسية</a></div>
   </div>
 </div>
@@ -60,17 +93,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
 const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
-const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
 const $=id=>document.getElementById(id);
 
-// where to go after login — same-origin path only (no open redirect)
 function nextPath(){
   const n=new URLSearchParams(location.search).get('next')||'';
   return (n.startsWith('/') && !n.startsWith('//')) ? n : '/app';
 }
-// if already signed in, skip the page
-(async()=>{ const {data:{session}}=await sb.auth.getSession(); if(session) location.replace(nextPath()); })();
-
 function normPhone(v){
   let d=(v||'').replace(/[^\d]/g,'');
   if(d.startsWith('00')) d=d.slice(2);
@@ -79,18 +108,68 @@ function normPhone(v){
   return d;
 }
 const phoneEmail = v => 'p'+normPhone(v)+'@homzy.app';
+async function api(path, opts){
+  const {data:{session}}=await sb.auth.getSession();
+  const tok=session?session.access_token:SB_KEY;
+  const r=await fetch(SB_URL+'/rest/v1'+path, Object.assign({headers:{apikey:SB_KEY, Authorization:'Bearer '+tok, 'Content-Type':'application/json'}}, opts||{}));
+  if(!r.ok) throw new Error('sb '+r.status+' '+(await r.text()));
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
 
+// ---- routing after any successful auth ----
+async function afterAuth(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ return; }
+  let prof=null;
+  try{ prof=(await api('/profiles?select=phone,full_name&id=eq.'+session.user.id))[0]; }catch(e){}
+  const hasPhone = prof && prof.phone && (''+prof.phone).replace(/\D/g,'').length>=10;
+  if(hasPhone){ location.replace(nextPath()); return; }
+  // needs profile completion
+  const meta=session.user.user_metadata||{};
+  $('cName').value = (prof&&prof.full_name) || meta.full_name || meta.name || '';
+  $('authView').style.display='none';
+  $('completeView').style.display='block';
+}
+// run on load (handles the OAuth redirect back too)
+afterAuth();
+
+// ---- Google ----
+window.googleSignIn=async ()=>{
+  const redirectTo = location.origin + '/login?next=' + encodeURIComponent(nextPath());
+  const {error}=await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo } });
+  if(error){ cmsg('تعذّر الدخول بجوجل: '+error.message); }
+};
+
+// ---- complete profile ----
+function cmsg(t,ok){ const e=$('cMsg'); e.textContent=t; e.className='msg '+(ok?'ok':(t?'err':'')); }
+$('completeForm').addEventListener('submit', async(e)=>{
+  e.preventDefault();
+  const name=$('cName').value.trim();
+  const phoneRaw=$('cPhone').value.trim();
+  if(name.length<2){ cmsg('اكتب اسمك.'); return; }
+  if(normPhone(phoneRaw).length<11){ cmsg('اكتب رقم موبايل صحيح.'); return; }
+  $('cBtn').disabled=true;
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    await api('/profiles?on_conflict=id', {
+      method:'POST',
+      headers:{apikey:SB_KEY, Authorization:'Bearer '+session.access_token, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates'},
+      body:JSON.stringify({ id:session.user.id, full_name:name, phone:normPhone(phoneRaw) })
+    });
+    location.replace(nextPath());
+  }catch(err){ cmsg('حصل خطأ، جرّب تاني.'); $('cBtn').disabled=false; }
+});
+window.signOutReset=async ()=>{ await sb.auth.signOut(); location.reload(); };
+
+// ---- phone + password (secondary) ----
 let mode='login';
 function setMode(m){
   mode=m; const reg=m==='register';
   $('fldName').classList.toggle('on', reg);
-  $('name').required=reg;
-  $('title').textContent = reg?'اعمل حساب في Homzy':'أهلاً بيك في Homzy';
-  $('sub').textContent = reg?'اسمك ورقم موبايلك وكلمة مرور — وابدأ تتصفّح.':'سجّل دخولك عشان تتصفّح المشاريع، المناطق، وتتكلم مع المستشار العقاري.';
-  $('authBtn').textContent = reg?'اعمل حساب':'دخول';
+  $('authBtn').textContent = reg?'اعمل حساب برقم الموبايل':'دخول برقم الموبايل';
   $('password').autocomplete = reg?'new-password':'current-password';
   $('switchTxt').textContent = reg?'عندك حساب؟':'لسه معندكش حساب؟';
-  $('switchLink').textContent = reg?'سجّل دخول':'اعمل حساب';
+  $('switchLink').textContent = reg?'سجّل دخول':'اعمل حساب برقم الموبايل';
   msg('');
 }
 $('switchLink').onclick=()=>setMode(mode==='login'?'register':'login');
@@ -105,21 +184,20 @@ $('authForm').addEventListener('submit', async(e)=>{
   e.preventDefault();
   const phone=normPhone($('phone').value), password=$('password').value;
   if(phone.length<11){ msg('رقم موبايل غير صحيح.'); return; }
+  if(password.length<6){ msg('كلمة المرور لازم ٦ أحرف على الأقل.'); return; }
   if(mode==='register' && $('name').value.trim().length<2){ msg('اكتب اسمك.'); return; }
   const email=phoneEmail($('phone').value);
   $('authBtn').disabled=true;
   try{
     if(mode==='register'){
-      const {error}=await sb.auth.signUp({ email, password, options:{ data:{
-        role:'client', phone, name:$('name').value.trim() } } });
+      const {error}=await sb.auth.signUp({ email, password, options:{ data:{ role:'client', phone, name:$('name').value.trim() } } });
       if(error) throw error;
     }else{
       const {error}=await sb.auth.signInWithPassword({ email, password });
       if(error) throw error;
     }
-    const {data:{session}}=await sb.auth.getSession();
-    if(session){ location.replace(nextPath()); return; }
-    msg('تم إنشاء الحساب — سجّل دخول.', true); setMode('login');
+    await afterAuth();
+    if(!(await sb.auth.getSession()).data.session){ msg('تم إنشاء الحساب — سجّل دخول.', true); setMode('login'); }
   }catch(err){ msg(authErr(err.message)); }
   finally{ $('authBtn').disabled=false; }
 });
