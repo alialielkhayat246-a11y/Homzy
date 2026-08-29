@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from typing import Any
 
-from . import config
+from . import areas as areas_mod, config
 
 SEO_BASE = "https://homzy-ai.com"
 _H = None
@@ -28,6 +29,54 @@ def _get(path: str) -> Any:
                      headers=_headers(), timeout=8)
     r.raise_for_status()
     return r.json()
+
+
+def _rpc(fn: str, args: dict) -> Any:
+    import requests
+    r = requests.post(config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/" + fn,
+                      headers={**_headers(), "Content-Type": "application/json"},
+                      json=args, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+# Same area-normalization as the client (HZ.normArea) so area pages merge the
+# same way the browse filter + map do (New Zayed / Zayed → one page).
+def _norm_area(a: str) -> str:
+    s = (a or "").lower()
+    s = re.sub(r"[^a-z0-9؀-ۿ ]", "", s)
+    s = re.sub(r"(\d)(st|nd|rd|th)", r"\1", s)
+    s = re.sub(r"\b(of|el|al|new)\b", "", s)
+    s = re.sub(r"\bnaser\b", "nasr", s)
+    s = re.sub(r"\bmokatam\b", "mokattam", s)
+    s = re.sub(r"\b(sedr|sudar)\b", "sudr", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def area_slug(label: str) -> str:
+    s = (label or "").lower().strip()
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+    return s.strip("-")
+
+
+def _area_groups() -> list[dict]:
+    """Merged areas from the catalog (label, variants, projects), like the map."""
+    rows = _get("/v_city_counts?select=area,projects&order=projects.desc&limit=80")
+    groups: dict[str, dict] = {}
+    for r in rows:
+        a = r.get("area")
+        if not a:
+            continue
+        k = _norm_area(a)
+        g = groups.get(k)
+        if not g:
+            groups[k] = {"label": a, "variants": [a], "projects": r.get("projects") or 0}
+        else:
+            g["projects"] += r.get("projects") or 0
+            g["variants"].append(a)
+            if len(a) > len(g["label"]):
+                g["label"] = a
+    return list(groups.values())
 
 
 def _esc(s: Any) -> str:
@@ -340,11 +389,95 @@ def render_listing(lid: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Sitemap URLs (public project + listing pages)
+# Area landing page (public, indexable) — one per area, high-intent SEO
+# ("عقارات التجمع الخامس"). Lists the area's projects + a profile blurb.
+# ---------------------------------------------------------------------------
+def render_area(slug: str) -> str | None:
+    slug = (slug or "").lower()
+    groups = _area_groups()
+    g = next((x for x in groups if area_slug(x["label"]) == slug), None)
+    if not g:
+        g = next((x for x in groups
+                  if any(area_slug(v) == slug for v in x["variants"])), None)
+    if not g:
+        return None
+    label = g["label"]
+    variants = g["variants"]
+    n = g["projects"]
+    try:
+        projects = _rpc("search_projects", {"p_areas": variants, "p_sort": "recent",
+                                            "p_limit": 24, "p_offset": 0})
+    except Exception:
+        projects = []
+
+    prof = areas_mod.profile(label) or {}
+    intro = (prof.get("ar") or "").strip()
+    canonical = f"{SEO_BASE}/area/{area_slug(label)}"
+    title = f"عقارات {label} — مشاريع وأسعار | Homzy"
+    desc = _clip(f"مشاريع ومطوّرين وعقارات في {label}. "
+                 f"{n} مشروع بأسعار وخطط تقسيط. {intro}", 160)
+    cover = next((p.get("cover_image_url") for p in projects if p.get("cover_image_url")), "")
+
+    # cards
+    cards = []
+    for p in projects:
+        nm = p.get("name_ar") or p.get("name") or "مشروع"
+        pid = p.get("id")
+        img = p.get("cover_image_url") or ""
+        price = _money(p.get("price_from_min")) if p.get("price_from_min") is not None else ""
+        dev = p.get("developer_name") or ""
+        cards.append(
+            f"<a class='acard' href='/project/{pid}'>"
+            f"<div class='acard-img' style=\"{('background-image:url('+chr(39)+_esc(img)+chr(39)+')') if img else ''}\"></div>"
+            f"<div class='acard-b'><div class='acard-n'>{_esc(nm)}</div>"
+            f"{('<div class=' + chr(39) + 'acard-d' + chr(39) + '>' + _esc(dev) + '</div>') if dev else ''}"
+            f"{('<div class=' + chr(39) + 'acard-p' + chr(39) + '>يبدأ من ' + price + '</div>') if price else ''}"
+            f"</div></a>")
+    grid = "<div class='agrid'>" + "".join(cards) + "</div>" if cards else \
+        "<p class='sp-sub'>لسه مفيش مشاريع منشورة في المنطقة دي.</p>"
+
+    # JSON-LD: a CollectionPage listing the projects
+    jsonld = {"@context": "https://schema.org", "@type": "CollectionPage",
+              "name": f"عقارات {label}", "description": desc, "url": canonical,
+              "about": {"@type": "Place", "name": label,
+                        "address": {"@type": "PostalAddress", "addressCountry": "EG",
+                                    "addressRegion": label}},
+              "mainEntity": {"@type": "ItemList", "numberOfItems": n}}
+    if cover:
+        jsonld["primaryImageOfPage"] = cover
+
+    extra_css = """
+    .agrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; margin-top:8px;}
+    .acard{background:var(--surface,#fff); border:1px solid var(--line,#E6DDCF); border-radius:16px; overflow:hidden; text-decoration:none; display:block; transition:transform .15s, box-shadow .15s;}
+    .acard:hover{transform:translateY(-3px); box-shadow:var(--shadow);}
+    .acard-img{height:130px; background:#e9e2da center/cover no-repeat;}
+    .acard-b{padding:12px 14px;} .acard-n{font-weight:800; color:var(--navy,#0B1D36); font-size:14.5px; line-height:1.35;}
+    .acard-d{color:var(--muted,#66717F); font-size:12.5px; margin-top:2px;}
+    .acard-p{color:var(--teal-d,#0B5563); font-weight:800; font-size:14px; margin-top:6px;}
+    """
+    body = f"""
+    <style>{extra_css}</style>
+    <nav class="sp-crumb"><a href="/">Homzy</a> › <a href="/areas">المناطق</a> › {_esc(label)}</nav>
+    <h1>عقارات {_esc(label)}</h1>
+    <div class="sp-sub">{n} مشروع من كبار المطوّرين — أسعار وخطط تقسيط محدّثة.</div>
+    {('<div class="sp-sec"><p>' + _esc(intro) + '</p></div>') if intro else ''}
+    <div class="sp-sec"><h2>مشاريع {_esc(label)}</h2>{grid}</div>
+    <div class="sp-cta"><a class="btn btn-teal" href="/app?area={_esc(label)}">اتصفّح كل مشاريع {_esc(label)} ←</a></div>
+    """
+    return _page(title, desc, canonical, cover, jsonld, body)
+
+
+# ---------------------------------------------------------------------------
+# Sitemap URLs (public project + listing + area pages)
 # ---------------------------------------------------------------------------
 def sitemap_urls(limit: int = 1000) -> list[tuple[str, str]]:
     """(loc, changefreq) for every public deep page, best-effort."""
     out: list[tuple[str, str]] = []
+    try:
+        for g in _area_groups():
+            out.append((f"{SEO_BASE}/area/{area_slug(g['label'])}", "weekly"))
+    except Exception:
+        pass
     try:
         for p in _get(f"/projects?select=id&area=not.is.null&limit={limit}"):
             out.append((f"{SEO_BASE}/project/{p['id']}", "weekly"))

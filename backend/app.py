@@ -134,6 +134,17 @@ def listing_page(lid: str):
     return HTMLResponse(page)
 
 
+@app.get("/area/{slug}")
+def area_page(slug: str):
+    try:
+        page = seo.render_area(slug)
+    except Exception:
+        page = None
+    if not page:
+        return HTMLResponse(_not_found_html(), status_code=404)
+    return HTMLResponse(page)
+
+
 def _not_found_html() -> str:
     return ('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">'
             '<meta name="robots" content="noindex"><title>Homzy — غير موجود</title>'
@@ -148,9 +159,10 @@ def _not_found_html() -> str:
 # SEO: robots.txt + sitemap.xml (public marketing pages only).
 # ---------------------------------------------------------------------------
 SEO_BASE = "https://homzy-ai.com"
-# Only the homepage is public now — the rest of the site sits behind the login
-# gate, so we don't advertise gated paths to crawlers (they'd just hit /login).
-_PUBLIC_PATHS = ["/"]
+# Public, crawlable pages: the homepage + the areas hub (its cards link to the
+# per-area landing pages, which the sitemap also lists). The rest of the app
+# stays behind the login gate.
+_PUBLIC_PATHS = ["/", "/areas"]
 
 
 @app.get("/robots.txt")

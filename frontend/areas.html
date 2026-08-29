@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script>/* auth gate: everything past the homepage requires login */
-(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search+location.hash));}}catch(e){location.replace('/login');}})();</script>
 <title>Homzy — المناطق</title>
 <meta name="description" content="اتصفّح أهم مناطق مصر على Homzy بأعداد المشاريع والوحدات الحقيقية — التجمع، العاصمة الإدارية، زايد، الساحل الشمالي والمزيد." />
 <meta name="keywords" content="مناطق عقارية مصر, عقارات التجمع الخامس, العاصمة الادارية, الشيخ زايد, الساحل الشمالي, مدينة المستقبل, 6 اكتوبر, عقارات القاهرة الجديدة" />
@@ -59,7 +57,8 @@
       const rows=[...map.values()].sort((a,b)=>b.projects-a.projects).slice(0,24);
       const g=document.getElementById('cityGrid'); g.innerHTML='';
       rows.forEach(c=>{
-        const d=document.createElement('a'); d.className='ccard reveal in'; d.href='/app?area='+encodeURIComponent(c.area);
+        const slug=(c.area||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        const d=document.createElement('a'); d.className='ccard reveal in'; d.href='/area/'+slug;
         d.innerHTML=`<div class="nm">${HZ.esc(c.area)}</div><div class="co"><b>${(c.projects||0).toLocaleString()}</b> <span data-ar="مشروع" data-en="projects">مشروع</span> · ${(c.units||0).toLocaleString()} <span data-ar="وحدة" data-en="units">وحدة</span></div>`;
         g.appendChild(d);
       });
