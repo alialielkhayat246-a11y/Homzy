@@ -89,6 +89,13 @@ def my_listings_page():
     return FileResponse(config.FRONTEND_DIR / "my-listings.html")
 
 
+@app.get("/map")
+def map_page():
+    """Interactive area map (Leaflet + OpenStreetMap). Gated like the rest of the
+    app; markers are areas sized by project count, click → browse that area."""
+    return FileResponse(config.FRONTEND_DIR / "map.html")
+
+
 @app.get("/inbox")
 def inbox_page():
     """Admin leads inbox — reads web_leads client-side with the admin's Google

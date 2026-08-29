@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate: everything past the homepage requires login */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search+location.hash));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — خريطة المناطق</title>
+<meta name="description" content="خريطة تفاعلية لمناطق العقارات في مصر على Homzy — دوس على أي منطقة تشوف مشاريعها." />
+<meta name="robots" content="noindex, follow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .mapwrap{max-width:1100px; margin:0 auto; padding:18px 18px 40px;}
+  .mhead{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .mhead h1{font-size:24px; color:var(--navy); margin:0;}
+  .mhead p{color:var(--muted); font-size:14px; margin:4px 0 0;}
+  .mhead a{font-family:var(--ff); font-weight:800; font-size:13.5px; color:var(--teal-d); text-decoration:none; border:1.5px solid var(--line-2); border-radius:11px; padding:9px 14px; background:#fff; white-space:nowrap;}
+  .mhead a:hover{border-color:var(--teal);}
+  #map{height:min(72vh,640px); width:100%; border-radius:20px; border:1px solid var(--line,#E6DDCF); box-shadow:var(--shadow); background:#dfe7ea; z-index:1;}
+  .maploading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-top:12px; color:var(--muted); font-size:13px;}
+  .legend .dot{display:inline-block; background:var(--teal); border-radius:50%; margin-inline-end:6px; vertical-align:middle; opacity:.85;}
+  /* area marker bubble */
+  .areabub{background:var(--teal,#0B5563); color:#fff; border:2.5px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:"Poppins",sans-serif; font-weight:800; box-shadow:0 4px 14px rgba(11,29,54,.4); cursor:pointer;}
+  .areabub:hover{background:var(--navy,#0B1D36);}
+  .leaflet-tooltip.areatt{font-family:"Cairo",sans-serif; font-weight:800; font-size:13px; color:var(--navy); border:1px solid var(--line); border-radius:8px;}
+  .leaflet-popup-content{font-family:"Cairo",sans-serif;}
+  .pop b{color:var(--navy); font-size:15px;} .pop .a{color:var(--muted); font-size:12.5px;}
+  .pop a{display:inline-block; margin-top:8px; background:var(--teal); color:#fff; font-weight:800; font-size:13px; padding:7px 14px; border-radius:9px; text-decoration:none;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+
+<div class="mapwrap">
+  <div class="mhead">
+    <div>
+      <h1>خريطة المناطق</h1>
+      <p data-ar="دوس على أي منطقة تشوف مشاريعها المتاحة — الحجم حسب عدد المشاريع." data-en="Tap any area to see its projects — bubble size reflects the number of projects.">دوس على أي منطقة تشوف مشاريعها المتاحة — الحجم حسب عدد المشاريع.</p>
+    </div>
+    <a href="/app" data-ar="↩ رجوع للتصفّح" data-en="↩ Back to browse">↩ رجوع للتصفّح</a>
+  </div>
+  <div style="position:relative">
+    <div id="map"></div>
+    <div class="maploading" id="mapLoading">…بحمّل الخريطة</div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="width:12px;height:12px"></span>منطقة</span>
+    <span><span class="dot" style="width:20px;height:20px"></span>مشاريع أكتر = فقاعة أكبر</span>
+    <span id="areaTotal"></span>
+  </div>
+</div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+// Egyptian real-estate areas -> real coordinates. Keyed by lowercased raw area
+// names (as they appear in the catalog). Merged by HZ.normArea so variants
+// (New Zayed / Zayed, 6th of October / 6 October) share one bubble.
+const COORDS = {
+  'new cairo':[30.03,31.47],'fifth settlement':[30.03,31.47],'old cairo':[30.01,31.23],
+  'new capital':[30.00,31.75],'administrative capital':[30.00,31.75],'mostakbal city':[30.10,31.70],'madinaty':[30.10,31.66],
+  'sheikh zayed':[30.02,30.97],'new zayed':[30.04,30.90],'zayed':[30.02,30.97],
+  '6th of october':[29.95,30.92],'6 october':[29.95,30.92],'october city':[29.95,30.92],'october gardens':[29.90,30.86],'new october':[29.88,30.80],'dreamland':[29.99,30.95],
+  'north coast':[30.95,28.95],'ras el hekma':[31.10,27.80],'new alamein':[30.83,28.95],'new mansoura':[31.45,31.55],
+  'ain sokhna':[29.60,32.33],'galala':[29.20,32.30],'ras sudr':[29.60,32.72],'ras sedr':[29.60,32.72],'ras sudar':[29.60,32.72],
+  'hurghada':[27.26,33.81],'el gouna':[27.40,33.68],'soma bay':[26.84,33.99],'sahl hasheesh':[27.08,33.85],'makadi bay':[26.98,33.90],'red sea':[27.10,33.83],
+  'alexandria':[31.20,29.92],'shorouk':[30.12,31.62],'shorouk city':[30.12,31.62],'obour':[30.22,31.47],'nasr city':[30.05,31.34],'naser city':[30.05,31.34],
+  'maadi':[29.96,31.26],'zahraa el maadi':[29.94,31.30],'heliopolis':[30.10,31.34],'new heliopolis':[30.15,31.60],'sheraton':[30.10,31.36],'mokattam':[30.00,31.31],'el mokatam':[30.00,31.31]
+};
+function coordsFor(label, variants){
+  const tryKey=s=>COORDS[(s||'').toLowerCase().trim()];
+  let c=tryKey(label);
+  if(!c && variants) for(const v of variants){ c=tryKey(v); if(c) break; }
+  return c||null;
+}
+
+let map;
+async function initMap(){
+  map = L.map('map', {scrollWheelZoom:true, attributionControl:true}).setView([28.8, 30.8], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom:18, attribution:'© OpenStreetMap'
+  }).addTo(map);
+
+  try{
+    const rows = await HZ.sb('/v_city_counts?select=area,projects&order=projects.desc&limit=60');
+    // merge variants
+    const groups=new Map();
+    rows.forEach(r=>{ if(!r.area) return; const k=HZ.normArea(r.area); const g=groups.get(k);
+      if(!g) groups.set(k,{label:r.area, variants:[r.area], projects:r.projects||0});
+      else{ g.projects+=r.projects||0; g.variants.push(r.area); if((r.area||'').length>g.label.length) g.label=r.area; } });
+    const placed=[]; let plottedProjects=0;
+    const maxP=Math.max(...[...groups.values()].map(g=>g.projects),1);
+    [...groups.values()].forEach(g=>{
+      const ll=coordsFor(g.label, g.variants); if(!ll) return;
+      const r=14+Math.round(26*Math.sqrt(g.projects/maxP));   // 14..40 px
+      const icon=L.divIcon({className:'', html:`<div class="areabub" style="width:${r}px;height:${r}px;font-size:${Math.max(10,Math.round(r/3.2))}px">${g.projects}</div>`, iconSize:[r,r], iconAnchor:[r/2,r/2]});
+      const m=L.marker(ll,{icon}).addTo(map);
+      m.bindTooltip(g.label, {className:'areatt', direction:'top', offset:[0,-r/2]});
+      const url='/app?area='+encodeURIComponent(g.label);
+      m.bindPopup(`<div class="pop"><b>${HZ.esc(g.label)}</b><div class="a">${g.projects} مشروع</div><a href="${url}">اتصفّح مشاريع ${HZ.esc(g.label)} ←</a></div>`);
+      m.on('click', ()=>m.openPopup());
+      placed.push(ll); plottedProjects+=g.projects;
+    });
+    // active resale listings that have coordinates (future-proof; empty for now)
+    try{
+      const ls = await HZ.sb('/listings?select=id,title,price,area,lat,lng&status=eq.active&lat=not.is.null&limit=300');
+      ls.forEach(l=>{ if(l.lat==null||l.lng==null) return;
+        const m=L.circleMarker([l.lat,l.lng],{radius:7,color:'#122744',fillColor:'#2563EB',fillOpacity:.9,weight:2}).addTo(map);
+        m.bindPopup(`<div class="pop"><b>${HZ.esc(l.title||'وحدة')}</b><div class="a">${l.price?Number(l.price).toLocaleString('en-US')+' ج.م':''}${l.area?' · '+HZ.esc(l.area):''}</div><a href="/listing/${l.id}">التفاصيل ←</a></div>`);
+        placed.push([l.lat,l.lng]);
+      });
+    }catch(_){}
+
+    if(placed.length>1) map.fitBounds(placed, {padding:[40,40], maxZoom:9});
+    document.getElementById('areaTotal').textContent = plottedProjects? (plottedProjects.toLocaleString('en-US')+' مشروع على الخريطة') : '';
+  }catch(e){ /* leave the base map */ }
+  finally{ const l=document.getElementById('mapLoading'); if(l) l.style.display='none'; setTimeout(()=>map.invalidateSize(),200); }
+}
+// Leaflet loads via a classic <script>; start once it + HZ are ready.
+(function start(){ if(window.L && window.HZ){ initMap(); } else setTimeout(start,60); })();
+</script>
+</body>
+</html>
