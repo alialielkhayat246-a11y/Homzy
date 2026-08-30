@@ -196,6 +196,27 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
   .hz-links{display:none;}
   .grid-3{grid-template-columns:1fr 1fr;} .grid-4{grid-template-columns:1fr 1fr;}
 }
+
+/* ============================================================
+   Global polish & accessibility (added without changing the look)
+   ============================================================ */
+html{ text-rendering:optimizeLegibility; -moz-osx-font-smoothing:grayscale; }
+body{ -webkit-tap-highlight-color:transparent; }
+::selection{ background:var(--teal-on-navy); color:#fff; }
+::-moz-selection{ background:var(--teal-on-navy); color:#fff; }
+/* visible keyboard-focus ring (only for keyboard users, not mouse clicks) */
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{
+  outline:2.5px solid var(--teal-on-navy); outline-offset:2px;
+}
+/* honor reduced-motion: kill transforms/animations for users who ask */
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{
+    animation-duration:.001ms !important; animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+  .reveal{ opacity:1 !important; transform:none !important; }
+}
 @media(max-width:560px){
   .grid-3,.grid-4{grid-template-columns:1fr;} .section{padding:52px 0;}
   .hz-mode button{padding:7px 11px; font-size:12px;}
