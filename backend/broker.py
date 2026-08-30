@@ -254,11 +254,12 @@ def _merge(req: dict[str, Any], found: dict[str, Any]) -> None:
 # Reply generation
 # --------------------------------------------------------------------------
 def _llm_reply(history: list[dict[str, str]], language: str,
-               matches: list[dict[str, Any]]):
+               matches: list[dict[str, Any]], coach: bool = False):
     client = _client_or_none()
     if client is None:
         return None
-    system = persona.broker_system(language, matches)
+    system = (persona.broker_coach_system(language, matches) if coach
+              else persona.broker_system(language, matches))
     messages = [{"role": "system", "content": system}] + history
     try:
         text = client.chat(messages, temperature=config.LLM_TEMPERATURE, max_tokens=900)
@@ -331,10 +332,11 @@ def _recommendation(req, matches):
 
 
 def handle_turn(session: dict[str, Any], message: str,
-                client_history: list[dict[str, str]] | None = None) -> dict[str, Any]:
+                client_history: list[dict[str, str]] | None = None,
+                coach: bool = False) -> dict[str, Any]:
     language, history, req, matches = _prepare(session, message, client_history)
 
-    reply = _llm_reply(history, language, matches)
+    reply = _llm_reply(history, language, matches, coach=coach)
     mode = "ai"
     if reply is None:
         greet = sum(1 for m in history if m["role"] == "user") <= 1
@@ -353,7 +355,8 @@ def handle_turn(session: dict[str, Any], message: str,
 
 
 def handle_turn_stream(session: dict[str, Any], message: str,
-                       client_history: list[dict[str, str]] | None = None):
+                       client_history: list[dict[str, str]] | None = None,
+                       coach: bool = False):
     """Same pipeline as handle_turn, but yields events so the reply streams
     token-by-token. Events: {'type':'meta'|'token'|'done', ...}."""
     language, history, req, matches = _prepare(session, message, client_history)
@@ -362,7 +365,8 @@ def handle_turn_stream(session: dict[str, Any], message: str,
     client = _client_or_none()
     reply = None
     if client is not None and hasattr(client, "stream"):
-        system = persona.broker_system(language, matches)
+        system = (persona.broker_coach_system(language, matches) if coach
+                  else persona.broker_system(language, matches))
         messages = [{"role": "system", "content": system}] + [
             {"role": m["role"], "content": m["content"]} for m in history]
         parts: list[str] = []
@@ -377,7 +381,7 @@ def handle_turn_stream(session: dict[str, Any], message: str,
 
     mode = "ai"
     if reply is None:  # non-streaming engine, or streaming failed → one shot
-        reply = _llm_reply(history, language, matches)
+        reply = _llm_reply(history, language, matches, coach=coach)
         if reply is None:
             greet = sum(1 for m in history if m["role"] == "user") <= 1
             reply = persona.template_reply(language, req, matches, greet=greet)

@@ -353,9 +353,14 @@ function renderChat(){
 function seedGreeting(){
   if(chat.greeted || chat.history.length) return;
   chat.greeted=true;
-  const g = HZ.lang==='ar'
-    ? 'أهلاً بيك! أنا Homzy، مستشارك العقاري 👋 عشان أوصلك لأنسب وحدة بالظبط، هسألك كام سؤال سريع — بتدوّر على إيجار ولا تمليك؟'
-    : "Hi! I'm Homzy, your property advisor 👋 To find the perfect fit, I'll ask you a few quick questions — are you looking to rent or buy?";
+  const brokerMode = HZ.isBroker && HZ.mode==='broker';
+  const g = brokerMode
+    ? (HZ.lang==='ar'
+        ? 'أهلاً كابتن 👋 أنا مساعد المبيعات بتاعك. قولّي عميلك عايز إيه (منطقة، ميزانية، عدد غرف) وأنا أرشّحلك أنسب وحدة، وأديك نقاط بيع تقنعه بيها — وفي الآخر أعملك عرض PDF باسمك تبعتهوله.'
+        : "Hey captain 👋 I'm your sales assistant. Tell me what your client wants (area, budget, bedrooms) and I'll pick the best unit, give you selling points to close them, and generate a branded PDF offer to send.")
+    : (HZ.lang==='ar'
+        ? 'أهلاً بيك! أنا Homzy، مستشارك العقاري 👋 عشان أوصلك لأنسب وحدة بالظبط، هسألك كام سؤال سريع — بتدوّر على إيجار ولا تمليك؟'
+        : "Hi! I'm Homzy, your property advisor 👋 To find the perfect fit, I'll ask you a few quick questions — are you looking to rent or buy?");
   addMsg(g,'bot');
   renderChips();
 }
@@ -370,6 +375,7 @@ async function sendMsg(text){
   const t=typing();
   const body={ session_id:chat.sessionId, message:text, history:chat.history };
   if(chat.context) body.context = chat.context;
+  if(HZ.isBroker && HZ.mode==='broker') body.mode='broker';   // sales-coach persona
   const finish=(reply,done)=>{
     chat.history.push({role:'assistant',content:reply});
     if(done){

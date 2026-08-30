@@ -286,7 +286,8 @@ async def chat(req: Request):
     history = body.get("history")
     if not isinstance(history, list):
         history = None
-    return broker.handle_turn(session, message, client_history=history)
+    coach = body.get("mode") == "broker"
+    return broker.handle_turn(session, message, client_history=history, coach=coach)
 
 
 @app.post("/api/chat/stream")
@@ -302,9 +303,10 @@ async def chat_stream(req: Request):
     history = body.get("history")
     if not isinstance(history, list):
         history = None
+    coach = body.get("mode") == "broker"
 
     def gen():
-        for evt in broker.handle_turn_stream(session, message, client_history=history):
+        for evt in broker.handle_turn_stream(session, message, client_history=history, coach=coach):
             yield _json.dumps(evt, ensure_ascii=False) + "\n"
 
     return StreamingResponse(gen(), media_type="application/x-ndjson",
