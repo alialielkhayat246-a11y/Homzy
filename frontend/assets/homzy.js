@@ -330,8 +330,96 @@ function addRec(rec){
   }
   const d=document.createElement('div'); d.className='rec-card'; d.dir=ar?'rtl':'ltr';
   d.innerHTML=`<span class="badge">${market}</span><div class="t">${HZ.esc(name)}</div>${area?`<div class="a">${HZ.esc(area)}</div>`:''}${price?`<div class="pr">${HZ.esc(price)}</div>`:''}<div class="meta">${beds}${size}${dev}</div>${wa}`;
+  // Broker sales tool: generate a branded PDF offer for the client.
+  if(HZ.isBroker && HZ.mode==='broker'){
+    const b=document.createElement('button'); b.className='rec-pdf';
+    b.textContent='📄 '+(ar?'اعمل عرض PDF':'Make a PDF offer');
+    b.onclick=()=>HZ.makeOffer(rec, b);
+    d.appendChild(b);
+  }
   log.appendChild(d); log.scrollTop=log.scrollHeight;
 }
+async function _toDataURL(url){
+  if(!url) return '';
+  try{ const r=await fetch(url); if(!r.ok) return ''; const bl=await r.blob();
+    return await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=()=>res(''); fr.readAsDataURL(bl); }); }
+  catch(e){ return ''; }
+}
+HZ.loadHtml2pdf = function(){
+  if(window.html2pdf) return Promise.resolve();
+  return new Promise((res,rej)=>{ const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
+    s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+};
+HZ.makeOffer = async function(rec, btn){
+  const ar=HZ.lang==='ar';
+  const old = btn && btn.textContent; if(btn){ btn.disabled=true; btn.textContent=ar?'بيتجهّز…':'Preparing…'; }
+  try{
+    // broker profile (logo/name/phone)
+    let prof={}; const s=HZ.session();
+    if(s){ try{ prof=(await HZ.sbAuth('/profiles?select=full_name,company,phone,company_logo_url&id=eq.'+s.uid, s.token))[0]||{}; }catch(e){} }
+    // AI advantages
+    let adv=[];
+    try{ const r=await fetch('/api/offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({unit:rec, language:HZ.lang})}); if(r.ok) adv=(await r.json()).advantages||[]; }catch(e){}
+    const name=ar?(rec.compound_ar||rec.compound||''):(rec.compound||rec.compound_ar||'');
+    const area=ar?(rec.area_ar||rec.area||''):(rec.area||rec.area_ar||'');
+    const price=ar?(rec.price_ar||rec.price_en||''):(rec.price_en||rec.price_ar||'');
+    const company=prof.company||prof.full_name||'', phone=prof.phone||'';
+    const [logo,cover]=await Promise.all([_toDataURL(prof.company_logo_url), _toDataURL(rec.cover_image)]);
+    const fact=(l,v)=> v?`<div class="of-fact"><span>${l}</span><b>${HZ.esc(v)}</b></div>`:'';
+    const el=document.createElement('div');
+    el.dir='rtl'; el.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Cairo,Arial,sans-serif;color:#14212E;';
+    el.innerHTML=`<style>
+      .of-wrap{padding:0;} .of-top{background:#0B1D36;color:#fff;padding:26px 34px;display:flex;align-items:center;gap:16px;}
+      .of-top .lg{width:64px;height:64px;border-radius:12px;background:#fff center/contain no-repeat;flex:none;}
+      .of-top .co{font-size:22px;font-weight:800;} .of-top .by{margin-inline-start:auto;text-align:end;font-size:12px;opacity:.8;}
+      .of-title{padding:22px 34px 6px;} .of-title .k{color:#0B5563;font-weight:800;font-size:13px;letter-spacing:1px;}
+      .of-title h1{font-size:28px;color:#0B1D36;margin:6px 0 2px;} .of-title .ar{color:#66717F;font-size:15px;}
+      .of-cover{height:260px;margin:14px 34px;border-radius:16px;background:#e9e2da center/cover no-repeat;}
+      .of-price{margin:0 34px;color:#0B5563;font-weight:800;font-size:24px;}
+      .of-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px 34px;}
+      .of-fact{background:#F7F3EC;border:1px solid #E6DDCF;border-radius:12px;padding:11px 13px;}
+      .of-fact span{display:block;color:#66717F;font-size:12px;} .of-fact b{color:#0B1D36;font-size:15px;}
+      .of-adv{padding:8px 34px 20px;} .of-adv h2{font-size:18px;color:#0B1D36;margin:0 0 10px;}
+      .of-adv ul{margin:0;padding:0;list-style:none;} .of-adv li{padding:8px 0 8px 0;border-bottom:1px dashed #E6DDCF;font-size:15px;color:#40506a;}
+      .of-adv li::before{content:'✔';color:#0B5563;font-weight:800;margin-inline-end:8px;}
+      .of-contact{margin:6px 34px 0;background:linear-gradient(135deg,#0B5563,#08414C);color:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
+      .of-contact .who{flex:1;} .of-contact .nm{font-size:20px;font-weight:800;} .of-contact .lbl{font-size:12px;opacity:.85;}
+      .of-contact .ph{font-size:24px;font-weight:800;direction:ltr;font-family:Poppins,sans-serif;}
+      .of-foot{padding:16px 34px 26px;color:#9aa;font-size:12px;text-align:center;}
+    </style>
+    <div class="of-wrap">
+      <div class="of-top">
+        ${logo?`<div class="lg" style="background-image:url('${logo}')"></div>`:''}
+        <div class="co">${HZ.esc(company||'عرض عقاري')}</div>
+        <div class="by">مقدّم عبر<br><b>Homzy</b></div>
+      </div>
+      <div class="of-title"><div class="k">عرض عقاري</div><h1>${HZ.esc(name)}</h1>${area?`<div class="ar">${HZ.esc(area)}</div>`:''}</div>
+      ${cover?`<div class="of-cover" style="background-image:url('${cover}')"></div>`:''}
+      ${price?`<div class="of-price">${HZ.esc(price)}</div>`:''}
+      <div class="of-facts">
+        ${fact('المطوّر',rec.developer)}
+        ${fact('الغرف',rec.bedrooms!=null?(rec.bedrooms+' غرف'):'')}
+        ${fact('المساحة',rec.size_sqm?(rec.size_sqm+' م²'):'')}
+        ${fact('المقدم',rec.down_payment)}
+        ${fact('التقسيط',rec.installment_years?(rec.installment_years+' سنة'):'')}
+        ${fact('التسليم',rec.delivery)}
+      </div>
+      ${adv.length?`<div class="of-adv"><h2>المزايا</h2><ul>${adv.map(a=>`<li>${HZ.esc(a)}</li>`).join('')}</ul></div>`:''}
+      <div class="of-contact">
+        <div class="who"><div class="lbl">للتواصل والمعاينة</div><div class="nm">${HZ.esc(company||'—')}</div></div>
+        ${phone?`<div class="ph">${HZ.esc(phone)}</div>`:''}
+      </div>
+      <div class="of-foot">تم إنشاء هذا العرض عبر Homzy — homzy-ai.com · الأسعار والتفاصيل قابلة للتأكيد.</div>
+    </div>`;
+    document.body.appendChild(el);
+    await HZ.loadHtml2pdf();
+    const fn='Homzy-offer-'+(name||'unit').replace(/[^\wء-ي]+/g,'-').slice(0,40)+'.pdf';
+    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'px',format:[794, el.scrollHeight+2],orientation:'portrait'}}).from(el).save();
+    el.remove();
+  }catch(e){ alert(ar?'تعذّر إنشاء العرض، جرّب تاني.':'Could not create the offer.'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+};
 function typing(){
   const log=document.getElementById('hzCpLog');
   const t=document.createElement('div'); t.className='typing'; t.innerHTML='<i></i><i></i><i></i>';

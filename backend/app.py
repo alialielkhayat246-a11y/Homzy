@@ -330,6 +330,20 @@ async def estimate(req: Request):
     )
 
 
+@app.post("/api/offer")
+async def offer(req: Request):
+    """AI-written selling advantages for a broker's PDF offer (grounded in the
+    real unit facts the client sends). Returns {advantages: [...]}"""
+    body = await req.json()
+    unit = body.get("unit") or {}
+    language = "ar" if (body.get("language") or "ar").startswith("ar") else "en"
+    try:
+        adv = broker.offer_advantages(unit, language)
+    except Exception:
+        adv = []
+    return {"advantages": adv}
+
+
 @app.post("/api/reset")
 async def reset(req: Request):
     body = await req.json()

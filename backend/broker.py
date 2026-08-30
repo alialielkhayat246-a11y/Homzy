@@ -325,6 +325,75 @@ def _prepare(session: dict[str, Any], message: str,
     return language, history, req, matches
 
 
+def _offer_facts_text(u: dict[str, Any]) -> str:
+    def g(*keys):
+        for k in keys:
+            v = u.get(k)
+            if v not in (None, "", []):
+                return v
+        return None
+    rows = [
+        ("Project/unit", g("compound_ar", "compound", "name")),
+        ("Area", g("area_ar", "area")),
+        ("Developer", g("developer")),
+        ("Market", "resale (ready)" if g("market") == "resale" else "primary (from developer)"),
+        ("Type", g("type")),
+        ("Bedrooms", g("bedrooms")),
+        ("Size (sqm)", g("size_sqm")),
+        ("Price", g("price_ar", "price_en", "price")),
+        ("Down payment", g("down_payment")),
+        ("Installment years", g("installment_years")),
+        ("Delivery", g("delivery")),
+        ("Payment plan", g("payment_plan")),
+    ]
+    return "\n".join(f"- {k}: {v}" for k, v in rows if v not in (None, ""))
+
+
+def _derived_advantages(u: dict[str, Any], language: str) -> list[str]:
+    ar = language == "ar"
+    out = []
+    if u.get("delivery"):
+        out.append((f"استلام: {u['delivery']}") if ar else f"Delivery: {u['delivery']}")
+    if u.get("down_payment"):
+        out.append((f"مقدم يبدأ من {u['down_payment']}") if ar else f"Down payment from {u['down_payment']}")
+    if u.get("installment_years"):
+        out.append((f"تقسيط يصل إلى {u['installment_years']} سنة") if ar else f"Installments up to {u['installment_years']} years")
+    if u.get("developer"):
+        out.append((f"من مطوّر معروف: {u['developer']}") if ar else f"By a trusted developer: {u['developer']}")
+    if u.get("market") == "resale":
+        out.append("جاهزة للاستلام الفوري — من غير انتظار" if ar else "Ready to move — no waiting")
+    else:
+        out.append("وحدة جديدة من المطوّر بخطة سداد مريحة" if ar else "Brand-new from the developer with a comfortable plan")
+    return out[:6]
+
+
+def offer_advantages(unit: dict[str, Any], language: str) -> list[str]:
+    """AI-written honest selling advantages for a PDF offer, grounded ONLY in the
+    unit's real facts. Falls back to data-derived bullets if the LLM is off."""
+    client = _client_or_none()
+    if client is not None:
+        lang = "Arabic (Egyptian dialect)" if language == "ar" else "English"
+        system = (
+            "You write the selling ADVANTAGES for a real-estate OFFER a broker will send a "
+            f"client. Using ONLY the facts below, write 4-6 short, punchy, HONEST advantages "
+            f"in {lang} — one per line, no numbering, no intro, no invented facts or prices.\n\n"
+            + _offer_facts_text(unit))
+        try:
+            txt = client.chat(
+                [{"role": "system", "content": system},
+                 {"role": "user", "content": "اكتب المزايا." if language == "ar" else "Write the advantages."}],
+                temperature=0.5, max_tokens=320)
+            if txt:
+                lines = [re.sub(r"^[\-•‣\d\.\)\s]+", "", l).strip()
+                         for l in txt.splitlines() if l.strip()]
+                lines = [l for l in lines if len(l) > 3][:6]
+                if lines:
+                    return lines
+        except Exception:
+            pass
+    return _derived_advantages(unit, language)
+
+
 def _recommendation(req, matches):
     if not persona._missing(req) and matches:
         return listings_mod.public(matches[0])
