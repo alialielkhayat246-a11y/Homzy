@@ -37,6 +37,16 @@
   .switch a{color:var(--teal-d); font-weight:800; cursor:pointer; text-decoration:none;}
 
   /* dashboard */
+  .company{display:flex; gap:18px; align-items:center; flex-wrap:wrap; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:18px; padding:16px 18px; margin-bottom:18px; box-shadow:0 10px 30px -24px rgba(11,29,54,.5);}
+  .co-logo{display:flex; flex-direction:column; align-items:center; gap:7px;}
+  .co-logo-img{width:76px; height:76px; border-radius:16px; background:var(--cream,#F7F3EC) center/contain no-repeat; border:1.5px dashed var(--line-2,#D8CFC0); display:flex; align-items:center; justify-content:center; font-size:26px; color:#b8ac97;}
+  .co-upload{font-size:12px; font-weight:800; color:var(--teal-d,#0B5563); cursor:pointer; text-decoration:underline;}
+  .co-upload input{display:none;}
+  .co-fields{flex:1; min-width:240px; display:flex; flex-direction:column; gap:10px;}
+  .co-title{font-weight:800; color:var(--navy,#0B1D36); font-size:15px;} .co-title span{font-weight:600; color:var(--muted,#66717F); font-size:12.5px;}
+  .co-row{display:flex; gap:10px; flex-wrap:wrap;} .co-row .in{flex:1; min-width:150px;}
+  .co-actions{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .co-msg{font-size:13px; font-weight:700;} .co-msg.ok{color:#1E8E5A;} .co-msg.err{color:#B42318;}
   .head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px;}
   .head h1{font-size:24px; color:var(--navy); margin:0;}
   .head .n{color:var(--muted); font-size:14px; font-weight:600;}
@@ -104,6 +114,23 @@
     <button onclick="signOut()">خروج</button>
   </div>
   <div class="wrap">
+    <div class="company">
+      <div class="co-logo">
+        <div class="co-logo-img" id="coLogoImg"><span id="coLogoPh">📷</span></div>
+        <label class="co-upload">تغيير اللوجو<input type="file" id="coLogo" accept="image/*" onchange="uploadLogo(event)" /></label>
+      </div>
+      <div class="co-fields">
+        <div class="co-title">بيانات شركتك <span>— بتظهر في عروض الـPDF اللي تبعتها للعملاء</span></div>
+        <div class="co-row">
+          <input class="in" id="coName" placeholder="اسم الشركة / البروكر" />
+          <input class="in" id="coPhone" type="tel" inputmode="tel" placeholder="رقم الموبايل" />
+        </div>
+        <div class="co-actions">
+          <button class="btn btn-teal btn-sm" id="coSave" onclick="saveProfile()">حفظ بيانات الشركة</button>
+          <span class="co-msg" id="coMsg"></span>
+        </div>
+      </div>
+    </div>
     <div class="head">
       <div><h1>وحداتي</h1><div class="n" id="count"></div></div>
       <button class="btn btn-teal" onclick="openForm()">＋ أضف وحدة</button>
@@ -192,8 +219,43 @@ async function boot(){
   if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
-  loadMine();
+  loadProfile(); loadMine();
 }
+let PROFILE={};
+async function loadProfile(){
+  try{
+    PROFILE=(await api('/profiles?select=full_name,company,phone,company_logo_url&id=eq.'+UID))[0]||{};
+  }catch(e){ PROFILE={}; }
+  $('coName').value = PROFILE.company || PROFILE.full_name || '';
+  $('coPhone').value = PROFILE.phone || '';
+  if(PROFILE.company_logo_url){ $('coLogoImg').style.backgroundImage="url('"+PROFILE.company_logo_url+"')"; $('coLogoPh').style.display='none'; }
+}
+function coMsg(t,ok){ const e=$('coMsg'); e.textContent=t; e.className='co-msg '+(ok?'ok':(t?'err':'')); }
+window.uploadLogo=async (e)=>{
+  const f=e.target.files[0]; if(!f) return; e.target.value='';
+  coMsg('بيرفع…', true);
+  try{
+    const path=UID+'/logo_'+Date.now()+'.'+((f.name.split('.').pop())||'png');
+    const {error}=await sb.storage.from('avatars').upload(path, f, {upsert:true});
+    if(error) throw error;
+    const url=sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    await api('/profiles?id=eq.'+UID, {method:'PATCH', body:JSON.stringify({company_logo_url:url})});
+    PROFILE.company_logo_url=url;
+    $('coLogoImg').style.backgroundImage="url('"+url+"')"; $('coLogoPh').style.display='none';
+    coMsg('✔ اتحفظ اللوجو', true); setTimeout(()=>coMsg(''),1600);
+  }catch(err){ coMsg('تعذّر رفع اللوجو.'); }
+};
+window.saveProfile=async ()=>{
+  const company=$('coName').value.trim(), phone=$('coPhone').value.trim();
+  if(company.length<2){ coMsg('اكتب اسم الشركة.'); return; }
+  $('coSave').disabled=true;
+  try{
+    await api('/profiles?id=eq.'+UID, {method:'PATCH', body:JSON.stringify({company, phone:phone||null})});
+    PROFILE.company=company; PROFILE.phone=phone;
+    coMsg('✔ اتحفظت البيانات', true); setTimeout(()=>coMsg(''),1600);
+  }catch(err){ coMsg('تعذّر الحفظ.'); }
+  finally{ $('coSave').disabled=false; }
+};
 window.loadMine=async ()=>{
   $('grid').innerHTML='<div class="empty">…بحمّل</div>';
   try{
