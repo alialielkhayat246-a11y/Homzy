@@ -367,28 +367,35 @@ HZ.makeOffer = async function(rec, btn){
     const company=prof.company||prof.full_name||'', phone=prof.phone||'';
     const [logo,cover]=await Promise.all([_toDataURL(prof.company_logo_url), _toDataURL(rec.cover_image)]);
     const fact=(l,v)=> v?`<div class="of-fact"><span>${l}</span><b>${HZ.esc(v)}</b></div>`:'';
+    // Scoped stylesheet in <head> (html2canvas applies head styles to its clone
+    // reliably; an inline <style> inside the captured node often renders blank).
+    if(!document.getElementById('hz-offer-css')){
+      const st=document.createElement('style'); st.id='hz-offer-css';
+      st.textContent=`
+      #hz-offer-sheet{width:794px;background:#fff;font-family:"Cairo",Arial,sans-serif;color:#14212E;}
+      #hz-offer-sheet .of-top{background:#0B1D36;color:#fff;padding:26px 34px;display:flex;align-items:center;gap:16px;}
+      #hz-offer-sheet .of-top .lg{width:64px;height:64px;border-radius:12px;background:#fff center/contain no-repeat;flex:none;}
+      #hz-offer-sheet .of-top .co{font-size:22px;font-weight:800;} #hz-offer-sheet .of-top .by{margin-inline-start:auto;text-align:end;font-size:12px;opacity:.85;}
+      #hz-offer-sheet .of-title{padding:22px 34px 6px;} #hz-offer-sheet .of-title .k{color:#0B5563;font-weight:800;font-size:13px;letter-spacing:1px;}
+      #hz-offer-sheet .of-title h1{font-size:28px;color:#0B1D36;margin:6px 0 2px;} #hz-offer-sheet .of-title .ar{color:#66717F;font-size:15px;}
+      #hz-offer-sheet .of-cover{height:260px;margin:14px 34px;border-radius:16px;background:#e9e2da center/cover no-repeat;}
+      #hz-offer-sheet .of-price{margin:0 34px;color:#0B5563;font-weight:800;font-size:24px;}
+      #hz-offer-sheet .of-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px 34px;}
+      #hz-offer-sheet .of-fact{background:#F7F3EC;border:1px solid #E6DDCF;border-radius:12px;padding:11px 13px;}
+      #hz-offer-sheet .of-fact span{display:block;color:#66717F;font-size:12px;} #hz-offer-sheet .of-fact b{color:#0B1D36;font-size:15px;}
+      #hz-offer-sheet .of-adv{padding:8px 34px 20px;} #hz-offer-sheet .of-adv h2{font-size:18px;color:#0B1D36;margin:0 0 10px;}
+      #hz-offer-sheet .of-adv ul{margin:0;padding:0;list-style:none;} #hz-offer-sheet .of-adv li{padding:8px 0;border-bottom:1px dashed #E6DDCF;font-size:15px;color:#40506a;}
+      #hz-offer-sheet .of-adv li::before{content:'✔';color:#0B5563;font-weight:800;margin-inline-end:8px;}
+      #hz-offer-sheet .of-contact{margin:6px 34px 0;background:linear-gradient(135deg,#0B5563,#08414C);color:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
+      #hz-offer-sheet .of-contact .who{flex:1;} #hz-offer-sheet .of-contact .nm{font-size:20px;font-weight:800;} #hz-offer-sheet .of-contact .lbl{font-size:12px;opacity:.85;}
+      #hz-offer-sheet .of-contact .ph{font-size:24px;font-weight:800;direction:ltr;font-family:"Poppins",sans-serif;}
+      #hz-offer-sheet .of-foot{padding:16px 34px 26px;color:#9aa;font-size:12px;text-align:center;}`;
+      document.head.appendChild(st);
+    }
     const el=document.createElement('div');
-    el.dir='rtl'; el.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:Cairo,Arial,sans-serif;color:#14212E;';
-    el.innerHTML=`<style>
-      .of-wrap{padding:0;} .of-top{background:#0B1D36;color:#fff;padding:26px 34px;display:flex;align-items:center;gap:16px;}
-      .of-top .lg{width:64px;height:64px;border-radius:12px;background:#fff center/contain no-repeat;flex:none;}
-      .of-top .co{font-size:22px;font-weight:800;} .of-top .by{margin-inline-start:auto;text-align:end;font-size:12px;opacity:.8;}
-      .of-title{padding:22px 34px 6px;} .of-title .k{color:#0B5563;font-weight:800;font-size:13px;letter-spacing:1px;}
-      .of-title h1{font-size:28px;color:#0B1D36;margin:6px 0 2px;} .of-title .ar{color:#66717F;font-size:15px;}
-      .of-cover{height:260px;margin:14px 34px;border-radius:16px;background:#e9e2da center/cover no-repeat;}
-      .of-price{margin:0 34px;color:#0B5563;font-weight:800;font-size:24px;}
-      .of-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px 34px;}
-      .of-fact{background:#F7F3EC;border:1px solid #E6DDCF;border-radius:12px;padding:11px 13px;}
-      .of-fact span{display:block;color:#66717F;font-size:12px;} .of-fact b{color:#0B1D36;font-size:15px;}
-      .of-adv{padding:8px 34px 20px;} .of-adv h2{font-size:18px;color:#0B1D36;margin:0 0 10px;}
-      .of-adv ul{margin:0;padding:0;list-style:none;} .of-adv li{padding:8px 0 8px 0;border-bottom:1px dashed #E6DDCF;font-size:15px;color:#40506a;}
-      .of-adv li::before{content:'✔';color:#0B5563;font-weight:800;margin-inline-end:8px;}
-      .of-contact{margin:6px 34px 0;background:linear-gradient(135deg,#0B5563,#08414C);color:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
-      .of-contact .who{flex:1;} .of-contact .nm{font-size:20px;font-weight:800;} .of-contact .lbl{font-size:12px;opacity:.85;}
-      .of-contact .ph{font-size:24px;font-weight:800;direction:ltr;font-family:Poppins,sans-serif;}
-      .of-foot{padding:16px 34px 26px;color:#9aa;font-size:12px;text-align:center;}
-    </style>
-    <div class="of-wrap">
+    el.id='hz-offer-sheet'; el.dir='rtl';
+    el.style.cssText='position:absolute;left:-9999px;top:0;';
+    el.innerHTML=`<div class="of-wrap">
       <div class="of-top">
         ${logo?`<div class="lg" style="background-image:url('${logo}')"></div>`:''}
         <div class="co">${HZ.esc(company||'عرض عقاري')}</div>
@@ -414,8 +421,11 @@ HZ.makeOffer = async function(rec, btn){
     </div>`;
     document.body.appendChild(el);
     await HZ.loadHtml2pdf();
+    try{ await document.fonts.ready; }catch(e){}
+    await new Promise(r=>setTimeout(r,180));   // let layout + fonts + bg images settle
+    const h=Math.max(el.scrollHeight, 900);
     const fn='Homzy-offer-'+(name||'unit').replace(/[^\wء-ي]+/g,'-').slice(0,40)+'.pdf';
-    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'px',format:[794, el.scrollHeight+2],orientation:'portrait'}}).from(el).save();
+    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:820,width:794,height:h,scrollX:0,scrollY:0},jsPDF:{unit:'px',format:[794,h],orientation:'portrait'}}).from(el).save();
     el.remove();
   }catch(e){ alert(ar?'تعذّر إنشاء العرض، جرّب تاني.':'Could not create the offer.'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
