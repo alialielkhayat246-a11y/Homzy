@@ -507,6 +507,24 @@ async function checkBrokerAccount(){
 }
 function notBroker(){ document.body.classList.remove('hz-broker'); HZ.isBroker=false; if(HZ.mode!=='client') HZ.setMode('client'); }
 
+/* Reveal-on-scroll for any .reveal element — global, so every page animates in
+   (and pages without their own observer, e.g. /areas, don't get stuck hidden). */
+HZ.initReveal = function(){
+  try{
+    const els = document.querySelectorAll('.reveal:not(.in)');
+    if(!els.length) return;
+    if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('in')); return; }
+    const io = new IntersectionObserver((ents)=>{
+      ents.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold:0.08, rootMargin:'0px 0px -40px 0px' });
+    els.forEach(e=>io.observe(e));
+    // safety net: if anything is still hidden after 1.2s (observer missed it), show it
+    setTimeout(()=>document.querySelectorAll('.reveal:not(.in)').forEach(e=>{
+      if(e.getBoundingClientRect().top < innerHeight) e.classList.add('in');
+    }), 1200);
+  }catch(e){ document.querySelectorAll('.reveal').forEach(e=>e.classList.add('in')); }
+};
+
 /* ---------- boot ---------- */
 function boot(){
   if(!chat) chat=newChatState();
@@ -515,6 +533,7 @@ function boot(){
   HZ.setMode(HZ.mode);
   HZ.applyLang();
   checkBrokerAccount();
+  HZ.initReveal();
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
