@@ -100,14 +100,25 @@ def run_followups() -> dict[str, Any]:
                 continue
         if not isinstance(sub, dict) or not sub.get("endpoint"):
             continue
-        n = int(row.get("due_count") or 0)
-        names = (row.get("names") or "").strip()
-        body = f"عندك {n} متابعة مستحقة اليوم"
-        if names:
-            first = "، ".join(names.split("، ")[:3])
-            body += f": {first}"
+        def _line(count: Any, names: Any, label: str) -> str:
+            c = int(count or 0)
+            if c <= 0:
+                return ""
+            nm = (names or "").strip()
+            txt = f"{c} متابعة {label}"
+            if nm:
+                txt += ": " + "، ".join(nm.split("، ")[:3])
+            return txt
+
+        parts = [
+            _line(row.get("due_count"), row.get("due_names"), "مستحقة اليوم"),
+            _line(row.get("tmr_count"), row.get("tmr_names"), "بكرة"),
+        ]
+        body = " — ".join(p for p in parts if p)
+        if not body:
+            continue
         payload = {
-            "title": "Homzy — متابعات اليوم",
+            "title": "Homzy — تذكير متابعات",
             "body": body,
             "url": "/clients",
             "tag": "homzy-followups",
