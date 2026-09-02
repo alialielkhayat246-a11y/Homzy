@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy Stays</title>
+<meta name="description" content="تفاصيل الإقامة على Homzy Stays — الصور، المميزات، السعر، والحجز الآمن." />
+<link rel="canonical" href="https://homzy-ai.com/stays" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="Homzy" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .st-wrap{max-width:1100px; margin:0 auto; padding:22px;}
+  .gallery{display:grid; grid-template-columns:2fr 1fr 1fr; grid-auto-rows:150px; gap:8px; border-radius:18px; overflow:hidden; margin-top:8px;}
+  .gallery .g0{grid-row:span 2; grid-column:1;}
+  .gallery img{width:100%; height:100%; object-fit:cover; cursor:pointer; background:#e9eef1;}
+  @media(max-width:760px){ .gallery{grid-template-columns:1fr 1fr; grid-auto-rows:120px;} .gallery .g0{grid-column:1/-1;} .gallery img:nth-child(n+5){display:none;} }
+  h1.st-title{font-size:clamp(22px,3vw,30px); margin-top:20px;}
+  .st-sub{display:flex; gap:14px; flex-wrap:wrap; align-items:center; color:#5b6b82; font-size:15px; margin-top:8px;}
+  .st-badges{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .tag{font-size:12.5px; font-weight:800; padding:6px 12px; border-radius:100px; background:var(--teal-l); color:var(--teal-d);}
+  .tag.fav{background:#FEECEC; color:#B42318;} .tag.super{background:var(--navy); color:#fff;} .tag.verified{background:#E6F6EC; color:#137a3e;}
+  .st-cols{display:grid; grid-template-columns:1fr 380px; gap:40px; margin-top:26px; align-items:start;}
+  @media(max-width:900px){ .st-cols{grid-template-columns:1fr;} }
+  .st-sec{padding:24px 0; border-top:1px solid var(--line);}
+  .st-sec h2{font-size:20px; margin-bottom:14px;}
+  .facts{display:flex; gap:18px; flex-wrap:wrap; color:#40506a; font-weight:600;}
+  .amen{display:grid; grid-template-columns:1fr 1fr; gap:12px 20px;}
+  .amen div{display:flex; gap:9px; align-items:center; font-weight:600; color:#33404f;}
+  .amen .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex:none;}
+  .rules{display:flex; flex-direction:column; gap:8px; color:#40506a;}
+  .hostcard{display:flex; gap:14px; align-items:center;}
+  .hostcard img{width:60px;height:60px;border-radius:50%;object-fit:cover;background:#e9eef1;}
+  .hostcard .hn{font-weight:800; font-size:17px;}
+  .hostcard .hm{color:var(--muted); font-size:13.5px; margin-top:2px;}
+  #map{height:320px; border-radius:16px; border:1px solid var(--line); z-index:0;}
+  .revs{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media(max-width:700px){ .revs{grid-template-columns:1fr;} }
+  .rev{background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px;}
+  .rev .rh{display:flex; justify-content:space-between; font-weight:700;}
+  .rev .rc{color:#40506a; margin-top:8px; font-size:14.5px;}
+  /* booking card */
+  .bookcard{position:sticky; top:88px; background:#fff; border:1px solid var(--line-2); border-radius:18px; box-shadow:var(--shadow); padding:20px;}
+  .bookcard .price{font-size:24px; font-weight:800;} .bookcard .price .u{font-size:14px; color:var(--muted); font-weight:600;}
+  .bkrow{display:grid; grid-template-columns:1fr 1fr; gap:0; border:1.5px solid var(--line-2); border-radius:12px; overflow:hidden; margin-top:14px;}
+  .bkrow .fld{padding:10px 12px;} .bkrow .fld+.fld{border-inline-start:1.5px solid var(--line-2);}
+  .bkrow label{font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase;}
+  .bkrow input{border:none; width:100%; font-family:var(--ff); font-weight:600; font-size:14px; color:var(--navy); outline:none; background:transparent;}
+  .bkguests{border:1.5px solid var(--line-2); border-radius:12px; padding:10px 12px; margin-top:8px; display:flex; justify-content:space-between; align-items:center;}
+  .bkguests input{border:none;width:60px;text-align:end;font-weight:700;font-size:15px;outline:none;}
+  .breakdown{margin-top:16px; display:flex; flex-direction:column; gap:9px; color:#40506a; font-size:14.5px;}
+  .breakdown .r{display:flex; justify-content:space-between;}
+  .breakdown .tot{border-top:1px solid var(--line); padding-top:11px; font-weight:800; color:var(--navy); font-size:16px;}
+  .bkmsg{margin-top:10px; font-size:13.5px; font-weight:700;}
+  .bkmsg.err{color:#B42318;} .bkmsg.ok{color:#137a3e;}
+  .ov{position:fixed; inset:0; background:rgba(11,29,54,.5); display:none; align-items:center; justify-content:center; z-index:100; padding:20px;}
+  .ov.open{display:flex;} .ovc{background:#fff; border-radius:18px; max-width:420px; width:100%; padding:26px; text-align:center;}
+  .mockbadge{display:inline-block; background:#FFF4E5; color:#B45309; font-weight:800; font-size:12px; padding:5px 12px; border-radius:100px; margin-bottom:14px;}
+  .loadwrap{padding:80px; text-align:center; color:var(--muted);}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div id="app"><div class="loadwrap">…</div></div>
+
+<div class="ov" id="payOv"><div class="ovc">
+  <div class="mockbadge" data-ar="بيئة تجريبية — دفع وهمي" data-en="Test environment — mock payment">بيئة تجريبية — دفع وهمي</div>
+  <h2 id="payTitle" style="font-size:20px"></h2>
+  <p id="paySub" style="color:#5b6b82; margin:10px 0 20px"></p>
+  <button class="btn btn-teal" id="payBtn" style="width:100%" onclick="payNow()" data-ar="ادفع وأكّد الحجز" data-en="Pay & confirm booking">ادفع وأكّد الحجز</button>
+  <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="document.getElementById('payOv').classList.remove('open')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+  <div id="payMsg" class="bkmsg"></div>
+</div></div>
+
+<div id="hz-footer"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/assets/homzy.js"></script>
+<script>
+const PID=(location.pathname.split('/').filter(Boolean)[1]||'').trim();
+const ar=()=>HZ.lang==='ar';
+const money=n=> n==null?'' : Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+let P=null, IMGS=[], AMEN=[], RULES=null, REVS=[], QUOTE=null, BOOKING=null, MAP=null;
+
+async function load(){
+  try{
+    const rows=await HZ.sb('/stay_cards?id=eq.'+PID+'&select=*'); P=rows&&rows[0];
+    if(!P){ document.getElementById('app').innerHTML=`<div class="loadwrap">${ar()?'الإقامة غير موجودة أو غير متاحة.':'This stay was not found or is unavailable.'}</div>`; return; }
+    IMGS=await HZ.sb('/stay_property_images?property_id=eq.'+PID+'&select=url&order=is_cover.desc,sort.asc')||[];
+    AMEN=await HZ.sb('/stay_property_amenities?property_id=eq.'+PID+'&select=stay_amenities(slug,name_en,name_ar)')||[];
+    const rl=await HZ.sb('/stay_house_rules?property_id=eq.'+PID+'&select=*'); RULES=rl&&rl[0];
+    REVS=await HZ.sb('/stay_reviews?property_id=eq.'+PID+'&author_role=eq.guest&is_hidden=eq.false&published_at=not.is.null&select=overall,comment,created_at&order=created_at.desc&limit=6')||[];
+  }catch(e){ document.getElementById('app').innerHTML=`<div class="loadwrap">${ar()?'حصل خطأ في التحميل.':'Failed to load.'}</div>`; return; }
+  render(); HZ.applyLang();
+}
+
+function render(){
+  const type=ar()?P.type_ar:P.type_en;
+  const loc=[P.area||P.city,P.governorate].filter(Boolean).join('، ');
+  const imgs=IMGS.length?IMGS:[{url:P.cover}];
+  const gal=imgs.slice(0,5).map((im,i)=>`<img class="g${i}" loading="lazy" src="${HZ.esc(im.url||'')}" onerror="this.style.opacity=.2" onclick="lightbox(${i})"/>`).join('');
+  const rate = P.reviews_count>0 ? `★ ${Number(P.rating_avg).toFixed(1)} · ${P.reviews_count} ${ar()?'تقييم':'reviews'}`:(ar()?'جديد':'New');
+  const badges=[
+    P.is_guest_favorite?`<span class="tag fav">${ar()?'مفضّل لدى الضيوف':'Guest Favorite'}</span>`:'',
+    P.is_super_host?`<span class="tag super">${ar()?'مضيف متميز':'Super Host'}</span>`:'',
+    P.host_verified==='verified'?`<span class="tag verified">${ar()?'مضيف موثّق':'Verified host'}</span>`:''
+  ].join('');
+  const amenHTML = AMEN.map(a=>a.stay_amenities).filter(Boolean).map(a=>`<div><span class="dot"></span>${HZ.esc(ar()?a.name_ar:a.name_en)}</div>`).join('') || `<div style="color:var(--muted)">${ar()?'—':'—'}</div>`;
+  const rulesHTML = RULES ? [
+      `${ar()?'تسجيل الوصول':'Check-in'}: ${HZ.esc(RULES.checkin_time||'-')}`,
+      `${ar()?'المغادرة':'Check-out'}: ${HZ.esc(RULES.checkout_time||'-')}`,
+      `${ar()?'التدخين':'Smoking'}: ${RULES.smoking?(ar()?'مسموح':'Allowed'):(ar()?'ممنوع':'Not allowed')}`,
+      `${ar()?'الحيوانات الأليفة':'Pets'}: ${RULES.pets?(ar()?'مسموح':'Allowed'):(ar()?'ممنوع':'Not allowed')}`,
+      `${ar()?'الحفلات':'Parties'}: ${RULES.parties?(ar()?'مسموح':'Allowed'):(ar()?'ممنوع':'Not allowed')}`,
+      RULES.custom_rules?HZ.esc(RULES.custom_rules):''
+    ].filter(Boolean).map(r=>`<div>• ${r}</div>`).join('') : '';
+  const revsHTML = REVS.length? REVS.map(r=>`<div class="rev"><div class="rh"><span>★ ${Number(r.overall).toFixed(1)}</span><span style="color:var(--muted);font-weight:600">${new Date(r.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</span></div>${r.comment?`<div class="rc">${HZ.esc(r.comment)}</div>`:''}</div>`).join('') : `<div style="color:var(--muted)">${ar()?'لسه مفيش تقييمات.':'No reviews yet.'}</div>`;
+
+  document.getElementById('app').innerHTML = `<div class="st-wrap">
+    <div class="gallery">${gal}</div>
+    <h1 class="st-title">${HZ.esc(P.title)}</h1>
+    <div class="st-sub"><span>★ ${rate}</span><span>·</span><span>${HZ.esc(type)}</span><span>·</span><span>${HZ.esc(loc)}</span></div>
+    <div class="st-badges">${badges}</div>
+    <div class="st-cols">
+      <div>
+        <div class="st-sec" style="border-top:none">
+          <div class="facts">
+            <span>${P.max_guests} ${ar()?'ضيوف':'guests'}</span><span>·</span>
+            <span>${P.bedrooms} ${ar()?'غرف نوم':'bedrooms'}</span><span>·</span>
+            <span>${P.beds} ${ar()?'سرير':'beds'}</span><span>·</span>
+            <span>${P.bathrooms} ${ar()?'حمام':'bathrooms'}</span>
+          </div>
+          <p style="margin-top:16px; color:#33404f; line-height:1.8">${HZ.esc(P.description||'')}</p>
+        </div>
+        <div class="st-sec"><h2 data-ar="المميزات" data-en="Amenities">المميزات</h2><div class="amen">${amenHTML}</div></div>
+        ${rulesHTML?`<div class="st-sec"><h2 data-ar="قواعد المكان" data-en="House rules">قواعد المكان</h2><div class="rules">${rulesHTML}</div></div>`:''}
+        <div class="st-sec"><h2 data-ar="المضيف" data-en="Host">المضيف</h2>
+          <div class="hostcard">
+            <img src="${HZ.esc(P.host_avatar||'')}" onerror="this.style.visibility='hidden'"/>
+            <div><div class="hn">${HZ.esc(P.host_name||(ar()?'مضيف':'Host'))} ${P.is_super_host?'· ⭐':''}</div>
+            <div class="hm">${P.host_reviews>0?('★ '+Number(P.host_rating).toFixed(1)+' · '+P.host_reviews+' '+(ar()?'تقييم':'reviews')+' · '):''}${P.host_response_rate?Math.round(P.host_response_rate*100)+'% '+(ar()?'معدل الرد':'response rate'):''}</div>
+            ${P.host_bio?`<div class="hm" style="margin-top:6px">${HZ.esc(P.host_bio)}</div>`:''}</div>
+          </div>
+        </div>
+        <div class="st-sec"><h2 data-ar="الموقع" data-en="Location">الموقع</h2><div id="map"></div>
+          <div style="color:var(--muted);font-size:13px;margin-top:8px">${P.show_exact_location?(ar()?'الموقع الدقيق':'Exact location'):(ar()?'الموقع التقريبي — يظهر بالضبط بعد الحجز':'Approximate area — exact location shared after booking')}</div></div>
+        <div class="st-sec"><h2>${ar()?'التقييمات':'Reviews'} ${P.reviews_count>0?('· ★ '+Number(P.rating_avg).toFixed(1)):''}</h2><div class="revs">${revsHTML}</div></div>
+      </div>
+      <div>
+        <div class="bookcard">
+          <div class="price">${money(P.base_price)} <span class="u">${P.currency}/${ar()?'ليلة':'night'}</span></div>
+          <div class="bkrow">
+            <div class="fld"><label data-ar="الوصول" data-en="Check-in">الوصول</label><input type="date" id="bIn" onchange="quote()"/></div>
+            <div class="fld"><label data-ar="المغادرة" data-en="Check-out">المغادرة</label><input type="date" id="bOut" onchange="quote()"/></div>
+          </div>
+          <div class="bkguests"><label style="font-size:11px;font-weight:800;color:var(--muted)" data-ar="الضيوف" data-en="GUESTS">الضيوف</label><input type="number" id="bGuests" min="1" max="${P.max_guests}" value="2" onchange="quote()"/></div>
+          <div class="breakdown" id="breakdown"></div>
+          <div class="bkmsg" id="bkmsg"></div>
+          <button class="btn btn-teal" id="resBtn" style="width:100%;margin-top:16px" onclick="reserve()" data-ar="احجز الآن" data-en="Reserve">احجز الآن</button>
+          <div style="text-align:center;color:var(--muted);font-size:12.5px;margin-top:10px" data-ar="مش هيتم خصم أي مبلغ قبل التأكيد" data-en="You won't be charged before confirming">مش هيتم خصم أي مبلغ قبل التأكيد</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // default dates
+  const t=new Date(Date.now()+864e5), o=new Date(Date.now()+(3+P.min_nights)*864e5);
+  const bi=document.getElementById('bIn'), bo=document.getElementById('bOut');
+  bi.value=t.toISOString().slice(0,10); bi.min=new Date().toISOString().slice(0,10);
+  bo.value=o.toISOString().slice(0,10);
+  initMap(); quote();
+}
+
+function initMap(){
+  if(typeof L==='undefined' || P.lat==null) return;
+  MAP=L.map('map',{scrollWheelZoom:false,attributionControl:true}).setView([P.lat,P.lng],P.show_exact_location?15:12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(MAP);
+  if(P.show_exact_location) L.marker([P.lat,P.lng]).addTo(MAP);
+  else L.circle([P.lat,P.lng],{radius:1200,color:'#0B5563',fillColor:'#0B5563',fillOpacity:.15}).addTo(MAP);
+}
+
+async function quote(){
+  const ci=document.getElementById('bIn').value, co=document.getElementById('bOut').value, g=parseInt(document.getElementById('bGuests').value||'1',10);
+  const bd=document.getElementById('breakdown'), msg=document.getElementById('bkmsg'), btn=document.getElementById('resBtn');
+  QUOTE=null; msg.textContent=''; msg.className='bkmsg';
+  if(!ci||!co){ bd.innerHTML=''; return; }
+  try{ QUOTE=await HZ.rpc('stay_compute',{p_property:PID,p_check_in:ci,p_check_out:co,p_guests:g}); }catch(e){ QUOTE=null; }
+  if(!QUOTE || !QUOTE.available){
+    bd.innerHTML=''; btn.disabled=true; btn.style.opacity=.5;
+    msg.className='bkmsg err'; msg.textContent=reasonText(QUOTE&&QUOTE.reason, QUOTE); return;
+  }
+  btn.disabled=false; btn.style.opacity=1;
+  const nightly = Number(QUOTE.gross_amount)/Number(QUOTE.nights);
+  bd.innerHTML =
+     `<div class="r"><span>${money(Math.round(nightly))} × ${QUOTE.nights} ${ar()?'ليالي':'nights'}</span><span>${money(QUOTE.gross_amount)} ${QUOTE.currency}</span></div>`
+    + (Number(QUOTE.cleaning_fee)>0?`<div class="r"><span>${ar()?'رسوم النظافة':'Cleaning fee'}</span><span>${money(QUOTE.cleaning_fee)}</span></div>`:'')
+    + (Number(QUOTE.extra_fees)>0?`<div class="r"><span>${ar()?'ضيوف إضافيون':'Extra guests'}</span><span>${money(QUOTE.extra_fees)}</span></div>`:'')
+    + `<div class="r tot"><span>${ar()?'الإجمالي':'Total'}</span><span>${money(QUOTE.total_amount)} ${QUOTE.currency}</span></div>`;
+}
+function reasonText(reason,q){
+  const m={ bad_dates:['تواريخ غير صحيحة','Invalid dates'], guests:['عدد الضيوف أكبر من المسموح','Too many guests'],
+    min_nights:['أقل مدة '+(q&&q.min_nights)+' ليالي','Minimum '+(q&&q.min_nights)+' nights'],
+    max_nights:['أقصى مدة '+(q&&q.max_nights)+' ليالي','Maximum '+(q&&q.max_nights)+' nights'],
+    dates_taken:['التواريخ دي محجوزة','These dates are taken'], blocked:['التواريخ دي غير متاحة','These dates are unavailable'],
+    not_approved:['الإقامة غير متاحة','Stay unavailable'], no_pricing:['السعر غير محدد','Pricing unavailable'] };
+  return (m[reason]||['غير متاح للتواريخ دي','Not available for these dates'])[ar()?0:1];
+}
+
+async function reserve(){
+  if(!QUOTE||!QUOTE.available) return;
+  const s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  const ci=document.getElementById('bIn').value, co=document.getElementById('bOut').value, g=parseInt(document.getElementById('bGuests').value||'1',10);
+  const btn=document.getElementById('resBtn'); btn.disabled=true; btn.textContent=ar()?'...جاري الحجز':'Booking...';
+  let r;
+  try{ r=await HZ.sbAuth('/rpc/stay_book', s.token, 'POST', {p_property:PID,p_check_in:ci,p_check_out:co,p_guests:g}); }
+  catch(e){ r={ok:false,error:'network'}; }
+  btn.disabled=false; btn.textContent=ar()?'احجز الآن':'Reserve';
+  if(!r||!r.ok){ const msg=document.getElementById('bkmsg'); msg.className='bkmsg err'; msg.textContent=reasonText(r&&r.error,QUOTE); return; }
+  BOOKING=r.booking_id;
+  document.getElementById('payTitle').textContent = ar()?'إتمام الدفع':'Complete payment';
+  document.getElementById('paySub').textContent = (ar()?'الإجمالي: ':'Total: ')+money(QUOTE.total_amount)+' '+QUOTE.currency;
+  document.getElementById('payMsg').textContent='';
+  document.getElementById('payOv').classList.add('open');
+}
+async function payNow(){
+  if(!BOOKING) return;
+  const s=HZ.session(); const btn=document.getElementById('payBtn'), msg=document.getElementById('payMsg');
+  btn.disabled=true; btn.textContent=ar()?'...جاري الدفع':'Processing...';
+  let r; try{ r=await HZ.sbAuth('/rpc/stay_settle_booking', s.token, 'POST', {p_booking:BOOKING,p_provider:'mock',p_ref:'mock-'+Date.now()}); }
+  catch(e){ r={ok:false}; }
+  if(r&&r.ok){ msg.className='bkmsg ok'; msg.textContent=ar()?'تم تأكيد الحجز! 🎉':'Booking confirmed! 🎉';
+    setTimeout(()=>location.href='/my-stays',1200); }
+  else { btn.disabled=false; btn.textContent=ar()?'ادفع وأكّد الحجز':'Pay & confirm booking'; msg.className='bkmsg err'; msg.textContent=ar()?'فشل الدفع — حاول تاني':'Payment failed — try again'; }
+}
+function lightbox(i){ const im=(IMGS[i]||{}).url; if(im) window.open(im,'_blank'); }
+document.addEventListener('hz:lang', ()=>{ if(P){ render(); } });
+load();
+</script>
+</body>
+</html>

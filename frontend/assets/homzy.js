@@ -92,6 +92,7 @@ const T = {
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
+  stays:{ar:'إقامات Homzy',en:'Homzy Stays'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -121,8 +122,8 @@ HZ.setMode = function(m){
 
 /* ---------- Header / nav ---------- */
 const NAV = {
-  client:[['/','home'],['/features','features'],['/areas','areas'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/leads','leads'],['/app','browse']],
+  client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
+  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/stays','stays'],['/app','browse']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;

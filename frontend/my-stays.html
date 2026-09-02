@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy Stays — رحلاتي</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .wrap2{max-width:920px;margin:0 auto;padding:26px 22px;}
+  .tabs{display:flex;gap:8px;margin:18px 0 22px;flex-wrap:wrap;}
+  .tab{padding:9px 16px;border-radius:100px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer;font-size:14px;}
+  .tab.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .bk{display:flex;gap:16px;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+  .bk img{width:150px;height:130px;object-fit:cover;background:#e9eef1;flex:none;}
+  .bk .b{padding:14px 16px;flex:1;}
+  .bk .t{font-weight:800;font-size:16px;}
+  .bk .d{color:#5b6b82;font-size:14px;margin-top:6px;}
+  .bk .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .stt{font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:100px;}
+  .stt.confirmed{background:#E6F6EC;color:#137a3e;} .stt.payment_pending{background:#FFF4E5;color:#B45309;}
+  .stt.completed{background:#EAF0FA;color:#1f4e9c;} .stt.cancelled,.stt.rejected{background:#FDECEC;color:#B42318;}
+  .stt.pending{background:#F1F0EE;color:#555;} .stt.refunded{background:#EEF6F7;color:#0B5563;}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+  @media(max-width:560px){ .bk{flex-direction:column;} .bk img{width:100%;height:160px;} }
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="wrap2">
+  <h1 data-ar="رحلاتي" data-en="My Stays">رحلاتي</h1>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"><div class="empty">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+const money=n=> n==null?'':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+let BKS=[], CARDS={}, TAB='upcoming';
+const TABS=[['upcoming','قادمة','Upcoming'],['current','حالية','Current'],['completed','منتهية','Completed'],['cancelled','ملغاة','Cancelled']];
+
+function bucket(b){
+  const today=new Date().toISOString().slice(0,10);
+  if(['cancelled','rejected','refunded'].includes(b.status)) return 'cancelled';
+  if(b.status==='completed' || b.check_out<today) return 'completed';
+  if(b.check_in<=today && b.check_out>=today) return 'current';
+  return 'upcoming';
+}
+function render(){
+  document.getElementById('tabs').innerHTML=TABS.map(([k,a,e])=>{
+    const n=BKS.filter(b=>bucket(b)===k).length;
+    return `<div class="tab ${k===TAB?'on':''}" onclick="setTab('${k}')">${ar()?a:e}${n?` (${n})`:''}</div>`;
+  }).join('');
+  const list=BKS.filter(b=>bucket(b)===TAB);
+  const el=document.getElementById('list');
+  if(!list.length){ el.innerHTML=`<div class="empty">${ar()?'لا توجد حجوزات هنا.':'Nothing here yet.'} <a href="/stays" style="color:var(--teal-d);font-weight:800">${ar()?'ابحث عن إقامة':'Find a stay'}</a></div>`; return; }
+  el.innerHTML=list.map(b=>{
+    const c=CARDS[b.property_id]||{};
+    const stLabels={confirmed:['مؤكد','Confirmed'],payment_pending:['بانتظار الدفع','Payment pending'],completed:['منتهية','Completed'],cancelled:['ملغى','Cancelled'],rejected:['مرفوض','Rejected'],pending:['قيد الانتظار','Pending'],refunded:['مسترجع','Refunded']};
+    const sl=(stLabels[b.status]||[b.status,b.status])[ar()?0:1];
+    return `<div class="bk">
+      <img src="${HZ.esc(c.cover||'')}" onerror="this.style.opacity=.2"/>
+      <div class="b">
+        <div class="t">${HZ.esc(c.title||(ar()?'إقامة':'Stay'))}</div>
+        <div class="d">${HZ.esc([c.area||c.city,c.governorate].filter(Boolean).join('، '))}</div>
+        <div class="d">📅 ${b.check_in} → ${b.check_out} · ${b.nights} ${ar()?'ليالي':'nights'} · ${b.guests} ${ar()?'ضيوف':'guests'}</div>
+        <div class="foot">
+          <span class="stt ${b.status}">${sl}</span>
+          <span><b>${money(b.total_amount)}</b> ${b.currency}</span>
+        </div>
+        ${b.status==='payment_pending'?`<div style="margin-top:10px"><a class="btn btn-teal btn-sm" href="/stays/${b.property_id}">${ar()?'أكمل الدفع':'Complete payment'}</a></div>`:''}
+        ${b.status==='confirmed'?`<div class="d" style="margin-top:8px;color:#137a3e">${ar()?'مضيفك:':'Host:'} ${HZ.esc(c.host_name||'')}</div>`:''}
+      </div></div>`;
+  }).join('');
+}
+window.setTab=(k)=>{ TAB=k; render(); };
+async function boot(){
+  const s=HZ.session(); if(!s){ location.href='/login?next=/my-stays'; return; }
+  try{
+    BKS=await HZ.sbAuth('/stay_bookings?guest_id=eq.'+s.uid+'&select=*&order=check_in.desc', s.token)||[];
+    const ids=[...new Set(BKS.map(b=>b.property_id))];
+    if(ids.length){
+      const cards=await HZ.sb('/stay_cards?id=in.('+ids.join(',')+')&select=id,title,cover,city,area,governorate,host_name')||[];
+      cards.forEach(c=>CARDS[c.id]=c);
+    }
+  }catch(e){ BKS=[]; }
+  // default tab: first non-empty
+  const firstNonEmpty=TABS.map(t=>t[0]).find(k=>BKS.some(b=>bucket(b)===k));
+  TAB=firstNonEmpty||'upcoming';
+  render(); HZ.applyLang();
+}
+document.addEventListener('hz:lang', render);
+boot();
+</script>
+</body>
+</html>

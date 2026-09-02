@@ -125,6 +125,33 @@ def login_page():
     return FileResponse(config.FRONTEND_DIR / "login.html")
 
 
+# --- Homzy Stays (short-term rental marketplace) ------------------------
+# Guest browse pages are PUBLIC (no login gate) so they can rank in Google;
+# booking/host/dashboard actions require a session (checked client-side).
+@app.get("/stays")
+def stays_page():
+    """Homzy Stays landing + search (public)."""
+    return FileResponse(config.FRONTEND_DIR / "stays.html")
+
+
+@app.get("/stays/{pid}")
+def stay_detail_page(pid: str):
+    """Public property detail + booking flow."""
+    return FileResponse(config.FRONTEND_DIR / "stay.html")
+
+
+@app.get("/host")
+def host_landing_page():
+    """Become-a-host landing (Homzy Stays)."""
+    return FileResponse(config.FRONTEND_DIR / "host.html")
+
+
+@app.get("/my-stays")
+def my_stays_page():
+    """Guest bookings dashboard."""
+    return FileResponse(config.FRONTEND_DIR / "my-stays.html")
+
+
 # Public, crawlable per-project / per-listing pages (outside the login gate) so
 # broker + developer units can rank in Google; the contact action stays gated.
 @app.get("/project/{pid}")

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy Stays — كن مضيفًا</title>
+<meta name="description" content="اعرض وحدتك على Homzy Stays واكسب من الإيجار قصير المدى — عمولة 7% فقط، ضيوف موثّقون، ودفعات آمنة." />
+<link rel="canonical" href="https://homzy-ai.com/host" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="Homzy" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .hhero{background:linear-gradient(160deg,#0B1D36,#0B5563);padding:64px 0;}
+  .hhero h1{color:#fff;font-size:clamp(28px,4vw,44px);font-family:var(--fd);max-width:640px;}
+  .hhero p{color:#d7e6ea;font-size:18px;margin-top:14px;max-width:560px;}
+  .hhero .cta{margin-top:26px;display:flex;gap:12px;flex-wrap:wrap;}
+  .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  @media(max-width:820px){.steps3{grid-template-columns:1fr;}}
+  .s3{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px;}
+  .s3 .ic{font-size:30px;} .s3 h3{font-size:19px;margin-top:12px;} .s3 p{color:#5b6b82;margin-top:8px;}
+  .commbox{background:var(--teal-l);border-radius:var(--r);padding:28px;text-align:center;}
+  .commbox .big{font-size:46px;font-weight:900;color:var(--teal-d);font-family:var(--fd);}
+  .msg{margin-top:14px;font-weight:800;}
+  .msg.ok{color:#137a3e;} .msg.err{color:#B42318;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+
+<section class="hhero"><div class="wrap">
+  <h1 data-ar="عندك وحدة؟ اكسب منها مع Homzy Stays." data-en="Have a property? Earn from it with Homzy Stays.">عندك وحدة؟ اكسب منها مع Homzy Stays.</h1>
+  <p data-ar="اعرض وحدتك، حدّد سعرك وتقويمك، واستقبل حجوزات من ضيوف موثّقين — بدفعات آمنة." data-en="List your place, set your price and calendar, and get bookings from verified guests — with secure payouts.">اعرض وحدتك، حدّد سعرك وتقويمك، واستقبل حجوزات من ضيوف موثّقين — بدفعات آمنة.</p>
+  <div class="cta">
+    <button class="btn btn-teal" id="becomeBtn" onclick="become()" data-ar="ابدأ كمضيف" data-en="Start hosting">ابدأ كمضيف</button>
+    <a class="btn btn-ghost" href="/stays" data-ar="تصفّح الإقامات" data-en="Browse stays">تصفّح الإقامات</a>
+  </div>
+  <div class="msg" id="msg" style="color:#fff"></div>
+</div></section>
+
+<section class="section"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow" data-ar="ليه Homzy Stays" data-en="Why Homzy Stays">ليه Homzy Stays</span>
+    <h2 data-ar="استضافة بسيطة وآمنة" data-en="Hosting made simple & safe">استضافة بسيطة وآمنة</h2></div>
+  <div class="steps3">
+    <div class="s3"><div class="ic">🏠</div><h3 data-ar="اعرض وحدتك" data-en="List your place">اعرض وحدتك</h3><p data-ar="صور، مميزات، تسعير، وقواعد — في خطوات بسيطة." data-en="Photos, amenities, pricing and rules — in a few simple steps.">صور، مميزات، تسعير، وقواعد — في خطوات بسيطة.</p></div>
+    <div class="s3"><div class="ic">🛡️</div><h3 data-ar="ضيوف موثّقون" data-en="Verified guests">ضيوف موثّقون</h3><p data-ar="توثيق هوية، تقييمات ثنائية، وحماية Homzy للنزاعات." data-en="ID verification, two-way reviews, and Homzy Protection for disputes.">توثيق هوية، تقييمات ثنائية، وحماية Homzy للنزاعات.</p></div>
+    <div class="s3"><div class="ic">💸</div><h3 data-ar="دفعات واضحة" data-en="Clear payouts">دفعات واضحة</h3><p data-ar="تشوف صافي أرباحك على كل حجز — Homzy بتاخد 7% بس." data-en="See your net earnings on every booking — Homzy takes just 7%.">تشوف صافي أرباحك على كل حجز — Homzy بتاخد 7% بس.</p></div>
+  </div>
+  <div class="commbox" style="margin-top:34px">
+    <div class="big">7%</div>
+    <p style="color:var(--teal-d);font-weight:700" data-ar="عمولة Homzy على كل حجز — الباقي كله ليك." data-en="Homzy's commission per booking — the rest is all yours.">عمولة Homzy على كل حجز — الباقي كله ليك.</p>
+  </div>
+</div></section>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+async function become(){
+  const s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent('/host'); return; }
+  const btn=document.getElementById('becomeBtn'), msg=document.getElementById('msg');
+  // already a host?
+  try{
+    const ex=await HZ.sbAuth('/stay_hosts?user_id=eq.'+s.uid+'&select=verification_status', s.token);
+    if(ex&&ex.length){ msg.className='msg ok'; msg.textContent=ar()?('أنت مسجّل كمضيف بالفعل — حالة التوثيق: '+ex[0].verification_status+'. معالج إضافة الوحدة قريبًا.'):('You are already a host — verification: '+ex[0].verification_status+'. Listing wizard coming soon.'); return; }
+  }catch(e){}
+  btn.disabled=true;
+  try{
+    await HZ.sbAuth('/stay_hosts', s.token, 'POST', {user_id:s.uid, verification_status:'pending'});
+    msg.className='msg ok'; msg.textContent=ar()?'تم! أنت دلوقتي مضيف (قيد التوثيق). معالج إضافة الوحدة هيكون متاح قريبًا.':'Done! You are now a host (pending verification). The listing wizard will be available soon.';
+  }catch(e){ msg.className='msg err'; msg.textContent=ar()?'حصلت مشكلة — حاول تاني.':'Something went wrong — try again.'; btn.disabled=false; }
+}
+</script>
+</body>
+</html>
