@@ -361,46 +361,50 @@ HZ.makeOffer = async function(rec, btn){
     // AI advantages
     let adv=[];
     try{ const r=await fetch('/api/offer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({unit:rec, language:HZ.lang})}); if(r.ok) adv=(await r.json()).advantages||[]; }catch(e){}
-    const name=ar?(rec.compound_ar||rec.compound||''):(rec.compound||rec.compound_ar||'');
-    const area=ar?(rec.area_ar||rec.area||''):(rec.area||rec.area_ar||'');
-    const price=ar?(rec.price_ar||rec.price_en||''):(rec.price_en||rec.price_ar||'');
+    const nameAr=rec.compound_ar||rec.compound||'';
+    const nameEn=(rec.compound&&rec.compound!==nameAr)?rec.compound:'';
+    const areaAr=rec.area_ar||rec.area||'';
+    const areaEn=(rec.area&&rec.area!==areaAr)?rec.area:'';
+    const price=rec.price_ar||rec.price_en||'';
     const company=prof.company||prof.full_name||'', phone=prof.phone||'';
     const [logo,cover]=await Promise.all([_toDataURL(prof.company_logo_url), _toDataURL(rec.cover_image)]);
     const fact=(l,v)=> v?`<div class="of-fact"><span>${l}</span><b>${HZ.esc(v)}</b></div>`:'';
-    // Scoped stylesheet in <head> (html2canvas applies head styles to its clone
-    // reliably; an inline <style> inside the captured node often renders blank).
-    if(!document.getElementById('hz-offer-css')){
-      const st=document.createElement('style'); st.id='hz-offer-css';
-      st.textContent=`
-      #hz-offer-sheet{width:794px;background:#fff;font-family:"Cairo",Arial,sans-serif;color:#14212E;}
-      #hz-offer-sheet .of-top{background:#0B1D36;color:#fff;padding:26px 34px;display:flex;align-items:center;gap:16px;}
-      #hz-offer-sheet .of-top .lg{width:64px;height:64px;border-radius:12px;background:#fff center/contain no-repeat;flex:none;}
-      #hz-offer-sheet .of-top .co{font-size:22px;font-weight:800;} #hz-offer-sheet .of-top .by{margin-inline-start:auto;text-align:end;font-size:12px;opacity:.85;}
-      #hz-offer-sheet .of-title{padding:22px 34px 6px;} #hz-offer-sheet .of-title .k{color:#0B5563;font-weight:800;font-size:13px;letter-spacing:1px;}
-      #hz-offer-sheet .of-title h1{font-size:28px;color:#0B1D36;margin:6px 0 2px;} #hz-offer-sheet .of-title .ar{color:#66717F;font-size:15px;}
-      #hz-offer-sheet .of-cover{height:260px;margin:14px 34px;border-radius:16px;background:#e9e2da center/cover no-repeat;}
-      #hz-offer-sheet .of-price{margin:0 34px;color:#0B5563;font-weight:800;font-size:24px;}
-      #hz-offer-sheet .of-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px 34px;}
-      #hz-offer-sheet .of-fact{background:#F7F3EC;border:1px solid #E6DDCF;border-radius:12px;padding:11px 13px;}
-      #hz-offer-sheet .of-fact span{display:block;color:#66717F;font-size:12px;} #hz-offer-sheet .of-fact b{color:#0B1D36;font-size:15px;}
-      #hz-offer-sheet .of-adv{padding:8px 34px 20px;} #hz-offer-sheet .of-adv h2{font-size:18px;color:#0B1D36;margin:0 0 10px;}
-      #hz-offer-sheet .of-adv ul{margin:0;padding:0;list-style:none;} #hz-offer-sheet .of-adv li{padding:8px 0;border-bottom:1px dashed #E6DDCF;font-size:15px;color:#40506a;}
-      #hz-offer-sheet .of-adv li::before{content:'✔';color:#0B5563;font-weight:800;margin-inline-end:8px;}
-      #hz-offer-sheet .of-contact{margin:6px 34px 0;background:linear-gradient(135deg,#0B5563,#08414C);color:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
-      #hz-offer-sheet .of-contact .who{flex:1;} #hz-offer-sheet .of-contact .nm{font-size:20px;font-weight:800;} #hz-offer-sheet .of-contact .lbl{font-size:12px;opacity:.85;}
-      #hz-offer-sheet .of-contact .ph{font-size:24px;font-weight:800;direction:ltr;font-family:"Poppins",sans-serif;}
-      #hz-offer-sheet .of-foot{padding:16px 34px 26px;color:#9aa;font-size:12px;text-align:center;}`;
-      document.head.appendChild(st);
-    }
-    const el=document.createElement('div');
-    el.id='hz-offer-sheet'; el.dir='rtl';
-    el.innerHTML=`<div class="of-wrap">
+    const CSS=`
+      @page{size:A4;margin:0;}
+      *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      body{margin:0;font-family:"Cairo",Arial,sans-serif;color:#14212E;}
+      .of-top{background:#0B1D36;color:#fff;padding:26px 34px;display:flex;align-items:center;gap:16px;}
+      .of-top .lg{width:70px;height:70px;border-radius:12px;background:#fff center/contain no-repeat;flex:none;}
+      .of-top .co{font-size:22px;font-weight:800;line-height:1.25;}
+      .of-top .by{margin-inline-start:auto;text-align:end;font-size:12px;opacity:.85;}
+      .of-title{padding:24px 34px 6px;} .of-title .k{color:#0B5563;font-weight:800;font-size:13px;letter-spacing:1px;}
+      .of-title h1{font-size:30px;color:#0B1D36;margin:6px 0 2px;}
+      .of-title .en{color:#0B5563;font-size:17px;font-family:"Poppins",Arial,sans-serif;font-weight:700;direction:ltr;}
+      .of-title .loc{color:#66717F;font-size:15px;margin-top:5px;}
+      .of-cover{height:250px;margin:14px 34px;border-radius:16px;background:#e9e2da center/cover no-repeat;}
+      .of-price{margin:0 34px;color:#0B5563;font-weight:800;font-size:24px;}
+      .of-facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px 34px;}
+      .of-fact{background:#F7F3EC;border:1px solid #E6DDCF;border-radius:12px;padding:11px 13px;}
+      .of-fact span{display:block;color:#66717F;font-size:12px;} .of-fact b{color:#0B1D36;font-size:15px;}
+      .of-adv{padding:8px 34px 18px;} .of-adv h2{font-size:18px;color:#0B1D36;margin:0 0 10px;}
+      .of-adv ul{margin:0;padding:0;list-style:none;} .of-adv li{padding:8px 0;border-bottom:1px dashed #E6DDCF;font-size:15px;color:#40506a;}
+      .of-adv li::before{content:'✔ ';color:#0B5563;font-weight:800;}
+      .of-contact{margin:6px 34px 0;background:linear-gradient(135deg,#0B5563,#08414C);color:#fff;border-radius:16px;padding:20px 24px;display:flex;align-items:center;gap:16px;}
+      .of-contact .who{flex:1;} .of-contact .nm{font-size:20px;font-weight:800;} .of-contact .lbl{font-size:12px;opacity:.85;}
+      .of-contact .ph{font-size:26px;font-weight:800;direction:ltr;font-family:"Poppins",Arial,sans-serif;}
+      .of-foot{padding:16px 34px 26px;color:#9aa;font-size:12px;text-align:center;}`;
+    const BODY=`
       <div class="of-top">
         ${logo?`<div class="lg" style="background-image:url('${logo}')"></div>`:''}
         <div class="co">${HZ.esc(company||'عرض عقاري')}</div>
         <div class="by">مقدّم عبر<br><b>Homzy</b></div>
       </div>
-      <div class="of-title"><div class="k">عرض عقاري</div><h1>${HZ.esc(name)}</h1>${area?`<div class="ar">${HZ.esc(area)}</div>`:''}</div>
+      <div class="of-title">
+        <div class="k">عرض عقاري · Property Offer</div>
+        <h1>${HZ.esc(nameAr)}</h1>
+        ${nameEn?`<div class="en">${HZ.esc(nameEn)}</div>`:''}
+        ${(areaAr||areaEn)?`<div class="loc">${HZ.esc(areaAr)}${(areaAr&&areaEn)?' · ':''}${HZ.esc(areaEn)}</div>`:''}
+      </div>
       ${cover?`<div class="of-cover" style="background-image:url('${cover}')"></div>`:''}
       ${price?`<div class="of-price">${HZ.esc(price)}</div>`:''}
       <div class="of-facts">
@@ -416,21 +420,22 @@ HZ.makeOffer = async function(rec, btn){
         <div class="who"><div class="lbl">للتواصل والمعاينة</div><div class="nm">${HZ.esc(company||'—')}</div></div>
         ${phone?`<div class="ph">${HZ.esc(phone)}</div>`:''}
       </div>
-      <div class="of-foot">تم إنشاء هذا العرض عبر Homzy — homzy-ai.com · الأسعار والتفاصيل قابلة للتأكيد.</div>
-    </div>`;
-    // Render the sheet VISIBLE in an overlay — html2canvas renders blank for
-    // off-screen (left:-9999px) nodes, so show it on screen while capturing.
-    const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(11,29,54,.7);overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:22px;';
-    el.style.boxShadow='0 20px 60px rgba(0,0,0,.45)';
-    ov.appendChild(el); document.body.appendChild(ov);
-    await HZ.loadHtml2pdf();
-    try{ await document.fonts.ready; }catch(e){}
-    await new Promise(r=>setTimeout(r,350));   // let layout + fonts + bg images settle
-    const h=Math.max(el.scrollHeight, 900);
-    const fn='Homzy-offer-'+(name||'unit').replace(/[^\wء-ي]+/g,'-').slice(0,40)+'.pdf';
-    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'px',format:[794,h],orientation:'portrait'}}).from(el).save();
-    ov.remove();
+      <div class="of-foot">تم إنشاء هذا العرض عبر Homzy — homzy-ai.com · الأسعار والتفاصيل قابلة للتأكيد.</div>`;
+    const docHtml='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">'
+      +'<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+      +'<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Poppins:wght@700;800&display=swap" rel="stylesheet">'
+      +'<title>عرض Homzy</title><style>'+CSS+'</style></head><body>'+BODY+'</body></html>';
+    // Print via a hidden iframe: the BROWSER renders Arabic natively (correct
+    // letter-shaping + spacing, unlike html2canvas). Broker picks "Save as PDF".
+    const ifr=document.createElement('iframe');
+    ifr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(ifr);
+    const idoc=ifr.contentWindow.document; idoc.open(); idoc.write(docHtml); idoc.close();
+    try{ await ifr.contentWindow.document.fonts.ready; }catch(e){}
+    await new Promise(r=>setTimeout(r,450));
+    ifr.contentWindow.focus(); ifr.contentWindow.print();
+    ifr.contentWindow.onafterprint=()=>{ try{ifr.remove();}catch(e){} };
+    setTimeout(()=>{ try{ifr.remove();}catch(e){} }, 120000);
   }catch(e){ alert(ar?'تعذّر إنشاء العرض، جرّب تاني.':'Could not create the offer.'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
 };
