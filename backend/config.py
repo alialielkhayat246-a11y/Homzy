@@ -76,10 +76,9 @@ VAPID_PUBLIC_KEY = _get(
 VAPID_PRIVATE_KEY = _get("VAPID_PRIVATE_KEY", "")
 VAPID_SUBJECT = _get("VAPID_SUBJECT", "mailto:hello@homzy-ai.com")
 
-# Service-role key: lets the server read every broker's due follow-ups +
-# push subscriptions (bypassing RLS) so the reminder job can fan out. Server
-# secret only. The reminder endpoint itself is guarded by PUSH_CRON_TOKEN.
-SUPABASE_SERVICE_ROLE_KEY = _get("SUPABASE_SERVICE_ROLE_KEY", "")
+# Shared secret for the daily reminder job. It guards the /api/push endpoint
+# AND authenticates the secret-gated SECURITY DEFINER RPCs that read due
+# follow-ups + prune dead subscriptions — so no service_role key is needed.
 PUSH_CRON_TOKEN = _get("PUSH_CRON_TOKEN", "")
 
 # --- Behaviour -----------------------------------------------------------

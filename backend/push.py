@@ -21,7 +21,8 @@ def enabled() -> bool:
     return bool(
         config.VAPID_PRIVATE_KEY
         and config.SUPABASE_URL
-        and config.SUPABASE_SERVICE_ROLE_KEY
+        and config.SUPABASE_KEY
+        and config.PUSH_CRON_TOKEN
     )
 
 
@@ -45,8 +46,8 @@ def send_one(subscription: dict[str, Any], payload: dict[str, Any]) -> int:
     return getattr(resp, "status_code", 201)
 
 
-def _service_headers() -> dict[str, str]:
-    key = config.SUPABASE_SERVICE_ROLE_KEY
+def _anon_headers() -> dict[str, str]:
+    key = config.SUPABASE_KEY
     return {
         "apikey": key,
         "Authorization": f"Bearer {key}",
@@ -55,14 +56,15 @@ def _service_headers() -> dict[str, str]:
 
 
 def _delete_subscription(endpoint: str) -> None:
-    """Prune a subscription the push service says is gone (410/404)."""
+    """Prune a subscription the push service says is gone (410/404). Goes
+    through a secret-gated SECURITY DEFINER RPC (no service_role needed)."""
     import requests
 
     try:
-        requests.delete(
-            config.SUPABASE_URL.rstrip("/") + "/rest/v1/push_subscriptions",
-            params={"endpoint": "eq." + endpoint},
-            headers=_service_headers(),
+        requests.post(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/delete_push_subscription",
+            headers=_anon_headers(),
+            json={"p_key": config.PUSH_CRON_TOKEN, "p_endpoint": endpoint},
             timeout=10,
         )
     except Exception:
@@ -79,8 +81,8 @@ def run_followups() -> dict[str, Any]:
     try:
         r = requests.post(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/due_followups_for_push",
-            headers=_service_headers(),
-            json={},
+            headers=_anon_headers(),
+            json={"p_key": config.PUSH_CRON_TOKEN},
             timeout=20,
         )
         r.raise_for_status()
