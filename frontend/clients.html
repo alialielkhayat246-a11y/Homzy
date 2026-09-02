@@ -124,6 +124,7 @@
       <h1>خط سير العملاء</h1>
       <span class="sp"></span>
       <input id="search" placeholder="ابحث باسم / رقم / منطقة…" oninput="renderBoard()" />
+      <button class="btn btn-ghost" id="bellBtn" onclick="toggleNotify()" title="تنبيهات المتابعة">🔔 فعّل التنبيهات</button>
       <button class="btn btn-navy" onclick="voiceAdd()">🎤 عميل بالصوت</button>
       <button class="btn btn-teal" onclick="openForm()">＋ أضف عميل</button>
     </div>
@@ -374,6 +375,56 @@ window.offerFor=(i)=>{
     delivery:p.delivery||null, market:'primary', cover_image:p.cover_image_url||null };
   HZ.makeOffer(rec, null, window.__muClient||'');
 };
+
+/* ---------- Web Push (background follow-up reminders) ---------- */
+const VAPID_PUBLIC='BCuomI2RTVdHmy0pjZciv6j5VdG8n5-K_3wJ15-6EyFRv_2Jcb9UOPJxcaDPbPpBVivBdFQqW2lh4gCAISxcfxI';
+function b64ToU8(b64){ const pad='='.repeat((4-b64.length%4)%4); const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(s); const u=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)u[i]=raw.charCodeAt(i); return u; }
+const pushSupported=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);
+
+async function currentSub(){ if(!pushSupported())return null;
+  try{ const reg=await navigator.serviceWorker.getRegistration(); if(!reg)return null; return await reg.pushManager.getSubscription(); }catch(e){ return null; } }
+
+async function updateBell(){ const b=$('bellBtn'); if(!b)return;
+  if(!pushSupported()){ b.style.display='none'; return; }
+  const sub=await currentSub();
+  const on=!!sub && Notification.permission==='granted';
+  b.textContent = on?'🔔 التنبيهات مفعّلة':'🔔 فعّل التنبيهات';
+  b.classList.toggle('btn-teal', on); b.classList.toggle('btn-ghost', !on);
+}
+
+window.toggleNotify=async ()=>{
+  const b=$('bellBtn');
+  if(!pushSupported()){ alert('المتصفح ده مش بيدعم إشعارات الخلفية — جرّب Chrome على الموبايل (أضف الموقع للشاشة الرئيسية).'); return; }
+  const existing=await currentSub();
+  if(existing && Notification.permission==='granted'){
+    // toggle OFF
+    try{ await existing.unsubscribe(); }catch(e){}
+    try{ await fetch(SB_URL+'/rest/v1/push_subscriptions?endpoint=eq.'+encodeURIComponent(existing.endpoint),
+      {method:'DELETE', headers:{apikey:SB_KEY, Authorization:'Bearer '+TOKEN}}); }catch(e){}
+    updateBell(); return;
+  }
+  b.disabled=true; b.textContent='… جارٍ التفعيل';
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){ b.disabled=false; updateBell();
+      alert('لازم تسمح بالإشعارات علشان توصلك تذكيرات المتابعة.'); return; }
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64ToU8(VAPID_PUBLIC) });
+    const j=sub.toJSON();
+    await fetch(SB_URL+'/rest/v1/push_subscriptions?on_conflict=user_id,endpoint',
+      { method:'POST',
+        headers:{apikey:SB_KEY, Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates'},
+        body:JSON.stringify({ user_id:UID, endpoint:sub.endpoint, subscription:j }) });
+    // instant confirmation so the broker sees it works
+    try{ reg.showNotification('Homzy — تم تفعيل التنبيهات', {body:'هنبعتلك تذكير بمتابعات العملاء المستحقة كل يوم.', icon:'/assets/icon-192.png', dir:'rtl', lang:'ar'}); }catch(e){}
+  }catch(e){ alert('حصلت مشكلة في التفعيل: '+(e.message||e)); }
+  finally{ b.disabled=false; updateBell(); }
+};
+
+const _origBoot=boot;
+boot=async function(){ await _origBoot(); try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{}); }catch(e){} updateBell(); };
 
 boot();
 </script>

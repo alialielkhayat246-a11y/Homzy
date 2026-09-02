@@ -14,7 +14,7 @@ from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
-from . import broker, config, listings as listings_mod, llm, seo, valuation
+from . import broker, config, listings as listings_mod, llm, push, seo, valuation
 
 app = FastAPI(title="Homzy Broker")
 
@@ -365,6 +365,33 @@ async def parse_client(req: Request):
     except Exception:
         fields = {}
     return {"fields": fields}
+
+
+@app.get("/sw.js")
+def service_worker():
+    """The push service worker. Must be served from root so its scope is the
+    whole site (the browser refuses a wider scope than the script's path)."""
+    return FileResponse(
+        config.FRONTEND_DIR / "sw.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"},
+    )
+
+
+@app.get("/api/push/config")
+def push_config():
+    """Public VAPID key the browser needs to subscribe. Safe to expose."""
+    return {"publicKey": config.VAPID_PUBLIC_KEY, "enabled": push.enabled()}
+
+
+@app.post("/api/push/run-followups")
+async def push_run_followups(req: Request):
+    """Daily reminder fan-out. Guarded by PUSH_CRON_TOKEN (the scheduler sends
+    it as ?token= or the X-Push-Token header) so only our cron can trigger it."""
+    token = req.query_params.get("token") or req.headers.get("x-push-token") or ""
+    if not config.PUSH_CRON_TOKEN or token != config.PUSH_CRON_TOKEN:
+        raise HTTPException(status_code=403, detail="forbidden")
+    return push.run_followups()
 
 
 @app.post("/api/reset")

@@ -65,6 +65,23 @@ ADMIN_TOKEN = _get("ADMIN_TOKEN", "")
 IS_HOSTED = bool(os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
                  or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
 
+# --- Web Push (broker follow-up reminders) -------------------------------
+# Background notifications to the broker's device, even when the app is closed.
+# The PUBLIC key is safe to ship in the frontend; the PRIVATE key must stay a
+# server secret (set it in the Vercel env, never commit it).
+VAPID_PUBLIC_KEY = _get(
+    "VAPID_PUBLIC_KEY",
+    "BCuomI2RTVdHmy0pjZciv6j5VdG8n5-K_3wJ15-6EyFRv_2Jcb9UOPJxcaDPbPpBVivBdFQqW2lh4gCAISxcfxI",
+)
+VAPID_PRIVATE_KEY = _get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = _get("VAPID_SUBJECT", "mailto:hello@homzy-ai.com")
+
+# Service-role key: lets the server read every broker's due follow-ups +
+# push subscriptions (bypassing RLS) so the reminder job can fan out. Server
+# secret only. The reminder endpoint itself is guarded by PUSH_CRON_TOKEN.
+SUPABASE_SERVICE_ROLE_KEY = _get("SUPABASE_SERVICE_ROLE_KEY", "")
+PUSH_CRON_TOKEN = _get("PUSH_CRON_TOKEN", "")
+
 # --- Behaviour -----------------------------------------------------------
 MAX_RESULTS = int(_get("MAX_RESULTS", "4"))
 LLM_TEMPERATURE = float(_get("LLM_TEMPERATURE", "0.6"))
