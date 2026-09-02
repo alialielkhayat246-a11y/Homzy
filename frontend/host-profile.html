@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy Stays — ملف المضيف</title>
+<meta name="description" content="ملف المضيف على Homzy Stays — التقييمات، الوحدات، ومعدل الاستجابة." />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .hp{max-width:960px;margin:0 auto;padding:26px 22px;}
+  .head{display:flex;gap:22px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;}
+  .head img{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#e9eef1;}
+  .head .nm{font-size:26px;font-weight:900;}
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .tag{font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:100px;}
+  .tag.super{background:var(--navy);color:#fff;} .tag.verified{background:#E6F6EC;color:#137a3e;} .tag.fav{background:var(--teal-l);color:var(--teal-d);}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0;}
+  @media(max-width:640px){.stats{grid-template-columns:1fr 1fr;}}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;}
+  .stat .n{font-size:22px;font-weight:900;} .stat .l{color:var(--muted);font-size:13px;margin-top:3px;}
+  h2{font-size:20px;margin:26px 0 14px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:820px){.grid{grid-template-columns:1fr 1fr;}} @media(max-width:520px){.grid{grid-template-columns:1fr;}}
+  .pcard{cursor:pointer;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .pcard img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#e9eef1;}
+  .pcard .b{padding:11px 13px;} .pcard .t{font-weight:800;font-size:14.5px;} .pcard .m{color:var(--muted);font-size:13px;margin-top:4px;}
+  .revs{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.revs{grid-template-columns:1fr;}}
+  .rev{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
+  .rev .rc{color:#40506a;margin-top:8px;font-size:14.5px;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="hp" id="app"><div style="padding:60px;text-align:center;color:var(--muted)">…</div></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const HID=(location.pathname.split('/').filter(Boolean)[2]||'').trim();
+const ar=()=>HZ.lang==='ar';
+const money=n=> n==null?'':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+let H=null, LISTINGS=[], REVS=[];
+async function load(){
+  try{
+    const r=await HZ.sb('/stay_host_public?user_id=eq.'+HID+'&select=*'); H=r&&r[0];
+    if(!H){ document.getElementById('app').innerHTML=`<div style="padding:60px;text-align:center;color:var(--muted)">${ar()?'المضيف غير موجود.':'Host not found.'}</div>`; return; }
+    LISTINGS=await HZ.sb('/stay_cards?host_id=eq.'+HID+'&select=id,title,cover,city,area,base_price,currency,rating_avg,reviews_count')||[];
+    REVS=await HZ.sb('/stay_reviews?host_id=eq.'+HID+'&author_role=eq.guest&is_hidden=eq.false&published_at=not.is.null&select=overall,comment,created_at&order=created_at.desc&limit=8')||[];
+  }catch(e){}
+  render(); HZ.applyLang();
+}
+function render(){
+  const joined=H.joined_at?new Date(H.joined_at).getFullYear():'';
+  const tags=[
+    H.is_super_host?`<span class="tag super">${ar()?'مضيف متميز':'Super Host'}</span>`:'',
+    H.verification_status==='verified'?`<span class="tag verified">${ar()?'موثّق':'Verified'}</span>`:''
+  ].join('');
+  document.getElementById('app').innerHTML=`
+    <div class="head">
+      <img src="${HZ.esc(H.avatar_url||'')}" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="nm">${HZ.esc(H.full_name||(ar()?'مضيف':'Host'))}</div>
+        <div class="tags">${tags}</div>
+        ${H.bio?`<div style="color:#40506a;margin-top:10px;max-width:520px">${HZ.esc(H.bio)}</div>`:''}
+        <div style="color:var(--muted);font-size:13.5px;margin-top:8px">${ar()?'انضم إلى Homzy في':'Joined Homzy in'} ${joined}</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">${H.reviews_count>0?('★ '+Number(H.rating_avg).toFixed(1)):'—'}</div><div class="l">${ar()?'التقييم':'Rating'}</div></div>
+      <div class="stat"><div class="n">${H.reviews_count}</div><div class="l">${ar()?'مراجعة':'Reviews'}</div></div>
+      <div class="stat"><div class="n">${H.completed_stays}</div><div class="l">${ar()?'إقامات مكتملة':'Completed stays'}</div></div>
+      <div class="stat"><div class="n">${H.response_rate?Math.round(H.response_rate*100)+'%':'—'}</div><div class="l">${ar()?'معدل الرد':'Response rate'}</div></div>
+    </div>
+    ${H.avg_response_minutes?`<div style="color:var(--muted);font-size:14px;margin-top:-6px">${ar()?'عادةً يرد خلال':'Usually responds within'} ${H.avg_response_minutes<60?H.avg_response_minutes+(ar()?' دقيقة':' min'):Math.round(H.avg_response_minutes/60)+(ar()?' ساعة':' hr')}</div>`:''}
+
+    <h2>${ar()?'وحدات المضيف':'Host listings'} (${LISTINGS.length})</h2>
+    <div class="grid">${LISTINGS.map(c=>`<div class="pcard" onclick="location.href='/stays/${c.id}'"><img loading="lazy" src="${HZ.esc(c.cover||'')}" onerror="this.style.opacity=.2"><div class="b"><div class="t">${HZ.esc(c.title)}</div><div class="m">${HZ.esc(c.area||c.city||'')} · ${money(c.base_price)} ${c.currency}/${ar()?'ليلة':'night'}${c.reviews_count>0?(' · ★ '+Number(c.rating_avg).toFixed(1)):''}</div></div></div>`).join('')||`<div style="color:var(--muted)">—</div>`}</div>
+
+    <h2>${ar()?'آراء الضيوف':'Guest reviews'}</h2>
+    <div class="revs">${REVS.length?REVS.map(r=>`<div class="rev"><div style="font-weight:800">★ ${Number(r.overall).toFixed(1)} <span style="color:var(--muted);font-weight:600;font-size:12px">· ${new Date(r.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</span></div>${r.comment?`<div class="rc">${HZ.esc(r.comment)}</div>`:''}</div>`).join(''):`<div style="color:var(--muted)">${ar()?'لا توجد مراجعات بعد.':'No reviews yet.'}</div>`}</div>`;
+}
+document.addEventListener('hz:lang', ()=>{ if(H) render(); });
+load();
+</script>
+</body>
+</html>

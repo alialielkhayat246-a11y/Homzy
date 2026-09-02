@@ -134,6 +134,12 @@ def stays_page():
     return FileResponse(config.FRONTEND_DIR / "stays.html")
 
 
+@app.get("/stays/host/{hid}")
+def stay_host_profile_page(hid: str):
+    """Public host reputation profile."""
+    return FileResponse(config.FRONTEND_DIR / "host-profile.html")
+
+
 @app.get("/stays/{pid}")
 def stay_detail_page(pid: str):
     """Public property detail + booking flow."""

@@ -78,6 +78,18 @@
   <div class="hnav" id="hnav"></div>
   <div id="content"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
 </div>
+<div id="hrvOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
+  <div style="background:#fff;border-radius:18px;max-width:420px;width:100%;padding:24px;max-height:90vh;overflow:auto">
+    <h2 style="font-size:19px" data-ar="قيّم الضيف" data-en="Review guest">قيّم الضيف</h2>
+    <div id="hrvBody" style="margin-top:12px"></div>
+    <div id="hrvMsg" style="margin-top:10px;font-weight:800"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-teal" style="flex:1" onclick="submitHReview()" data-ar="إرسال" data-en="Submit">إرسال</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('hrvOv').style.display='none'" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+<style>.stars span{cursor:pointer;font-size:24px;color:#d8dee6;} .stars span.on{color:#F59E0B;} .rvline{display:flex;justify-content:space-between;align-items:center;margin:8px 0;} .rvline .stars span{font-size:19px;}</style>
 <div id="hz-footer"></div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -340,11 +352,38 @@ window.toggleBlock=async(ds,isBlocked)=>{
 async function viewBookings(){
   const bk=await HZ.sbAuth('/stay_bookings?host_id=eq.'+S.uid+'&select=*&order=check_in.desc',S.token)||[];
   if(!bk.length) return `<div style="padding:40px;text-align:center;color:var(--muted)">${ar()?'لا توجد حجوزات بعد.':'No bookings yet.'}</div>`;
-  const titles={}; PROPS.forEach(p=>titles[p.id]=p.title);
-  if(!PROPS.length){ await loadProps(); PROPS.forEach(p=>titles[p.id]=p.title); }
-  return bk.map(b=>`<div class="row"><div><b>${HZ.esc(titles[b.property_id]||'—')}</b><div style="color:var(--muted);font-size:13px">${b.check_in} → ${b.check_out} · ${b.guests} ${ar()?'ضيوف':'guests'}</div></div>
-    <div style="text-align:end"><span class="st ${b.status}" style="position:static">${b.status}</span><div style="font-weight:800;margin-top:4px">+${money(b.host_net)} ${b.currency}</div></div></div>`).join('');
+  const titles={}; if(!PROPS.length){ await loadProps(); } PROPS.forEach(p=>titles[p.id]=p.title);
+  let hrev=new Set();
+  try{ const r=await HZ.sbAuth('/stay_reviews?host_id=eq.'+S.uid+'&author_role=eq.host&select=booking_id',S.token)||[]; r.forEach(x=>hrev.add(x.booking_id)); }catch(e){}
+  return bk.map(b=>{
+    const done=b.status==='completed';
+    return `<div class="row"><div><b>${HZ.esc(titles[b.property_id]||'—')}</b>
+      <div style="color:var(--muted);font-size:13px">${b.check_in} → ${b.check_out} · ${b.guests} ${ar()?'ضيوف':'guests'}</div>
+      ${done&&!hrev.has(b.id)?`<button class="btn btn-teal btn-sm" style="margin-top:8px" onclick="openHReview('${b.id}')">${ar()?'قيّم الضيف':'Review guest'}</button>`:''}
+      ${done&&hrev.has(b.id)?`<div style="color:#137a3e;font-size:12px;margin-top:6px">★ ${ar()?'تم تقييم الضيف':'Guest reviewed'}</div>`:''}</div>
+      <div style="text-align:end"><span class="st ${b.status}" style="position:static">${b.status}</span><div style="font-weight:800;margin-top:4px">+${money(b.host_net)} ${b.currency}</div></div></div>`;
+  }).join('');
 }
+/* host reviews the guest (author_role decided server-side) */
+let HRV={}, HRV_BK=null;
+const HRCATS=[['communication','التواصل','Communication'],['rules','الالتزام بالقواعد','House rules'],['respect','احترام المكان','Respect for property']];
+window.openHReview=(bid)=>{
+  HRV_BK=bid; HRV={overall:5}; HRCATS.forEach(c=>HRV[c[0]]=5);
+  const sr=(k)=>`<div class="stars" data-key="${k}">`+[1,2,3,4,5].map(i=>`<span data-v="${i}" onclick="hSetStar('${k}',${i})">★</span>`).join('')+`</div>`;
+  document.getElementById('hrvBody').innerHTML=
+      `<div style="text-align:center;margin-bottom:10px"><div style="font-weight:800;margin-bottom:6px">${ar()?'تقييمك العام للضيف':'Overall'}</div>${sr('overall')}</div>`
+    + HRCATS.map(c=>`<div class="rvline"><span style="font-weight:700">${ar()?c[1]:c[2]}</span>${sr(c[0])}</div>`).join('')
+    + `<textarea id="hrvComment" rows="2" placeholder="${ar()?'ملاحظات (اختياري)':'Notes (optional)'}" style="width:100%;margin-top:12px;border:1.5px solid var(--line-2);border-radius:10px;padding:10px;font-family:var(--ff)"></textarea>`;
+  ['overall'].concat(HRCATS.map(c=>c[0])).forEach(k=>hSetStar(k,5));
+  document.getElementById('hrvMsg').textContent=''; document.getElementById('hrvOv').style.display='flex';
+};
+window.hSetStar=(k,v)=>{ HRV[k]=v; document.querySelectorAll('.stars[data-key="'+k+'"] span').forEach(s=>s.classList.toggle('on', +s.dataset.v<=v)); };
+window.submitHReview=async()=>{
+  const msg=document.getElementById('hrvMsg'); const cats={}; HRCATS.forEach(c=>cats[c[0]]=HRV[c[0]]);
+  let r; try{ r=await HZ.sbAuth('/rpc/stay_submit_review',S.token,'POST',{p_booking:HRV_BK,p_overall:HRV.overall,p_categories:cats,p_comment:(document.getElementById('hrvComment').value||'').trim()||null}); }catch(e){ r={ok:false}; }
+  if(r&&r.ok){ msg.style.color='#137a3e'; msg.textContent=ar()?'تم ✅':'Done ✅'; setTimeout(()=>{document.getElementById('hrvOv').style.display='none'; renderTab();},800); }
+  else { msg.style.color='#B42318'; msg.textContent=(ar()?'خطأ: ':'Error: ')+((r&&r.error)||''); }
+};
 
 /* ---------- Earnings ---------- */
 async function viewEarnings(){

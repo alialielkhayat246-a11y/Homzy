@@ -140,7 +140,7 @@ function render(){
         <div class="st-sec"><h2 data-ar="المميزات" data-en="Amenities">المميزات</h2><div class="amen">${amenHTML}</div></div>
         ${rulesHTML?`<div class="st-sec"><h2 data-ar="قواعد المكان" data-en="House rules">قواعد المكان</h2><div class="rules">${rulesHTML}</div></div>`:''}
         <div class="st-sec"><h2 data-ar="المضيف" data-en="Host">المضيف</h2>
-          <div class="hostcard">
+          <div class="hostcard" style="cursor:pointer" onclick="location.href='/stays/host/${P.host_id}'">
             <img src="${HZ.esc(P.host_avatar||'')}" onerror="this.style.visibility='hidden'"/>
             <div><div class="hn">${HZ.esc(P.host_name||(ar()?'مضيف':'Host'))} ${P.is_super_host?'· ⭐':''}</div>
             <div class="hm">${P.host_reviews>0?('★ '+Number(P.host_rating).toFixed(1)+' · '+P.host_reviews+' '+(ar()?'تقييم':'reviews')+' · '):''}${P.host_response_rate?Math.round(P.host_response_rate*100)+'% '+(ar()?'معدل الرد':'response rate'):''}</div>

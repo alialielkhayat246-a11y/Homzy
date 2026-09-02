@@ -38,12 +38,25 @@
   <div class="tabs" id="tabs"></div>
   <div id="list"><div class="empty">…</div></div>
 </div>
+<div class="ov" id="rvOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
+  <div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:24px;max-height:90vh;overflow:auto">
+    <h2 style="font-size:20px" data-ar="قيّم إقامتك" data-en="Review your stay">قيّم إقامتك</h2>
+    <div id="rvBody" style="margin-top:14px"></div>
+    <div class="bkmsg" id="rvMsg" style="margin-top:10px;font-weight:800"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-teal" style="flex:1" onclick="submitReview()" data-ar="إرسال التقييم" data-en="Submit review">إرسال التقييم</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('rvOv').style.display='none'" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+<style>.stars span{cursor:pointer;font-size:26px;color:#d8dee6;} .stars span.on{color:#F59E0B;} .rvline{display:flex;justify-content:space-between;align-items:center;margin:8px 0;} .rvline .stars span{font-size:20px;}</style>
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 const money=n=> n==null?'':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
-let BKS=[], CARDS={}, TAB='upcoming';
+let BKS=[], CARDS={}, TAB='upcoming', REVIEWED=new Set(), RV_BOOKING=null;
+const RCATS=[['cleanliness','النظافة','Cleanliness'],['accuracy','مطابقة الوصف','Accuracy'],['location','الموقع','Location'],['value','القيمة','Value'],['communication','التواصل','Communication'],['checkin','تسجيل الوصول','Check-in']];
 const TABS=[['upcoming','قادمة','Upcoming'],['current','حالية','Current'],['completed','منتهية','Completed'],['cancelled','ملغاة','Cancelled']];
 
 function bucket(b){
@@ -77,6 +90,8 @@ function render(){
         </div>
         ${b.status==='payment_pending'?`<div style="margin-top:10px"><a class="btn btn-teal btn-sm" href="/stays/${b.property_id}">${ar()?'أكمل الدفع':'Complete payment'}</a></div>`:''}
         ${b.status==='confirmed'?`<div class="d" style="margin-top:8px;color:#137a3e">${ar()?'مضيفك:':'Host:'} ${HZ.esc(c.host_name||'')}</div>`:''}
+        ${bucket(b)==='completed'&&!REVIEWED.has(b.id)?`<div style="margin-top:10px"><button class="btn btn-teal btn-sm" onclick="openReview('${b.id}')">${ar()?'قيّم إقامتك':'Review your stay'}</button></div>`:''}
+        ${REVIEWED.has(b.id)?`<div class="d" style="margin-top:8px;color:#137a3e">★ ${ar()?'شكرًا لتقييمك':'Thanks for your review'}</div>`:''}
       </div></div>`;
   }).join('');
 }
@@ -85,6 +100,7 @@ async function boot(){
   const s=HZ.session(); if(!s){ location.href='/login?next=/my-stays'; return; }
   try{
     BKS=await HZ.sbAuth('/stay_bookings?guest_id=eq.'+s.uid+'&select=*&order=check_in.desc', s.token)||[];
+    try{ const rv=await HZ.sbAuth('/stay_reviews?guest_id=eq.'+s.uid+'&author_role=eq.guest&select=booking_id', s.token)||[]; rv.forEach(r=>REVIEWED.add(r.booking_id)); }catch(e){}
     const ids=[...new Set(BKS.map(b=>b.property_id))];
     if(ids.length){
       const cards=await HZ.sb('/stay_cards?id=in.('+ids.join(',')+')&select=id,title,cover,city,area,governorate,host_name')||[];
@@ -96,6 +112,27 @@ async function boot(){
   TAB=firstNonEmpty||'upcoming';
   render(); HZ.applyLang();
 }
+/* ---- guest review ---- */
+let RV={};
+function starRow(key){ return `<div class="stars" data-key="${key}">`+[1,2,3,4,5].map(i=>`<span data-v="${i}" onclick="setStar('${key}',${i})">★</span>`).join('')+`</div>`; }
+window.setStar=(key,v)=>{ RV[key]=v; document.querySelectorAll('.stars[data-key="'+key+'"] span').forEach(s=>s.classList.toggle('on', +s.dataset.v<=v)); };
+window.openReview=(bid)=>{
+  RV_BOOKING=bid; RV={overall:5}; RCATS.forEach(c=>RV[c[0]]=5);
+  document.getElementById('rvBody').innerHTML=
+      `<div style="text-align:center;margin-bottom:10px"><div style="font-weight:800;margin-bottom:6px">${ar()?'تقييمك العام':'Overall'}</div>${starRow('overall')}</div>`
+    + RCATS.map(c=>`<div class="rvline"><span style="font-weight:700">${ar()?c[1]:c[2]}</span>${starRow(c[0])}</div>`).join('')
+    + `<textarea id="rvComment" rows="3" placeholder="${ar()?'شاركنا رأيك (اختياري)':'Share your experience (optional)'}" style="width:100%;margin-top:12px;border:1.5px solid var(--line-2);border-radius:10px;padding:10px;font-family:var(--ff)"></textarea>`;
+  ['overall'].concat(RCATS.map(c=>c[0])).forEach(k=>setStar(k,5));
+  document.getElementById('rvMsg').textContent='';
+  document.getElementById('rvOv').style.display='flex';
+};
+window.submitReview=async()=>{
+  const s=HZ.session(); const msg=document.getElementById('rvMsg');
+  const cats={}; RCATS.forEach(c=>cats[c[0]]=RV[c[0]]);
+  let r; try{ r=await HZ.sbAuth('/rpc/stay_submit_review', s.token,'POST',{p_booking:RV_BOOKING,p_overall:RV.overall,p_categories:cats,p_comment:(document.getElementById('rvComment').value||'').trim()||null}); }catch(e){ r={ok:false,error:'network'}; }
+  if(r&&r.ok){ REVIEWED.add(RV_BOOKING); msg.style.color='#137a3e'; msg.textContent=ar()?'شكرًا! تم إرسال تقييمك ✅':'Thanks! Review submitted ✅'; setTimeout(()=>{document.getElementById('rvOv').style.display='none'; render();},900); }
+  else { msg.style.color='#B42318'; msg.textContent=(ar()?'تعذّر الإرسال: ':'Could not submit: ')+((r&&r.error)||''); }
+};
 document.addEventListener('hz:lang', render);
 boot();
 </script>
