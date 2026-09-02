@@ -75,6 +75,12 @@
   .modal{background:var(--cream); width:min(560px,100%); border-radius:20px; margin:auto; box-shadow:var(--shadow); overflow:hidden;}
   .modal .mh{display:flex; align-items:center; justify-content:space-between; padding:15px 20px; background:#fff; border-bottom:1px solid var(--line);}
   .modal .mh h3{font-size:18px; color:var(--navy); margin:0;} .modal .mx{width:34px;height:34px;border:none;background:var(--cream);border-radius:9px;font-size:19px;cursor:pointer;}
+  .mic{font-family:"Cairo"; font-weight:800; font-size:13px; border:1.5px solid var(--teal); background:var(--teal-l); color:var(--teal-d); border-radius:10px; padding:7px 12px; cursor:pointer;}
+  .mic.rec{background:#B42318; color:#fff; border-color:#B42318; animation:micpulse 1s infinite;}
+  @keyframes micpulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+  .voicebar{display:none; padding:11px 20px; background:var(--teal-l); border-bottom:1px solid var(--line); color:var(--teal-d); font-size:13.5px; font-weight:600; line-height:1.6;}
+  .voicebar.show{display:block;}
+  .voicebar .hint{color:var(--muted); font-weight:600;}
   .modal .mb{padding:18px; display:flex; flex-direction:column; gap:12px; max-height:74vh; overflow:auto;}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   .mf{display:flex; gap:10px; padding:15px 20px; background:#fff; border-top:1px solid var(--line);} .mf .btn{flex:1;}
@@ -118,6 +124,7 @@
       <h1>خط سير العملاء</h1>
       <span class="sp"></span>
       <input id="search" placeholder="ابحث باسم / رقم / منطقة…" oninput="renderBoard()" />
+      <button class="btn btn-navy" onclick="voiceAdd()">🎤 عميل بالصوت</button>
       <button class="btn btn-teal" onclick="openForm()">＋ أضف عميل</button>
     </div>
     <div class="board" id="board"></div>
@@ -127,7 +134,13 @@
 <!-- client form modal -->
 <div class="ov" id="formOv">
   <div class="modal">
-    <div class="mh"><h3 id="fTitle">إضافة عميل</h3><button class="mx" onclick="closeForm()">×</button></div>
+    <div class="mh"><h3 id="fTitle">إضافة عميل</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="mic" id="micBtn" onclick="toggleVoice()" title="إملأ بصوتك">🎤 بالصوت</button>
+        <button class="mx" onclick="closeForm()">×</button>
+      </div>
+    </div>
+    <div class="voicebar" id="voicebar"></div>
     <div class="mb">
       <div class="row2">
         <div class="fld"><label>الاسم</label><input class="in" id="cName" placeholder="اسم العميل" /></div>
@@ -262,7 +275,49 @@ function cardHTML(c){
 window.openForm=()=>{ EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
   ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes'].forEach(id=>$(id).value='');
   $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg(''); $('formOv').classList.add('open'); };
-window.closeForm=()=>$('formOv').classList.remove('open');
+window.closeForm=()=>{ stopVoice(true); $('voicebar').classList.remove('show'); $('formOv').classList.remove('open'); };
+
+/* ---------- Voice entry (AI-parsed) ---------- */
+let REC=null, VOICE_ON=false, VOICE_TXT='';
+const speechSupported=()=>!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+window.voiceAdd=()=>{ openForm(); setTimeout(()=>toggleVoice(),250); };
+function vbar(t,err){ const v=$('voicebar'); v.classList.add('show'); v.innerHTML=err?('<span style="color:#B42318">'+esc(t)+'</span>'):t; }
+function micUI(on){ const b=$('micBtn'); if(!b) return; b.classList.toggle('rec',on); b.textContent=on?'⏹ إيقاف':'🎤 بالصوت'; }
+window.toggleVoice=()=>{
+  if(VOICE_ON){ VOICE_ON=false; try{REC&&REC.stop();}catch(e){} return; }   // stop → onend → process
+  if(!speechSupported()){ vbar('المتصفح ده مش بيدعم الإدخال الصوتي — جرّب Chrome على الموبايل أو الكمبيوتر.', true); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  REC=new SR(); REC.lang='ar-EG'; REC.interimResults=true; REC.continuous=true; VOICE_TXT='';
+  REC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript+' '; VOICE_TXT=t.trim(); vbar('🎤 بسمعك… «'+esc(VOICE_TXT)+'»'); };
+  REC.onerror=(e)=>{ VOICE_ON=false; micUI(false); vbar('تعذّر التسجيل ('+(e.error||'')+'). اسمح للميكروفون وجرّب تاني.', true); };
+  REC.onend=()=>{ if(VOICE_ON){ VOICE_ON=false; micUI(false); processVoice(); } };
+  try{ REC.start(); VOICE_ON=true; micUI(true);
+    vbar('🎤 اتكلم دلوقتي… مثلاً: «عميل اسمه أحمد، رقمه ٠١٠١٢٣٤٥٦٧٨، عايز يشتري شقة في التجمع بـ٦ مليون، ٣ غرف، متابعة الخميس الجاي». ودوس ⏹ لما تخلص.');
+  }catch(e){ vbar('تعذّر بدء التسجيل.', true); }
+};
+function stopVoice(silent){ if(VOICE_ON){ VOICE_ON=false; try{REC&&REC.stop();}catch(e){} micUI(false); } }
+async function processVoice(){
+  const text=(VOICE_TXT||'').trim();
+  if(!text){ vbar('مسمعتش حاجة واضحة — جرّب تاني.', true); return; }
+  vbar('🧠 بحلّل كلامك…');
+  try{
+    const r=await fetch('/api/parse-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const fields=(r.ok?(await r.json()).fields:null)||{};
+    const n=fillFromFields(fields);
+    if(n) vbar('✅ ملّيت '+n+' حقل من كلامك — راجعهم واحفظ.<div class="hint">«'+esc(text)+'»</div>');
+    else vbar('مفهمتش بيانات واضحة — قول الاسم والرقم والطلب.<div class="hint">«'+esc(text)+'»</div>', true);
+  }catch(e){ vbar('حصل خطأ في التحليل.', true); }
+}
+function fillFromFields(f){
+  let n=0; const setV=(id,v)=>{ if(v!=null&&v!==''){ $(id).value=v; n++; } };
+  setV('cName',f.name); setV('cPhone',f.phone); setV('cArea',f.area);
+  if(f.budget) setV('cBudget',f.budget); if(f.bedrooms!=null) setV('cBeds',f.bedrooms); setV('cFollow',f.next_followup);
+  if(f.purpose){ $('cPurpose').value=f.purpose; n++; }
+  if(f.type){ $('cType').value=f.type; n++; }
+  if(f.stage){ $('cStage').value=f.stage; n++; }
+  if(f.notes){ const el=$('cNotes'); el.value=(el.value?el.value+' · ':'')+f.notes; n++; }
+  return n;
+}
 window.editClient=(id)=>{ const c=CLIENTS.find(x=>x.id===id); if(!c) return; EDIT_ID=id; $('fTitle').textContent='تعديل العميل';
   $('cName').value=c.name||''; $('cPhone').value=c.phone||''; $('cPurpose').value=c.purpose||'sale'; $('cType').value=c.type||'';
   $('cArea').value=c.area||''; $('cBudget').value=c.budget||''; $('cBeds').value=c.bedrooms||''; $('cStage').value=c.stage||'new';

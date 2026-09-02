@@ -352,6 +352,21 @@ async def offer(req: Request):
     return {"advantages": adv}
 
 
+@app.post("/api/parse-client")
+async def parse_client(req: Request):
+    """Voice → structured CRM fields: the broker speaks, the browser transcribes,
+    and this turns the Arabic sentence into client fields to fill/merge the form."""
+    body = await req.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"fields": {}}
+    try:
+        fields = broker.parse_client(text)
+    except Exception:
+        fields = {}
+    return {"fields": fields}
+
+
 @app.post("/api/reset")
 async def reset(req: Request):
     body = await req.json()

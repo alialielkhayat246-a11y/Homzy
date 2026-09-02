@@ -395,6 +395,66 @@ def offer_advantages(unit: dict[str, Any], language: str) -> list[str]:
     return _derived_advantages(unit, language)
 
 
+def parse_client(text: str) -> dict[str, Any]:
+    """Turn a broker's spoken sentence (Arabic) into structured CRM client fields.
+    Returns only the fields the model is confident about (so it also works for
+    partial UPDATES). Empty dict if the LLM is unavailable or nothing parsed."""
+    import datetime as _dt
+    client = _client_or_none()
+    if client is None or not (text or "").strip():
+        return {}
+    today = _dt.date.today().isoformat()
+    system = (
+        "You extract Egyptian real-estate CRM client info from a broker's spoken Arabic "
+        "into JSON. Output ONLY a JSON object, no prose. Include ONLY the fields you are "
+        "confident the speaker stated (omit the rest — this also supports partial edits).\n"
+        "Fields:\n"
+        "- name: the client's name (string)\n"
+        "- phone: Egyptian mobile, DIGITS ONLY (e.g. 01012345678); convert spoken digits\n"
+        "- purpose: 'sale' if buy/تمليك/شراء, 'rent' if إيجار\n"
+        "- type: one of apartment,villa,duplex,penthouse,studio,townhouse,office,shop (if a unit type is mentioned)\n"
+        "- area: the area/location name as said (Arabic or English)\n"
+        "- budget: a NUMBER in EGP — convert words, e.g. '6 مليون'->6000000, 'مليون ونص'->1500000, '500 الف'->500000\n"
+        "- bedrooms: integer number of rooms\n"
+        "- stage: one of new,contact,viewing,negotiate,closed,lost (if a status is implied)\n"
+        f"- next_followup: a date YYYY-MM-DD. Resolve relative Arabic dates using TODAY={today} "
+        "(e.g. 'بكرة','الخميس الجاي','بعد أسبوع','يوم 20').\n"
+        "- notes: any extra detail said, as a short Arabic note\n"
+        "Return {} if nothing useful was said."
+    )
+    try:
+        raw = client.chat(
+            [{"role": "system", "content": system},
+             {"role": "user", "content": text.strip()}],
+            temperature=0.1, max_tokens=300)
+        data = _parse_json(raw or "")
+        out: dict[str, Any] = {}
+        allowed = ("name", "phone", "purpose", "type", "area", "budget",
+                   "bedrooms", "stage", "next_followup", "notes")
+        for k in allowed:
+            v = data.get(k)
+            if v in (None, "", []):
+                continue
+            if k == "phone":
+                v = re.sub(r"\D", "", str(v))
+                if len(v) < 10:
+                    continue
+            if k == "budget":
+                try:
+                    v = int(float(v))
+                except (TypeError, ValueError):
+                    continue
+            if k == "bedrooms":
+                try:
+                    v = int(v)
+                except (TypeError, ValueError):
+                    continue
+            out[k] = v
+        return out
+    except Exception:
+        return {}
+
+
 def _recommendation(req, matches):
     if not persona._missing(req) and matches:
         return listings_mod.public(matches[0])
