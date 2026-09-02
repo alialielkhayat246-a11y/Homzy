@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy Stays — الإدارة</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .ad{max-width:1080px;margin:0 auto;padding:22px;}
+  .anav{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 22px;border-bottom:1px solid var(--line);padding-bottom:12px;}
+  .anav a{padding:9px 14px;border-radius:100px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;}
+  .anav a.on{background:var(--navy);color:#fff;}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;flex-wrap:wrap;}
+  .row .info{flex:1;min-width:220px;}
+  .row .t{font-weight:800;} .row .m{color:var(--muted);font-size:13px;margin-top:4px;}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;}
+  .acts button{font-size:13px;padding:7px 12px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer;}
+  .acts .ok{border-color:#137a3e;color:#137a3e;} .acts .no{border-color:#B42318;color:#B42318;}
+  .badge{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:100px;}
+  .badge.pending{background:#FFF4E5;color:#B45309;} .badge.approved,.badge.verified,.badge.confirmed{background:#E6F6EC;color:#137a3e;}
+  .badge.rejected,.badge.suspended,.badge.cancelled{background:#FDECEC;color:#B42318;} .badge.draft{background:#F1F0EE;color:#555;}
+  .filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .filters button{padding:7px 13px;border-radius:100px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;font-size:13px;cursor:pointer;}
+  .filters button.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;max-width:640px;}
+  .form h3{font-size:15px;color:var(--teal-d);margin:16px 0 10px;} .form h3:first-child{margin-top:0;}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;max-width:280px;}
+  .fld label{font-size:13px;font-weight:700;color:#40506a;}
+  .fld input{border:1.5px solid var(--line-2);border-radius:9px;padding:9px 11px;font-family:var(--ff);font-weight:600;}
+  .msg{font-weight:800;margin-top:8px;} .empty{padding:40px;text-align:center;color:var(--muted);}
+  .notadmin{padding:70px 20px;text-align:center;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="ad">
+  <h1 data-ar="إدارة Homzy Stays" data-en="Homzy Stays admin">إدارة Homzy Stays</h1>
+  <div class="anav" id="anav"></div>
+  <div id="content"><div class="empty">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+const money=n=>n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+let S=null, TAB='properties', ISADMIN=false, PFILTER='pending';
+const TABS=[['properties','الوحدات','Properties'],['hosts','المضيفون','Hosts'],['verifications','التوثيق','Verifications'],['bookings','الحجوزات','Bookings'],['reviews','المراجعات','Reviews'],['disputes','النزاعات','Disputes'],['settings','الإعدادات','Settings']];
+
+function parsePath(){ const p=location.pathname.split('/').filter(Boolean); return p[2]||'properties'; } // admin, stays, X
+function go(tab){ history.pushState({},'', '/admin/stays/'+tab); TAB=tab; renderNav(); renderTab(); }
+window.onpopstate=()=>{ TAB=parsePath(); renderNav(); renderTab(); };
+function renderNav(){ document.getElementById('anav').innerHTML=TABS.map(([k,a,e])=>`<a class="${k===TAB?'on':''}" onclick="go('${k}')">${ar()?a:e}</a>`).join(''); }
+
+async function api(path){ return await HZ.sbAuth(path, S.token)||[]; }
+async function rpc(fn,args){ return await HZ.sbAuth('/rpc/'+fn, S.token,'POST',args); }
+
+async function renderTab(){
+  const c=document.getElementById('content'); c.innerHTML='<div class="empty">…</div>';
+  if(!ISADMIN){ c.innerHTML=`<div class="notadmin"><h2>${ar()?'غير مصرّح':'Not authorized'}</h2><p style="color:var(--muted);margin-top:10px">${ar()?'الصفحة دي للأدمن فقط.':'This page is for admins only.'}</p></div>`; return; }
+  try{
+    if(TAB==='properties') c.innerHTML=await viewProps();
+    else if(TAB==='hosts') c.innerHTML=await viewHosts();
+    else if(TAB==='verifications') c.innerHTML=await viewVerifs();
+    else if(TAB==='bookings') c.innerHTML=await viewBookings();
+    else if(TAB==='reviews') c.innerHTML=await viewReviews();
+    else if(TAB==='disputes') c.innerHTML=await viewDisputes();
+    else if(TAB==='settings') c.innerHTML=await viewSettings();
+    HZ.applyLang();
+  }catch(e){ c.innerHTML='<div class="empty" style="color:#B42318">'+HZ.esc(e.message||'error')+'</div>'; }
+}
+
+/* Properties moderation */
+async function viewProps(){
+  const flt=PFILTER==='all'?'':'&status=eq.'+PFILTER;
+  const rows=await api('/stay_properties?select=id,title,status,city,host_id,created_at,stay_property_images(url,is_cover),reject_reason&order=created_at.desc'+flt);
+  const bar=`<div class="filters">${['pending','approved','rejected','suspended','draft','all'].map(f=>`<button class="${f===PFILTER?'on':''}" onclick="PFILTER='${f}';renderTab()">${({pending:['قيد المراجعة','Pending'],approved:['منشورة','Approved'],rejected:['مرفوضة','Rejected'],suspended:['موقوفة','Suspended'],draft:['مسودة','Draft'],all:['الكل','All']}[f])[ar()?0:1]}</button>`).join('')}</div>`;
+  if(!rows.length) return bar+`<div class="empty">${ar()?'لا يوجد.':'Nothing here.'}</div>`;
+  return bar+rows.map(p=>`<div class="row"><div class="info"><div class="t">${HZ.esc(p.title||'—')} <span class="badge ${p.status}">${p.status}</span></div>
+    <div class="m">${HZ.esc(p.city||'')} · ${(p.stay_property_images||[]).length} ${ar()?'صور':'photos'} · ${new Date(p.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</div>
+    ${p.reject_reason?`<div class="m" style="color:#B42318">${HZ.esc(p.reject_reason)}</div>`:''}</div>
+    <div class="acts">
+      <button onclick="window.open('/stays/${p.id}','_blank')">${ar()?'عرض':'View'}</button>
+      ${p.status!=='approved'?`<button class="ok" onclick="modProp('${p.id}','approved')">${ar()?'اعتماد':'Approve'}</button>`:''}
+      ${p.status!=='rejected'?`<button class="no" onclick="modProp('${p.id}','rejected')">${ar()?'رفض':'Reject'}</button>`:''}
+      ${p.status==='approved'?`<button class="no" onclick="modProp('${p.id}','suspended')">${ar()?'إيقاف':'Suspend'}</button>`:''}
+    </div></div>`).join('');
+}
+window.modProp=async(id,status)=>{
+  let reason=null; if(status==='rejected'||status==='suspended'){ reason=prompt(ar()?'السبب (اختياري):':'Reason (optional):')||''; }
+  const r=await rpc('stay_admin_moderate_property',{p_pid:id,p_status:status,p_reason:reason});
+  if(r&&r.ok) renderTab(); else alert('Error: '+((r&&r.error)||''));
+};
+
+/* Hosts */
+async function viewHosts(){
+  const hosts=await api('/stay_hosts?select=user_id,verification_status,is_super_host,rating_avg,reviews_count,completed_stays,properties_count&order=joined_at.desc');
+  if(!hosts.length) return `<div class="empty">${ar()?'لا يوجد مضيفون.':'No hosts.'}</div>`;
+  const ids=hosts.map(h=>h.user_id);
+  const profs=await api('/profiles?id=in.('+ids.join(',')+')&select=id,full_name,phone');
+  const pm={}; profs.forEach(p=>pm[p.id]=p);
+  return hosts.map(h=>{const pf=pm[h.user_id]||{};return `<div class="row"><div class="info"><div class="t">${HZ.esc(pf.full_name||'—')} <span class="badge ${h.verification_status}">${h.verification_status}</span>${h.is_super_host?' ⭐':''}</div>
+    <div class="m">${HZ.esc(pf.phone||'')} · ${h.properties_count} ${ar()?'وحدات':'props'} · ${h.completed_stays} ${ar()?'إقامات':'stays'} · ★ ${Number(h.rating_avg).toFixed(1)}</div></div>
+    <div class="acts">
+      ${h.verification_status!=='verified'?`<button class="ok" onclick="verifyHost('${h.user_id}','verified')">${ar()?'توثيق':'Verify'}</button>`:''}
+      ${h.verification_status!=='rejected'?`<button class="no" onclick="verifyHost('${h.user_id}','rejected')">${ar()?'رفض':'Reject'}</button>`:''}
+      ${h.verification_status!=='suspended'?`<button class="no" onclick="verifyHost('${h.user_id}','suspended')">${ar()?'إيقاف':'Suspend'}</button>`:''}
+    </div></div>`;}).join('');
+}
+window.verifyHost=async(id,status)=>{ const r=await rpc('stay_admin_verify_host',{p_host:id,p_status:status,p_note:null}); if(r&&r.ok) renderTab(); else alert('Error'); };
+
+/* Verifications (ID docs) */
+async function viewVerifs(){
+  const rows=await api('/stay_verifications?status=eq.pending&select=id,user_id,role,doc_type,doc_path,created_at&order=created_at.desc');
+  if(!rows.length) return `<div class="empty">${ar()?'لا توجد مستندات قيد المراجعة.':'No pending documents.'}</div>`;
+  return rows.map(v=>`<div class="row"><div class="info"><div class="t">${HZ.esc(v.doc_type)} <span class="badge pending">pending</span></div>
+    <div class="m">${ar()?'المستخدم':'User'}: ${HZ.esc(v.user_id.slice(0,8))} · ${new Date(v.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</div></div>
+    <div class="acts">
+      <button onclick="viewDoc('${HZ.esc(v.doc_path)}')">${ar()?'عرض المستند':'View doc'}</button>
+      <button class="ok" onclick="verifyHost('${v.user_id}','verified')">${ar()?'قبول':'Approve'}</button>
+      <button class="no" onclick="verifyHost('${v.user_id}','rejected')">${ar()?'رفض':'Reject'}</button>
+    </div></div>`).join('');
+}
+window.viewDoc=async(path)=>{
+  try{
+    const res=await fetch(SB_URL+'/storage/v1/object/sign/stay-docs/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:120})});
+    const j=await res.json();
+    if(j&&j.signedURL) window.open(SB_URL+'/storage/v1'+j.signedURL,'_blank'); else alert(ar()?'تعذّر فتح المستند':'Could not open document');
+  }catch(e){ alert('Error'); }
+};
+
+/* Bookings */
+async function viewBookings(){
+  const bk=await api('/stay_bookings?select=id,check_in,check_out,status,total_amount,commission_amount,currency,property_id&order=created_at.desc&limit=100');
+  if(!bk.length) return `<div class="empty">${ar()?'لا حجوزات.':'No bookings.'}</div>`;
+  return bk.map(b=>`<div class="row"><div class="info"><div class="t">${b.check_in} → ${b.check_out} <span class="badge ${b.status}">${b.status}</span></div>
+    <div class="m">${ar()?'الإجمالي':'Total'}: ${money(b.total_amount)} ${b.currency} · ${ar()?'عمولة':'commission'}: ${money(b.commission_amount)}</div></div>
+    <div class="acts"><button onclick="window.open('/stays/'+'${b.property_id}','_blank')">${ar()?'الوحدة':'Property'}</button></div></div>`).join('');
+}
+
+/* Reviews moderation */
+async function viewReviews(){
+  const rv=await api('/stay_reviews?author_role=eq.guest&select=id,overall,comment,is_hidden,created_at,property_id&order=created_at.desc&limit=100');
+  if(!rv.length) return `<div class="empty">${ar()?'لا مراجعات.':'No reviews.'}</div>`;
+  return rv.map(r=>`<div class="row"><div class="info"><div class="t">★ ${Number(r.overall).toFixed(1)} ${r.is_hidden?`<span class="badge rejected">${ar()?'مخفية':'Hidden'}</span>`:''}</div>
+    <div class="m">${HZ.esc(r.comment||'—')}</div></div>
+    <div class="acts">${r.is_hidden?`<button class="ok" onclick="hideRev('${r.id}',false)">${ar()?'استعادة':'Restore'}</button>`:`<button class="no" onclick="hideRev('${r.id}',true)">${ar()?'إخفاء':'Hide'}</button>`}</div></div>`).join('');
+}
+window.hideRev=async(id,hidden)=>{ let reason=hidden?(prompt(ar()?'سبب الإخفاء:':'Reason:')||''):null; const r=await rpc('stay_admin_set_review_hidden',{p_rid:id,p_hidden:hidden,p_reason:reason}); if(r&&r.ok) renderTab(); else alert('Error'); };
+
+/* Disputes */
+async function viewDisputes(){
+  const ds=await api('/stay_disputes?select=id,category,description,status,refund_amount,opener_role,created_at&order=created_at.desc');
+  if(!ds.length) return `<div class="empty">${ar()?'لا نزاعات — كله تمام 👍':'No disputes 👍'}</div>`;
+  return ds.map(d=>`<div class="row"><div class="info"><div class="t">${HZ.esc(d.category)} <span class="badge ${d.status==='resolved'?'approved':d.status==='rejected'?'rejected':'pending'}">${d.status}</span></div>
+    <div class="m">${HZ.esc(d.description||'')}</div></div>
+    <div class="acts">
+      <button class="ok" onclick="resolveDisp('${d.id}','resolved')">${ar()?'حل':'Resolve'}</button>
+      <button class="no" onclick="resolveDisp('${d.id}','rejected')">${ar()?'رفض':'Reject'}</button>
+    </div></div>`).join('');
+}
+window.resolveDisp=async(id,status)=>{ const res=prompt(ar()?'ملاحظة الحل:':'Resolution note:')||''; const refund=status==='resolved'?(+prompt(ar()?'مبلغ الاسترجاع (0 لو لا يوجد):':'Refund amount (0 if none):','0')||0):0; const r=await rpc('stay_admin_resolve_dispute',{p_did:id,p_status:status,p_resolution:res,p_refund:refund}); if(r&&r.ok) renderTab(); else alert('Error'); };
+
+/* Settings */
+let SET={};
+async function viewSettings(){
+  const rows=await api('/stay_settings?select=key,value'); SET={}; rows.forEach(r=>SET[r.key]=r.value);
+  const comm=Math.round((+SET.commission_rate||0.07)*10000)/100;
+  const sh=SET.super_host_criteria||{}, gf=SET.guest_favorite_criteria||{};
+  return `<div class="form">
+    <h3 data-ar="العمولة" data-en="Commission">العمولة</h3>
+    <div class="fld"><label data-ar="عمولة Homzy (%)" data-en="Homzy commission (%)">عمولة Homzy (%)</label><input type="number" id="s_comm" step="0.5" value="${comm}"></div>
+    <h3 data-ar="النشر والمراجعات" data-en="Publishing & reviews">النشر والمراجعات</h3>
+    <div class="fld"><label data-ar="أقل عدد صور للنشر" data-en="Min photos to publish">أقل عدد صور للنشر</label><input type="number" id="s_photos" value="${(SET.min_property_photos)||5}"></div>
+    <div class="fld"><label data-ar="نافذة المراجعة (أيام)" data-en="Review window (days)">نافذة المراجعة (أيام)</label><input type="number" id="s_rev" value="${(SET.review_window_days)||14}"></div>
+    <h3 data-ar="معايير المضيف المتميز" data-en="Super Host criteria">معايير المضيف المتميز</h3>
+    <div class="fld"><label data-ar="أقل إقامات مكتملة" data-en="Min completed stays">أقل إقامات مكتملة</label><input type="number" id="sh_stays" value="${sh.min_completed_stays||10}"></div>
+    <div class="fld"><label data-ar="أقل متوسط تقييم" data-en="Min avg rating">أقل متوسط تقييم</label><input type="number" step="0.1" id="sh_rating" value="${sh.min_avg_rating||4.8}"></div>
+    <div class="fld"><label data-ar="أقصى نسبة إلغاء" data-en="Max cancellation rate">أقصى نسبة إلغاء</label><input type="number" step="0.01" id="sh_canc" value="${sh.max_cancellation_rate||0.05}"></div>
+    <h3 data-ar="معايير مفضّل لدى الضيوف" data-en="Guest Favorite criteria">معايير مفضّل لدى الضيوف</h3>
+    <div class="fld"><label data-ar="أقل عدد مراجعات" data-en="Min reviews">أقل عدد مراجعات</label><input type="number" id="gf_reviews" value="${gf.min_reviews||5}"></div>
+    <div class="fld"><label data-ar="أقل متوسط تقييم" data-en="Min avg rating">أقل متوسط تقييم</label><input type="number" step="0.1" id="gf_rating" value="${gf.min_avg_rating||4.8}"></div>
+    <div class="msg" id="setmsg"></div>
+    <button class="btn btn-teal" onclick="saveSettings()" data-ar="حفظ الإعدادات" data-en="Save settings">حفظ الإعدادات</button>
+  </div>`;
+}
+async function setKey(key,value){ await HZ.sbAuth('/stay_settings?key=eq.'+key, S.token,'PATCH',{value:value}); }
+window.saveSettings=async()=>{
+  const msg=document.getElementById('setmsg'); msg.textContent=ar()?'...جاري الحفظ':'Saving...';
+  try{
+    await setKey('commission_rate', (+document.getElementById('s_comm').value||7)/100);
+    await setKey('min_property_photos', +document.getElementById('s_photos').value||5);
+    await setKey('review_window_days', +document.getElementById('s_rev').value||14);
+    await setKey('super_host_criteria', {min_completed_stays:+document.getElementById('sh_stays').value, min_avg_rating:+document.getElementById('sh_rating').value, min_response_rate:(SET.super_host_criteria&&SET.super_host_criteria.min_response_rate)||0.9, max_cancellation_rate:+document.getElementById('sh_canc').value});
+    await setKey('guest_favorite_criteria', {min_reviews:+document.getElementById('gf_reviews').value, min_avg_rating:+document.getElementById('gf_rating').value, max_cancellation_rate:(SET.guest_favorite_criteria&&SET.guest_favorite_criteria.max_cancellation_rate)||0.05});
+    msg.style.color='#137a3e'; msg.textContent=ar()?'تم الحفظ ✅':'Saved ✅';
+  }catch(e){ msg.style.color='#B42318'; msg.textContent=(ar()?'خطأ: ':'Error: ')+(e.message||''); }
+};
+
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  try{ const me=await api('/profiles?id=eq.'+S.uid+'&select=is_admin'); ISADMIN=!!(me&&me[0]&&me[0].is_admin); }catch(e){ ISADMIN=false; }
+  TAB=parsePath(); renderNav(); renderTab();
+}
+document.addEventListener('hz:lang', ()=>{ renderNav(); renderTab(); });
+boot();
+</script>
+</body>
+</html>

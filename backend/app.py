@@ -466,6 +466,20 @@ def admin_page():
     return FileResponse(config.FRONTEND_DIR / "admin.html")
 
 
+# Homzy Stays admin — one page, tab chosen from the path. Access is enforced by
+# RLS (is_admin) on the data itself; non-admins simply see empty lists.
+@app.get("/admin/stays")
+@app.get("/admin/stays/properties")
+@app.get("/admin/stays/bookings")
+@app.get("/admin/stays/hosts")
+@app.get("/admin/stays/reviews")
+@app.get("/admin/stays/verifications")
+@app.get("/admin/stays/disputes")
+@app.get("/admin/stays/settings")
+def admin_stays_page():
+    return FileResponse(config.FRONTEND_DIR / "admin-stays.html")
+
+
 def _require_admin(token: str | None) -> None:
     if config.ADMIN_TOKEN:
         if token != config.ADMIN_TOKEN:
