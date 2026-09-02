@@ -88,7 +88,7 @@ const T = {
   footTagline:{ar:'مستشارك العقاري الذكي في مصر — بالعربي والإنجليزي، مبني على داتا حقيقية.',en:'Your smart real-estate advisor in Egypt — bilingual, grounded in real data.'},
   platform:{ar:'المنصة',en:'Platform'}, forBrokers:{ar:'للبروكرز',en:'For brokers'},
   admin:{ar:'لوحة الإدارة',en:'Admin'}, join:{ar:'انضم كبروكر',en:'Join as broker'},
-  sell:{ar:'اعرض وحدتك',en:'List your unit'},
+  sell:{ar:'اعرض وحدتك',en:'List your unit'}, clients:{ar:'عملائي',en:'My clients'},
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
@@ -122,7 +122,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/features','features'],['/areas','areas'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/my-listings','mylistings'],['/leads','leads'],['/app','browse'],['/download','app']],
+  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/leads','leads'],['/app','browse']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;
@@ -351,7 +351,7 @@ HZ.loadHtml2pdf = function(){
     s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
     s.onload=res; s.onerror=rej; document.head.appendChild(s); });
 };
-HZ.makeOffer = async function(rec, btn){
+HZ.makeOffer = async function(rec, btn, clientName){
   const ar=HZ.lang==='ar';
   const old = btn && btn.textContent; if(btn){ btn.disabled=true; btn.textContent=ar?'بيتجهّز…':'Preparing…'; }
   try{
@@ -404,6 +404,7 @@ HZ.makeOffer = async function(rec, btn){
         <h1>${HZ.esc(nameAr)}</h1>
         ${nameEn?`<div class="en">${HZ.esc(nameEn)}</div>`:''}
         ${(areaAr||areaEn)?`<div class="loc">${HZ.esc(areaAr)}${(areaAr&&areaEn)?' · ':''}${HZ.esc(areaEn)}</div>`:''}
+        ${clientName?`<div class="loc" style="color:#0B5563;font-weight:800;margin-top:6px">عرض خاص لـ ${HZ.esc(clientName)}</div>`:''}
       </div>
       ${cover?`<div class="of-cover" style="background-image:url('${cover}')"></div>`:''}
       ${price?`<div class="of-price">${HZ.esc(price)}</div>`:''}

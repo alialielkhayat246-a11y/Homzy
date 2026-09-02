@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — عملائي (CRM)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .lx-top .brand{display:flex; align-items:center; gap:9px; font-family:"Poppins",sans-serif; font-weight:800; font-size:18px;}
+  .lx-top .brand svg{width:30px; height:30px;} .lx-top .brand b{color:var(--teal-on-navy,#5FD0DE);}
+  .lx-top .sp{flex:1;}
+  .lx-top a, .lx-top button{font-family:"Cairo"; font-weight:700; font-size:13.5px; border-radius:10px; padding:8px 14px; cursor:pointer; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff; text-decoration:none;}
+  .lx-top a:hover, .lx-top button:hover{background:rgba(255,255,255,.16);}
+  .wrap{max-width:1200px; margin:0 auto; padding:20px 16px 70px;}
+
+  /* gate (same pattern as /my-listings) */
+  .gate{max-width:430px; margin:7vh auto; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:22px; padding:32px 28px; box-shadow:var(--shadow);}
+  .gate .lg{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:14px;}
+  .gate .lg svg{width:44px; height:44px;} .gate .lg b{font-family:"Poppins";font-weight:800;font-size:20px;color:var(--navy);}
+  .gate h1{text-align:center; font-size:21px; color:var(--navy); margin:0 0 6px;}
+  .gate .sub{text-align:center; color:var(--muted); font-size:14px; margin:0 0 20px;}
+  .fld{display:flex; flex-direction:column; margin-bottom:12px;}
+  .fld label{font-size:13px; font-weight:700; color:var(--navy); margin-bottom:6px;}
+  .in{font-family:"Cairo"; font-size:15px; padding:11px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; background:#fff; color:var(--navy); outline:none; width:100%; box-sizing:border-box;}
+  .in:focus{border-color:var(--teal);}
+  select.in{appearance:none;}
+  textarea.in{resize:vertical; min-height:64px;}
+  .msg{margin-top:10px; font-size:13.5px; font-weight:700; text-align:center; min-height:16px;}
+  .msg.err{color:#B42318;} .msg.ok{color:#1E8E5A;}
+
+  /* stats */
+  .stats{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 16px; min-width:110px;}
+  .stat .n{font-family:"Poppins"; font-weight:800; font-size:22px; color:var(--navy); line-height:1;}
+  .stat .l{color:var(--muted); font-size:12.5px; margin-top:5px; font-weight:600;}
+  .stat.warn .n{color:#B42318;}
+
+  .bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px;}
+  .bar h1{font-size:23px; color:var(--navy); margin:0;}
+  .bar .sp{flex:1;}
+  .bar input{font-family:"Cairo"; font-size:14px; padding:9px 13px; border:1.5px solid var(--line-2); border-radius:11px; outline:none; min-width:170px;}
+
+  /* pipeline board */
+  .board{display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; align-items:flex-start;}
+  .col{flex:0 0 260px; background:rgba(255,255,255,.5); border:1px solid var(--line); border-radius:16px; padding:10px; min-height:120px;}
+  .col-h{display:flex; align-items:center; justify-content:space-between; padding:4px 6px 10px; font-weight:800; font-size:14px;}
+  .col-h .cnt{background:var(--cream); border:1px solid var(--line); color:var(--muted); font-size:12px; border-radius:100px; padding:2px 9px;}
+  .col.new .col-h{color:#2563EB;} .col.contact .col-h{color:#0B5563;} .col.viewing .col-h{color:#7C5BAE;}
+  .col.negotiate .col-h{color:#B8860B;} .col.closed .col-h{color:#1E8E5A;} .col.lost .col-h{color:#8A7C5F;}
+  .ccard{background:#fff; border:1px solid var(--line); border-radius:13px; padding:12px; margin-bottom:10px; box-shadow:0 6px 16px -14px rgba(11,29,54,.5);}
+  .ccard .nm{font-weight:800; color:var(--navy); font-size:15px;}
+  .ccard .ph{font-family:"Poppins"; direction:ltr; unicode-bidi:isolate; color:var(--muted); font-size:12.5px; margin-top:1px;}
+  .ccard .req{color:#40506a; font-size:12.5px; margin-top:7px; line-height:1.6;}
+  .ccard .fu{margin-top:6px; font-size:12px; font-weight:700; color:var(--teal-d);}
+  .ccard .fu.over{color:#B42318;}
+  .ccard .note{margin-top:6px; font-size:12px; color:var(--muted); background:var(--cream); border-radius:8px; padding:6px 8px; line-height:1.5; max-height:52px; overflow:hidden;}
+  .ccard .acts{display:flex; gap:6px; margin-top:9px; flex-wrap:wrap;}
+  .ccard .acts button, .ccard .acts a{font-family:"Cairo"; font-weight:700; font-size:11.5px; border-radius:8px; padding:6px 9px; cursor:pointer; border:1.5px solid var(--line-2); background:#fff; color:var(--navy); text-decoration:none;}
+  .ccard .acts .wa{background:#25D366; color:#fff; border-color:#25D366;}
+  .ccard .acts .mu{background:var(--teal-l); color:var(--teal-d); border-color:var(--teal-l);}
+  .ccard .mv{margin-top:8px; width:100%; font-size:12px; padding:6px; border:1.5px solid var(--line-2); border-radius:8px; font-family:"Cairo"; color:var(--navy); background:var(--cream);}
+  .col-empty{color:#b8ac97; font-size:12.5px; text-align:center; padding:16px 6px;}
+
+  /* modal */
+  .ov{position:fixed; inset:0; background:rgba(11,29,54,.55); backdrop-filter:blur(3px); display:none; z-index:90; padding:18px; overflow:auto;}
+  .ov.open{display:flex; align-items:flex-start; justify-content:center;}
+  .modal{background:var(--cream); width:min(560px,100%); border-radius:20px; margin:auto; box-shadow:var(--shadow); overflow:hidden;}
+  .modal .mh{display:flex; align-items:center; justify-content:space-between; padding:15px 20px; background:#fff; border-bottom:1px solid var(--line);}
+  .modal .mh h3{font-size:18px; color:var(--navy); margin:0;} .modal .mx{width:34px;height:34px;border:none;background:var(--cream);border-radius:9px;font-size:19px;cursor:pointer;}
+  .modal .mb{padding:18px; display:flex; flex-direction:column; gap:12px; max-height:74vh; overflow:auto;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .mf{display:flex; gap:10px; padding:15px 20px; background:#fff; border-top:1px solid var(--line);} .mf .btn{flex:1;}
+  /* matching-units list */
+  .mu-item{display:flex; gap:12px; align-items:center; background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:9px;}
+  .mu-item .im{width:64px;height:64px;border-radius:10px;background:#e9e2da center/cover no-repeat;flex:none;}
+  .mu-item .info{flex:1;} .mu-item .info .t{font-weight:800;color:var(--navy);font-size:14px;} .mu-item .info .m{color:var(--muted);font-size:12px;margin-top:2px;}
+  .mu-item .info .pr{color:var(--teal-d);font-weight:800;font-size:13.5px;margin-top:3px;}
+  .mu-item .pdf{font-family:"Cairo";font-weight:800;font-size:12px;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:8px 11px;cursor:pointer;white-space:nowrap;}
+  @media(max-width:560px){ .row2{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- gate -->
+<div id="gate" class="gate" style="display:none">
+  <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
+  <h1>عملائي</h1>
+  <p class="sub">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير عملاءك.</p>
+  <form id="authForm">
+    <div class="fld"><label>رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
+    <div class="fld"><label>كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" required /></div>
+    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%">دخول</button>
+    <div class="msg" id="gMsg"></div>
+  </form>
+  <div class="sub" style="margin-top:14px">عايز حساب بروكر؟ <a href="/leads?register=1" style="color:var(--teal-d);font-weight:800">سجّل من هنا</a></div>
+</div>
+
+<!-- app -->
+<div id="app" style="display:none">
+  <div class="lx-top">
+    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>عملائي</b></span>
+    <span class="sp"></span>
+    <a href="/my-listings">وحداتي</a>
+    <a href="/leads">سوق الليدز</a>
+    <button onclick="signOut()">خروج</button>
+  </div>
+  <div class="wrap">
+    <div class="stats" id="stats"></div>
+    <div class="bar">
+      <h1>خط سير العملاء</h1>
+      <span class="sp"></span>
+      <input id="search" placeholder="ابحث باسم / رقم / منطقة…" oninput="renderBoard()" />
+      <button class="btn btn-teal" onclick="openForm()">＋ أضف عميل</button>
+    </div>
+    <div class="board" id="board"></div>
+  </div>
+</div>
+
+<!-- client form modal -->
+<div class="ov" id="formOv">
+  <div class="modal">
+    <div class="mh"><h3 id="fTitle">إضافة عميل</h3><button class="mx" onclick="closeForm()">×</button></div>
+    <div class="mb">
+      <div class="row2">
+        <div class="fld"><label>الاسم</label><input class="in" id="cName" placeholder="اسم العميل" /></div>
+        <div class="fld"><label>رقم الموبايل</label><input class="in" id="cPhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" /></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>الغرض</label><select class="in" id="cPurpose"><option value="sale">شراء</option><option value="rent">إيجار</option></select></div>
+        <div class="fld"><label>النوع</label><select class="in" id="cType"><option value="">أي نوع</option><option value="apartment">شقة</option><option value="villa">فيلا</option><option value="duplex">دوبلكس</option><option value="penthouse">بنتهاوس</option><option value="studio">استوديو</option><option value="townhouse">تاون هاوس</option><option value="office">مكتب</option><option value="shop">محل</option></select></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>المنطقة</label><input class="in" id="cArea" placeholder="التجمع الخامس" /></div>
+        <div class="fld"><label>الميزانية (حتى)</label><input class="in" id="cBudget" type="number" inputmode="numeric" placeholder="6000000" /></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label>عدد الغرف</label><input class="in" id="cBeds" type="number" inputmode="numeric" placeholder="3" /></div>
+        <div class="fld"><label>المرحلة</label><select class="in" id="cStage"></select></div>
+      </div>
+      <div class="fld"><label>موعد المتابعة القادم</label><input class="in" id="cFollow" type="date" /></div>
+      <div class="fld"><label>ملاحظات</label><textarea class="in" id="cNotes" placeholder="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…"></textarea></div>
+      <div class="msg" id="fMsg"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
+      <button class="btn btn-teal" id="saveBtn" onclick="saveClient()">حفظ العميل</button>
+    </div>
+  </div>
+</div>
+
+<!-- matching units modal -->
+<div class="ov" id="muOv">
+  <div class="modal">
+    <div class="mh"><h3 id="muTitle">وحدات مطابقة</h3><button class="mx" onclick="document.getElementById('muOv').classList.remove('open')">×</button></div>
+    <div class="mb" id="muBody"></div>
+  </div>
+</div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
+const $=id=>document.getElementById(id);
+let TOKEN=null, UID=null, CLIENTS=[], EDIT_ID=null;
+const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>n==null||n===''?'':Number(n).toLocaleString('en-US')+' ج.م';
+
+const STAGES=[
+  {k:'new',label:'جديد'},{k:'contact',label:'تواصل'},{k:'viewing',label:'معاينة'},
+  {k:'negotiate',label:'تفاوض'},{k:'closed',label:'تم البيع'},{k:'lost',label:'خسارة'}
+];
+const stageLabel=k=>(STAGES.find(s=>s.k===k)||{label:'جديد'}).label;
+
+function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
+const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
+async function api(path, opts){
+  const r=await fetch(SB_URL+'/rest/v1'+path, Object.assign({headers:{apikey:SB_KEY, Authorization:'Bearer '+(TOKEN||SB_KEY), 'Content-Type':'application/json'}}, opts||{}));
+  if(!r.ok){ throw new Error('sb '+r.status+' '+(await r.text())); }
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+
+/* auth */
+$('authForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const phone=normPhone($('phone').value), password=$('password').value;
+  if(phone.length<11){ $('gMsg').textContent='رقم موبايل غير صحيح.'; $('gMsg').className='msg err'; return; }
+  $('authBtn').disabled=true;
+  try{ const {error}=await sb.auth.signInWithPassword({ email:phoneEmail($('phone').value), password }); if(error) throw error; boot(); }
+  catch(err){ $('gMsg').textContent=/Invalid login|credentials/i.test(err.message)?'الرقم أو كلمة المرور غلط.':err.message; $('gMsg').className='msg err'; }
+  finally{ $('authBtn').disabled=false; }
+});
+window.signOut=async ()=>{ await sb.auth.signOut(); location.reload(); };
+
+// populate stage select
+$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
+  TOKEN=session.access_token; UID=session.user.id;
+  $('gate').style.display='none'; $('app').style.display='block';
+  loadClients();
+}
+window.loadClients=async ()=>{
+  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){ CLIENTS=[]; }
+  renderStats(); renderBoard();
+};
+function isOverdue(d){ if(!d) return false; return new Date(d) < new Date(new Date().toDateString()); }
+function renderStats(){
+  const total=CLIENTS.length;
+  const open=CLIENTS.filter(c=>c.stage!=='closed'&&c.stage!=='lost').length;
+  const won=CLIENTS.filter(c=>c.stage==='closed').length;
+  const over=CLIENTS.filter(c=>isOverdue(c.next_followup)&&c.stage!=='closed'&&c.stage!=='lost').length;
+  $('stats').innerHTML=
+    `<div class="stat"><div class="n">${total}</div><div class="l">إجمالي العملاء</div></div>`
+   +`<div class="stat"><div class="n">${open}</div><div class="l">صفقات مفتوحة</div></div>`
+   +`<div class="stat"><div class="n">${won}</div><div class="l">تم البيع</div></div>`
+   +`<div class="stat ${over?'warn':''}"><div class="n">${over}</div><div class="l">متابعات متأخرة</div></div>`;
+}
+window.renderBoard=()=>{
+  const q=($('search').value||'').trim().toLowerCase();
+  const match=c=>!q||((c.name||'')+' '+(c.phone||'')+' '+(c.area||'')).toLowerCase().includes(q);
+  $('board').innerHTML=STAGES.map(s=>{
+    const list=CLIENTS.filter(c=>(c.stage||'new')===s.k && match(c));
+    const cards=list.map(cardHTML).join('')||'<div class="col-empty">—</div>';
+    return `<div class="col ${s.k}"><div class="col-h"><span>${s.label}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
+  }).join('');
+};
+function cardHTML(c){
+  const wa=c.phone?normPhone(c.phone):'';
+  const req=[c.area, c.budget?('حتى '+money(c.budget)):'', c.bedrooms?(c.bedrooms+' غرف'):'', c.purpose==='rent'?'إيجار':'شراء'].filter(Boolean).join(' · ');
+  const fu=c.next_followup?`<div class="fu ${isOverdue(c.next_followup)&&c.stage!=='closed'&&c.stage!=='lost'?'over':''}">📅 متابعة: ${esc(c.next_followup)}</div>`:'';
+  const opts=STAGES.map(s=>`<option value="${s.k}"${(c.stage||'new')===s.k?' selected':''}>${s.label}</option>`).join('');
+  return `<div class="ccard">
+    <div class="nm">${esc(c.name||'—')}</div>
+    ${c.phone?`<div class="ph">${esc(c.phone)}</div>`:''}
+    ${req?`<div class="req">${esc(req)}</div>`:''}
+    ${fu}
+    ${c.notes?`<div class="note">${esc(c.notes)}</div>`:''}
+    <div class="acts">
+      ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}">واتساب</a>`:''}
+      <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
+      <button onclick="editClient('${c.id}')">تعديل</button>
+      <button onclick="delClient('${c.id}')" style="color:#B42318">حذف</button>
+    </div>
+    <select class="mv" onchange="moveStage('${c.id}',this.value)">${opts}</select>
+  </div>`;
+}
+
+/* form */
+window.openForm=()=>{ EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
+  ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes'].forEach(id=>$(id).value='');
+  $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg(''); $('formOv').classList.add('open'); };
+window.closeForm=()=>$('formOv').classList.remove('open');
+window.editClient=(id)=>{ const c=CLIENTS.find(x=>x.id===id); if(!c) return; EDIT_ID=id; $('fTitle').textContent='تعديل العميل';
+  $('cName').value=c.name||''; $('cPhone').value=c.phone||''; $('cPurpose').value=c.purpose||'sale'; $('cType').value=c.type||'';
+  $('cArea').value=c.area||''; $('cBudget').value=c.budget||''; $('cBeds').value=c.bedrooms||''; $('cStage').value=c.stage||'new';
+  $('cFollow').value=c.next_followup||''; $('cNotes').value=c.notes||''; fmsg(''); $('formOv').classList.add('open'); };
+function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':(t?'err':'')); }
+window.saveClient=async ()=>{
+  const name=$('cName').value.trim();
+  if(name.length<2){ fmsg('اكتب اسم العميل.'); return; }
+  const rec={ owner_id:UID, name, phone:$('cPhone').value.trim()||null, purpose:$('cPurpose').value, type:$('cType').value||null,
+    area:$('cArea').value.trim()||null, budget:$('cBudget').value?Number($('cBudget').value):null,
+    bedrooms:$('cBeds').value?Number($('cBeds').value):null, stage:$('cStage').value,
+    next_followup:$('cFollow').value||null, notes:$('cNotes').value.trim()||null };
+  $('saveBtn').disabled=true;
+  try{
+    if(EDIT_ID) await api('/clients?id=eq.'+EDIT_ID,{method:'PATCH',body:JSON.stringify(rec)});
+    else await api('/clients',{method:'POST',body:JSON.stringify(rec)});
+    closeForm(); loadClients();
+  }catch(e){ fmsg('تعذّر الحفظ.'); } finally{ $('saveBtn').disabled=false; }
+};
+window.moveStage=async (id,stage)=>{ try{ await api('/clients?id=eq.'+id,{method:'PATCH',body:JSON.stringify({stage})}); const c=CLIENTS.find(x=>x.id===id); if(c)c.stage=stage; renderStats(); renderBoard(); }catch(e){} };
+window.delClient=async (id)=>{ if(!confirm('تمسح العميل ده؟')) return; try{ await api('/clients?id=eq.'+id,{method:'DELETE'}); CLIENTS=CLIENTS.filter(x=>x.id!==id); renderStats(); renderBoard(); }catch(e){} };
+
+/* matching units for a client → offer */
+window.matchUnits=async (id)=>{
+  const c=CLIENTS.find(x=>x.id===id); if(!c) return;
+  $('muTitle').textContent='وحدات مطابقة لـ '+(c.name||'');
+  $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">…بدوّر</div>';
+  $('muOv').classList.add('open');
+  try{
+    const args={ p_areas:c.area?[c.area]:null, p_max:c.budget||null, p_beds:(c.bedrooms!=null?c.bedrooms:null), p_sort:'recent', p_limit:6 };
+    const rows=(await HZ.rpc('search_projects', args))||[];
+    if(!rows.length){ $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">مفيش وحدات مطابقة بالضبط — جرّب توسّع المعايير.</div>'; return; }
+    window.__muClient=c.name||'';
+    $('muBody').innerHTML=rows.map((p,i)=>{
+      const nm=p.name_ar||p.name||'مشروع';
+      const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+      const pr=p.price_from_min!=null?('يبدأ من '+money(p.price_from_min)):'';
+      window['__mu'+i]=p;
+      return `<div class="mu-item"><div class="im" style="${bg}"></div>
+        <div class="info"><div class="t">${esc(nm)}</div><div class="m">${esc(p.area||'')}${p.developer_name?' · '+esc(p.developer_name):''}</div><div class="pr">${pr}</div></div>
+        <button class="pdf" onclick="offerFor(${i})">📄 عرض PDF</button></div>`;
+    }).join('');
+  }catch(e){ $('muBody').innerHTML='<div style="text-align:center;color:#B42318;padding:20px">حصل خطأ.</div>'; }
+};
+// map a search_projects row to the chat-rec shape HZ.makeOffer expects, then generate the PDF
+window.offerFor=(i)=>{
+  const p=window['__mu'+i]; if(!p||!window.HZ||!HZ.makeOffer) return;
+  const rec={ compound:p.name, compound_ar:p.name_ar, area:p.area, area_ar:p.area,
+    developer:p.developer_name, bedrooms:(p.beds_min!=null?p.beds_min:null),
+    size_sqm:(p.size_from_min!=null?(p.size_to_max&&p.size_to_max>p.size_from_min?(p.size_from_min+'–'+p.size_to_max):p.size_from_min):null),
+    price_ar:(p.price_from_min!=null?('يبدأ من '+money(p.price_from_min)):''),
+    price_en:(p.price_from_min!=null?('from '+Number(p.price_from_min).toLocaleString('en-US')+' EGP'):''),
+    down_payment:p.down_payment||null, installment_years:p.installment_years_max||null,
+    delivery:p.delivery||null, market:'primary', cover_image:p.cover_image_url||null };
+  HZ.makeOffer(rec, null, window.__muClient||'');
+};
+
+boot();
+</script>
+</body>
+</html>

@@ -81,6 +81,14 @@ def leads_page():
     return FileResponse(config.FRONTEND_DIR / "leads.html")
 
 
+@app.get("/clients")
+def clients_page():
+    """Broker CRM — manage clients through a sales pipeline, match units, and
+    generate offers. Auth + CRUD run client-side against Supabase (RLS scopes
+    every client row to owner_id = the signed-in broker)."""
+    return FileResponse(config.FRONTEND_DIR / "clients.html")
+
+
 @app.get("/my-listings")
 def my_listings_page():
     """Broker dashboard: post / edit / delete their own units (listings) with
