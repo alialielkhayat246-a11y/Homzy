@@ -394,7 +394,6 @@ HZ.makeOffer = async function(rec, btn){
     }
     const el=document.createElement('div');
     el.id='hz-offer-sheet'; el.dir='rtl';
-    el.style.cssText='position:absolute;left:-9999px;top:0;';
     el.innerHTML=`<div class="of-wrap">
       <div class="of-top">
         ${logo?`<div class="lg" style="background-image:url('${logo}')"></div>`:''}
@@ -419,14 +418,19 @@ HZ.makeOffer = async function(rec, btn){
       </div>
       <div class="of-foot">تم إنشاء هذا العرض عبر Homzy — homzy-ai.com · الأسعار والتفاصيل قابلة للتأكيد.</div>
     </div>`;
-    document.body.appendChild(el);
+    // Render the sheet VISIBLE in an overlay — html2canvas renders blank for
+    // off-screen (left:-9999px) nodes, so show it on screen while capturing.
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(11,29,54,.7);overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:22px;';
+    el.style.boxShadow='0 20px 60px rgba(0,0,0,.45)';
+    ov.appendChild(el); document.body.appendChild(ov);
     await HZ.loadHtml2pdf();
     try{ await document.fonts.ready; }catch(e){}
-    await new Promise(r=>setTimeout(r,180));   // let layout + fonts + bg images settle
+    await new Promise(r=>setTimeout(r,350));   // let layout + fonts + bg images settle
     const h=Math.max(el.scrollHeight, 900);
     const fn='Homzy-offer-'+(name||'unit').replace(/[^\wء-ي]+/g,'-').slice(0,40)+'.pdf';
-    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:820,width:794,height:h,scrollX:0,scrollY:0},jsPDF:{unit:'px',format:[794,h],orientation:'portrait'}}).from(el).save();
-    el.remove();
+    await html2pdf().set({margin:0,filename:fn,image:{type:'jpeg',quality:.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},jsPDF:{unit:'px',format:[794,h],orientation:'portrait'}}).from(el).save();
+    ov.remove();
   }catch(e){ alert(ar?'تعذّر إنشاء العرض، جرّب تاني.':'Could not create the offer.'); }
   finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
 };
