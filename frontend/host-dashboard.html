@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy Stays — لوحة المضيف</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .hd{max-width:1080px;margin:0 auto;padding:22px;}
+  .hnav{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 24px;border-bottom:1px solid var(--line);padding-bottom:12px;}
+  .hnav a{padding:9px 15px;border-radius:100px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;}
+  .hnav a.on{background:var(--navy);color:#fff;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  @media(max-width:720px){.stats{grid-template-columns:1fr 1fr;}}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
+  .stat .n{font-size:24px;font-weight:900;} .stat .l{color:var(--muted);font-size:13px;margin-top:3px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr;}} @media(max-width:600px){.grid{grid-template-columns:1fr;}}
+  .pc{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .pc .ph{aspect-ratio:16/10;background:#e9eef1;position:relative;}
+  .pc .ph img{width:100%;height:100%;object-fit:cover;}
+  .pc .st{position:absolute;top:8px;inset-inline-start:8px;font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:100px;}
+  .st.draft{background:#F1F0EE;color:#555;} .st.pending{background:#FFF4E5;color:#B45309;}
+  .st.approved{background:#E6F6EC;color:#137a3e;} .st.rejected,.st.suspended{background:#FDECEC;color:#B42318;}
+  .pc .b{padding:13px 14px;} .pc .t{font-weight:800;} .pc .m{color:var(--muted);font-size:13px;margin-top:4px;}
+  .pc .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .pc .acts button,.pc .acts a{font-size:13px;padding:7px 12px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer;}
+  /* form */
+  .form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;max-width:760px;}
+  .form h3{margin:18px 0 12px;font-size:16px;color:var(--teal-d);}
+  .form h3:first-child{margin-top:0;}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:600px){.fg{grid-template-columns:1fr;}}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+  .fld label{font-size:13px;font-weight:700;color:#40506a;}
+  .fld input,.fld select,.fld textarea{border:1.5px solid var(--line-2);border-radius:10px;padding:10px 12px;font-family:var(--ff);font-size:14px;font-weight:600;color:var(--navy);outline:none;}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--teal);}
+  .amenwrap{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  @media(max-width:600px){.amenwrap{grid-template-columns:1fr 1fr;}}
+  .amchk{display:flex;gap:7px;align-items:center;font-size:14px;font-weight:600;background:#fff;border:1.5px solid var(--line-2);border-radius:9px;padding:8px 10px;cursor:pointer;}
+  .amchk.on{border-color:var(--teal);background:var(--teal-l);}
+  .toggles{display:flex;gap:8px;flex-wrap:wrap;}
+  .tgl{font-size:13.5px;font-weight:700;padding:8px 13px;border-radius:100px;border:1.5px solid var(--line-2);cursor:pointer;background:#fff;}
+  .tgl.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .photos{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .photo{position:relative;width:110px;height:82px;border-radius:10px;overflow:hidden;border:1px solid var(--line);}
+  .photo img{width:100%;height:100%;object-fit:cover;}
+  .photo .x{position:absolute;top:3px;inset-inline-end:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:800;}
+  .photo .cov{position:absolute;bottom:0;inset-inline-start:0;background:var(--teal);color:#fff;font-size:10px;font-weight:800;padding:2px 6px;}
+  .addph{width:110px;height:82px;border:2px dashed var(--line-2);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:26px;}
+  .msg{margin-top:12px;font-weight:800;} .msg.ok{color:#137a3e;} .msg.err{color:#B42318;}
+  #map{height:260px;border-radius:12px;border:1px solid var(--line);z-index:0;margin-top:6px;}
+  .row{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;max-width:520px;}
+  .cal .dow{text-align:center;font-weight:800;font-size:12px;color:var(--muted);padding:4px;}
+  .cal .day{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;cursor:pointer;background:#fff;}
+  .cal .day.blocked{background:#FDECEC;color:#B42318;border-color:#f3c4c4;}
+  .cal .day.booked{background:#EAF0FA;color:#1f4e9c;cursor:not-allowed;}
+  .cal .day.past{opacity:.35;cursor:not-allowed;}
+  .cal .day.empty{border:none;background:transparent;cursor:default;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="hd">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <h1 data-ar="لوحة المضيف" data-en="Host dashboard">لوحة المضيف</h1>
+    <a class="btn btn-teal btn-sm" onclick="go('new')" data-ar="＋ أضف وحدة" data-en="＋ Add a property">＋ أضف وحدة</a>
+  </div>
+  <div class="hnav" id="hnav"></div>
+  <div id="content"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+const money=n=> n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+let S=null, TYPES=[], AMENS=[], DESTS=[], PROPS=[], TAB='properties', EDIT=null, MAP=null, MARKER=null, CALPROP=null;
+const TABS=[['properties','وحداتي','My properties'],['calendar','التقويم','Calendar'],['bookings','الحجوزات','Bookings'],['earnings','الأرباح','Earnings'],['reviews','المراجعات','Reviews'],['verification','التوثيق','Verification']];
+
+function parsePath(){
+  const p=location.pathname.split('/').filter(Boolean); // host, x, y
+  const x=p[1], y=p[2];
+  if(!x||x==='properties'){ if(y==='new') return {tab:'new'}; if(y) return {tab:'edit',id:y}; return {tab:'properties'}; }
+  if(x==='profile') return {tab:'verification'};
+  return {tab:x};
+}
+function go(tab,id){
+  let url='/host/properties';
+  if(tab==='new') url='/host/properties/new';
+  else if(tab==='edit') url='/host/properties/'+id;
+  else if(tab!=='properties') url='/host/'+tab;
+  history.pushState({},'',url); route();
+}
+window.onpopstate=route;
+function route(){ const r=parsePath(); TAB=r.tab; EDIT=r.id||null; renderNav(); renderTab(); }
+function renderNav(){
+  const active = TAB==='new'||TAB==='edit' ? 'properties' : TAB;
+  document.getElementById('hnav').innerHTML=TABS.map(([k,a,e])=>`<a class="${k===active?'on':''}" onclick="go('${k}')">${ar()?a:e}</a>`).join('');
+}
+
+async function ensureHost(){
+  const ex=await HZ.sbAuth('/stay_hosts?user_id=eq.'+S.uid+'&select=user_id,verification_status', S.token);
+  if(!ex||!ex.length){ await HZ.sbAuth('/stay_hosts',S.token,'POST',{user_id:S.uid,verification_status:'pending'}); return {verification_status:'pending'}; }
+  return ex[0];
+}
+async function loadProps(){
+  PROPS=await HZ.sbAuth('/stay_properties?host_id=eq.'+S.uid+'&select=*,stay_pricing(base_price,currency),stay_property_images(id,url,is_cover,sort)&order=created_at.desc', S.token)||[];
+}
+
+async function renderTab(){
+  const c=document.getElementById('content');
+  c.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">…</div>';
+  try{
+    if(TAB==='properties'){ await loadProps(); c.innerHTML=viewProps(); }
+    else if(TAB==='new'||TAB==='edit'){ await renderWizard(c); }
+    else if(TAB==='calendar'){ await loadProps(); await renderCalendar(c); }
+    else if(TAB==='bookings'){ c.innerHTML=await viewBookings(); }
+    else if(TAB==='earnings'){ c.innerHTML=await viewEarnings(); }
+    else if(TAB==='reviews'){ c.innerHTML=await viewReviews(); }
+    else if(TAB==='verification'){ c.innerHTML=await viewVerification(); }
+    HZ.applyLang();
+  }catch(e){ c.innerHTML='<div style="padding:30px;color:#B42318">'+(ar()?'حصل خطأ في التحميل.':'Load error.')+' '+HZ.esc(e.message||'')+'</div>'; }
+}
+
+/* ---------- Properties list ---------- */
+function stLabel(s){ return ({draft:['مسودة','Draft'],pending:['قيد المراجعة','Pending review'],approved:['منشورة','Published'],rejected:['مرفوضة','Rejected'],suspended:['موقوفة','Suspended']}[s]||[s,s])[ar()?0:1]; }
+function viewProps(){
+  if(!PROPS.length) return `<div style="padding:50px;text-align:center;color:var(--muted)">${ar()?'لسه مضفتش أي وحدة.':'No properties yet.'}<br><br><button class="btn btn-teal" onclick="go('new')">${ar()?'أضف أول وحدة':'Add your first property'}</button></div>`;
+  return `<div class="grid">`+PROPS.map(p=>{
+    const cov=(p.stay_property_images||[]).sort((a,b)=>b.is_cover-a.is_cover||a.sort-b.sort)[0];
+    const price=(p.stay_pricing&&p.stay_pricing.base_price)||0;
+    const canSubmit=p.status==='draft';
+    return `<div class="pc"><div class="ph"><span class="st ${p.status}">${stLabel(p.status)}</span>${cov?`<img src="${HZ.esc(cov.url)}">`:''}</div>
+      <div class="b"><div class="t">${HZ.esc(p.title||'—')}</div>
+      <div class="m">${HZ.esc(p.city||'')} · ${money(price)} ${ar()?'ج.م/ليلة':'EGP/night'} · ${(p.stay_property_images||[]).length} ${ar()?'صور':'photos'}</div>
+      <div class="acts">
+        <button onclick="go('edit','${p.id}')">${ar()?'تعديل':'Edit'}</button>
+        <button onclick="calFor('${p.id}')">${ar()?'التقويم':'Calendar'}</button>
+        ${canSubmit?`<button style="border-color:var(--teal);color:var(--teal-d)" onclick="submitProp('${p.id}')">${ar()?'اطلب النشر':'Submit'}</button>`:''}
+        ${p.status==='approved'?`<a href="/stays/${p.id}" target="_blank">${ar()?'عرض':'View'}</a>`:''}
+      </div></div></div>`;
+  }).join('')+`</div>`;
+}
+async function submitProp(id){
+  try{ await HZ.sbAuth('/stay_properties?id=eq.'+id,S.token,'PATCH',{status:'pending'}); alert(ar()?'تم إرسال الوحدة للمراجعة ✅':'Submitted for review ✅'); renderTab(); }
+  catch(e){ alert(ar()?'محتاجة 5 صور على الأقل قبل النشر.':'Needs at least 5 photos before submitting.'); }
+}
+window.submitProp=submitProp; window.calFor=(id)=>{ CALPROP=id; go('calendar'); };
+
+/* ---------- Wizard ---------- */
+let WPROP=null, WAMEN=new Set(), WRULES={smoking:false,pets:false,parties:false,children:true};
+async function renderWizard(c){
+  WPROP=null; WAMEN=new Set(); WRULES={smoking:false,pets:false,parties:false,children:true};
+  if(EDIT){
+    const rows=await HZ.sbAuth('/stay_properties?id=eq.'+EDIT+'&select=*,stay_pricing(*),stay_house_rules(*),stay_property_amenities(amenity_id),stay_property_images(id,url,is_cover,sort)',S.token);
+    WPROP=rows&&rows[0];
+    if(WPROP){ (WPROP.stay_property_amenities||[]).forEach(a=>WAMEN.add(a.amenity_id));
+      if(WPROP.stay_house_rules&&WPROP.stay_house_rules[0]) WRULES=WPROP.stay_house_rules[0]; }
+  }
+  const p=WPROP||{}, pr=(WPROP&&WPROP.stay_pricing&&WPROP.stay_pricing[0])||{};
+  const opt=(a,sel)=>`<option value="${a[0]}" ${sel===a[0]?'selected':''}>${ar()?a[2]:a[1]}</option>`;
+  c.innerHTML=`<div class="form">
+    <h3 data-ar="الأساسيات" data-en="Basics">الأساسيات</h3>
+    <div class="fld"><label data-ar="عنوان الوحدة" data-en="Title">عنوان الوحدة</label><input id="w_title" value="${HZ.esc(p.title||'')}"></div>
+    <div class="fg">
+      <div class="fld"><label data-ar="النوع" data-en="Type">النوع</label><select id="w_type">${TYPES.map(t=>`<option value="${t.slug}" ${p.type_slug===t.slug?'selected':''}>${ar()?t.name_ar:t.name_en}</option>`).join('')}</select></div>
+      <div class="fld"><label data-ar="الوجهة" data-en="Destination">الوجهة</label><select id="w_dest"><option value="">—</option>${DESTS.map(d=>`<option value="${d.slug}" ${p.destination_slug===d.slug?'selected':''}>${ar()?d.name_ar:d.name_en}</option>`).join('')}</select></div>
+    </div>
+    <div class="fld"><label data-ar="الوصف" data-en="Description">الوصف</label><textarea id="w_desc" rows="3">${HZ.esc(p.description||'')}</textarea></div>
+    <div class="fg">
+      <div class="fld"><label data-ar="أقصى عدد ضيوف" data-en="Max guests">أقصى عدد ضيوف</label><input type="number" id="w_guests" min="1" value="${p.max_guests||2}"></div>
+      <div class="fld"><label data-ar="غرف النوم" data-en="Bedrooms">غرف النوم</label><input type="number" id="w_bed" min="0" value="${p.bedrooms||1}"></div>
+      <div class="fld"><label data-ar="الأسرّة" data-en="Beds">الأسرّة</label><input type="number" id="w_beds" min="0" value="${p.beds||1}"></div>
+      <div class="fld"><label data-ar="الحمامات" data-en="Bathrooms">الحمامات</label><input type="number" id="w_bath" min="0" step="0.5" value="${p.bathrooms||1}"></div>
+    </div>
+
+    <h3 data-ar="الموقع" data-en="Location">الموقع</h3>
+    <div class="fg">
+      <div class="fld"><label data-ar="المحافظة" data-en="Governorate">المحافظة</label><input id="w_gov" value="${HZ.esc(p.governorate||'')}"></div>
+      <div class="fld"><label data-ar="المدينة" data-en="City">المدينة</label><input id="w_city" value="${HZ.esc(p.city||'')}"></div>
+    </div>
+    <div class="fld"><label data-ar="المنطقة/الحي" data-en="Area">المنطقة/الحي</label><input id="w_area" value="${HZ.esc(p.area||'')}"></div>
+    <div class="fld"><label data-ar="اضغط على الخريطة لتحديد الموقع" data-en="Click the map to set location">اضغط على الخريطة لتحديد الموقع</label><div id="map"></div></div>
+    <label class="amchk ${p.show_exact_location?'on':''}" style="display:inline-flex" id="w_exact_l" onclick="var i=document.getElementById('w_exact');i.checked=!i.checked;this.classList.toggle('on',i.checked)"><input type="checkbox" id="w_exact" ${p.show_exact_location?'checked':''} style="display:none"><span data-ar="إظهار الموقع الدقيق للعامة" data-en="Show exact location publicly">إظهار الموقع الدقيق للعامة</span></label>
+
+    <h3 data-ar="التسعير" data-en="Pricing">التسعير</h3>
+    <div class="fg">
+      <div class="fld"><label data-ar="السعر/ليلة (ج.م)" data-en="Nightly price">السعر/ليلة (ج.م)</label><input type="number" id="w_price" min="0" value="${pr.base_price||''}"></div>
+      <div class="fld"><label data-ar="سعر عطلة نهاية الأسبوع" data-en="Weekend price">سعر عطلة نهاية الأسبوع</label><input type="number" id="w_wprice" min="0" value="${pr.weekend_price||''}"></div>
+      <div class="fld"><label data-ar="رسوم النظافة" data-en="Cleaning fee">رسوم النظافة</label><input type="number" id="w_clean" min="0" value="${pr.cleaning_fee||0}"></div>
+      <div class="fld"><label data-ar="أقل عدد ليالٍ" data-en="Min nights">أقل عدد ليالٍ</label><input type="number" id="w_min" min="1" value="${pr.min_nights||1}"></div>
+    </div>
+    <div class="fld"><label data-ar="سياسة الإلغاء" data-en="Cancellation policy">سياسة الإلغاء</label><select id="w_cancel">
+      ${['flexible|مرنة|Flexible','moderate|متوسطة|Moderate','strict|صارمة|Strict'].map(x=>{const a=x.split('|');return `<option value="${a[0]}" ${pr.cancellation_policy===a[0]?'selected':''}>${ar()?a[1]:a[2]}</option>`;}).join('')}
+    </select></div>
+
+    <h3 data-ar="المميزات" data-en="Amenities">المميزات</h3>
+    <div class="amenwrap">${AMENS.map(a=>`<label class="amchk ${WAMEN.has(a.id)?'on':''}" onclick="tglAmen(${a.id},this)"><span>${ar()?a.name_ar:a.name_en}</span></label>`).join('')}</div>
+
+    <h3 data-ar="القواعد" data-en="House rules">القواعد</h3>
+    <div class="fg">
+      <div class="fld"><label data-ar="تسجيل الوصول" data-en="Check-in">تسجيل الوصول</label><input id="w_cin" value="${HZ.esc(WRULES.checkin_time||'14:00')}"></div>
+      <div class="fld"><label data-ar="المغادرة" data-en="Check-out">المغادرة</label><input id="w_cout" value="${HZ.esc(WRULES.checkout_time||'12:00')}"></div>
+    </div>
+    <div class="toggles">
+      <div class="tgl ${WRULES.smoking?'on':''}" onclick="tglRule('smoking',this)" data-ar="التدخين" data-en="Smoking">التدخين</div>
+      <div class="tgl ${WRULES.pets?'on':''}" onclick="tglRule('pets',this)" data-ar="حيوانات أليفة" data-en="Pets">حيوانات أليفة</div>
+      <div class="tgl ${WRULES.parties?'on':''}" onclick="tglRule('parties',this)" data-ar="حفلات" data-en="Parties">حفلات</div>
+      <div class="tgl ${WRULES.children?'on':''}" onclick="tglRule('children',this)" data-ar="أطفال" data-en="Children">أطفال</div>
+    </div>
+
+    <h3 data-ar="الصور" data-en="Photos">الصور</h3>
+    <div id="photosBox">${EDIT?photosHTML():`<div style="color:var(--muted);font-size:14px">${ar()?'احفظ المسودة الأول علشان تقدر ترفع الصور.':'Save the draft first, then upload photos.'}</div>`}</div>
+
+    <div class="msg" id="wmsg"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-teal" onclick="saveWizard()" data-ar="حفظ" data-en="Save">حفظ</button>
+      ${EDIT?`<button class="btn btn-navy" onclick="submitProp('${EDIT}')" data-ar="اطلب النشر" data-en="Submit for review">اطلب النشر</button>`:''}
+      <button class="btn btn-ghost" onclick="go('properties')" data-ar="رجوع" data-en="Back">رجوع</button>
+    </div>
+  </div>`;
+  setTimeout(()=>initWizMap(p),60);
+}
+window.tglAmen=(id,el)=>{ if(WAMEN.has(id))WAMEN.delete(id); else WAMEN.add(id); el.classList.toggle('on'); };
+window.tglRule=(k,el)=>{ WRULES[k]=!WRULES[k]; el.classList.toggle('on'); };
+function initWizMap(p){
+  if(typeof L==='undefined') return;
+  const lat=p.lat||30.0444, lng=p.lng||31.2357;
+  MAP=L.map('map').setView([lat,lng],p.lat?13:6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(MAP);
+  if(p.lat){ MARKER=L.marker([lat,lng]).addTo(MAP); }
+  MAP.on('click',e=>{ if(MARKER)MARKER.setLatLng(e.latlng); else MARKER=L.marker(e.latlng).addTo(MAP); });
+}
+async function saveWizard(){
+  const msg=document.getElementById('wmsg'); msg.className='msg'; msg.textContent=ar()?'...جاري الحفظ':'Saving...';
+  await ensureHost();
+  const body={ title:val('w_title'), type_slug:val('w_type'), destination_slug:val('w_dest')||null, description:val('w_desc'),
+    max_guests:+val('w_guests')||1, bedrooms:+val('w_bed')||0, beds:+val('w_beds')||0, bathrooms:+val('w_bath')||1,
+    governorate:val('w_gov'), city:val('w_city'), area:val('w_area'),
+    show_exact_location:document.getElementById('w_exact').checked };
+  if(MARKER){ const ll=MARKER.getLatLng(); body.lat=ll.lat; body.lng=ll.lng; }
+  let pid=EDIT;
+  try{
+    if(EDIT){ await HZ.sbAuth('/stay_properties?id=eq.'+EDIT,S.token,'PATCH',body); }
+    else{ body.host_id=S.uid; const r=await HZ.sbAuth('/stay_properties',S.token,'POST',body,{Prefer:'return=representation'}); pid=r[0].id; }
+    const pricing={ property_id:pid, base_price:+val('w_price')||0, weekend_price:val('w_wprice')?+val('w_wprice'):null,
+      cleaning_fee:+val('w_clean')||0, min_nights:+val('w_min')||1, cancellation_policy:val('w_cancel') };
+    await HZ.sbAuth('/stay_pricing?on_conflict=property_id',S.token,'POST',pricing,{Prefer:'resolution=merge-duplicates'});
+    const rules={ property_id:pid, checkin_time:val('w_cin'), checkout_time:val('w_cout'), smoking:WRULES.smoking, pets:WRULES.pets, parties:WRULES.parties, children:WRULES.children };
+    await HZ.sbAuth('/stay_house_rules?on_conflict=property_id',S.token,'POST',rules,{Prefer:'resolution=merge-duplicates'});
+    await HZ.sbAuth('/stay_property_amenities?property_id=eq.'+pid,S.token,'DELETE');
+    if(WAMEN.size) await HZ.sbAuth('/stay_property_amenities',S.token,'POST',[...WAMEN].map(id=>({property_id:pid,amenity_id:id})));
+    msg.className='msg ok'; msg.textContent=ar()?'تم الحفظ ✅':'Saved ✅';
+    if(!EDIT){ go('edit',pid); }
+  }catch(e){ msg.className='msg err'; msg.textContent=(ar()?'خطأ: ':'Error: ')+(e.message||''); }
+}
+function val(id){ return (document.getElementById(id).value||'').trim(); }
+
+/* photos */
+function photosHTML(){
+  const imgs=((WPROP&&WPROP.stay_property_images)||[]).sort((a,b)=>b.is_cover-a.is_cover||a.sort-b.sort);
+  return `<div class="photos">${imgs.map(im=>`<div class="photo"><img src="${HZ.esc(im.url)}"><button class="x" onclick="delPhoto('${im.id}')">×</button>${im.is_cover?`<span class="cov">${ar()?'غلاف':'Cover'}</span>`:`<button class="cov" style="border:none;cursor:pointer" onclick="setCover('${im.id}')">${ar()?'اجعله غلاف':'Set cover'}</button>`}</div>`).join('')}
+    <label class="addph">+<input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this.files)"></label></div>
+    <div style="color:var(--muted);font-size:12.5px;margin-top:6px">${ar()?'محتاج 5 صور على الأقل للنشر.':'At least 5 photos required to publish.'}</div>`;
+}
+async function uploadPhotos(files){
+  if(!EDIT&&!(WPROP&&WPROP.id)){ alert(ar()?'احفظ المسودة الأول.':'Save the draft first.'); return; }
+  const pid=EDIT||WPROP.id;
+  const box=document.getElementById('photosBox'); box.insertAdjacentHTML('afterbegin',`<div id="upst" style="color:var(--teal-d);font-weight:700">${ar()?'...جاري الرفع':'Uploading...'}</div>`);
+  const cnt=((WPROP&&WPROP.stay_property_images)||[]).length;
+  for(let i=0;i<files.length;i++){
+    const f=files[i]; const safe=f.name.replace(/[^a-zA-Z0-9.]/g,'_');
+    const path=S.uid+'/'+pid+'/'+Date.now()+'-'+i+'-'+safe;
+    try{
+      const up=await fetch(SB_URL+'/storage/v1/object/stay-media/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token},body:f});
+      if(!up.ok) throw new Error('upload '+up.status);
+      const url=SB_URL+'/storage/v1/object/public/stay-media/'+path;
+      await HZ.sbAuth('/stay_property_images',S.token,'POST',{property_id:pid,url:url,sort:cnt+i,is_cover:(cnt+i===0)});
+    }catch(e){ console.error(e); }
+  }
+  await refreshWprop(pid); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang();
+}
+async function refreshWprop(pid){ const r=await HZ.sbAuth('/stay_properties?id=eq.'+pid+'&select=id,stay_property_images(id,url,is_cover,sort)',S.token); WPROP=Object.assign(WPROP||{},r&&r[0]); }
+window.delPhoto=async(id)=>{ await HZ.sbAuth('/stay_property_images?id=eq.'+id,S.token,'DELETE'); await refreshWprop(EDIT||WPROP.id); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang(); };
+window.setCover=async(id)=>{ const pid=EDIT||WPROP.id; await HZ.sbAuth('/stay_property_images?property_id=eq.'+pid,S.token,'PATCH',{is_cover:false}); await HZ.sbAuth('/stay_property_images?id=eq.'+id,S.token,'PATCH',{is_cover:true}); await refreshWprop(pid); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang(); };
+window.uploadPhotos=uploadPhotos; window.saveWizard=saveWizard;
+
+/* ---------- Calendar ---------- */
+async function renderCalendar(c){
+  if(!PROPS.length){ c.innerHTML=`<div style="color:var(--muted)">${ar()?'أضف وحدة أول.':'Add a property first.'}</div>`; return; }
+  if(!CALPROP) CALPROP=PROPS[0].id;
+  const sel=`<div class="fld" style="max-width:340px"><label data-ar="اختر الوحدة" data-en="Property">اختر الوحدة</label><select onchange="CALPROP=this.value;renderCalendar(document.getElementById('content'))">${PROPS.map(p=>`<option value="${p.id}" ${p.id===CALPROP?'selected':''}>${HZ.esc(p.title||'—')}</option>`).join('')}</select></div>`;
+  const av=await HZ.sbAuth('/stay_availability?property_id=eq.'+CALPROP+'&select=date,status',S.token)||[];
+  const bk=await HZ.sbAuth('/stay_bookings?property_id=eq.'+CALPROP+'&status=in.(pending,payment_pending,confirmed,completed)&select=check_in,check_out',S.token)||[];
+  const blocked=new Set(av.filter(a=>a.status==='blocked').map(a=>a.date));
+  const bookedSet=new Set();
+  bk.forEach(b=>{ let d=new Date(b.check_in), end=new Date(b.check_out); for(;d<end;d.setDate(d.getDate()+1)) bookedSet.add(d.toISOString().slice(0,10)); });
+  let html=sel+`<div style="display:flex;gap:16px;font-size:13px;color:var(--muted);margin:6px 0 14px"><span>🟥 ${ar()?'محظور':'Blocked'}</span><span>🟦 ${ar()?'محجوز':'Booked'}</span><span>⬜ ${ar()?'متاح — اضغط للحظر':'Open — click to block'}</span></div>`;
+  html+=twoMonths(blocked,bookedSet);
+  c.innerHTML=html;
+}
+function twoMonths(blocked,booked){
+  const now=new Date(); let out='<div style="display:flex;gap:30px;flex-wrap:wrap">';
+  for(let m=0;m<2;m++){
+    const d=new Date(now.getFullYear(),now.getMonth()+m,1);
+    const dows=ar()?['أحد','إثن','ثلا','أرب','خمي','جمع','سبت']:['Su','Mo','Tu','We','Th','Fr','Sa'];
+    out+=`<div><div style="font-weight:800;margin-bottom:8px">${d.toLocaleDateString(ar()?'ar-EG':'en-US',{month:'long',year:'numeric'})}</div><div class="cal">`;
+    out+=dows.map(x=>`<div class="dow">${x}</div>`).join('');
+    for(let i=0;i<d.getDay();i++) out+='<div class="day empty"></div>';
+    const days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    for(let dn=1;dn<=days;dn++){
+      const ds=new Date(d.getFullYear(),d.getMonth(),dn).toISOString().slice(0,10);
+      const past=ds<new Date().toISOString().slice(0,10);
+      let cls='day', click='';
+      if(past) cls+=' past'; else if(booked.has(ds)) cls+=' booked'; else if(blocked.has(ds)){ cls+=' blocked'; click=`onclick="toggleBlock('${ds}',true)"`; } else click=`onclick="toggleBlock('${ds}',false)"`;
+      out+=`<div class="${cls}" ${click}>${dn}</div>`;
+    }
+    out+='</div></div>';
+  }
+  return out+'</div>';
+}
+window.toggleBlock=async(ds,isBlocked)=>{
+  if(isBlocked) await HZ.sbAuth('/stay_availability?property_id=eq.'+CALPROP+'&date=eq.'+ds,S.token,'DELETE');
+  else await HZ.sbAuth('/stay_availability',S.token,'POST',{property_id:CALPROP,date:ds,status:'blocked'});
+  renderCalendar(document.getElementById('content'));
+};
+
+/* ---------- Bookings ---------- */
+async function viewBookings(){
+  const bk=await HZ.sbAuth('/stay_bookings?host_id=eq.'+S.uid+'&select=*&order=check_in.desc',S.token)||[];
+  if(!bk.length) return `<div style="padding:40px;text-align:center;color:var(--muted)">${ar()?'لا توجد حجوزات بعد.':'No bookings yet.'}</div>`;
+  const titles={}; PROPS.forEach(p=>titles[p.id]=p.title);
+  if(!PROPS.length){ await loadProps(); PROPS.forEach(p=>titles[p.id]=p.title); }
+  return bk.map(b=>`<div class="row"><div><b>${HZ.esc(titles[b.property_id]||'—')}</b><div style="color:var(--muted);font-size:13px">${b.check_in} → ${b.check_out} · ${b.guests} ${ar()?'ضيوف':'guests'}</div></div>
+    <div style="text-align:end"><span class="st ${b.status}" style="position:static">${b.status}</span><div style="font-weight:800;margin-top:4px">+${money(b.host_net)} ${b.currency}</div></div></div>`).join('');
+}
+
+/* ---------- Earnings ---------- */
+async function viewEarnings(){
+  const bk=await HZ.sbAuth('/stay_bookings?host_id=eq.'+S.uid+'&select=status,host_net,commission_amount,total_amount,currency,check_out',S.token)||[];
+  const earned=bk.filter(b=>['confirmed','completed'].includes(b.status)).reduce((s,b)=>s+ +b.host_net,0);
+  const comm=bk.filter(b=>['confirmed','completed'].includes(b.status)).reduce((s,b)=>s+ +b.commission_amount,0);
+  const today=new Date().toISOString().slice(0,10);
+  const pending=bk.filter(b=>b.status==='confirmed'&&b.check_out>today).reduce((s,b)=>s+ +b.host_net,0);
+  const done=bk.filter(b=>b.status==='completed').reduce((s,b)=>s+ +b.host_net,0);
+  return `<div class="stats">
+    <div class="stat"><div class="n">${money(earned)}</div><div class="l">${ar()?'إجمالي الأرباح (ج.م)':'Total earnings (EGP)'}</div></div>
+    <div class="stat"><div class="n">${money(done)}</div><div class="l">${ar()?'محصّلة':'Completed'}</div></div>
+    <div class="stat"><div class="n">${money(pending)}</div><div class="l">${ar()?'قادمة':'Upcoming'}</div></div>
+    <div class="stat"><div class="n">${money(comm)}</div><div class="l">${ar()?'عمولة Homzy (7%)':'Homzy commission'}</div></div>
+  </div><div style="color:var(--muted);font-size:13px">${ar()?'الأرباح صافية بعد خصم عمولة Homzy. الدفعات هتتفعّل مع ربط بوابة الدفع.':'Earnings are net of Homzy commission. Payouts activate once a payment gateway is connected.'}</div>`;
+}
+
+/* ---------- Reviews ---------- */
+async function viewReviews(){
+  const rv=await HZ.sbAuth('/stay_reviews?host_id=eq.'+S.uid+'&author_role=eq.guest&select=overall,comment,created_at,property_id&order=created_at.desc',S.token)||[];
+  if(!rv.length) return `<div style="padding:40px;text-align:center;color:var(--muted)">${ar()?'لا توجد مراجعات بعد.':'No reviews yet.'}</div>`;
+  return rv.map(r=>`<div class="row"><div><div style="font-weight:800">★ ${Number(r.overall).toFixed(1)}</div><div style="color:#40506a;font-size:14px;margin-top:4px">${HZ.esc(r.comment||'')}</div></div><div style="color:var(--muted);font-size:12px">${new Date(r.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</div></div>`).join('');
+}
+
+/* ---------- Verification ---------- */
+async function viewVerification(){
+  const h=await ensureHost();
+  const vs=h.verification_status||'pending';
+  const lab={pending:['قيد المراجعة','Pending'],verified:['موثّق ✅','Verified ✅'],rejected:['مرفوض','Rejected'],suspended:['موقوف','Suspended']}[vs];
+  const docs=await HZ.sbAuth('/stay_verifications?user_id=eq.'+S.uid+'&select=doc_type,status,created_at&order=created_at.desc',S.token)||[];
+  return `<div class="form">
+    <h3 data-ar="حالة التوثيق" data-en="Verification status">حالة التوثيق</h3>
+    <div style="font-size:18px;font-weight:800">${ar()?lab[0]:lab[1]}</div>
+    <p style="color:var(--muted);margin:10px 0 18px">${ar()?'ارفع صورة بطاقتك (وجه أو ظهر). المستندات سرية — مخزّنة في مكان آمن ولا تظهر للعامة أبدًا، ويراجعها فريق Homzy فقط.':'Upload your national ID (front or back). Documents are private, stored securely, never public, and reviewed only by Homzy.'}</p>
+    <div class="fld"><label data-ar="نوع المستند" data-en="Document type">نوع المستند</label><select id="v_type"><option value="national_id">${ar()?'بطاقة رقم قومي':'National ID'}</option><option value="passport">${ar()?'جواز سفر':'Passport'}</option></select></div>
+    <label class="btn btn-teal" style="display:inline-flex"><span data-ar="ارفع مستند" data-en="Upload document">ارفع مستند</span><input type="file" accept="image/*,application/pdf" style="display:none" onchange="uploadDoc(this.files[0])"></label>
+    <div class="msg" id="vmsg"></div>
+    ${docs.length?`<h3 style="margin-top:20px" data-ar="مستنداتك" data-en="Your documents">مستنداتك</h3>`+docs.map(d=>`<div class="row"><span>${HZ.esc(d.doc_type)}</span><span class="st ${d.status==='verified'?'approved':d.status}" style="position:static">${d.status}</span></div>`).join(''):''}
+  </div>`;
+}
+window.uploadDoc=async(f)=>{
+  if(!f) return; const msg=document.getElementById('vmsg'); msg.className='msg'; msg.textContent=ar()?'...جاري الرفع':'Uploading...';
+  const safe=f.name.replace(/[^a-zA-Z0-9.]/g,'_'); const path=S.uid+'/'+Date.now()+'-'+safe;
+  try{
+    const up=await fetch(SB_URL+'/storage/v1/object/stay-docs/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token},body:f});
+    if(!up.ok) throw new Error('upload '+up.status);
+    await HZ.sbAuth('/stay_verifications',S.token,'POST',{user_id:S.uid,role:'host',doc_type:document.getElementById('v_type').value,doc_path:path});
+    msg.className='msg ok'; msg.textContent=ar()?'تم الرفع — قيد المراجعة ✅':'Uploaded — pending review ✅';
+    setTimeout(()=>renderTab(),900);
+  }catch(e){ msg.className='msg err'; msg.textContent=(ar()?'خطأ في الرفع: ':'Upload error: ')+(e.message||''); }
+};
+
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  try{
+    TYPES=await HZ.sb('/stay_property_types?select=*&active=eq.true&order=sort')||[];
+    AMENS=await HZ.sb('/stay_amenities?select=*&active=eq.true&order=sort')||[];
+    DESTS=await HZ.sb('/stay_destinations?select=*&active=eq.true&order=sort')||[];
+  }catch(e){}
+  route();
+}
+document.addEventListener('hz:lang', ()=>{ renderNav(); renderTab(); });
+boot();
+</script>
+</body>
+</html>

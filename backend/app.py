@@ -146,9 +146,29 @@ def host_landing_page():
     return FileResponse(config.FRONTEND_DIR / "host.html")
 
 
+# Host dashboard — one page, tab chosen from the path (properties/new/calendar/
+# bookings/earnings/reviews/verification). All require a session (client-side gate).
+@app.get("/host/properties")
+@app.get("/host/properties/new")
+@app.get("/host/properties/{pid}")
+@app.get("/host/calendar")
+@app.get("/host/bookings")
+@app.get("/host/earnings")
+@app.get("/host/reviews")
+@app.get("/host/verification")
+@app.get("/host/profile")
+def host_dashboard_page(pid: str = ""):
+    return FileResponse(config.FRONTEND_DIR / "host-dashboard.html")
+
+
 @app.get("/my-stays")
 def my_stays_page():
     """Guest bookings dashboard."""
+    return FileResponse(config.FRONTEND_DIR / "my-stays.html")
+
+
+@app.get("/my-stays/{bid}")
+def my_stay_detail_page(bid: str = ""):
     return FileResponse(config.FRONTEND_DIR / "my-stays.html")
 
 

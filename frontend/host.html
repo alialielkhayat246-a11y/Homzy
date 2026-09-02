@@ -66,12 +66,13 @@ async function become(){
   // already a host?
   try{
     const ex=await HZ.sbAuth('/stay_hosts?user_id=eq.'+s.uid+'&select=verification_status', s.token);
-    if(ex&&ex.length){ msg.className='msg ok'; msg.textContent=ar()?('أنت مسجّل كمضيف بالفعل — حالة التوثيق: '+ex[0].verification_status+'. معالج إضافة الوحدة قريبًا.'):('You are already a host — verification: '+ex[0].verification_status+'. Listing wizard coming soon.'); return; }
+    if(ex&&ex.length){ location.href='/host/properties'; return; }
   }catch(e){}
   btn.disabled=true;
   try{
     await HZ.sbAuth('/stay_hosts', s.token, 'POST', {user_id:s.uid, verification_status:'pending'});
-    msg.className='msg ok'; msg.textContent=ar()?'تم! أنت دلوقتي مضيف (قيد التوثيق). معالج إضافة الوحدة هيكون متاح قريبًا.':'Done! You are now a host (pending verification). The listing wizard will be available soon.';
+    msg.className='msg ok'; msg.textContent=ar()?'تم! جاري فتح لوحة المضيف…':'Done! Opening your host dashboard…';
+    setTimeout(()=>location.href='/host/properties',700);
   }catch(e){ msg.className='msg err'; msg.textContent=ar()?'حصلت مشكلة — حاول تاني.':'Something went wrong — try again.'; btn.disabled=false; }
 }
 </script>
