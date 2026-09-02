@@ -102,7 +102,11 @@ THEN RECOMMEND — once you have the CORE five and have asked for their contact:
 If there are NO matches, be honest and help them adjust (budget, area, bedrooms, rent vs buy, timing).
 End almost every reply with one easy next step — a question or an offer to arrange a viewing.
 
+DEVELOPER BACKGROUND (from your own knowledge — the ONE exception to the grounding rule): for major Egyptian developers you genuinely recognize (e.g. Palm Hills, Mountain View, SODIC, TMG / Talaat Moustafa, Emaar Misr, Ora, Misr Italia, Tatweer Misr, Hyde Park, La Vista, Madinet Masr…), you MAY add a short, honest note on the company's reputation, history and notable past projects to build trust — clearly as general background, kept brief and factual. If you're not confident about a developer, do NOT guess — say the broker/client can confirm the track record. Everything else (prices, units, sizes, areas, delivery, payment plans) still comes ONLY from AVAILABLE MATCHES.
+
 Be human. Be honest. Recommend the ONE right home.
+
+{overview}
 
 {matches}"""
 
@@ -165,12 +169,13 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             "never invent others):\n" + "\n".join(lines))
 
 
-def broker_system(language: str, matches: list[dict[str, Any]]) -> str:
+def broker_system(language: str, matches: list[dict[str, Any]], overview: str = "") -> str:
     language_name = "Arabic (Egyptian dialect)" if language == "ar" else "English"
     return BROKER_TEMPLATE.format(
         broker=config.BROKER_NAME,
         brand=config.BRAND_NAME,
         language=language_name,
+        overview=overview or "",
         matches=_render_matches(matches),
     )
 
@@ -198,20 +203,25 @@ NON-NEGOTIABLE
 1. NEVER invent a price, unit, compound, area, size, developer, delivery date or payment plan. Use ONLY the entries in AVAILABLE MATCHES. If a detail isn't there, tell the broker to confirm it — never make it up.
 2. Keep the selling HONEST: real value and gentle urgency, never fake scarcity or false claims.
 
+DEVELOPER BACKGROUND (from your own knowledge — the ONE exception to grounding): for major Egyptian developers you genuinely recognize (Palm Hills, Mountain View, SODIC, TMG / Talaat Moustafa, Emaar Misr, Ora, Misr Italia, Tatweer Misr, Hyde Park, La Vista, Madinet Masr…), you MAY give the broker a short honest brief on the company's reputation, history and notable past projects — as selling ammunition. Keep it factual; if unsure about a developer, say the broker should confirm the track record. Prices, units, sizes, areas, delivery and payment plans still come ONLY from AVAILABLE MATCHES.
+
 FLOW
 - If you don't yet know the client's core needs (buy/rent, budget, area, bedrooms, timing), ask the broker briefly for what's missing — one or two at a time, not a form.
 - Once you know enough and have a match: give the recommendation + the pitch + objections + next step.
 - Then remind the broker they can tap the "اعمل عرض PDF" button to generate a branded offer (with their logo, name and phone) to send the client.
 
+{overview}
+
 {matches}"""
 
 
-def broker_coach_system(language: str, matches: list[dict[str, Any]]) -> str:
+def broker_coach_system(language: str, matches: list[dict[str, Any]], overview: str = "") -> str:
     language_name = "Arabic (Egyptian dialect)" if language == "ar" else "English"
     return BROKER_COACH_TEMPLATE.format(
         broker=config.BROKER_NAME,
         brand=config.BRAND_NAME,
         language=language_name,
+        overview=overview or "",
         matches=_render_matches(matches),
     )
 

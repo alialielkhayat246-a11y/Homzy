@@ -15,6 +15,48 @@ _CACHE: list[dict[str, Any]] | None = None
 _CACHE_AT = 0.0
 _TTL = 300  # seconds
 
+_OVERVIEW: str | None = None
+_OVERVIEW_AT = 0.0
+
+
+def market_overview() -> str:
+    """A compact snapshot of what Homzy actually has (areas + counts + types +
+    a payment-plan note), injected into the chat so the assistant is aware of the
+    whole catalog, not just the few matched units. Cached (10 min)."""
+    global _OVERVIEW, _OVERVIEW_AT
+    if not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return ""
+    now = time.time()
+    if _OVERVIEW is not None and now - _OVERVIEW_AT < 600:
+        return _OVERVIEW
+    try:
+        import requests
+
+        r = requests.get(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/v_city_counts",
+            params={"select": "area,projects", "order": "projects.desc", "limit": "40"},
+            headers={"apikey": config.SUPABASE_KEY,
+                     "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+            timeout=8,
+        )
+        r.raise_for_status()
+        rows = [x for x in r.json() if x.get("area")]
+        areas = "، ".join(f"{x['area']} ({x.get('projects') or 0})" for x in rows[:32])
+        _OVERVIEW = (
+            "WHAT HOMZY COVERS (be aware of the whole catalog, not only the matches below):\n"
+            f"- Areas we have inventory in (with project counts): {areas}.\n"
+            "- Property types: mostly apartments/studios, plus other unit types where the "
+            "developer offers them.\n"
+            "- Payment plans differ per unit — the real down payment, installment years and "
+            "delivery for each option are in AVAILABLE MATCHES; quote those, never a generic plan.\n"
+            "If the client names an area or type we don't have a match for right now, say so "
+            "honestly and offer the closest available option."
+        )
+        _OVERVIEW_AT = now
+        return _OVERVIEW
+    except Exception:
+        return _OVERVIEW or ""
+
 
 def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
     proj = u.get("project") or {}

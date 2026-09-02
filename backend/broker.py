@@ -258,8 +258,9 @@ def _llm_reply(history: list[dict[str, str]], language: str,
     client = _client_or_none()
     if client is None:
         return None
-    system = (persona.broker_coach_system(language, matches) if coach
-              else persona.broker_system(language, matches))
+    overview = catalog.market_overview()
+    system = (persona.broker_coach_system(language, matches, overview) if coach
+              else persona.broker_system(language, matches, overview))
     messages = [{"role": "system", "content": system}] + history
     try:
         text = client.chat(messages, temperature=config.LLM_TEMPERATURE, max_tokens=900)
@@ -434,8 +435,9 @@ def handle_turn_stream(session: dict[str, Any], message: str,
     client = _client_or_none()
     reply = None
     if client is not None and hasattr(client, "stream"):
-        system = (persona.broker_coach_system(language, matches) if coach
-                  else persona.broker_system(language, matches))
+        overview = catalog.market_overview()
+        system = (persona.broker_coach_system(language, matches, overview) if coach
+                  else persona.broker_system(language, matches, overview))
         messages = [{"role": "system", "content": system}] + [
             {"role": m["role"], "content": m["content"]} for m in history]
         parts: list[str] = []
