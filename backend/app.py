@@ -141,10 +141,30 @@ def stay_host_profile_page(hid: str):
     return FileResponse(config.FRONTEND_DIR / "host-profile.html")
 
 
+_STAY_META_DEFAULT = (
+    '<title>Homzy Stays</title>'
+    '<meta name="description" content="تفاصيل الإقامة على Homzy Stays — الصور، '
+    'المميزات، السعر، والحجز الآمن." />'
+    '<link rel="canonical" href="https://homzy-ai.com/stays" />'
+)
+
+
 @app.get("/stays/{pid}")
 def stay_detail_page(pid: str):
-    """Public property detail + booking flow."""
-    return FileResponse(config.FRONTEND_DIR / "stay.html")
+    """Public property detail + booking flow, with server-rendered SEO meta
+    (title/description/OG/JSON-LD) injected so property pages rank in Google."""
+    path = config.FRONTEND_DIR / "stay.html"
+    try:
+        page = path.read_text(encoding="utf-8")
+        meta = None
+        try:
+            meta = seo.stay_meta(pid)
+        except Exception:
+            meta = None
+        page = page.replace("<!--HZ_SEO-->", meta or _STAY_META_DEFAULT, 1)
+        return HTMLResponse(page)
+    except Exception:
+        return FileResponse(path)
 
 
 @app.get("/host")

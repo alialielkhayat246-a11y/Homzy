@@ -210,6 +210,60 @@ def _viewing_form(ctx_json: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Homzy Stays property — server-rendered <head> meta (injected into stay.html)
+# ---------------------------------------------------------------------------
+def stay_meta(pid: str) -> str | None:
+    """SEO <head> block for a Homzy Stays property, or None if not found/approved."""
+    try:
+        rows = _get("/stay_cards?id=eq." + pid + "&select=title,description,city,area,"
+                    "governorate,type_ar,type_en,base_price,currency,rating_avg,reviews_count,cover&limit=1")
+    except Exception:
+        return None
+    if not rows:
+        return None
+    p = rows[0]
+    title = (p.get("title") or "Homzy Stays").strip()
+    loc = " · ".join([x for x in (p.get("area") or p.get("city"), p.get("governorate")) if x])
+    desc = _clip((p.get("description") or f"{p.get('type_ar') or ''} {loc}").strip(), 160)
+    canonical = "https://homzy-ai.com/stays/" + pid
+    cover = p.get("cover") or ""
+    full_title = f"{title} — Homzy Stays"
+    jsonld: dict[str, Any] = {
+        "@context": "https://schema.org", "@type": "LodgingBusiness",
+        "name": title, "description": desc, "url": canonical,
+    }
+    if loc:
+        jsonld["address"] = {"@type": "PostalAddress",
+                             "addressLocality": p.get("city") or loc, "addressCountry": "EG"}
+    if cover:
+        jsonld["image"] = cover
+    if p.get("reviews_count"):
+        jsonld["aggregateRating"] = {"@type": "AggregateRating",
+                                     "ratingValue": p.get("rating_avg"),
+                                     "reviewCount": p.get("reviews_count")}
+    if p.get("base_price"):
+        try:
+            jsonld["priceRange"] = f"{int(float(p['base_price']))} {p.get('currency') or 'EGP'}"
+        except Exception:
+            pass
+    ld = json.dumps(jsonld, ensure_ascii=False)
+    parts = [
+        f"<title>{_esc(full_title)}</title>",
+        f'<meta name="description" content="{_esc(desc)}" />',
+        f'<link rel="canonical" href="{canonical}" />',
+        '<meta property="og:type" content="website" /><meta property="og:site_name" content="Homzy" />',
+        f'<meta property="og:url" content="{canonical}" />',
+        f'<meta property="og:title" content="{_esc(full_title)}" />',
+        f'<meta property="og:description" content="{_esc(desc)}" />',
+        (f'<meta property="og:image" content="{_esc(cover)}" />'
+         '<meta name="twitter:card" content="summary_large_image" />' if cover else
+         '<meta name="twitter:card" content="summary" />'),
+        f'<script type="application/ld+json">{ld}</script>',
+    ]
+    return "\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
 # Project (primary / developer)
 # ---------------------------------------------------------------------------
 def render_project(pid: str) -> str | None:

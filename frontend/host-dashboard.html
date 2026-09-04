@@ -76,6 +76,7 @@
     <a class="btn btn-teal btn-sm" onclick="go('new')" data-ar="＋ أضف وحدة" data-en="＋ Add a property">＋ أضف وحدة</a>
   </div>
   <div class="hnav" id="hnav"></div>
+  <div id="notif"></div>
   <div id="content"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
 </div>
 <div id="hrvOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
@@ -454,8 +455,17 @@ async function boot(){
     AMENS=await HZ.sb('/stay_amenities?select=*&active=eq.true&order=sort')||[];
     DESTS=await HZ.sb('/stay_destinations?select=*&active=eq.true&order=sort')||[];
   }catch(e){}
-  route();
+  route(); renderNotif();
 }
+async function renderNotif(){
+  const el=document.getElementById('notif'); if(!el||!S) return;
+  let n=[]; try{ n=await HZ.sbAuth('/stay_notifications?user_id=eq.'+S.uid+'&read_at=is.null&select=id,title,body,created_at&order=created_at.desc&limit=8',S.token)||[]; }catch(e){}
+  if(!n.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<div style="background:#EAF3F4;border:1px solid var(--teal-l);border-radius:14px;padding:12px 14px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b>🔔 ${n.length} ${ar()?'إشعار':'notifications'}</b><button onclick="markNotifRead()" style="background:none;border:none;color:var(--teal-d);font-weight:800;cursor:pointer;font-size:13px">${ar()?'تحديد كمقروء':'Mark read'}</button></div>
+    ${n.map(x=>`<div style="font-size:13.5px;color:#40506a;margin-top:6px">• ${HZ.esc(x.title||'')}${x.body?(' — '+HZ.esc(x.body)):''}</div>`).join('')}</div>`;
+}
+window.markNotifRead=async()=>{ try{ await HZ.sbAuth('/stay_notifications?user_id=eq.'+S.uid+'&read_at=is.null',S.token,'PATCH',{read_at:new Date().toISOString()},{Prefer:'return=minimal'}); }catch(e){} document.getElementById('notif').innerHTML=''; };
 /* ---- messaging + cancel (host side) ---- */
 let MSG_BK=null;
 window.openMsgs=async(bid,title)=>{ MSG_BK=bid; document.getElementById('msgTitle').textContent=title||(ar()?'المحادثة':'Messages'); document.getElementById('msgOv').style.display='flex'; await loadMsgs(); };

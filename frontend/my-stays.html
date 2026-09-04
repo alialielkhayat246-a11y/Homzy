@@ -39,6 +39,7 @@
 <div id="hz-header"></div>
 <div class="wrap2">
   <h1 data-ar="رحلاتي" data-en="My Stays">رحلاتي</h1>
+  <div id="notif"></div>
   <div class="tabs" id="tabs"></div>
   <div id="list"><div class="empty">…</div></div>
 </div>
@@ -152,8 +153,17 @@ async function boot(){
   // default tab: first non-empty
   const firstNonEmpty=TABS.map(t=>t[0]).find(k=>BKS.some(b=>bucket(b)===k));
   TAB=firstNonEmpty||'upcoming';
-  render(); HZ.applyLang();
+  render(); renderNotif(); HZ.applyLang();
 }
+async function renderNotif(){
+  const s=HZ.session(); const el=document.getElementById('notif'); if(!el||!s) return;
+  let n=[]; try{ n=await HZ.sbAuth('/stay_notifications?user_id=eq.'+s.uid+'&read_at=is.null&select=id,title,body,created_at&order=created_at.desc&limit=8',s.token)||[]; }catch(e){}
+  if(!n.length){ el.innerHTML=''; return; }
+  el.innerHTML=`<div style="background:#EAF3F4;border:1px solid var(--teal-l);border-radius:14px;padding:12px 14px;margin:6px 0 16px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b>🔔 ${n.length} ${ar()?'إشعار':'notifications'}</b><button onclick="markNotifRead()" style="background:none;border:none;color:var(--teal-d);font-weight:800;cursor:pointer;font-size:13px">${ar()?'تحديد كمقروء':'Mark read'}</button></div>
+    ${n.map(x=>`<div style="font-size:13.5px;color:#40506a;margin-top:6px">• ${HZ.esc(x.title||'')}${x.body?(' — '+HZ.esc(x.body)):''}</div>`).join('')}</div>`;
+}
+window.markNotifRead=async()=>{ const s=HZ.session(); try{ await HZ.sbAuth('/stay_notifications?user_id=eq.'+s.uid+'&read_at=is.null',s.token,'PATCH',{read_at:new Date().toISOString()},{Prefer:'return=minimal'}); }catch(e){} document.getElementById('notif').innerHTML=''; };
 /* ---- guest review ---- */
 let RV={};
 function starRow(key){ return `<div class="stars" data-key="${key}">`+[1,2,3,4,5].map(i=>`<span data-v="${i}" onclick="setStar('${key}',${i})">★</span>`).join('')+`</div>`; }
