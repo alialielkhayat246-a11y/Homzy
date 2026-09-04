@@ -302,12 +302,29 @@ function buildChat(){
     <div class="cp-ctx" id="hzCpCtx"></div>
     <div class="cp-log" id="hzCpLog"></div>
     <div class="cp-chips" id="hzCpChips"></div>
-    <form class="cp-form" id="hzCpForm"><input id="hzCpInput" autocomplete="off"/><button type="submit" id="hzCpSend"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8Z" fill="currentColor"/></svg></button></form>`;
+    <form class="cp-form" id="hzCpForm"><button type="button" class="cp-mic" id="hzCpMic" title="صوت" aria-label="voice">🎤</button><input id="hzCpInput" autocomplete="off"/><button type="submit" id="hzCpSend"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8Z" fill="currentColor"/></svg></button></form>`;
   document.body.appendChild(fab); document.body.appendChild(panel);
   document.getElementById('hzCpClose').onclick=()=>HZ.toggleChat();
   document.getElementById('hzCpNew').onclick=()=>{ chat=newChatState(); saveChat(); renderChat(); seedGreeting(); };
   document.getElementById('hzCpForm').addEventListener('submit',e=>{e.preventDefault(); sendMsg(document.getElementById('hzCpInput').value);});
+  document.getElementById('hzCpMic').onclick=toggleChatVoice;
   document.getElementById('hzCpSub').textContent=HZ.t('advisor');
+}
+
+/* ---------- Voice input for the chat (Web Speech API) ---------- */
+let CHAT_REC=null, CHAT_VOICE_ON=false;
+function chatMicUI(on){ const b=document.getElementById('hzCpMic'); if(b){ b.classList.toggle('rec',on); b.textContent=on?'⏹':'🎤'; } }
+function toggleChatVoice(){
+  if(CHAT_VOICE_ON){ CHAT_VOICE_ON=false; try{CHAT_REC&&CHAT_REC.stop();}catch(e){} return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const input=document.getElementById('hzCpInput');
+  if(!SR){ input.placeholder=HZ.lang==='ar'?'المتصفح ده مش بيدعم الصوت — جرّب Chrome':'Voice not supported — try Chrome'; return; }
+  CHAT_REC=new SR(); CHAT_REC.lang=HZ.lang==='ar'?'ar-EG':'en-US'; CHAT_REC.interimResults=true; CHAT_REC.continuous=false;
+  const base=input.value?input.value+' ':'';
+  CHAT_REC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript; input.value=base+t; };
+  CHAT_REC.onerror=()=>{ CHAT_VOICE_ON=false; chatMicUI(false); };
+  CHAT_REC.onend=()=>{ CHAT_VOICE_ON=false; chatMicUI(false); input.focus(); };
+  try{ CHAT_REC.start(); CHAT_VOICE_ON=true; chatMicUI(true); }catch(e){ CHAT_VOICE_ON=false; chatMicUI(false); }
 }
 
 function ctxLabel(){

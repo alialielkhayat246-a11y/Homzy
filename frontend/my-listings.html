@@ -317,6 +317,30 @@ function renderThumbs(){
 window.dropKept=(i)=>{ KEEP_MEDIA.splice(i,1); renderThumbs(); };
 window.dropNew=(i)=>{ NEW_FILES.splice(i,1); renderThumbs(); };
 
+/* ---- Auto-stamp the broker's company logo onto listing photos ---- */
+let _LOGO_IMG=null; // null=not tried, false=failed, else Image
+function _loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+async function _getLogo(url){ if(_LOGO_IMG!==null) return _LOGO_IMG; try{ _LOGO_IMG=await _loadImg(url); }catch(e){ _LOGO_IMG=false; } return _LOGO_IMG; }
+function _roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+async function watermark(file, logoUrl){
+  try{
+    const logo=await _getLogo(logoUrl); if(!logo) return file;
+    const img=await _loadImg(URL.createObjectURL(file));
+    const cw=img.naturalWidth||img.width, ch=img.naturalHeight||img.height;
+    const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+    const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,cw,ch);
+    const lw=Math.max(64,Math.round(cw*0.20)); const lr=(logo.naturalWidth||1)/(logo.naturalHeight||1); const lh=Math.round(lw/(lr||1));
+    const pad=Math.round(cw*0.028); const x=cw-lw-pad, y=ch-lh-pad;
+    ctx.save();
+    ctx.globalAlpha=0.72; ctx.fillStyle='#fff';
+    _roundRect(ctx, x-pad*0.5, y-pad*0.5, lw+pad, lh+pad, Math.round(lw*0.10)); ctx.fill();
+    ctx.globalAlpha=0.96; ctx.drawImage(logo, x, y, lw, lh);
+    ctx.restore();
+    const blob=await new Promise(res=> cv.toBlob(b=>res(b), 'image/jpeg', 0.9));
+    return blob||file;   // toBlob null (e.g. tainted canvas) -> original
+  }catch(e){ return file; }
+}
+
 window.saveListing=async ()=>{
   const title=$('fTitleTxt').value.trim();
   if(title.length<4){ fmsg('اكتب عنوان واضح للإعلان.'); return; }
@@ -339,11 +363,14 @@ window.saveListing=async ()=>{
       const rows=await api('/listings', {method:'POST', headers:{apikey:SB_KEY,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',Prefer:'return=representation'}, body:JSON.stringify(rec)});
       id=rows[0].id;
     }
-    // media: upload new files, then reconcile listing_media to KEEP_MEDIA + uploaded
+    // media: upload new files (auto-stamped with the broker's company logo),
+    // then reconcile listing_media to KEEP_MEDIA + uploaded
     const uploaded=[];
     for(const f of NEW_FILES){
-      const path=UID+'/'+id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+(f.name.split('.').pop()||'jpg');
-      const {error}=await sb.storage.from('listings').upload(path, f, {upsert:false});
+      const toUpload = PROFILE.company_logo_url ? await watermark(f, PROFILE.company_logo_url) : f;
+      const ext = (toUpload===f) ? (f.name.split('.').pop()||'jpg') : 'jpg';
+      const path=UID+'/'+id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
+      const {error}=await sb.storage.from('listings').upload(path, toUpload, {upsert:false, contentType:toUpload.type||'image/jpeg'});
       if(error) throw error;
       uploaded.push(sb.storage.from('listings').getPublicUrl(path).data.publicUrl);
     }

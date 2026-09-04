@@ -150,6 +150,10 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
 .cp-form input:focus{border-color:var(--teal); background:#fff;}
 .cp-form button{width:44px; height:44px; flex:none; border:none; border-radius:50%; background:var(--teal); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
 .cp-form button:disabled{opacity:.5; cursor:default;}
+.cp-form .cp-mic{background:#fff; color:var(--teal-d); border:1.5px solid var(--line-2); font-size:18px;}
+.cp-form .cp-mic:hover{border-color:var(--teal);}
+.cp-form .cp-mic.rec{background:#B42318; color:#fff; border-color:#B42318; animation:micpulse 1s infinite;}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(180,35,24,.4);}50%{box-shadow:0 0 0 6px rgba(180,35,24,0);}}
 
 /* ============================================================
    Mobile app-like shell — bottom tab bar + "More" sheet.
