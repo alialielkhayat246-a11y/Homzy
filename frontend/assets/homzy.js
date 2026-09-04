@@ -116,7 +116,7 @@ HZ.setMode = function(m){
   document.body.setAttribute('data-mode', m);
   const seg = document.getElementById('hzMode');
   if(seg){ seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.m===m)); }
-  buildNavLinks();
+  buildNavLinks(); refreshTabbar();
   document.dispatchEvent(new CustomEvent('hz:mode', {detail:m}));
 };
 
@@ -222,32 +222,40 @@ const ICON={
   chat:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>',
   areas:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>',
   stays:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a2 2 0 0 1 2-2h10a4 4 0 0 1 4 4v4M3 18h18M3 18v2m18-2v2M7 10V8a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  clients:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  mylistings:'<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>',
 };
-const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},stays:{ar:'إقامات',en:'Stays'},more:{ar:'المزيد',en:'More'}};
-function tt(k){return TAB_T[k][HZ.lang];}
+const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},stays:{ar:'إقامات',en:'Stays'},clients:{ar:'عملائي',en:'Clients'},mylistings:{ar:'وحداتي',en:'Units'},more:{ar:'المزيد',en:'More'}};
+function tt(k){return (TAB_T[k]||{})[HZ.lang]||HZ.t(k);}
+function tabActive(k){
+  const path=location.pathname;
+  if(k==='home') return path==='/';
+  if(k==='browse') return /^\/(app|browse|projects)/.test(path);
+  if(k==='stays') return /^\/(stays|host|my-stays)/.test(path);
+  if(k==='clients') return path.startsWith('/clients');
+  if(k==='mylistings') return path.startsWith('/my-listings');
+  return false;
+}
 function buildTabbar(){
   if(document.getElementById('hzTabbar')) return;
-  const path=location.pathname;
-  const act=(k)=> (k==='home'&&path==='/')||(k==='browse'&&/^\/(app|browse|projects)/.test(path))||(k==='stays'&&/^\/(stays|host|my-stays)/.test(path)) ? 'on':'';
+  const broker = HZ.isBroker && HZ.mode==='broker';
+  const link=(href,k)=>`<a href="${href}" class="${tabActive(k)?'on':''}">${ICON[k]||ICON.browse}<span>${tt(k)}</span></a>`;
   const bar=document.createElement('nav'); bar.className='hz-tabbar'; bar.id='hzTabbar';
-  bar.innerHTML=`
-    <a href="/" class="${act('home')}">${ICON.home}<span>${tt('home')}</span></a>
-    <a href="/app" class="${act('browse')}">${ICON.browse}<span>${tt('browse')}</span></a>
-    <button class="tb-chat" onclick="HZ.openChat()"><span class="tb-chat-ic">${ICON.chat}</span><span>${tt('chat')}</span></button>
-    <a href="/stays" class="${act('stays')}">${ICON.stays}<span>${tt('stays')}</span></a>
-    <button onclick="HZ.toggleMore()">${ICON.more}<span>${tt('more')}</span></button>`;
+  const left  = broker ? link('/','home')+link('/clients','clients') : link('/','home')+link('/app','browse');
+  const right = broker ? link('/my-listings','mylistings') : link('/stays','stays');
+  bar.innerHTML = left
+    + `<button class="tb-chat" onclick="HZ.openChat()"><span class="tb-chat-ic">${ICON.chat}</span><span>${tt('chat')}</span></button>`
+    + right
+    + `<button onclick="HZ.toggleMore()">${ICON.more}<span>${tt('more')}</span></button>`;
   document.body.appendChild(bar);
-  // "More" sheet
+  // "More" sheet — mode-aware so every destination is reachable on mobile
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
-  sheet.innerHTML=`<div class="handle"></div>
-    <a href="/areas"><span class="ic">📍</span><span>${HZ.t('areas')}</span></a>
-    <a href="/features"><span class="ic">✨</span><span>${HZ.t('features')}</span></a>
-    <a href="/leads"><span class="ic">🎯</span><span>${HZ.t('leads')}</span></a>
-    <a href="/brokers"><span class="ic">🧰</span><span>${HZ.t('forBrokers')}</span></a>
-    <a href="/download"><span class="ic">📱</span><span>${HZ.t('app')}</span></a>
-    <a href="/admin"><span class="ic">⚙️</span><span>${HZ.t('admin')}</span></a>`;
+  const items = broker
+    ? [['/stays','🏠','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/sell','🏷️','sell'],['/download','📱','app'],['/admin','⚙️','admin']]
+    : [['/areas','📍','areas'],['/features','✨','features'],['/leads','🎯','leads'],['/brokers','🧰','forBrokers'],['/download','📱','app'],['/admin','⚙️','admin']];
+  sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);
 }
 HZ.toggleMore=function(){
@@ -618,7 +626,7 @@ async function checkBrokerAccount(){
       {headers:{apikey:SB_KEY, Authorization:'Bearer '+jwt}});
     if(!r.ok) return notBroker();
     const rows=await r.json();
-    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; }
+    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); }
     else notBroker();
   }catch(e){ notBroker(); }
 }
