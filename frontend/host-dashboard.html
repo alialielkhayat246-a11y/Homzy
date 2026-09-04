@@ -89,6 +89,13 @@
     </div>
   </div>
 </div>
+<div id="msgOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
+  <div style="background:#fff;border-radius:18px;max-width:460px;width:100%;overflow:hidden;display:flex;flex-direction:column;max-height:88vh">
+    <div style="padding:14px 18px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center"><b id="msgTitle" style="font-size:15px"></b><button onclick="document.getElementById('msgOv').style.display='none'" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button></div>
+    <div id="msgLog" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--cream);min-height:200px"></div>
+    <form id="msgForm" style="display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#fff"><input id="msgInput" autocomplete="off" placeholder="اكتب رسالتك…" style="flex:1;border:1px solid var(--line-2);border-radius:100px;padding:10px 15px;font-family:var(--ff);outline:none"/><button type="submit" class="btn btn-teal" style="width:44px;height:44px;border-radius:50%;padding:0">➤</button></form>
+  </div>
+</div>
 <style>.stars span{cursor:pointer;font-size:24px;color:#d8dee6;} .stars span.on{color:#F59E0B;} .rvline{display:flex;justify-content:space-between;align-items:center;margin:8px 0;} .rvline .stars span{font-size:19px;}</style>
 <div id="hz-footer"></div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -359,8 +366,12 @@ async function viewBookings(){
     const done=b.status==='completed';
     return `<div class="row"><div><b>${HZ.esc(titles[b.property_id]||'—')}</b>
       <div style="color:var(--muted);font-size:13px">${b.check_in} → ${b.check_out} · ${b.guests} ${ar()?'ضيوف':'guests'}</div>
-      ${done&&!hrev.has(b.id)?`<button class="btn btn-teal btn-sm" style="margin-top:8px" onclick="openHReview('${b.id}')">${ar()?'قيّم الضيف':'Review guest'}</button>`:''}
-      ${done&&hrev.has(b.id)?`<div style="color:#137a3e;font-size:12px;margin-top:6px">★ ${ar()?'تم تقييم الضيف':'Guest reviewed'}</div>`:''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button onclick="openMsgs('${b.id}','${HZ.esc((titles[b.property_id]||'').replace(/'/g,''))}')" style="font-size:12.5px;padding:6px 11px;border-radius:8px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer">💬 ${ar()?'مراسلة الضيف':'Message'}</button>
+        ${['pending','payment_pending','confirmed'].includes(b.status)?`<button onclick="cancelBk('${b.id}')" style="font-size:12.5px;padding:6px 11px;border-radius:8px;border:1.5px solid #f0c9c4;background:#fff;font-weight:700;color:#B42318;cursor:pointer">${ar()?'إلغاء':'Cancel'}</button>`:''}
+        ${done&&!hrev.has(b.id)?`<button class="btn btn-teal btn-sm" onclick="openHReview('${b.id}')">${ar()?'قيّم الضيف':'Review guest'}</button>`:''}
+        ${done&&hrev.has(b.id)?`<span style="color:#137a3e;font-size:12px;align-self:center">★ ${ar()?'تم تقييم الضيف':'Guest reviewed'}</span>`:''}
+      </div></div>
       <div style="text-align:end"><span class="st ${b.status}" style="position:static">${b.status}</span><div style="font-weight:800;margin-top:4px">+${money(b.host_net)} ${b.currency}</div></div></div>`;
   }).join('');
 }
@@ -445,6 +456,17 @@ async function boot(){
   }catch(e){}
   route();
 }
+/* ---- messaging + cancel (host side) ---- */
+let MSG_BK=null;
+window.openMsgs=async(bid,title)=>{ MSG_BK=bid; document.getElementById('msgTitle').textContent=title||(ar()?'المحادثة':'Messages'); document.getElementById('msgOv').style.display='flex'; await loadMsgs(); };
+async function loadMsgs(){
+  const log=document.getElementById('msgLog'); let rows=[];
+  try{ rows=await HZ.sbAuth('/stay_messages?booking_id=eq.'+MSG_BK+'&select=sender_id,body,created_at&order=created_at.asc',S.token)||[]; }catch(e){}
+  log.innerHTML=rows.length?rows.map(m=>{const mine=m.sender_id===S.uid;return `<div style="align-self:${mine?'flex-end':'flex-start'};max-width:80%;background:${mine?'var(--teal)':'#fff'};color:${mine?'#fff':'var(--navy)'};border:1px solid ${mine?'var(--teal)':'var(--line)'};border-radius:14px;padding:8px 12px;font-size:14px">${HZ.esc(m.body)}</div>`;}).join(''):`<div style="text-align:center;color:var(--muted);margin:auto">${ar()?'ابدأ المحادثة مع الضيف':'Start the conversation'}</div>`;
+  log.scrollTop=log.scrollHeight;
+}
+document.getElementById('msgForm').addEventListener('submit',async e=>{ e.preventDefault(); const inp=document.getElementById('msgInput'); const body=(inp.value||'').trim(); if(!body||!MSG_BK) return; inp.value=''; try{ await HZ.sbAuth('/stay_messages',S.token,'POST',{booking_id:MSG_BK,sender_id:S.uid,body},{Prefer:'return=minimal'}); }catch(e){} loadMsgs(); });
+window.cancelBk=async(bid)=>{ if(!confirm(ar()?'متأكد إنك عايز تلغي الحجز؟ الضيف هياخد استرجاع كامل.':'Cancel this booking? The guest gets a full refund.')) return; let r; try{ r=await HZ.sbAuth('/rpc/stay_cancel_booking',S.token,'POST',{p_booking:bid}); }catch(e){ r={ok:false}; } if(r&&r.ok){ alert(ar()?'تم الإلغاء':'Cancelled'); renderTab(); } else alert((ar()?'تعذّر: ':'Failed: ')+((r&&r.error)||'')); };
 document.addEventListener('hz:lang', ()=>{ renderNav(); renderTab(); });
 boot();
 </script>

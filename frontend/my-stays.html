@@ -28,6 +28,10 @@
   .stt.completed{background:#EAF0FA;color:#1f4e9c;} .stt.cancelled,.stt.rejected{background:#FDECEC;color:#B42318;}
   .stt.pending{background:#F1F0EE;color:#555;} .stt.refunded{background:#EEF6F7;color:#0B5563;}
   .empty{text-align:center;padding:60px 20px;color:var(--muted);}
+  .bkacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .bkacts button{font-family:var(--ff);font-weight:700;font-size:13px;padding:7px 12px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);}
+  .bkacts button.danger{color:#B42318;border-color:#f0c9c4;}
+  .bkacts button:hover{border-color:var(--navy);}
   @media(max-width:560px){ .bk{flex-direction:column;} .bk img{width:100%;height:160px;} }
 </style>
 </head>
@@ -37,6 +41,38 @@
   <h1 data-ar="رحلاتي" data-en="My Stays">رحلاتي</h1>
   <div class="tabs" id="tabs"></div>
   <div id="list"><div class="empty">…</div></div>
+</div>
+<div id="msgOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
+  <div style="background:#fff;border-radius:18px;max-width:460px;width:100%;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh">
+    <div style="padding:14px 18px;background:var(--navy);color:#fff;display:flex;justify-content:space-between;align-items:center">
+      <b id="msgTitle" style="font-size:15px"></b><button onclick="document.getElementById('msgOv').style.display='none'" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div id="msgLog" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--cream);min-height:200px"></div>
+    <form id="msgForm" style="display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#fff">
+      <input id="msgInput" autocomplete="off" placeholder="${'اكتب رسالتك…'}" style="flex:1;border:1px solid var(--line-2);border-radius:100px;padding:10px 15px;font-family:var(--ff);outline:none"/>
+      <button type="submit" class="btn btn-teal" style="width:44px;height:44px;border-radius:50%;padding:0">➤</button>
+    </form>
+  </div>
+</div>
+<div id="dispOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
+  <div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:24px">
+    <h2 style="font-size:19px" data-ar="🛡️ الإبلاغ عن مشكلة" data-en="🛡️ Report an issue">🛡️ الإبلاغ عن مشكلة</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:8px 0 14px" data-ar="حماية Homzy — فريقنا هيراجع البلاغ ويتواصل معاك." data-en="Homzy Protection — our team will review and get back to you.">حماية Homzy — فريقنا هيراجع البلاغ ويتواصل معاك.</p>
+    <select id="dispCat" style="width:100%;border:1.5px solid var(--line-2);border-radius:10px;padding:10px;font-family:var(--ff);margin-bottom:10px">
+      <option value="not_as_listed">${'الوحدة مختلفة عن الوصف'}</option>
+      <option value="cleanliness">${'مشكلة نظافة'}</option>
+      <option value="host_issue">${'مشكلة مع المضيف'}</option>
+      <option value="safety">${'مشكلة أمان'}</option>
+      <option value="payment">${'مشكلة في الدفع'}</option>
+      <option value="other">${'أخرى'}</option>
+    </select>
+    <textarea id="dispDesc" rows="3" placeholder="${'اشرح المشكلة…'}" style="width:100%;border:1.5px solid var(--line-2);border-radius:10px;padding:10px;font-family:var(--ff)"></textarea>
+    <div id="dispMsg" style="font-weight:800;margin-top:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-teal" style="flex:1" onclick="submitDispute()" data-ar="إرسال البلاغ" data-en="Submit report">إرسال البلاغ</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('dispOv').style.display='none'" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    </div>
+  </div>
 </div>
 <div class="ov" id="rvOv" style="position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px">
   <div style="background:#fff;border-radius:18px;max-width:440px;width:100%;padding:24px;max-height:90vh;overflow:auto">
@@ -88,6 +124,12 @@ function render(){
           <span class="stt ${b.status}">${sl}</span>
           <span><b>${money(b.total_amount)}</b> ${b.currency}</span>
         </div>
+        <div class="bkacts">
+          <button onclick="openMsgs('${b.id}','${HZ.esc((c.title||'').replace(/'/g,''))}')">💬 ${ar()?'مراسلة':'Message'}</button>
+          ${['pending','payment_pending','confirmed'].includes(b.status)?`<button class="danger" onclick="cancelBk('${b.id}')">${ar()?'إلغاء الحجز':'Cancel'}</button>`:''}
+          ${['confirmed','completed'].includes(b.status)?`<button onclick="openDispute('${b.id}')">🛡️ ${ar()?'الإبلاغ عن مشكلة':'Report an issue'}</button>`:''}
+        </div>
+        ${b.refund_amount>0?`<div class="d" style="color:#0B5563;margin-top:6px">${ar()?'تم استرجاع':'Refunded'} ${money(b.refund_amount)} ${b.currency}</div>`:''}
         ${b.status==='payment_pending'?`<div style="margin-top:10px"><a class="btn btn-teal btn-sm" href="/stays/${b.property_id}">${ar()?'أكمل الدفع':'Complete payment'}</a></div>`:''}
         ${b.status==='confirmed'?`<div class="d" style="margin-top:8px;color:#137a3e">${ar()?'مضيفك:':'Host:'} ${HZ.esc(c.host_name||'')}</div>`:''}
         ${bucket(b)==='completed'&&!REVIEWED.has(b.id)?`<div style="margin-top:10px"><button class="btn btn-teal btn-sm" onclick="openReview('${b.id}')">${ar()?'قيّم إقامتك':'Review your stay'}</button></div>`:''}
@@ -132,6 +174,38 @@ window.submitReview=async()=>{
   let r; try{ r=await HZ.sbAuth('/rpc/stay_submit_review', s.token,'POST',{p_booking:RV_BOOKING,p_overall:RV.overall,p_categories:cats,p_comment:(document.getElementById('rvComment').value||'').trim()||null}); }catch(e){ r={ok:false,error:'network'}; }
   if(r&&r.ok){ REVIEWED.add(RV_BOOKING); msg.style.color='#137a3e'; msg.textContent=ar()?'شكرًا! تم إرسال تقييمك ✅':'Thanks! Review submitted ✅'; setTimeout(()=>{document.getElementById('rvOv').style.display='none'; render();},900); }
   else { msg.style.color='#B42318'; msg.textContent=(ar()?'تعذّر الإرسال: ':'Could not submit: ')+((r&&r.error)||''); }
+};
+/* ---- messaging + cancel + dispute ---- */
+let MSG_BK=null;
+window.openMsgs=async(bid,title)=>{ MSG_BK=bid; document.getElementById('msgTitle').textContent=title||(ar()?'المحادثة':'Messages'); document.getElementById('msgOv').style.display='flex'; await loadMsgs(); };
+async function loadMsgs(){
+  const s=HZ.session(); const log=document.getElementById('msgLog');
+  let rows=[]; try{ rows=await HZ.sbAuth('/stay_messages?booking_id=eq.'+MSG_BK+'&select=sender_id,body,created_at&order=created_at.asc',s.token)||[]; }catch(e){}
+  log.innerHTML = rows.length? rows.map(m=>{ const mine=m.sender_id===s.uid;
+    return `<div style="align-self:${mine?'flex-end':'flex-start'};max-width:80%;background:${mine?'var(--teal)':'#fff'};color:${mine?'#fff':'var(--navy)'};border:1px solid ${mine?'var(--teal)':'var(--line)'};border-radius:14px;padding:8px 12px;font-size:14px">${HZ.esc(m.body)}</div>`;
+  }).join('') : `<div style="text-align:center;color:var(--muted);margin:auto">${ar()?'ابدأ المحادثة مع المضيف':'Start the conversation'}</div>`;
+  log.scrollTop=log.scrollHeight;
+}
+document.getElementById('msgForm').addEventListener('submit', async e=>{
+  e.preventDefault(); const inp=document.getElementById('msgInput'); const body=(inp.value||'').trim(); if(!body||!MSG_BK) return;
+  const s=HZ.session(); inp.value='';
+  try{ await HZ.sbAuth('/stay_messages',s.token,'POST',{booking_id:MSG_BK,sender_id:s.uid,body},{Prefer:'return=minimal'}); }catch(e){}
+  loadMsgs();
+});
+window.cancelBk=async(bid)=>{
+  if(!confirm(ar()?'متأكد إنك عايز تلغي الحجز؟ الاسترجاع بيتحسب حسب سياسة الإلغاء.':'Cancel this booking? Refund follows the cancellation policy.')) return;
+  const s=HZ.session();
+  let r; try{ r=await HZ.sbAuth('/rpc/stay_cancel_booking',s.token,'POST',{p_booking:bid}); }catch(e){ r={ok:false}; }
+  if(r&&r.ok){ alert(ar()?('تم الإلغاء. الاسترجاع: '+money(r.refund_amount)+' ج.م'):('Cancelled. Refund: '+money(r.refund_amount))); boot(); }
+  else alert((ar()?'تعذّر الإلغاء: ':'Could not cancel: ')+((r&&r.error)||''));
+};
+let DISP_BK=null;
+window.openDispute=(bid)=>{ DISP_BK=bid; document.getElementById('dispMsg').textContent=''; document.getElementById('dispDesc').value=''; document.getElementById('dispOv').style.display='flex'; };
+window.submitDispute=async()=>{
+  const s=HZ.session(); const msg=document.getElementById('dispMsg');
+  const body={booking_id:DISP_BK,opened_by:s.uid,opener_role:'guest',category:document.getElementById('dispCat').value,description:document.getElementById('dispDesc').value.trim()||null};
+  try{ await HZ.sbAuth('/stay_disputes',s.token,'POST',body,{Prefer:'return=minimal'}); msg.style.color='#137a3e'; msg.textContent=ar()?'تم إرسال البلاغ ✅':'Report submitted ✅'; setTimeout(()=>document.getElementById('dispOv').style.display='none',1000); }
+  catch(e){ msg.style.color='#B42318'; msg.textContent=ar()?'تعذّر الإرسال':'Could not submit'; }
 };
 document.addEventListener('hz:lang', render);
 boot();

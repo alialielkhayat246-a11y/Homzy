@@ -47,6 +47,8 @@
   .bar input:focus{border-color:var(--teal,#0B5563);}
 
   .lead{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; padding:15px 17px; margin-bottom:12px; box-shadow:0 8px 24px -20px rgba(11,29,54,.4);}
+  .lead.lead-hot{border:2px solid #22C55E; box-shadow:0 8px 26px -16px rgba(34,197,94,.5);}
+  .badge.hot{background:#E6F6EC; color:#137a3e;}
   .lead .hd{display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;}
   .lead .who{flex:1; min-width:180px;}
   .lead .nm{font-weight:800; font-size:16px; color:var(--navy,#0B1D36);}
@@ -100,6 +102,7 @@
     <div class="bar">
       <div class="tabs">
         <button class="tab on" data-f="all" onclick="setFilter('all',this)">الكل</button>
+        <button class="tab" data-f="contact" onclick="setFilter('contact',this)">📞 طلبوا تواصل</button>
         <button class="tab" data-f="view" onclick="setFilter('view',this)">معاينات</button>
         <button class="tab" data-f="chat" onclick="setFilter('chat',this)">شات</button>
       </div>
@@ -156,7 +159,8 @@ async function boot(){
 window.loadLeads=async ()=>{
   $('list').innerHTML='<div class="empty">…بحمّل</div>';
   try{
-    LEADS=await api('/web_leads?select=session_id,name,phone,context,messages,lang,created_at,req&order=created_at.desc&limit=500');
+    LEADS=await api('/web_leads?select=session_id,name,phone,context,messages,lang,created_at,req,wants_contact,contact_at&order=created_at.desc&limit=500');
+    LEADS.sort((a,b)=>(b.wants_contact?1:0)-(a.wants_contact?1:0) || (new Date(b.created_at)-new Date(a.created_at)));
     const views=LEADS.filter(isViewing).length;
     $('sAll').textContent=LEADS.length;
     $('sView').textContent=views;
@@ -173,6 +177,7 @@ window.render=()=>{
   let rows=LEADS.slice();
   if(FILTER==='view') rows=rows.filter(isViewing);
   else if(FILTER==='chat') rows=rows.filter(l=>!isViewing(l));
+  else if(FILTER==='contact') rows=rows.filter(l=>l.wants_contact);
   if(q) rows=rows.filter(l=>((l.name||'')+' '+(l.phone||'')+' '+(l.context||'')+' '+(l.req?JSON.stringify(l.req):'')).toLowerCase().includes(q));
   if(!rows.length){ $('list').innerHTML='<div class="empty">مفيش ليدز هنا لسه.</div>'; return; }
   $('list').innerHTML=rows.map((l,i)=>{
@@ -182,12 +187,13 @@ window.render=()=>{
     const msgs=Array.isArray(l.messages)?l.messages:[];
     const proj=req.project||req.area||'';
     const time=req.preferred_time?('⏰ '+esc(req.preferred_time)):'';
-    return `<div class="lead">
+    return `<div class="lead${l.wants_contact?' lead-hot':''}">
       <div class="hd">
         <div class="who">
           <div class="nm">${esc(l.name||'—')}</div>
           <div class="ph">${esc(l.phone||'—')}</div>
         </div>
+        ${l.wants_contact?'<span class="badge hot">📞 طلب تواصل</span>':''}
         <span class="badge ${v?'view':'chat'}">${v?'🏠 طلب معاينة':'💬 شات'}</span>
       </div>
       <div class="ctx">${esc(l.context||(proj?('استفسار عن '+proj):'استفسار عام'))}</div>
