@@ -93,6 +93,7 @@ const T = {
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
   stays:{ar:'إقامات Homzy',en:'Homzy Stays'},
+  hosting:{ar:'الاستضافة',en:'Hosting'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -123,7 +124,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/stays','stays'],['/app','browse']],
+  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;
@@ -224,15 +225,17 @@ const ICON={
   stays:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a2 2 0 0 1 2-2h10a4 4 0 0 1 4 4v4M3 18h18M3 18v2m18-2v2M7 10V8a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   clients:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   mylistings:'<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  hosting:'<svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M10.6 12.4 20 3M17 6l2 2M15 8l1.6 1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>',
 };
-const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},stays:{ar:'إقامات',en:'Stays'},clients:{ar:'عملائي',en:'Clients'},mylistings:{ar:'وحداتي',en:'Units'},more:{ar:'المزيد',en:'More'}};
+const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},stays:{ar:'إقامات',en:'Stays'},hosting:{ar:'استضافة',en:'Hosting'},clients:{ar:'عملائي',en:'Clients'},mylistings:{ar:'وحداتي',en:'Units'},more:{ar:'المزيد',en:'More'}};
 function tt(k){return (TAB_T[k]||{})[HZ.lang]||HZ.t(k);}
 function tabActive(k){
   const path=location.pathname;
   if(k==='home') return path==='/';
   if(k==='browse') return /^\/(app|browse|projects)/.test(path);
-  if(k==='stays') return /^\/(stays|host|my-stays)/.test(path);
+  if(k==='stays') return /^\/(stays|my-stays)/.test(path);
+  if(k==='hosting') return path.startsWith('/host');
   if(k==='clients') return path.startsWith('/clients');
   if(k==='mylistings') return path.startsWith('/my-listings');
   return false;
@@ -253,7 +256,7 @@ function buildTabbar(){
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   const items = broker
-    ? [['/stays','🏠','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/sell','🏷️','sell'],['/download','📱','app'],['/admin','⚙️','admin']]
+    ? [['/host/properties','🏠','hosting'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/download','📱','app'],['/admin','⚙️','admin']]
     : [['/areas','📍','areas'],['/features','✨','features'],['/leads','🎯','leads'],['/brokers','🧰','forBrokers'],['/download','📱','app'],['/admin','⚙️','admin']];
   sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);
