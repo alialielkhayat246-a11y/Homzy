@@ -448,6 +448,32 @@ async def push_run_followups(req: Request):
     return push.run_followups()
 
 
+@app.post("/api/stays/cron")
+async def stays_cron(req: Request):
+    """Daily Homzy Stays maintenance: complete past-checkout bookings and publish
+    reviews whose window expired. Guarded by PUSH_CRON_TOKEN; the scheduler (n8n)
+    sends it as ?token=. The RPCs are secret-gated with the same shared token."""
+    token = req.query_params.get("token") or req.headers.get("x-push-token") or ""
+    if not config.PUSH_CRON_TOKEN or token != config.PUSH_CRON_TOKEN:
+        raise HTTPException(status_code=403, detail="forbidden")
+    import requests
+
+    hdr = {"apikey": config.SUPABASE_KEY,
+           "Authorization": "Bearer " + config.SUPABASE_KEY,
+           "Content-Type": "application/json"}
+    out: dict[str, Any] = {}
+    for fn in ("stay_complete_due_bookings", "stay_publish_expired_reviews"):
+        try:
+            r = requests.post(
+                config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/" + fn,
+                headers=hdr, json={"p_key": config.PUSH_CRON_TOKEN}, timeout=25,
+            )
+            out[fn] = r.json() if r.ok else {"error": r.status_code, "detail": r.text[:200]}
+        except Exception as exc:  # pragma: no cover
+            out[fn] = {"error": str(exc)}
+    return {"ok": True, "results": out}
+
+
 @app.post("/api/lead-contact")
 async def lead_contact(req: Request):
     """A signed-in client asked a sales rep to contact them. Emails the operator
