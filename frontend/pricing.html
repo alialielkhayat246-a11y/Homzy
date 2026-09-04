@@ -46,12 +46,12 @@
     <div class="price-hero">
       <span class="eyebrow">Homzy للمحترفين</span>
       <h1>اختر باقتك</h1>
-      <p>أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 14 يوم.</p>
+      <p>أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور.</p>
       <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')">شهري</button><button id="cY" onclick="setCyc('yearly')">سنوي · وفّر شهرين</button></div>
     </div>
     <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
     <div class="note">
-      💳 الدفع الشهري عبر Paymob (كروت/فوري/محافظ) — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 14 يوم</b>.<br>
+      💳 الدفع الشهري عبر Paymob (كروت/فوري/محافظ) — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>.<br>
       عمولة Homzy Stays 7% للباقات، و<b>5% لباقة الأعمال</b>. الأسعار بالجنيه المصري شاملة، وممكن تتغير.
     </div>
   </div>
@@ -84,7 +84,7 @@ function planCard(p){
   let cta;
   if(p.plan==='free') cta = isCur?`<div class="cur">باقتك الحالية</div>`:`<a class="btn btn-ghost cta" href="/my-listings">ابدأ مجانًا</a>`;
   else if(isCur) cta = `<div class="cur">باقتك الحالية ✓</div>`;
-  else cta = `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="subscribe('${p.plan}')">ابدأ تجربة 14 يوم</button>`;
+  else cta = `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="subscribe('${p.plan}')">ابدأ تجربة 3 شهور</button>`;
   return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?'<span class="tag">الأكثر رواجًا</span>':''}
     <h3>${HZ.esc(p.name_ar)}</h3>
     <div class="price">${price>0?`<b>${money(price)}</b> <span>ج.م/${per}</span>`:`<b>مجاني</b>`}</div>
@@ -97,7 +97,7 @@ window.setCyc=(c)=>{ CYC=c; document.getElementById('cM').classList.toggle('on',
 window.subscribe=async(plan)=>{
   const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
   let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan}); }catch(e){ r={ok:false}; }
-  if(r&&r.ok){ alert('تم تفعيل تجربتك المجانية 14 يوم لباقة '+plan.toUpperCase()+' 🎉'); location.href='/my-listings'; }
+  if(r&&r.ok){ alert('تم تفعيل تجربتك المجانية 3 شهور لباقة '+plan.toUpperCase()+' 🎉'); location.href='/my-listings'; }
   else{
     const m={already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — الدفع هيتفعّل قريبًا عبر Paymob.',not_authenticated:'سجّل دخولك الأول.'};
     alert(m[r&&r.error]||'تعذّر التفعيل — حاول تاني.');
