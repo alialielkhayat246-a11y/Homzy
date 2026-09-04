@@ -11,6 +11,7 @@ import html
 import json
 import re
 from typing import Any
+from urllib.parse import quote
 
 from . import areas as areas_mod, config
 
@@ -426,6 +427,37 @@ def render_listing(lid: str) -> str | None:
     ctx = html.escape(json.dumps(
         {"listing_id": lid, "name": title_txt, "area": area}, ensure_ascii=True), quote=True)
 
+    # Broker's own registered contact (name/company/phone) — they added it at
+    # registration / in "بيانات شركتك"; shown so clients can reach them directly.
+    contact_html = ""
+    try:
+        cr = _rpc("listing_contact", {"p_lid": lid})
+        c = cr[0] if cr else {}
+    except Exception:
+        c = {}
+    phone_raw = (c.get("phone") or "").strip()
+    if phone_raw:
+        wa = re.sub(r"\D", "", phone_raw)
+        if wa.startswith("00"):
+            wa = wa[2:]
+        elif wa.startswith("0"):
+            wa = "2" + wa            # Egypt local 01... -> 201...
+        elif not wa.startswith("2"):
+            wa = "2" + wa
+        who = _esc(c.get("company") or c.get("full_name") or "")
+        wtext = quote(f"مهتم بـ {title_txt} — Homzy")
+        contact_html = (
+            '<div class="sp-sec" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;'
+            'background:#fff;border:1px solid var(--line,#EBE5DE);border-radius:16px;padding:16px">'
+            + (f'<span style="font-weight:800;margin-inline-end:auto">🏢 {who}</span>' if who else
+               '<span style="font-weight:800;margin-inline-end:auto">تواصل مع المعلن</span>')
+            + f'<a target="_blank" rel="noopener" href="https://wa.me/{wa}?text={wtext}" '
+            'style="background:#22C55E;color:#fff;font-weight:800;padding:11px 18px;border-radius:12px;text-decoration:none">💬 واتساب</a>'
+            + f'<a href="tel:{_esc(phone_raw)}" '
+            'style="background:#0B1D36;color:#fff;font-weight:800;padding:11px 18px;border-radius:12px;text-decoration:none">📞 اتصال</a>'
+            '</div>'
+        )
+
     body = f"""
     <nav class="sp-crumb"><a href="/">Homzy</a> › <a href="/app">سوق العقارات</a>{(' › ' + _esc(area)) if area else ''} › {_esc(title_txt)}</nav>
     <div class="sp-cover" style="{('background-image:url(' + chr(39) + _esc(cover) + chr(39) + ')') if cover else ''}">
@@ -437,6 +469,7 @@ def render_listing(lid: str) -> str | None:
     <div class="sp-chips">{''.join(chips)}</div>
     {('<div class="sp-sec"><p>' + _esc(l.get('description')) + '</p></div>') if l.get('description') else ''}
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(title_txt)}">' for u in images) + '</div></div>') if images else ''}
+    {contact_html}
     {_viewing_form(ctx)}
     """
     return _page(title, desc, canonical, cover, jsonld, body)
