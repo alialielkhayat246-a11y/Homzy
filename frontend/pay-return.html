@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — نتيجة الدفع</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .pr-wrap{max-width:520px;margin:0 auto;padding:70px 22px;text-align:center;}
+  .pr-ic{font-size:64px;} .pr-wrap h1{font-size:26px;margin:14px 0 8px;}
+  .pr-wrap p{color:#5b6b82;font-size:16px;margin-bottom:24px;}
+  .pr-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="pr-wrap" id="app"><div class="pr-ic">⏳</div><h1>جارٍ التأكيد…</h1></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+function q(k){ return new URLSearchParams(location.search).get(k); }
+function render(){
+  // Paymob appends ?success=true/false (settlement itself is confirmed server-side via webhook)
+  const ok = (q('success')==='true') || (q('txn_response_code')==='APPROVED');
+  const app=document.getElementById('app');
+  if(ok){
+    app.innerHTML=`<div class="pr-ic">✅</div>
+      <h1>${ar()?'تم الدفع بنجاح':'Payment successful'}</h1>
+      <p>${ar()?'إيصالك اتسجّل، وبنأكّد العملية دلوقتي. ممكن تكمّل من حسابك.':'Your payment is recorded and being confirmed. You can continue from your account.'}</p>
+      <div class="pr-actions">
+        <a class="btn btn-teal" href="/my-stays">${ar()?'رحلاتي':'My Stays'}</a>
+        <a class="btn btn-ghost" href="/my-listings">${ar()?'حسابي':'My account'}</a>
+      </div>`;
+  } else {
+    app.innerHTML=`<div class="pr-ic">⚠️</div>
+      <h1>${ar()?'الدفع ماتمّش':'Payment not completed'}</h1>
+      <p>${ar()?'الدفع اتلغى أو حصلت مشكلة — تقدر تحاول تاني.':'The payment was cancelled or failed — you can try again.'}</p>
+      <div class="pr-actions">
+        <a class="btn btn-teal" href="/pricing">${ar()?'الباقات':'Pricing'}</a>
+        <a class="btn btn-ghost" href="/">${ar()?'الرئيسية':'Home'}</a>
+      </div>`;
+  }
+}
+document.addEventListener('hz:lang', render);
+render();
+</script>
+</body>
+</html>

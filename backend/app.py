@@ -14,8 +14,8 @@ from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
-from . import (broker, config, listings as listings_mod, llm, notify, push,
-               seo, valuation)
+from . import (broker, config, listings as listings_mod, llm, notify, payments,
+               push, seo, valuation)
 
 app = FastAPI(title="Homzy Broker")
 
@@ -498,6 +498,38 @@ async def stays_cron(req: Request):
         except Exception as exc:  # pragma: no cover
             out[fn] = {"error": str(exc)}
     return {"ok": True, "results": out}
+
+
+@app.get("/api/pay/config")
+def pay_config():
+    return {"enabled": payments.enabled(), "public_key": config.PAYMOB_PUBLIC_KEY}
+
+
+@app.post("/api/pay/create")
+async def pay_create(req: Request):
+    """Create a Paymob checkout for a booking / subscription / wallet top-up.
+    Amount is computed server-side from the user's own data — never trusted."""
+    body = await req.json()
+    return payments.create_payment(body.get("token") or "", body.get("kind") or "",
+                                   body.get("ref") or {})
+
+
+@app.post("/api/pay/webhook")
+async def pay_webhook(req: Request):
+    """Paymob transaction callback. HMAC-verified, then settles the intent."""
+    try:
+        payload = await req.json()
+    except Exception:
+        payload = {}
+    hm = (req.query_params.get("hmac")
+          or (payload.get("hmac") if isinstance(payload, dict) else "") or "")
+    return payments.handle_webhook(payload, hm)
+
+
+@app.get("/pay/return")
+def pay_return_page():
+    """Landing page after Paymob redirects the browser back."""
+    return FileResponse(config.FRONTEND_DIR / "pay-return.html")
 
 
 @app.post("/api/lead-contact")

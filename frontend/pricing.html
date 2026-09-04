@@ -59,7 +59,7 @@
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js"></script>
 <script>
-let PLANS=[], CYC='monthly', CURRENT='free';
+let PLANS=[], CYC='monthly', CURRENT='free', PAY_ON=false;
 const money=n=>Number(n).toLocaleString('ar-EG');
 function featRow(on,txt){ return `<li class="${on?'':'off'}"><span class="ic">${on?'✓':'—'}</span><span>${txt}</span></li>`; }
 function planCard(p){
@@ -84,7 +84,10 @@ function planCard(p){
   let cta;
   if(p.plan==='free') cta = isCur?`<div class="cur">باقتك الحالية</div>`:`<a class="btn btn-ghost cta" href="/my-listings">ابدأ مجانًا</a>`;
   else if(isCur) cta = `<div class="cur">باقتك الحالية ✓</div>`;
-  else cta = `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="subscribe('${p.plan}')">ابدأ تجربة 3 شهور</button>`;
+  else {
+    const payBtn = PAY_ON ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">اشترك الآن · ${money(price)} ج.م</button>` : '';
+    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">ابدأ تجربة 3 شهور مجانًا</button>`;
+  }
   return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?'<span class="tag">الأكثر رواجًا</span>':''}
     <h3>${HZ.esc(p.name_ar)}</h3>
     <div class="price">${price>0?`<b>${money(price)}</b> <span>ج.م/${per}</span>`:`<b>مجاني</b>`}</div>
@@ -103,7 +106,9 @@ window.subscribe=async(plan)=>{
     alert(m[r&&r.error]||'تعذّر التفعيل — حاول تاني.');
   }
 };
+window.payPlan=async(plan)=>{ const r=await HZ.pay('subscription',{plan,cycle:CYC}); if(!(r&&r.ok)) alert('تعذّر فتح صفحة الدفع: '+((r&&r.error)||'')); };
 async function boot(){
+  try{ PAY_ON = await HZ.checkPay(); }catch(e){ PAY_ON=false; }
   try{ PLANS=await HZ.sb('/plan_limits?select=*&active=eq.true&order=sort')||[]; }catch(e){ PLANS=[]; }
   const s=HZ.session();
   if(s){ try{ const cp=await HZ.rpc('current_plan',{p_uid:s.uid}); CURRENT=(typeof cp==='string')?cp:((cp&&cp[0])||'free'); }catch(e){} }

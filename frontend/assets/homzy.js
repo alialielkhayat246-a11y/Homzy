@@ -704,6 +704,26 @@ HZ.loadPlan = async function(){
   return HZ.PLAN;
 };
 
+/* ---------- Paymob payments ---------- */
+HZ.payEnabled = null;
+HZ.checkPay = async function(){
+  if(HZ.payEnabled!==null) return HZ.payEnabled;
+  try{ const j = await (await fetch('/api/pay/config')).json(); HZ.payEnabled = !!j.enabled; }
+  catch(e){ HZ.payEnabled = false; }
+  return HZ.payEnabled;
+};
+// Start a hosted Paymob checkout for {kind: booking|subscription|wallet}. Redirects on success.
+HZ.pay = async function(kind, ref){
+  const s = HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return {ok:false}; }
+  let r;
+  try{ r = await (await fetch('/api/pay/create',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:s.token, kind, ref})})).json(); }
+  catch(e){ r = {ok:false, error:'network'}; }
+  if(r && r.ok && r.checkout_url){ location.href = r.checkout_url; return r; }
+  return r || {ok:false};
+};
+
 /* Reveal-on-scroll for any .reveal element — global, so every page animates in
    (and pages without their own observer, e.g. /areas, don't get stuck hidden). */
 HZ.initReveal = function(){

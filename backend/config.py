@@ -91,6 +91,19 @@ SMTP_PASS = _get("SMTP_PASS", "")
 LEAD_NOTIFY_FROM = _get("LEAD_NOTIFY_FROM", "") or SMTP_USER
 LEAD_NOTIFY_TO = _get("LEAD_NOTIFY_TO", "hello@homzy-ai.com")
 
+# --- Paymob (Accept) payment gateway --------------------------------------
+# Server secrets — set in the Vercel env, never committed. Empty => payments off
+# (the mock/trial paths keep working). Test with Paymob's test keys first.
+PAYMOB_SECRET_KEY = _get("PAYMOB_SECRET_KEY", "")
+PAYMOB_PUBLIC_KEY = _get("PAYMOB_PUBLIC_KEY", "")
+PAYMOB_HMAC = _get("PAYMOB_HMAC", "")
+# Comma-separated integration IDs (card / wallet) from Paymob → Payment Integrations.
+PAYMOB_INTEGRATION_IDS = _get("PAYMOB_INTEGRATION_IDS", "")
+PAYMOB_BASE = _get("PAYMOB_BASE", "https://accept.paymob.com")
+# Where the browser returns after paying, and where Paymob POSTs the result.
+PUBLIC_SITE = _get("PUBLIC_SITE", "https://homzy-ai.com")
+API_SITE = _get("API_SITE", "https://homzy-jet.vercel.app")
+
 # --- Behaviour -----------------------------------------------------------
 MAX_RESULTS = int(_get("MAX_RESULTS", "4"))
 LLM_TEMPERATURE = float(_get("LLM_TEMPERATURE", "0.6"))

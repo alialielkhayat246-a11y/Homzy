@@ -230,6 +230,12 @@ async function payNow(){
   if(!BOOKING) return;
   const s=HZ.session(); const btn=document.getElementById('payBtn'), msg=document.getElementById('payMsg');
   btn.disabled=true; btn.textContent=ar()?'...جاري الدفع':'Processing...';
+  // Real Paymob checkout when configured; otherwise the mock settle (test env).
+  if(await HZ.checkPay()){
+    const pr=await HZ.pay('booking',{booking_id:BOOKING});   // redirects on success
+    if(!(pr&&pr.ok)){ btn.disabled=false; btn.textContent=ar()?'ادفع وأكّد الحجز':'Pay & confirm booking'; msg.className='bkmsg err'; msg.textContent=ar()?'تعذّر فتح صفحة الدفع':'Could not start payment'; }
+    return;
+  }
   let r; try{ r=await HZ.sbAuth('/rpc/stay_settle_booking', s.token, 'POST', {p_booking:BOOKING,p_provider:'mock',p_ref:'mock-'+Date.now()}); }
   catch(e){ r={ok:false}; }
   if(r&&r.ok){ msg.className='bkmsg ok'; msg.textContent=ar()?'تم تأكيد الحجز! 🎉':'Booking confirmed! 🎉';
