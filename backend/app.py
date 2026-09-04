@@ -173,6 +173,12 @@ def host_landing_page():
     return FileResponse(config.FRONTEND_DIR / "host.html")
 
 
+@app.get("/pricing")
+def pricing_page():
+    """Broker subscription plans (public)."""
+    return FileResponse(config.FRONTEND_DIR / "pricing.html")
+
+
 # Host dashboard — one page, tab chosen from the path (properties/new/calendar/
 # bookings/earnings/reviews/verification). All require a session (client-side gate).
 @app.get("/host/properties")

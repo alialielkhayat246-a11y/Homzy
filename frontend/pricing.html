@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>باقات Homzy — اشتراكات البروكرز</title>
+<meta name="description" content="باقات Homzy الشهرية للبروكرز والمكاتب — CRM، مساعد مبيعات ذكي، وحدات غير محدودة، ليدز، واستضافة Homzy Stays." />
+<link rel="canonical" href="https://homzy-ai.com/pricing" />
+<meta property="og:type" content="website" /><meta property="og:site_name" content="Homzy" />
+<meta property="og:title" content="باقات Homzy" /><meta property="og:description" content="اشتراكات شهرية لأدوات البروكر في Homzy." />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .price-hero{text-align:center;padding:56px 0 20px;}
+  .price-hero h1{font-size:clamp(28px,4vw,42px);font-family:var(--fd);}
+  .price-hero p{color:#5b6b82;font-size:17px;margin-top:12px;}
+  .cyc{display:inline-flex;gap:4px;background:#fff;border:1.5px solid var(--line-2);border-radius:100px;padding:4px;margin-top:20px;}
+  .cyc button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:14px;padding:8px 18px;border-radius:100px;cursor:pointer;color:var(--muted);}
+  .cyc button.on{background:var(--navy);color:#fff;}
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;max-width:1000px;margin:34px auto 0;align-items:start;}
+  @media(max-width:860px){.plans{grid-template-columns:1fr;max-width:420px;}}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;position:relative;box-shadow:var(--shadow-sm);}
+  .plan.pop{border:2px solid var(--teal);box-shadow:var(--shadow);}
+  .plan .tag{position:absolute;top:-13px;inset-inline-start:50%;transform:translateX(50%);background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:5px 14px;border-radius:100px;}
+  .plan h3{font-size:22px;}
+  .plan .price{margin:14px 0 4px;} .plan .price b{font-size:38px;font-family:var(--fd);} .plan .price span{color:var(--muted);font-weight:600;}
+  .plan .yr{color:var(--teal-d);font-size:13px;font-weight:700;min-height:18px;}
+  .plan ul{list-style:none;padding:0;margin:18px 0;display:flex;flex-direction:column;gap:10px;}
+  .plan li{display:flex;gap:9px;font-size:14.5px;color:#33404f;}
+  .plan li .ic{color:var(--teal);font-weight:900;flex:none;}
+  .plan li.off{color:#aab2bd;} .plan li.off .ic{color:#cfd6dd;}
+  .plan .cta{width:100%;margin-top:8px;}
+  .cur{text-align:center;font-weight:800;color:#137a3e;padding:12px;}
+  .note{max-width:760px;margin:34px auto 0;color:var(--muted);font-size:13.5px;text-align:center;line-height:1.9;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<section class="section" style="padding-top:20px">
+  <div class="wrap">
+    <div class="price-hero">
+      <span class="eyebrow">Homzy للمحترفين</span>
+      <h1>اختر باقتك</h1>
+      <p>أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 14 يوم.</p>
+      <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')">شهري</button><button id="cY" onclick="setCyc('yearly')">سنوي · وفّر شهرين</button></div>
+    </div>
+    <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
+    <div class="note">
+      💳 الدفع الشهري عبر Paymob (كروت/فوري/محافظ) — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 14 يوم</b>.<br>
+      عمولة Homzy Stays 7% للباقات، و<b>5% لباقة الأعمال</b>. الأسعار بالجنيه المصري شاملة، وممكن تتغير.
+    </div>
+  </div>
+</section>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+let PLANS=[], CYC='monthly', CURRENT='free';
+const money=n=>Number(n).toLocaleString('ar-EG');
+function featRow(on,txt){ return `<li class="${on?'':'off'}"><span class="ic">${on?'✓':'—'}</span><span>${txt}</span></li>`; }
+function planCard(p){
+  const f=p.features||{};
+  const price = CYC==='yearly' ? p.price_yearly : p.price_monthly;
+  const per = CYC==='yearly' ? 'سنويًا' : 'شهريًا';
+  const yr = (CYC==='monthly' && p.price_yearly>0) ? ('أو '+money(p.price_yearly)+' ج.م سنويًا (وفّر شهرين)') : '';
+  const isCur = p.plan===CURRENT;
+  const feats = [
+    featRow(true, p.max_listings==null?'وحدات غير محدودة':('حتى '+p.max_listings+' وحدات')),
+    featRow(true, p.max_clients==null?'عملاء بلا حدود (CRM)':('CRM حتى '+p.max_clients+' عميل')),
+    featRow(f.ai_sales, 'مساعد المبيعات الذكي'),
+    featRow(f.branded_pdf, 'عروض PDF باسمك ولوجوك'),
+    featRow(f.logo_watermark, 'لوجوك تلقائيًا على صور الوحدات'),
+    featRow(f.voice, 'إدخال صوتي في الـCRM'),
+    featRow(p.leads_included>0, p.leads_included>0?(p.leads_included+' ليد مضمّنة/شهر'):'ليدز مضمّنة'),
+    featRow(true, 'استضافة Homzy Stays (عمولة '+(p.stays_commission_rate*100)+'%)'),
+    featRow(p.team_seats>1, p.team_seats>1?(p.team_seats+' حسابات فريق'):'حساب واحد'),
+    featRow(f.featured, 'وحدات مميّزة في البحث'),
+    featRow(f.analytics, 'تحليلات + دعم أولوية'),
+  ].join('');
+  let cta;
+  if(p.plan==='free') cta = isCur?`<div class="cur">باقتك الحالية</div>`:`<a class="btn btn-ghost cta" href="/my-listings">ابدأ مجانًا</a>`;
+  else if(isCur) cta = `<div class="cur">باقتك الحالية ✓</div>`;
+  else cta = `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="subscribe('${p.plan}')">ابدأ تجربة 14 يوم</button>`;
+  return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?'<span class="tag">الأكثر رواجًا</span>':''}
+    <h3>${HZ.esc(p.name_ar)}</h3>
+    <div class="price">${price>0?`<b>${money(price)}</b> <span>ج.م/${per}</span>`:`<b>مجاني</b>`}</div>
+    <div class="yr">${yr}</div>
+    <ul>${feats}</ul>
+    ${cta}</div>`;
+}
+function render(){ document.getElementById('plans').innerHTML = PLANS.map(planCard).join(''); }
+window.setCyc=(c)=>{ CYC=c; document.getElementById('cM').classList.toggle('on',c==='monthly'); document.getElementById('cY').classList.toggle('on',c==='yearly'); render(); };
+window.subscribe=async(plan)=>{
+  const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
+  let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan}); }catch(e){ r={ok:false}; }
+  if(r&&r.ok){ alert('تم تفعيل تجربتك المجانية 14 يوم لباقة '+plan.toUpperCase()+' 🎉'); location.href='/my-listings'; }
+  else{
+    const m={already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — الدفع هيتفعّل قريبًا عبر Paymob.',not_authenticated:'سجّل دخولك الأول.'};
+    alert(m[r&&r.error]||'تعذّر التفعيل — حاول تاني.');
+  }
+};
+async function boot(){
+  try{ PLANS=await HZ.sb('/plan_limits?select=*&active=eq.true&order=sort')||[]; }catch(e){ PLANS=[]; }
+  const s=HZ.session();
+  if(s){ try{ const cp=await HZ.rpc('current_plan',{p_uid:s.uid}); CURRENT=(typeof cp==='string')?cp:((cp&&cp[0])||'free'); }catch(e){} }
+  render();
+}
+boot();
+</script>
+</body>
+</html>

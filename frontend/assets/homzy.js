@@ -94,6 +94,7 @@ const T = {
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
   stays:{ar:'إقامات Homzy',en:'Homzy Stays'},
   hosting:{ar:'الاستضافة',en:'Hosting'},
+  pricing:{ar:'الباقات والأسعار',en:'Pricing'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -208,7 +209,7 @@ function buildFooter(){
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('forBrokers')}</h4>
-          <a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a>
+          <a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a><a href="/pricing">${HZ.t('pricing')}</a>
         </div>
       </div>
       <div class="hz-foot-bottom"><span>© ${new Date().getFullYear()} Homzy</span><span>${HZ.t('disclaimer')}</span></div>
@@ -256,7 +257,7 @@ function buildTabbar(){
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   const items = broker
-    ? [['/host/properties','🏠','hosting'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/download','📱','app'],['/admin','⚙️','admin']]
+    ? [['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/admin','⚙️','admin']]
     : [['/areas','📍','areas'],['/features','✨','features'],['/leads','🎯','leads'],['/brokers','🧰','forBrokers'],['/download','📱','app'],['/admin','⚙️','admin']];
   sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);
@@ -414,6 +415,11 @@ HZ.loadHtml2pdf = function(){
 };
 HZ.makeOffer = async function(rec, btn, clientName){
   const ar=HZ.lang==='ar';
+  if(!HZ.PLAN) await HZ.loadPlan();
+  if(!HZ.hasFeature('branded_pdf')){
+    if(confirm(ar?'عروض PDF بالبراند ميزة في باقة Pro. تحب تشوف الباقات وتبدأ تجربة مجانية؟':'Branded PDF offers are a Pro feature. See plans and start a free trial?')) location.href='/pricing';
+    return;
+  }
   const old = btn && btn.textContent; if(btn){ btn.disabled=true; btn.textContent=ar?'بيتجهّز…':'Preparing…'; }
   try{
     // broker profile (logo/name/phone)
@@ -676,11 +682,27 @@ async function checkBrokerAccount(){
       {headers:{apikey:SB_KEY, Authorization:'Bearer '+jwt}});
     if(!r.ok) return notBroker();
     const rows=await r.json();
-    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); }
+    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); HZ.loadPlan(); }
     else notBroker();
   }catch(e){ notBroker(); }
 }
 function notBroker(){ document.body.classList.remove('hz-broker'); HZ.isBroker=false; if(HZ.mode!=='client') HZ.setMode('client'); }
+
+/* ---------- Subscription plan (feature gating) ---------- */
+HZ.PLAN = null; // plan_limits row for the signed-in user (or free defaults)
+HZ.hasFeature = (f)=> !!(HZ.PLAN && HZ.PLAN.features && HZ.PLAN.features[f]);
+HZ.loadPlan = async function(){
+  const s = HZ.session();
+  if(!s){ HZ.PLAN = {plan:'free', features:{}, max_listings:3, max_clients:25, leads_included:0}; return HZ.PLAN; }
+  try{
+    const cp = await HZ.rpc('current_plan', {p_uid:s.uid});   // scalar text
+    const plan = (typeof cp==='string') ? cp : ((cp&&cp[0])||'free');
+    const rows = await HZ.sb('/plan_limits?plan=eq.'+plan+'&select=*');
+    HZ.PLAN = (rows&&rows[0]) ? rows[0] : {plan:'free', features:{}};
+  }catch(e){ HZ.PLAN = {plan:'free', features:{}}; }
+  document.dispatchEvent(new CustomEvent('hz:plan', {detail:HZ.PLAN}));
+  return HZ.PLAN;
+};
 
 /* Reveal-on-scroll for any .reveal element — global, so every page animates in
    (and pages without their own observer, e.g. /areas, don't get stuck hidden). */

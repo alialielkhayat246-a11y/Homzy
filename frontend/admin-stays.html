@@ -51,7 +51,7 @@
 const ar=()=>HZ.lang==='ar';
 const money=n=>n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
 let S=null, TAB='properties', ISADMIN=false, PFILTER='pending';
-const TABS=[['properties','الوحدات','Properties'],['hosts','المضيفون','Hosts'],['verifications','التوثيق','Verifications'],['bookings','الحجوزات','Bookings'],['reviews','المراجعات','Reviews'],['disputes','النزاعات','Disputes'],['settings','الإعدادات','Settings']];
+const TABS=[['properties','الوحدات','Properties'],['hosts','المضيفون','Hosts'],['verifications','التوثيق','Verifications'],['bookings','الحجوزات','Bookings'],['reviews','المراجعات','Reviews'],['disputes','النزاعات','Disputes'],['plans','الباقات','Plans'],['settings','الإعدادات','Settings']];
 
 function parsePath(){ const p=location.pathname.split('/').filter(Boolean); return p[2]||'properties'; } // admin, stays, X
 function go(tab){ history.pushState({},'', '/admin/stays/'+tab); TAB=tab; renderNav(); renderTab(); }
@@ -71,6 +71,7 @@ async function renderTab(){
     else if(TAB==='bookings') c.innerHTML=await viewBookings();
     else if(TAB==='reviews') c.innerHTML=await viewReviews();
     else if(TAB==='disputes') c.innerHTML=await viewDisputes();
+    else if(TAB==='plans') c.innerHTML=await viewPlans();
     else if(TAB==='settings') c.innerHTML=await viewSettings();
     HZ.applyLang();
   }catch(e){ c.innerHTML='<div class="empty" style="color:#B42318">'+HZ.esc(e.message||'error')+'</div>'; }
@@ -201,6 +202,40 @@ window.saveSettings=async()=>{
     await setKey('guest_favorite_criteria', {min_reviews:+document.getElementById('gf_reviews').value, min_avg_rating:+document.getElementById('gf_rating').value, max_cancellation_rate:(SET.guest_favorite_criteria&&SET.guest_favorite_criteria.max_cancellation_rate)||0.05});
     msg.style.color='#137a3e'; msg.textContent=ar()?'تم الحفظ ✅':'Saved ✅';
   }catch(e){ msg.style.color='#B42318'; msg.textContent=(ar()?'خطأ: ':'Error: ')+(e.message||''); }
+};
+
+/* Plans + subscriptions */
+async function viewPlans(){
+  const plans=await api('/plan_limits?select=*&order=sort');
+  return plans.map(p=>`<div class="form" style="margin-bottom:14px">
+    <h3>${HZ.esc(p.name_ar)} <span style="color:var(--muted);font-weight:600">(${p.plan})</span></h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div class="fld"><label>سعر شهري</label><input type="number" id="pm_${p.plan}" value="${p.price_monthly}"></div>
+      <div class="fld"><label>سعر سنوي</label><input type="number" id="py_${p.plan}" value="${p.price_yearly}"></div>
+      <div class="fld"><label>عمولة Stays (0.07)</label><input type="number" step="0.01" id="pc_${p.plan}" value="${p.stays_commission_rate}"></div>
+      <div class="fld"><label>ليدز/شهر</label><input type="number" id="pl_${p.plan}" value="${p.leads_included}"></div>
+      <div class="fld"><label>حد الوحدات (فاضي=∞)</label><input type="number" id="px_${p.plan}" value="${p.max_listings==null?'':p.max_listings}"></div>
+    </div>
+    <button class="btn btn-teal btn-sm" onclick="savePlan('${p.plan}')">حفظ</button>
+  </div>`).join('')
+  + `<div class="form"><h3>منح/تفعيل اشتراك لمستخدم</h3>
+    <div class="fld"><label>User ID (uuid)</label><input id="g_uid" placeholder="uuid المستخدم"></div>
+    <div class="fld"><label>الباقة</label><select id="g_plan"><option value="pro">Pro</option><option value="business">Business</option><option value="free">Free</option></select></div>
+    <div class="fld"><label>عدد الأيام</label><input type="number" id="g_days" value="30"></div>
+    <div class="msg" id="gmsg"></div>
+    <button class="btn btn-navy btn-sm" onclick="grantSub()">تفعيل الاشتراك</button></div>`;
+}
+window.savePlan=async(plan)=>{
+  const body={price_monthly:+document.getElementById('pm_'+plan).value||0, price_yearly:+document.getElementById('py_'+plan).value||0,
+    stays_commission_rate:+document.getElementById('pc_'+plan).value||0.07, leads_included:+document.getElementById('pl_'+plan).value||0};
+  const mx=document.getElementById('px_'+plan).value; body.max_listings = mx===''?null:(+mx);
+  try{ await HZ.sbAuth('/plan_limits?plan=eq.'+plan, S.token,'PATCH',body,{Prefer:'return=minimal'}); alert('تم الحفظ ✅'); }catch(e){ alert('خطأ في الحفظ'); }
+};
+window.grantSub=async()=>{
+  const uid=document.getElementById('g_uid').value.trim(), plan=document.getElementById('g_plan').value, days=+document.getElementById('g_days').value||30;
+  const msg=document.getElementById('gmsg'); if(!uid){ msg.style.color='#B42318'; msg.textContent='اكتب User ID'; return; }
+  const r=await rpc('admin_set_subscription',{p_uid:uid,p_plan:plan,p_status:'active',p_days:days});
+  if(r&&r.ok){ msg.style.color='#137a3e'; msg.textContent='تم التفعيل ✅'; } else { msg.style.color='#B42318'; msg.textContent='خطأ: '+((r&&r.error)||''); }
 };
 
 async function boot(){

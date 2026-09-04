@@ -219,6 +219,7 @@ async function boot(){
   if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
+  HZ.loadPlan && HZ.loadPlan();
   loadProfile(); loadMine();
 }
 let PROFILE={};
@@ -291,7 +292,12 @@ function render(){
 }
 
 /* form */
-window.openForm=()=>{ EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent='إضافة وحدة';
+window.openForm=()=>{
+  if(window.HZ && HZ.PLAN && HZ.PLAN.max_listings!=null && LISTINGS.length >= HZ.PLAN.max_listings){
+    if(confirm('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك المجانية. تحب ترقّي لباقة أعلى ووحدات غير محدودة؟')) location.href='/pricing';
+    return;
+  }
+  EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent='إضافة وحدة';
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
   $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='active';
   $('fThumbs').innerHTML=''; fmsg(''); $('formOv').classList.add('open'); };
@@ -367,7 +373,8 @@ window.saveListing=async ()=>{
     // then reconcile listing_media to KEEP_MEDIA + uploaded
     const uploaded=[];
     for(const f of NEW_FILES){
-      const toUpload = PROFILE.company_logo_url ? await watermark(f, PROFILE.company_logo_url) : f;
+      const stamp = PROFILE.company_logo_url && (!window.HZ || HZ.hasFeature('logo_watermark'));
+      const toUpload = stamp ? await watermark(f, PROFILE.company_logo_url) : f;
       const ext = (toUpload===f) ? (f.name.split('.').pop()||'jpg') : 'jpg';
       const path=UID+'/'+id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
       const {error}=await sb.storage.from('listings').upload(path, toUpload, {upsert:false, contentType:toUpload.type||'image/jpeg'});

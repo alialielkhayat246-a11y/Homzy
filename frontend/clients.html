@@ -224,6 +224,7 @@ async function boot(){
   if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
+  HZ.loadPlan && HZ.loadPlan();
   loadClients();
 }
 window.loadClients=async ()=>{
@@ -281,7 +282,13 @@ window.closeForm=()=>{ stopVoice(true); $('voicebar').classList.remove('show'); 
 /* ---------- Voice entry (AI-parsed) ---------- */
 let REC=null, VOICE_ON=false, VOICE_TXT='';
 const speechSupported=()=>!!(window.SpeechRecognition||window.webkitSpeechRecognition);
-window.voiceAdd=()=>{ openForm(); setTimeout(()=>toggleVoice(),250); };
+window.voiceAdd=()=>{
+  if(window.HZ && HZ.PLAN && !HZ.hasFeature('voice')){
+    if(confirm('الإدخال الصوتي ميزة في باقة Pro. تحب تشوف الباقات وتبدأ تجربة مجانية؟')) location.href='/pricing';
+    return;
+  }
+  openForm(); setTimeout(()=>toggleVoice(),250);
+};
 function vbar(t,err){ const v=$('voicebar'); v.classList.add('show'); v.innerHTML=err?('<span style="color:#B42318">'+esc(t)+'</span>'):t; }
 function micUI(on){ const b=$('micBtn'); if(!b) return; b.classList.toggle('rec',on); b.textContent=on?'⏹ إيقاف':'🎤 بالصوت'; }
 window.toggleVoice=()=>{
