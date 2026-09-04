@@ -368,8 +368,38 @@ function addRec(rec){
     b.onclick=()=>HZ.makeOffer(rec, b);
     d.appendChild(b);
   }
-  log.appendChild(d); log.scrollTop=log.scrollHeight;
+  log.appendChild(d);
+  // Client sales-handoff CTA: offer to have a sales rep contact them (once).
+  if(!(HZ.isBroker && HZ.mode==='broker') && !chat.contactRequested){
+    const cb=document.createElement('button'); cb.className='rec-contact';
+    cb.textContent=(HZ.lang==='ar'?'✅ عايز حد من المبيعات يتواصل معايا':'✅ Have a sales rep contact me');
+    cb.onclick=()=>HZ.requestContact(cb);
+    log.appendChild(cb);
+  }
+  log.scrollTop=log.scrollHeight;
 }
+HZ.requestContact = async function(btn){
+  const ar=HZ.lang==='ar', s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  if(btn){ btn.disabled=true; btn.textContent=ar?'بنبعت طلبك…':'Sending…'; }
+  let prof={}; try{ prof=(await HZ.sbAuth('/profiles?select=full_name,phone&id=eq.'+s.uid, s.token))[0]||{}; }catch(e){}
+  let name=prof.full_name||chat.lead.name||null;
+  let phone=prof.phone||chat.lead.phone||null;
+  if(!phone){
+    phone=((prompt(ar?'اكتب رقم موبايلك عشان فريق المبيعات يتواصل معاك:':'Your phone so sales can reach you:')||'').trim())||null;
+    if(!phone){ if(btn){ btn.disabled=false; btn.textContent=ar?'✅ عايز حد من المبيعات يتواصل معايا':'✅ Have a sales rep contact me'; } return; }
+    chat.lead.phone=phone;
+  }
+  const ctx = chat.context ? (chat.context.name+(chat.context.area?(' · '+chat.context.area):'')) : null;
+  const lastMsg=(chat.history.slice(-1)[0]||{}).content||'';
+  const hdr={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'};
+  try{ await HZ.sb('/rpc/upsert_web_lead',{method:'POST',headers:hdr,body:JSON.stringify({p_session_id:chat.sessionId,p_name:name,p_phone:phone,p_context:ctx,p_messages:chat.history,p_lang:HZ.lang,p_req:chat.req||null})}); }catch(e){}
+  try{ await HZ.sb('/rpc/mark_web_lead_contact',{method:'POST',headers:hdr,body:JSON.stringify({p_session_id:chat.sessionId})}); }catch(e){}
+  try{ await fetch('/api/lead-contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:s.token, context:ctx, message:lastMsg, lang:HZ.lang})}); }catch(e){}
+  chat.contactRequested=true; saveChat();
+  if(btn){ btn.textContent=ar?'✅ اتبعت — هنتواصل معاك':"✅ Sent — we'll contact you"; }
+  addMsg(ar?'تمام! ✅ سجّلت طلبك، وفريق المبيعات هيتواصل معاك في أقرب وقت على رقمك المسجّل. تحب أساعدك في حاجة تانية؟':"Done! ✅ Our sales team will reach out shortly on your registered number. Anything else?",'bot');
+};
 async function _toDataURL(url){
   if(!url) return '';
   try{ const r=await fetch(url); if(!r.ok) return ''; const bl=await r.blob();

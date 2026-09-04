@@ -14,7 +14,8 @@ from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
-from . import broker, config, listings as listings_mod, llm, push, seo, valuation
+from . import (broker, config, listings as listings_mod, llm, notify, push,
+               seo, valuation)
 
 app = FastAPI(title="Homzy Broker")
 
@@ -445,6 +446,19 @@ async def push_run_followups(req: Request):
     if not config.PUSH_CRON_TOKEN or token != config.PUSH_CRON_TOKEN:
         raise HTTPException(status_code=403, detail="forbidden")
     return push.run_followups()
+
+
+@app.post("/api/lead-contact")
+async def lead_contact(req: Request):
+    """A signed-in client asked a sales rep to contact them. Emails the operator
+    with the client's REGISTERED name + phone (read server-side, not trusted from
+    the browser). Best-effort: the lead is also recorded client-side (web_leads)."""
+    body = await req.json()
+    token = (body.get("token") or "").strip()
+    return notify.handle_lead_contact(
+        token, body.get("context") or "", body.get("message") or "",
+        body.get("lang") or "ar",
+    )
 
 
 @app.post("/api/reset")

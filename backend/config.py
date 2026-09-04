@@ -81,6 +81,16 @@ VAPID_SUBJECT = _get("VAPID_SUBJECT", "mailto:hello@homzy-ai.com")
 # follow-ups + prune dead subscriptions — so no service_role key is needed.
 PUSH_CRON_TOKEN = _get("PUSH_CRON_TOKEN", "")
 
+# --- Lead notification email (a client asks a sales rep to contact them) ------
+# SMTP is optional: if not configured, the lead is still recorded (visible in
+# /inbox) — the email is just an extra. Spacemail: mail.spacemail.com:465 (SSL).
+SMTP_HOST = _get("SMTP_HOST", "mail.spacemail.com")
+SMTP_PORT = int(_get("SMTP_PORT", "465"))
+SMTP_USER = _get("SMTP_USER", "")
+SMTP_PASS = _get("SMTP_PASS", "")
+LEAD_NOTIFY_FROM = _get("LEAD_NOTIFY_FROM", "") or SMTP_USER
+LEAD_NOTIFY_TO = _get("LEAD_NOTIFY_TO", "hello@homzy-ai.com")
+
 # --- Behaviour -----------------------------------------------------------
 MAX_RESULTS = int(_get("MAX_RESULTS", "4"))
 LLM_TEMPERATURE = float(_get("LLM_TEMPERATURE", "0.6"))

@@ -138,6 +138,9 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
 .rec-card .rec-pdf{display:block; width:100%; margin-top:10px; font-family:var(--ff); font-weight:800; font-size:13px; color:#fff; background:var(--navy); border:none; border-radius:10px; padding:9px 12px; cursor:pointer; transition:background .15s;}
 .rec-card .rec-pdf:hover{background:var(--navy-2);}
 .rec-card .rec-pdf:disabled{opacity:.6; cursor:default;}
+.rec-contact{align-self:flex-start; max-width:90%; margin-top:2px; font-family:var(--ff); font-weight:800; font-size:13.5px; color:#fff; background:var(--teal); border:none; border-radius:12px; padding:11px 16px; cursor:pointer; box-shadow:0 8px 20px rgba(11,85,99,.28); transition:background .15s;}
+.rec-contact:hover{background:var(--teal-d);}
+.rec-contact:disabled{opacity:.7; cursor:default;}
 .typing{display:flex; gap:4px; padding:12px 14px; background:#fff; border:1px solid var(--line); border-radius:16px; align-self:flex-start; width:fit-content;}
 .typing i{width:7px; height:7px; border-radius:50%; background:#c3c9d2; animation:blink 1.3s infinite;}
 .typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}

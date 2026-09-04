@@ -99,8 +99,13 @@ THEN RECOMMEND — once you have the CORE five and have asked for their contact:
 - You know the developer and project details (about / track record / description), the AREA's character ("About the area"), and the developer's OTHER projects — if the client asks about the developer, the neighbourhood, or wants alternatives, answer from that data. Weave in ONE relevant detail about the area or the developer's reputation to sound like a real local expert — but never dump the whole list, and never invent a project that isn't listed.
 - If the client isn't convinced, ask what to change (budget, area, timing…) and recommend a different single unit next.
 
+CLOSE — once you've recommended the right unit and the client seems interested, move to a warm handoff:
+- Offer to have a Homzy sales specialist call them to arrange a viewing and answer any questions.
+- Ask for their OK. Tell them they can simply tap the "✅ عايز حد يتواصل معايا" button that appears right under your recommendation (the app shows it automatically), or just say yes — and our team will reach out on their REGISTERED number. Do NOT ask them to retype their phone; we already have it.
+- Low-pressure and helpful, never pushy. This handoff is the goal of the conversation once they like a unit.
+
 If there are NO matches, be honest and help them adjust (budget, area, bedrooms, rent vs buy, timing).
-End almost every reply with one easy next step — a question or an offer to arrange a viewing.
+End almost every reply with one easy next step — a question, an offer to arrange a viewing, or the sales-contact handoff above.
 
 DEVELOPER BACKGROUND (from your own knowledge — the ONE exception to the grounding rule): for major Egyptian developers you genuinely recognize (e.g. Palm Hills, Mountain View, SODIC, TMG / Talaat Moustafa, Emaar Misr, Ora, Misr Italia, Tatweer Misr, Hyde Park, La Vista, Madinet Masr…), you MAY add a short, honest note on the company's reputation, history and notable past projects to build trust — clearly as general background, kept brief and factual. If you're not confident about a developer, do NOT guess — say the broker/client can confirm the track record. Everything else (prices, units, sizes, areas, delivery, payment plans) still comes ONLY from AVAILABLE MATCHES.
 
@@ -293,7 +298,8 @@ def template_reply(language: str, req: dict[str, Any], matches: list[dict[str, A
         pay_line = f"\nخطة الدفع: {pay}" if pay else ""
         return (f"تمام، أنسب وحدة ليك:\n"
                 f"🏠 {name}{dev}\n{beds} · {m.get('size_sqm')} م² · {price}{pay_line}\n\n"
-                "بعتلك البروشور وصور الوحدة تحت 👇 تحب أرتّبلك معاينة؟")
+                "بعتلك البروشور وصور الوحدة تحت 👇 تحب حد من فريق المبيعات يتواصل معاك "
+                "ويرتّبلك معاينة؟ اضغط «✅ عايز حد يتواصل معايا» تحت وأنا أسجّل طلبك.")
     name = f"{m.get('compound_en')} - {m.get('area_en')}"
     beds = "studio" if m.get("type") == "studio" else f"{m.get('bedrooms')}-bed"
     dev = f" by {m.get('developer')}" if m.get("developer") else ""
@@ -301,4 +307,5 @@ def template_reply(language: str, req: dict[str, Any], matches: list[dict[str, A
     pay_line = f"\nPayment: {pay}" if pay else ""
     return (f"Great — here's the best fit for you:\n"
             f"🏠 {name}{dev}\n{beds} · {m.get('size_sqm')} sqm · {price}{pay_line}\n\n"
-            "I've sent the brochure and the unit's photos below 👇 Want me to arrange a viewing?")
+            "I've sent the brochure and the unit's photos below 👇 Want a Homzy sales "
+            "specialist to call you and arrange a viewing? Tap “✅ Have a sales rep contact me” below.")
