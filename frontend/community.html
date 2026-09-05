@@ -55,10 +55,17 @@
 </div></div>
 
 <div id="hz-footer"></div>
+<script src="/assets/eg-areas.js"></script>
 <script src="/assets/homzy.js"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
-const AREAS=[['new-cairo','التجمع / القاهرة الجديدة'],['sheikh-zayed','الشيخ زايد'],['6-october','السادس من أكتوبر'],['new-capital','العاصمة الإدارية'],['nasr-city','مدينة نصر'],['maadi','المعادي'],['heliopolis','مصر الجديدة'],['zamalek','الزمالك'],['mostakbal','مدينة المستقبل'],['shorouk','الشروق'],['madinaty','مدينتي'],['north-coast','الساحل الشمالي'],['ain-sokhna','العين السخنة'],['alexandria','الإسكندرية']];
+const AREA_LABEL={};
+(window.EG_AREA_GROUPS||[]).forEach(([g])=>(EG_AREAS[g]||[]).forEach(([s,nm])=>AREA_LABEL[s]=nm));
+function areaOptions(){
+  return (window.EG_AREA_GROUPS||[]).map(([g,gname])=>
+    `<optgroup label="${gname}">`+(EG_AREAS[g]||[]).map(a=>`<option value="${a[0]}" ${a[0]===AREA?'selected':''}>${a[1]}</option>`).join('')+`</optgroup>`
+  ).join('');
+}
 let S=null, ISBROKER=false, AREA=localStorage.getItem('hz_comm_area')||'new-cairo', TIMER=null;
 
 function fmtTime(t){ const d=new Date(t); const now=new Date(); const sameDay=d.toDateString()===now.toDateString();
@@ -91,10 +98,9 @@ function render(){
       <a class="btn btn-navy" href="/account">${ar()?'ابقى بروكر':'Become a broker'}</a></div>`;
     return;
   }
-  const opts=AREAS.map(a=>`<option value="${a[0]}" ${a[0]===AREA?'selected':''}>${a[1]}</option>`).join('');
   document.getElementById('app').innerHTML=`
     <div class="cm-top"><h1 data-ar="مجتمع البروكرز" data-en="Brokers community">مجتمع البروكرز</h1><span class="sp"></span>
-      <select class="areasel" onchange="pickArea(this.value)">${opts}</select></div>
+      <select class="areasel" onchange="pickArea(this.value)">${areaOptions()}</select></div>
     <div class="hint" data-ar="اعرض طلب عميلك على بروكرز المنطقة، أو اقفل ديل مع حد عنده الوحدة المناسبة. كل بروكر بيظهر باسمه ورقمه للتواصل." data-en="Post your client's request to area brokers, or close a deal with whoever has the right unit.">اعرض طلب عميلك على بروكرز المنطقة، أو اقفل ديل مع حد عنده الوحدة المناسبة.</div>
     <div class="log" id="log"></div>`;
   loadMsgs();
