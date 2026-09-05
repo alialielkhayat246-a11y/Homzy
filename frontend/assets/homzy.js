@@ -611,9 +611,7 @@ function captureLead(text){
 
 HZ.openChat = function(opts){
   opts=opts||{};
-  // The advisor is a gated feature too — send guests to log in first, then come
-  // straight back (the homepage is the only place a guest can be).
-  if(!HZ.isLoggedIn()){ location.href='/login?next='+encodeURIComponent(location.pathname+location.search); return; }
+  // Public: guests can chat with the advisor. Only lead/booking actions gate.
   buildChat();
   // A project context resets to a focused conversation about that project.
   if(opts.context){
