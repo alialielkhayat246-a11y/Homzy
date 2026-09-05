@@ -91,6 +91,16 @@ SMTP_PASS = _get("SMTP_PASS", "")
 LEAD_NOTIFY_FROM = _get("LEAD_NOTIFY_FROM", "") or SMTP_USER
 LEAD_NOTIFY_TO = _get("LEAD_NOTIFY_TO", "hello@homzy-ai.com")
 
+# --- Payment gateway (Kashier default; Paymob also supported) --------------
+# Which provider to use: "kashier" or "paymob".
+PAYMENT_PROVIDER = _get("PAYMENT_PROVIDER", "kashier").lower()
+
+# Kashier — set in the Vercel env. Empty => payments off (mock/trial still work).
+KASHIER_MID = _get("KASHIER_MID", "")          # Merchant ID, e.g. MID-123-456
+KASHIER_API_KEY = _get("KASHIER_API_KEY", "")  # Secret key (HPP hash + webhook)
+KASHIER_MODE = _get("KASHIER_MODE", "test")    # test | live
+KASHIER_CHECKOUT = _get("KASHIER_CHECKOUT", "https://checkout.kashier.io")
+
 # --- Paymob (Accept) payment gateway --------------------------------------
 # Server secrets — set in the Vercel env, never committed. Empty => payments off
 # (the mock/trial paths keep working). Test with Paymob's test keys first.

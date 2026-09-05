@@ -27,7 +27,9 @@ const ar=()=>HZ.lang==='ar';
 function q(k){ return new URLSearchParams(location.search).get(k); }
 function render(){
   // Paymob appends ?success=true/false (settlement itself is confirmed server-side via webhook)
-  const ok = (q('success')==='true') || (q('txn_response_code')==='APPROVED');
+  const kst=(q('paymentStatus')||q('status')||'').toUpperCase();
+  const ok = (q('success')==='true') || (q('txn_response_code')==='APPROVED')
+          || ['SUCCESS','PAID','APPROVED'].includes(kst);
   const app=document.getElementById('app');
   if(ok){
     app.innerHTML=`<div class="pr-ic">✅</div>

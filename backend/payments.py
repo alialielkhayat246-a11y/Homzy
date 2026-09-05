@@ -30,8 +30,59 @@ _HMAC_ORDER = [
 
 
 def enabled() -> bool:
-    return bool(config.PAYMOB_SECRET_KEY and config.PAYMOB_PUBLIC_KEY
-               and config.PAYMOB_INTEGRATION_IDS)
+    p = config.PAYMENT_PROVIDER
+    if p == "kashier":
+        return bool(config.KASHIER_MID and config.KASHIER_API_KEY)
+    if p == "paymob":
+        return bool(config.PAYMOB_SECRET_KEY and config.PAYMOB_PUBLIC_KEY
+                    and config.PAYMOB_INTEGRATION_IDS)
+    return False
+
+
+def _hs256(key: str, msg: str) -> str:
+    return _hmac.new(key.encode(), msg.encode(), hashlib.sha256).hexdigest()
+
+
+def _kashier_checkout(intent_id: str, amount: float, currency: str) -> str:
+    """Build the Kashier Hosted Payment Page URL (signed)."""
+    from urllib.parse import quote
+    mid = config.KASHIER_MID
+    amt = f"{amount:.2f}"
+    path = f"/?payment={mid}.{intent_id}.{amt}.{currency}"
+    h = _hs256(config.KASHIER_API_KEY, path)
+    params = {
+        "merchantId": mid, "orderId": intent_id, "amount": amt, "currency": currency,
+        "hash": h, "mode": config.KASHIER_MODE,
+        "merchantRedirect": config.PUBLIC_SITE.rstrip("/") + "/pay/return",
+        "serverWebhook": config.API_SITE.rstrip("/") + "/api/pay/webhook",
+        "allowedMethods": "card,wallet", "display": "ar", "redirectMethod": "get",
+    }
+    qs = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
+    return config.KASHIER_CHECKOUT.rstrip("/") + "/?" + qs
+
+
+def handle_kashier_webhook(payload: dict) -> dict[str, Any]:
+    """Validate the Kashier webhook signature (over its own signatureKeys) and settle."""
+    data = (payload or {}).get("data") or {}
+    keys = data.get("signatureKeys") or []
+    if not keys:
+        return {"ok": False, "error": "no_signature_keys"}
+    qs = "&".join(f"{k}={data.get(k)}" for k in keys)
+    sig = _hs256(config.KASHIER_API_KEY, qs)
+    if not _hmac.compare_digest(sig, str(data.get("signature") or "")):
+        return {"ok": False, "error": "bad_signature"}
+    status = str(data.get("status") or "").upper()
+    if status not in ("SUCCESS", "PAID", "APPROVED"):
+        return {"ok": True, "ignored": status}
+    ref = data.get("merchantOrderId") or data.get("orderId")
+    if not ref:
+        return {"ok": False, "error": "no_reference"}
+    txn = data.get("transactionId") or data.get("kashierOrderId") or data.get("orderReference") or ""
+    try:
+        res = _rpc("pay_settle", {"p_key": TOKEN, "p_intent": str(ref), "p_provider_ref": str(txn)})
+        return {"ok": True, "settle": res}
+    except Exception as exc:  # pragma: no cover
+        return {"ok": False, "error": "settle_failed", "detail": str(exc)}
 
 
 def _headers() -> dict[str, str]:
@@ -123,6 +174,11 @@ def create_payment(token: str, kind: str, ref: dict) -> dict[str, Any]:
 
     intent_id = _rpc("pay_create_intent", {"p_key": TOKEN, "p_uid": user["id"],
                                            "p_kind": kind, "p_ref": ref, "p_amount": amount})
+
+    if config.PAYMENT_PROVIDER == "kashier":
+        return {"ok": True, "checkout_url": _kashier_checkout(str(intent_id), amount, currency),
+                "intent_id": str(intent_id)}
+
     cents = int(round(amount * 100))
     billing = {"first_name": first, "last_name": last, "email": email,
                "phone_number": phone, "country": "EG", "city": "Cairo",
@@ -186,7 +242,10 @@ def verify_hmac(obj: dict, received: str) -> bool:
 
 
 def handle_webhook(payload: dict, received_hmac: str) -> dict[str, Any]:
-    """Verify HMAC and settle the matching intent on success. Idempotent."""
+    """Verify the provider signature and settle the matching intent. Idempotent."""
+    if config.PAYMENT_PROVIDER == "kashier":
+        return handle_kashier_webhook(payload)
+    # --- Paymob ---
     obj = payload.get("obj") if isinstance(payload, dict) else None
     if not isinstance(obj, dict):
         obj = payload if isinstance(payload, dict) else {}
