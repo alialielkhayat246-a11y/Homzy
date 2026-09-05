@@ -95,6 +95,7 @@ const T = {
   stays:{ar:'إقامات Homzy',en:'Homzy Stays'},
   hosting:{ar:'الاستضافة',en:'Hosting'},
   pricing:{ar:'الباقات والأسعار',en:'Pricing'},
+  settings:{ar:'الإعدادات',en:'Settings'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -154,6 +155,7 @@ function buildHeader(){
           <button class="b" data-m="broker" onclick="HZ.setMode('broker')">${HZ.t('broker')}</button>
         </div>
         <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()">EN</button>
+        <a class="hz-lang hz-settings" href="/account" title="الإعدادات" style="text-decoration:none">⚙️</a>
         <button class="hz-auth" id="hzAuth" onclick="HZ.authAction()"></button>
         <button class="hz-menu-btn" onclick="document.getElementById('hzMobile').classList.toggle('open')" aria-label="menu">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="#0B1D36" stroke-width="2" stroke-linecap="round"/></svg>
@@ -257,8 +259,8 @@ function buildTabbar(){
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   const items = broker
-    ? [['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/areas','📍','areas'],['/admin','⚙️','admin']]
-    : [['/areas','📍','areas'],['/features','✨','features'],['/leads','🎯','leads'],['/brokers','🧰','forBrokers'],['/download','📱','app'],['/admin','⚙️','admin']];
+    ? [['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/account','👤','settings'],['/admin','⚙️','admin']]
+    : [['/areas','📍','areas'],['/features','✨','features'],['/brokers','🧰','forBrokers'],['/account','👤','settings'],['/download','📱','app']];
   sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);
 }

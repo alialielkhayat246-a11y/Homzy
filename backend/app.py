@@ -126,6 +126,19 @@ def login_page():
     return FileResponse(config.FRONTEND_DIR / "login.html")
 
 
+@app.get("/welcome")
+def welcome_page():
+    """First-run role choice (user vs broker) after signing in."""
+    return FileResponse(config.FRONTEND_DIR / "welcome.html")
+
+
+@app.get("/account")
+@app.get("/settings")
+def account_page():
+    """Account settings — profile, view mode (client/broker), account type."""
+    return FileResponse(config.FRONTEND_DIR / "account.html")
+
+
 # --- Homzy Stays (short-term rental marketplace) ------------------------
 # Guest browse pages are PUBLIC (no login gate) so they can rank in Google;
 # booking/host/dashboard actions require a session (checked client-side).

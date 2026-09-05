@@ -121,9 +121,13 @@ async function afterAuth(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ return; }
   let prof=null;
-  try{ prof=(await api('/profiles?select=phone,full_name&id=eq.'+session.user.id))[0]; }catch(e){}
+  try{ prof=(await api('/profiles?select=phone,full_name,onboarded&id=eq.'+session.user.id))[0]; }catch(e){}
   const hasPhone = prof && prof.phone && (''+prof.phone).replace(/\D/g,'').length>=10;
-  if(hasPhone){ location.replace(nextPath()); return; }
+  if(hasPhone){
+    if(prof.onboarded){ location.replace(nextPath()); }
+    else { location.replace('/welcome?next='+encodeURIComponent(nextPath())); }
+    return;
+  }
   // needs profile completion
   const meta=session.user.user_metadata||{};
   $('cName').value = (prof&&prof.full_name) || meta.full_name || meta.name || '';
@@ -156,7 +160,7 @@ $('completeForm').addEventListener('submit', async(e)=>{
       headers:{apikey:SB_KEY, Authorization:'Bearer '+session.access_token, 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates'},
       body:JSON.stringify({ id:session.user.id, full_name:name, phone:normPhone(phoneRaw) })
     });
-    location.replace(nextPath());
+    location.replace('/welcome?next='+encodeURIComponent(nextPath()));
   }catch(err){ cmsg('حصل خطأ، جرّب تاني.'); $('cBtn').disabled=false; }
 });
 window.signOutReset=async ()=>{ await sb.auth.signOut(); location.reload(); };

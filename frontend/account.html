@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/account'));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — الإعدادات</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .ac{max-width:640px;margin:0 auto;padding:26px 22px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;}
+  .card h3{font-size:16px;margin-bottom:12px;}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);}
+  .kv:last-child{border-bottom:none;} .kv .k{color:var(--muted);} .kv .v{font-weight:700;}
+  .modeseg{display:flex;gap:6px;background:var(--cream);border:1.5px solid var(--line-2);border-radius:100px;padding:5px;}
+  .modeseg button{flex:1;border:none;background:none;font-family:var(--ff);font-weight:800;font-size:14px;padding:10px;border-radius:100px;cursor:pointer;color:var(--muted);}
+  .modeseg button.on{background:var(--navy);color:#fff;}
+  .rowbtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+  .msg{font-weight:800;margin-top:10px;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="ac">
+  <h1 data-ar="الإعدادات" data-en="Settings">الإعدادات</h1>
+  <div id="content"><div style="padding:40px;text-align:center;color:var(--muted)">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+let S=null, PROF={};
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next=/account'; return; }
+  try{ PROF=(await HZ.sbAuth('/profiles?select=full_name,phone,email,role,company,onboarded&id=eq.'+S.uid, S.token))[0]||{}; }catch(e){ PROF={}; }
+  render(); HZ.applyLang();
+}
+function render(){
+  const isBroker = PROF.role==='broker';
+  const mode = localStorage.getItem('hz_mode')||'client';
+  let html = `<div class="card"><h3 data-ar="حسابي" data-en="My account">حسابي</h3>
+    <div class="kv"><span class="k" data-ar="الاسم" data-en="Name">الاسم</span><span class="v">${HZ.esc(PROF.full_name||'—')}</span></div>
+    <div class="kv"><span class="k" data-ar="الموبايل" data-en="Phone">الموبايل</span><span class="v" style="direction:ltr">${HZ.esc(PROF.phone||'—')}</span></div>
+    <div class="kv"><span class="k" data-ar="الإيميل" data-en="Email">الإيميل</span><span class="v" style="direction:ltr">${HZ.esc(PROF.email||'—')}</span></div>
+    <div class="kv"><span class="k" data-ar="نوع الحساب" data-en="Account type">نوع الحساب</span><span class="v">${isBroker?(ar()?'بروكر 💼':'Broker 💼'):(ar()?'مستخدم 🏠':'User 🏠')}</span></div>
+  </div>`;
+
+  if(isBroker){
+    html += `<div class="card"><h3 data-ar="وضع العرض" data-en="View mode">وضع العرض</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:12px" data-ar="بدّل بين واجهة العميل وأدوات البروكر." data-en="Switch between the client view and your broker tools.">بدّل بين واجهة العميل وأدوات البروكر.</p>
+      <div class="modeseg">
+        <button class="${mode==='client'?'on':''}" onclick="setMode('client')" data-ar="عرض العميل" data-en="Client view">عرض العميل</button>
+        <button class="${mode==='broker'?'on':''}" onclick="setMode('broker')" data-ar="عرض البروكر" data-en="Broker view">عرض البروكر</button>
+      </div>
+      <div class="rowbtns" style="margin-top:14px">
+        <a class="btn btn-ghost btn-sm" href="/clients">${ar()?'عملائي':'My clients'}</a>
+        <a class="btn btn-ghost btn-sm" href="/my-listings">${ar()?'وحداتي':'My units'}</a>
+        <a class="btn btn-ghost btn-sm" href="/host/properties">${ar()?'الاستضافة':'Hosting'}</a>
+        <a class="btn btn-ghost btn-sm" href="/pricing">${ar()?'الباقات':'Plans'}</a>
+      </div></div>`;
+  } else {
+    html += `<div class="card"><h3 data-ar="ابقى بروكر" data-en="Become a broker">ابقى بروكر</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:12px" data-ar="افتح أدوات البروكر: CRM، اعرض وحداتك، مساعد مبيعات AI، سوق الليدز، والاستضافة." data-en="Unlock broker tools: CRM, list units, AI sales assistant, leads market, hosting.">افتح أدوات البروكر: CRM، اعرض وحداتك، مساعد مبيعات AI، سوق الليدز، والاستضافة.</p>
+      <button class="btn btn-navy" onclick="becomeBroker()" data-ar="ترقية لحساب بروكر" data-en="Upgrade to broker">ترقية لحساب بروكر</button>
+      <div class="msg" id="brMsg"></div></div>`;
+  }
+
+  html += `<div class="card"><h3 data-ar="عام" data-en="General">عام</h3>
+    <div class="rowbtns">
+      <button class="btn btn-ghost btn-sm" onclick="HZ.toggleLang()">${ar()?'English':'العربية'}</button>
+      <button class="btn btn-ghost btn-sm" style="color:#B42318" onclick="HZ.logout()">${ar()?'تسجيل الخروج':'Log out'}</button>
+    </div></div>`;
+  document.getElementById('content').innerHTML=html;
+}
+window.setMode=(m)=>{ HZ.setMode(m); render(); HZ.applyLang(); };
+window.becomeBroker=async()=>{
+  const msg=document.getElementById('brMsg'); msg.textContent=ar()?'...جاري':'...';
+  let r; try{ r=await HZ.sbAuth('/rpc/set_my_role', S.token,'POST',{p_role:'broker'}); }catch(e){ r={ok:false}; }
+  if(r&&r.ok){ localStorage.setItem('hz_mode','broker'); location.href='/my-listings'; }
+  else { msg.style.color='#B42318'; msg.textContent=ar()?'حصل خطأ — حاول تاني':'Something went wrong'; }
+};
+document.addEventListener('hz:lang', ()=>{ if(PROF.role!==undefined) render(); });
+boot();
+</script>
+</body>
+</html>

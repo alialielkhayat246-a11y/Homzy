@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — أهلاً بيك</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  body{background:linear-gradient(160deg,#0B1D36,#0B5563);min-height:100vh;}
+  .wc{max-width:840px;margin:0 auto;padding:48px 22px;}
+  .wc .top{text-align:center;color:#fff;margin-bottom:30px;}
+  .wc .top h1{font-size:clamp(26px,4vw,36px);font-family:var(--fd);}
+  .wc .top p{color:#d7e6ea;font-size:17px;margin-top:10px;}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:700px){.roles{grid-template-columns:1fr;}}
+  .role{background:#fff;border-radius:20px;padding:28px;cursor:pointer;border:3px solid transparent;transition:transform .15s,border-color .15s,box-shadow .2s;box-shadow:var(--shadow);}
+  .role:hover{transform:translateY(-4px);border-color:var(--teal);}
+  .role .ic{font-size:40px;} .role h2{font-size:23px;margin:12px 0 4px;}
+  .role .sub{color:var(--muted);font-size:14px;margin-bottom:14px;}
+  .role ul{list-style:none;padding:0;margin:0 0 20px;display:flex;flex-direction:column;gap:9px;}
+  .role li{display:flex;gap:9px;font-size:14.5px;color:#33404f;} .role li .c{color:var(--teal);font-weight:900;flex:none;}
+  .role .go{width:100%;}
+  .role.broker{border-color:transparent;} .role.broker .go{background:var(--navy);}
+  .wc .msg{text-align:center;color:#fff;margin-top:18px;font-weight:700;min-height:22px;}
+  .skip{display:block;text-align:center;color:#cfe3e7;margin-top:20px;font-weight:700;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%;font-family:var(--ff);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wc">
+  <div class="top">
+    <h1 data-ar="أهلاً بيك في Homzy 👋" data-en="Welcome to Homzy 👋">أهلاً بيك في Homzy 👋</h1>
+    <p data-ar="هتستخدم Homzy إزاي؟ اختر اللي يناسبك — وتقدر تغيّره بعدين من الإعدادات." data-en="How will you use Homzy? Pick what fits — you can change it later in settings.">هتستخدم Homzy إزاي؟ اختر اللي يناسبك — وتقدر تغيّره بعدين من الإعدادات.</p>
+  </div>
+  <div class="roles">
+    <div class="role" onclick="choose('user')">
+      <div class="ic">🏠</div>
+      <h2 data-ar="مستخدم / باحث عن عقار" data-en="User / Home seeker">مستخدم / باحث عن عقار</h2>
+      <div class="sub" data-ar="بتدوّر على شقة أو فيلا أو إقامة" data-en="Looking for a home or a stay">بتدوّر على شقة أو فيلا أو إقامة</div>
+      <ul>
+        <li><span class="c">✓</span><span data-ar="تصفّح كل المشاريع والعقارات" data-en="Browse all projects & listings">تصفّح كل المشاريع والعقارات</span></li>
+        <li><span class="c">✓</span><span data-ar="مستشار عقاري ذكي يرشّحلك" data-en="Smart AI property advisor">مستشار عقاري ذكي يرشّحلك</span></li>
+        <li><span class="c">✓</span><span data-ar="احجز إقامات على Homzy Stays" data-en="Book on Homzy Stays">احجز إقامات على Homzy Stays</span></li>
+        <li><span class="c">✓</span><span data-ar="احفظ بحثك ووصلك تنبيهات" data-en="Save searches & get alerts">احفظ بحثك ووصلك تنبيهات</span></li>
+      </ul>
+      <button class="btn btn-teal go" data-ar="ابدأ كمستخدم" data-en="Continue as user">ابدأ كمستخدم</button>
+    </div>
+    <div class="role broker" onclick="choose('broker')">
+      <div class="ic">💼</div>
+      <h2 data-ar="بروكر / مكتب عقاري" data-en="Broker / Agency">بروكر / مكتب عقاري</h2>
+      <div class="sub" data-ar="بتبيع وتأجّر وتدير عملاء" data-en="You sell, rent & manage clients">بتبيع وتأجّر وتدير عملاء</div>
+      <ul>
+        <li><span class="c">✓</span><span data-ar="كل مزايا المستخدم +" data-en="Everything a user gets, plus:">كل مزايا المستخدم +</span></li>
+        <li><span class="c">✓</span><span data-ar="CRM لإدارة عملائك وصفقاتك" data-en="CRM for your clients & deals">CRM لإدارة عملائك وصفقاتك</span></li>
+        <li><span class="c">✓</span><span data-ar="اعرض وحداتك + مساعد مبيعات AI وعروض PDF" data-en="List units + AI sales assistant & PDF offers">اعرض وحداتك + مساعد مبيعات AI وعروض PDF</span></li>
+        <li><span class="c">✓</span><span data-ar="سوق الليدز + استضافة على Homzy Stays" data-en="Leads market + host on Homzy Stays">سوق الليدز + استضافة على Homzy Stays</span></li>
+      </ul>
+      <button class="btn btn-navy go" data-ar="ابدأ كبروكر" data-en="Continue as broker">ابدأ كبروكر</button>
+    </div>
+  </div>
+  <div class="msg" id="msg"></div>
+  <button class="skip" onclick="choose('user')" data-ar="مش متأكد؟ ابدأ كمستخدم" data-en="Not sure? Start as a user">مش متأكد؟ ابدأ كمستخدم</button>
+</div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+function nextParam(){ const n=new URLSearchParams(location.search).get('next')||''; return (n.startsWith('/')&&!n.startsWith('//'))?n:''; }
+let BUSY=false;
+window.choose=async(role)=>{
+  if(BUSY) return; const s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent('/welcome'); return; }
+  BUSY=true; document.getElementById('msg').textContent=ar()?'جاري التجهيز…':'Setting up…';
+  let r; try{ r=await HZ.sbAuth('/rpc/set_my_role', s.token,'POST',{p_role:role}); }catch(e){ r={ok:false}; }
+  if(role==='broker'){ localStorage.setItem('hz_mode','broker'); }
+  const dest = role==='broker' ? '/my-listings' : (nextParam() || '/app');
+  location.replace(dest);
+};
+// already onboarded? skip straight through.
+(async()=>{
+  const s=HZ.session(); if(!s) return;
+  try{ const p=(await HZ.sbAuth('/profiles?select=onboarded,role&id=eq.'+s.uid, s.token))[0];
+    if(p&&p.onboarded){ location.replace(p.role==='broker'?'/my-listings':(nextParam()||'/app')); } }catch(e){}
+})();
+document.addEventListener('DOMContentLoaded', ()=>HZ.applyLang&&HZ.applyLang());
+</script>
+</body>
+</html>
