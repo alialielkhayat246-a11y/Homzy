@@ -96,6 +96,7 @@ const T = {
   hosting:{ar:'الاستضافة',en:'Hosting'},
   pricing:{ar:'الباقات والأسعار',en:'Pricing'},
   settings:{ar:'الإعدادات',en:'Settings'},
+  community:{ar:'مجتمع البروكرز',en:'Community'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -259,7 +260,7 @@ function buildTabbar(){
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   const items = broker
-    ? [['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/app','🔍','browse'],['/account','👤','settings'],['/admin','⚙️','admin']]
+    ? [['/community','💬','community'],['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/account','👤','settings'],['/admin','⚙️','admin']]
     : [['/areas','📍','areas'],['/features','✨','features'],['/brokers','🧰','forBrokers'],['/account','👤','settings'],['/download','📱','app']];
   sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);

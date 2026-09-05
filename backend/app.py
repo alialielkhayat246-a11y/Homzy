@@ -192,6 +192,12 @@ def pricing_page():
     return FileResponse(config.FRONTEND_DIR / "pricing.html")
 
 
+@app.get("/community")
+def community_page():
+    """Per-area broker community chat (co-broking). Brokers only."""
+    return FileResponse(config.FRONTEND_DIR / "community.html")
+
+
 # Host dashboard — one page, tab chosen from the path (properties/new/calendar/
 # bookings/earnings/reviews/verification). All require a session (client-side gate).
 @app.get("/host/properties")

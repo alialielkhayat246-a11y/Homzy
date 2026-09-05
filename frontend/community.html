@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/community'));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — مجتمع البروكرز</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .cm{max-width:820px;margin:0 auto;padding:18px 16px 90px;}
+  .cm-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .cm-top h1{font-size:22px;} .cm-top .sp{flex:1;}
+  .areasel{border:1.5px solid var(--line-2);border-radius:12px;padding:9px 12px;font-family:var(--ff);font-weight:700;background:#fff;}
+  .hint{background:var(--teal-l);color:var(--teal-d);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-bottom:12px;}
+  .log{display:flex;flex-direction:column;gap:10px;min-height:50vh;}
+  .m{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
+  .m.req{border:2px solid var(--amber);background:#FFFDF5;}
+  .m.mine{background:var(--teal-l);border-color:var(--teal-l);}
+  .m .h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .m .who{font-weight:800;font-size:14px;} .m .co{color:var(--muted);font-weight:600;font-size:12px;}
+  .m .t{color:#33404f;margin-top:6px;font-size:14.5px;white-space:pre-wrap;}
+  .m .tm{color:var(--muted);font-size:11px;}
+  .m .badge{background:var(--amber);color:#3a2c00;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;}
+  .m .wa{display:inline-block;margin-top:8px;background:var(--green);color:#fff;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:9px;text-decoration:none;}
+  .composer{position:fixed;inset-inline:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+  .composer .row{max-width:820px;margin:0 auto;display:flex;gap:8px;align-items:center;}
+  .composer input{flex:1;border:1.5px solid var(--line-2);border-radius:100px;padding:11px 16px;font-family:var(--ff);outline:none;}
+  .composer button{flex:none;border:none;border-radius:50%;width:46px;height:46px;background:var(--teal);color:#fff;cursor:pointer;font-size:18px;}
+  .composer .reqbtn{width:auto;border-radius:12px;padding:0 14px;background:var(--amber);color:#3a2c00;font-weight:800;font-size:13px;}
+  .notbroker{padding:60px 20px;text-align:center;}
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px;}
+  .ov.open{display:flex;} .ovc{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;}
+  .ovc .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;} .ovc label{font-size:13px;font-weight:700;color:#40506a;}
+  .ovc input,.ovc select,.ovc textarea{border:1.5px solid var(--line-2);border-radius:10px;padding:9px 11px;font-family:var(--ff);}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="cm" id="app"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
+
+<div class="ov" id="reqOv"><div class="ovc">
+  <h2 style="font-size:19px" data-ar="🔔 اعرض ريكوست على البروكرز" data-en="🔔 Post a request">🔔 اعرض ريكوست على البروكرز</h2>
+  <p style="color:var(--muted);font-size:13px;margin:6px 0 14px" data-ar="اكتب طلب عميلك — البروكرز في المنطقة هيشوفوه ويقدروا يقفلوا معاك." data-en="Describe your client's need — brokers in the area can co-broke with you.">اكتب طلب عميلك — البروكرز في المنطقة هيشوفوه ويقدروا يقفلوا معاك.</p>
+  <div style="display:flex;gap:10px"><div class="fld" style="flex:1"><label data-ar="النوع" data-en="Type">النوع</label><select id="rqType"><option value="apartment">شقة</option><option value="villa">فيلا</option><option value="duplex">دوبلكس</option><option value="chalet">شاليه</option><option value="office">مكتب</option><option value="shop">محل</option><option value="other">أخرى</option></select></div>
+  <div class="fld" style="flex:1"><label data-ar="الميزانية" data-en="Budget">الميزانية</label><input id="rqBudget" placeholder="مثلاً 5 مليون"></div></div>
+  <div class="fld"><label data-ar="التفاصيل" data-en="Details">التفاصيل</label><textarea id="rqBody" rows="3" placeholder="عميل عايز شقة 3 غرف استلام فوري…"></textarea></div>
+  <div id="rqMsg" style="font-weight:800;margin-bottom:8px"></div>
+  <div style="display:flex;gap:10px"><button class="btn btn-teal" style="flex:1" onclick="postRequest()">اعرض الريكوست</button><button class="btn btn-ghost" onclick="document.getElementById('reqOv').classList.remove('open')">إلغاء</button></div>
+</div></div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+const AREAS=[['new-cairo','التجمع / القاهرة الجديدة'],['sheikh-zayed','الشيخ زايد'],['6-october','السادس من أكتوبر'],['new-capital','العاصمة الإدارية'],['nasr-city','مدينة نصر'],['maadi','المعادي'],['heliopolis','مصر الجديدة'],['zamalek','الزمالك'],['mostakbal','مدينة المستقبل'],['shorouk','الشروق'],['madinaty','مدينتي'],['north-coast','الساحل الشمالي'],['ain-sokhna','العين السخنة'],['alexandria','الإسكندرية']];
+let S=null, ISBROKER=false, AREA=localStorage.getItem('hz_comm_area')||'new-cairo', TIMER=null;
+
+function fmtTime(t){ const d=new Date(t); const now=new Date(); const sameDay=d.toDateString()===now.toDateString();
+  return sameDay ? d.toLocaleTimeString(ar()?'ar-EG':'en-US',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString(ar()?'ar-EG':'en-US',{day:'numeric',month:'short'}); }
+function waNum(p){ let d=(p||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('00'))d=d.slice(2); else if(d.startsWith('0'))d='2'+d; else if(!d.startsWith('2'))d='2'+d; return d; }
+
+async function loadMsgs(){
+  if(!ISBROKER) return;
+  let rows=[]; try{ rows=await HZ.sbAuth('/broker_area_chat?area_slug=eq.'+AREA+'&select=*&order=created_at.desc&limit=80', S.token)||[]; }catch(e){}
+  rows.reverse();
+  const log=document.getElementById('log'); if(!log) return;
+  const atBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 120;
+  log.innerHTML = rows.length ? rows.map(m=>{
+    const mine=m.sender_id===S.uid;
+    const wa = (!mine && m.sender_phone) ? `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(m.sender_phone)}?text=${encodeURIComponent('بخصوص طلبك في مجتمع Homzy')}">💬 كلّمه</a>` : '';
+    const meta = m.meta||{};
+    const reqLine = m.kind==='request' ? `<div class="co">${[meta.type,meta.budget].filter(Boolean).map(HZ.esc).join(' · ')}</div>` : '';
+    return `<div class="m ${m.kind==='request'?'req':''} ${mine?'mine':''}">
+      <div class="h"><div><span class="who">${HZ.esc(m.sender_name||(ar()?'بروكر':'Broker'))}</span> ${m.sender_company?`<span class="co">· ${HZ.esc(m.sender_company)}</span>`:''}</div>
+        <div style="display:flex;gap:8px;align-items:center">${m.kind==='request'?`<span class="badge">🔔 ${ar()?'ريكوست':'Request'}</span>`:''}<span class="tm">${fmtTime(m.created_at)}</span></div></div>
+      ${reqLine}<div class="t">${HZ.esc(m.body)}</div>${wa}</div>`;
+  }).join('') : `<div style="text-align:center;color:var(--muted);padding:40px">${ar()?'مفيش رسايل في المنطقة دي لسه — ابدأ إنت 👇':'No messages here yet — start the conversation 👇'}</div>`;
+  if(atBottom) log.scrollTop=log.scrollHeight;
+}
+
+function render(){
+  if(!ISBROKER){
+    document.getElementById('app').innerHTML=`<div class="notbroker"><h2>${ar()?'مجتمع البروكرز':'Brokers community'}</h2>
+      <p style="color:var(--muted);margin:12px 0 18px">${ar()?'الميزة دي للبروكرز فقط. فعّل حساب بروكر عشان تتواصل وتقفل ديلز مع بروكرز تانيين.':'This is for brokers only. Become a broker to connect and co-broke deals.'}</p>
+      <a class="btn btn-navy" href="/account">${ar()?'ابقى بروكر':'Become a broker'}</a></div>`;
+    return;
+  }
+  const opts=AREAS.map(a=>`<option value="${a[0]}" ${a[0]===AREA?'selected':''}>${a[1]}</option>`).join('');
+  document.getElementById('app').innerHTML=`
+    <div class="cm-top"><h1 data-ar="مجتمع البروكرز" data-en="Brokers community">مجتمع البروكرز</h1><span class="sp"></span>
+      <select class="areasel" onchange="pickArea(this.value)">${opts}</select></div>
+    <div class="hint" data-ar="اعرض طلب عميلك على بروكرز المنطقة، أو اقفل ديل مع حد عنده الوحدة المناسبة. كل بروكر بيظهر باسمه ورقمه للتواصل." data-en="Post your client's request to area brokers, or close a deal with whoever has the right unit.">اعرض طلب عميلك على بروكرز المنطقة، أو اقفل ديل مع حد عنده الوحدة المناسبة.</div>
+    <div class="log" id="log"></div>`;
+  loadMsgs();
+}
+window.pickArea=(a)=>{ AREA=a; localStorage.setItem('hz_comm_area',a); loadMsgs(); };
+document.getElementById('reqOv'); // ensure exists
+
+function composer(){
+  if(document.getElementById('cmComposer')) return;
+  const c=document.createElement('div'); c.className='composer'; c.id='cmComposer';
+  c.innerHTML=`<form class="row" id="cmForm"><button type="button" class="reqbtn" onclick="document.getElementById('reqOv').classList.add('open')">🔔 ${ar()?'ريكوست':'Request'}</button>
+    <input id="cmInput" autocomplete="off" placeholder="${ar()?'اكتب رسالة للبروكرز…':'Message brokers…'}"><button type="submit">➤</button></form>`;
+  document.body.appendChild(c);
+  document.getElementById('cmForm').addEventListener('submit', async e=>{
+    e.preventDefault(); const inp=document.getElementById('cmInput'); const body=(inp.value||'').trim(); if(!body) return; inp.value='';
+    try{ await HZ.sbAuth('/rpc/post_area_msg', S.token,'POST',{p_area:AREA,p_body:body,p_kind:'message',p_meta:null}); }catch(e){}
+    loadMsgs();
+  });
+}
+window.postRequest=async()=>{
+  const body=(document.getElementById('rqBody').value||'').trim(); const msg=document.getElementById('rqMsg');
+  if(body.length<3){ msg.style.color='#B42318'; msg.textContent=ar()?'اكتب تفاصيل الطلب':'Add details'; return; }
+  const meta={type:document.getElementById('rqType').options[document.getElementById('rqType').selectedIndex].text, budget:(document.getElementById('rqBudget').value||'').trim()};
+  try{ await HZ.sbAuth('/rpc/post_area_msg', S.token,'POST',{p_area:AREA,p_body:body,p_kind:'request',p_meta:meta}); }catch(e){}
+  document.getElementById('reqOv').classList.remove('open'); document.getElementById('rqBody').value=''; document.getElementById('rqBudget').value='';
+  loadMsgs();
+};
+
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next=/community'; return; }
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid, S.token))[0]; ISBROKER = p&&p.role==='broker'; }catch(e){ ISBROKER=false; }
+  render(); if(ISBROKER){ composer(); TIMER=setInterval(loadMsgs, 4000); }
+  HZ.applyLang();
+}
+document.addEventListener('hz:lang', ()=>{ render(); });
+window.addEventListener('beforeunload', ()=>{ if(TIMER) clearInterval(TIMER); });
+boot();
+</script>
+</body>
+</html>
