@@ -1,0 +1,24 @@
+-- ============================================================================
+-- HOMZY OS — Phase 2: Lead Engine (applied 2026-09-05, verified)
+-- Non-destructive extension of the existing broker CRM (public.clients).
+--
+--  * clients: + CRM-grade columns (lead_type, intent, budget_min/max, source,
+--    utm_*, lead_score, temperature, tags, custom jsonb, company/agency/team_id,
+--    created_by/updated_by, deleted_at …) + indexes.
+--  * crm_lead_activities: per-lead timeline (call/whatsapp/note/stage_change/
+--    property_sent/viewing_*/negotiation/deal …). RLS = lead owner or admin.
+--  * crm_events: event log for automation / n8n / analytics / audit. RLS admin.
+--  * crm_scoring_config: admin-editable weights + temperature thresholds
+--    (0-100). NOT hardcoded.
+--  * crm_score_lead(lead): recompute score + temperature from fields + activity
+--    (recursion-safe via the 'crm.scoring' txn flag).
+--  * crm_log_activity(lead, kind, body, meta): owner/admin-gated timeline entry
+--    -> touches last_activity, emits crm_event, rescopes. Returns score/temp.
+--  * trigger trg_crm_rescore: auto-score on insert/update of scoring fields.
+--
+-- Applied via the Supabase migration API in steps crm_phase2_lead_engine,
+-- crm_phase2_scoring_functions, crm_score_lead_fix, crm_clients_autoscore_trigger.
+-- This file is the consolidated source of truth. Verified: base 45 (warm) ->
+-- whatsapp/viewing/negotiation -> 100 (very_hot); auto-score on insert.
+-- ============================================================================
+-- (Full statements are in the applied migration history; safe/idempotent.)

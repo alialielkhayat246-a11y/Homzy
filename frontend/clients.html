@@ -57,6 +57,9 @@
   .col.negotiate .col-h{color:#B8860B;} .col.closed .col-h{color:#1E8E5A;} .col.lost .col-h{color:#8A7C5F;}
   .ccard{background:#fff; border:1px solid var(--line); border-radius:13px; padding:12px; margin-bottom:10px; box-shadow:0 6px 16px -14px rgba(11,29,54,.5);}
   .ccard .nm{font-weight:800; color:var(--navy); font-size:15px;}
+  .temp{font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:100px; white-space:nowrap; flex:none;}
+  .temp.very_hot{background:#FDE8E4; color:#B42318;} .temp.hot{background:#FFF0E0; color:#B45309;}
+  .temp.warm{background:#FEF7E0; color:#8a6d00;} .temp.cold{background:#EEF1F3; color:#5b6b82;}
   .ccard .ph{font-family:"Poppins"; direction:ltr; unicode-bidi:isolate; color:var(--muted); font-size:12.5px; margin-top:1px;}
   .ccard .req{color:#40506a; font-size:12.5px; margin-top:7px; line-height:1.6;}
   .ccard .fu{margin-top:6px; font-size:12px; font-weight:700; color:var(--teal-d);}
@@ -257,14 +260,21 @@ function cardHTML(c){
   const req=[c.area, c.budget?('حتى '+money(c.budget)):'', c.bedrooms?(c.bedrooms+' غرف'):'', c.purpose==='rent'?'إيجار':'شراء'].filter(Boolean).join(' · ');
   const fu=c.next_followup?`<div class="fu ${isOverdue(c.next_followup)&&c.stage!=='closed'&&c.stage!=='lost'?'over':''}">📅 متابعة: ${esc(c.next_followup)}</div>`:'';
   const opts=STAGES.map(s=>`<option value="${s.k}"${(c.stage||'new')===s.k?' selected':''}>${s.label}</option>`).join('');
+  const tp=c.temperature||'cold';
+  const tlab={very_hot:'🔥 ساخن جدًا',hot:'🟠 ساخن',warm:'🟡 دافئ',cold:'⚪ بارد'}[tp]||tp;
+  const tel=c.phone?(''+c.phone).replace(/\s/g,''):'';
   return `<div class="ccard">
-    <div class="nm">${esc(c.name||'—')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+      <div class="nm">${esc(c.name||'—')}</div>
+      <span class="temp ${tp}">${tlab} · ${c.lead_score||0}</span>
+    </div>
     ${c.phone?`<div class="ph">${esc(c.phone)}</div>`:''}
     ${req?`<div class="req">${esc(req)}</div>`:''}
     ${fu}
     ${c.notes?`<div class="note">${esc(c.notes)}</div>`:''}
     <div class="acts">
-      ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}">واتساب</a>`:''}
+      ${tel?`<a class="wa" href="tel:${tel}" onclick="logAct('${c.id}','call')">📞</a>`:''}
+      ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">واتساب</a>`:''}
       <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
       <button onclick="editClient('${c.id}')">تعديل</button>
       <button onclick="delClient('${c.id}')" style="color:#B42318">حذف</button>
@@ -272,6 +282,11 @@ function cardHTML(c){
     <select class="mv" onchange="moveStage('${c.id}',this.value)">${opts}</select>
   </div>`;
 }
+window.logAct=async(id,kind,body)=>{
+  try{ const r=await HZ.sbAuth('/rpc/crm_log_activity', TOKEN,'POST',{p_lead:id,p_kind:kind,p_body:body||null,p_meta:null});
+    const c=CLIENTS.find(x=>x.id===id); if(c&&r&&r.temperature){ c.temperature=r.temperature; c.lead_score=r.score; renderBoard(); renderStats(); }
+  }catch(e){}
+};
 
 /* form */
 window.openForm=()=>{ EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
