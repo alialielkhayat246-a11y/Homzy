@@ -220,8 +220,11 @@ def pricing_page():
 
 
 @app.get("/community")
-def community_page():
-    """Per-area broker community chat (co-broking). Brokers only."""
+@app.get("/community/{area_slug}")
+def community_page(area_slug: str = ""):
+    """Per-area broker community chat (co-broking). Brokers only. `/community`
+    is the area hub (every Greater-Cairo + Alexandria area); `/community/<slug>`
+    opens that one area's live chat. The slug is read + validated client-side."""
     return FileResponse(config.FRONTEND_DIR / "community.html")
 
 
