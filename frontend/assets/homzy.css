@@ -55,6 +55,21 @@ body.hz-broker .hz-mode{display:inline-flex;}
 body[data-mode=broker] .hz-mode button.b{background:var(--teal); color:#fff;}
 .hz-lang{font-family:var(--ff); font-weight:700; font-size:14px; cursor:pointer; background:#fff; border:1.5px solid var(--line-2); border-radius:11px; padding:9px 13px; color:var(--navy);}
 .hz-lang:hover{border-color:var(--navy);}
+.hz-bell{position:relative; font-size:16px; cursor:pointer; background:#fff; border:1.5px solid var(--line-2); border-radius:11px; padding:8px 11px; line-height:1;}
+.hz-bell:hover{border-color:var(--navy);}
+.hz-bell-badge{position:absolute; top:-6px; inset-inline-end:-6px; min-width:17px; height:17px; padding:0 4px; border-radius:100px; background:#B42318; color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center; font-family:var(--ff);}
+.hz-notif{position:fixed; top:64px; inset-inline-end:14px; width:min(340px,calc(100vw - 28px)); background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 24px 60px -24px rgba(11,29,54,.45); z-index:80; overflow:hidden; display:none;}
+.hz-notif.open{display:block;}
+.hz-notif-h{display:flex; align-items:center; justify-content:space-between; padding:12px 15px; border-bottom:1px solid var(--line); font-weight:800; color:var(--navy); font-size:14px;}
+.hz-notif-h a{color:var(--teal-d); font-size:12.5px; font-weight:700; text-decoration:none;}
+.hz-notif-list{max-height:60vh; overflow:auto;}
+.hz-notif-item{display:flex; gap:10px; padding:11px 15px; border-bottom:1px solid var(--line);}
+.hz-notif-item.unread{background:var(--teal-l);}
+.hz-notif-item .i{font-size:17px; flex:none;}
+.hz-notif-item .b .t{font-weight:800; color:var(--navy); font-size:13px;}
+.hz-notif-item .b .m{color:#40506a; font-size:12px; margin-top:1px; line-height:1.5;}
+.hz-notif-item .b .d{color:var(--muted); font-size:10.5px; margin-top:3px;}
+.hz-notif-empty{padding:26px 15px; text-align:center; color:var(--muted); font-size:13px;}
 .hz-auth{font-family:var(--ff); font-weight:800; font-size:14px; cursor:pointer; background:var(--navy); border:1.5px solid var(--navy); border-radius:11px; padding:9px 15px; color:#fff;}
 .hz-auth:hover{background:#122744;}
 .hz-auth.out{background:#fff; color:var(--navy); border-color:var(--line-2);}

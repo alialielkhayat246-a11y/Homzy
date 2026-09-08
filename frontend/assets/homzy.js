@@ -158,6 +158,7 @@ function buildHeader(){
           <button class="b" data-m="broker" onclick="HZ.setMode('broker')">${HZ.t('broker')}</button>
         </div>
         <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()">EN</button>
+        <button class="hz-bell" id="hzBell" onclick="HZ.toggleNotifs(event)" title="التنبيهات" hidden>🔔<span class="hz-bell-badge" id="hzBellBadge" hidden>0</span></button>
         <a class="hz-lang hz-settings" href="/account" title="الإعدادات" style="text-decoration:none">⚙️</a>
         <button class="hz-auth" id="hzAuth" onclick="HZ.authAction()"></button>
         <button class="hz-menu-btn" onclick="document.getElementById('hzMobile').classList.toggle('open')" aria-label="menu">
@@ -169,7 +170,29 @@ function buildHeader(){
   </header>`;
   addEventListener('scroll',()=>{ const n=document.getElementById('hzNav'); if(n) n.classList.toggle('scrolled', scrollY>8); });
   document.getElementById('hzMobile').addEventListener('click',e=>{ if(e.target.tagName==='A') document.getElementById('hzMobile').classList.remove('open'); });
+  if(!document.getElementById('hzNotif')){ const nd=document.createElement('div'); nd.className='hz-notif'; nd.id='hzNotif'; document.body.appendChild(nd);
+    document.addEventListener('click',ev=>{ const p=document.getElementById('hzNotif'), b=document.getElementById('hzBell'); if(p&&p.classList.contains('open')&&!p.contains(ev.target)&&ev.target!==b&&!(b&&b.contains(ev.target))) p.classList.remove('open'); }); }
 }
+/* ---------- Broker in-app notifications (crm_notifications) ---------- */
+HZ.initNotifs=function(){ const b=document.getElementById('hzBell'); if(!b) return; b.hidden=false;
+  HZ.loadNotifs(); if(HZ._notifTimer) clearInterval(HZ._notifTimer); HZ._notifTimer=setInterval(()=>HZ.loadNotifs(), 60000); };
+HZ.loadNotifs=async function(){ const s=HZ.session(); if(!s) return;
+  let rows=[]; try{ rows=await HZ.sbAuth('/crm_notifications?user_id=eq.'+s.uid+'&select=*&order=created_at.desc&limit=20', s.token)||[]; }catch(e){ return; }
+  HZ._notifs=rows; const un=rows.filter(r=>!r.read_at).length; const bd=document.getElementById('hzBellBadge');
+  if(bd){ bd.textContent=un>9?'9+':(''+un); bd.hidden=un===0; } if(document.getElementById('hzNotif')&&document.getElementById('hzNotif').classList.contains('open')) HZ._renderNotif(); };
+HZ._renderNotif=function(){ const p=document.getElementById('hzNotif'); if(!p) return; const rows=HZ._notifs||[];
+  const ic={lead_new:'🎯',deal_won:'🎉',task:'✅',viewing:'🏠'};
+  const body = rows.length ? rows.map(n=>{ const t=n.created_at?new Date(n.created_at).toLocaleString(HZ.lang==='ar'?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):'';
+    return `<div class="hz-notif-item${n.read_at?'':' unread'}"><div class="i">${ic[n.type]||'🔔'}</div><div class="b"><div class="t">${HZ.esc(n.title||'')}</div>${n.body?`<div class="m">${HZ.esc(n.body)}</div>`:''}<div class="d">${t}</div></div></div>`;
+  }).join('') : `<div class="hz-notif-empty">${HZ.lang==='ar'?'لا توجد تنبيهات':'No notifications'}</div>`;
+  p.innerHTML=`<div class="hz-notif-h"><span>${HZ.lang==='ar'?'التنبيهات':'Notifications'}</span><a href="/my-day">${HZ.lang==='ar'?'يومي':'My Day'}</a></div><div class="hz-notif-list">${body}</div>`; };
+HZ.toggleNotifs=function(ev){ if(ev) ev.stopPropagation(); const p=document.getElementById('hzNotif'); if(!p) return;
+  const open=!p.classList.contains('open'); p.classList.toggle('open', open);
+  if(open){ HZ._renderNotif(); HZ._markAllRead(); } };
+HZ._markAllRead=async function(){ const s=HZ.session(); if(!s) return; const un=(HZ._notifs||[]).filter(r=>!r.read_at);
+  if(!un.length) return; const now=new Date().toISOString();
+  try{ await HZ.sbAuth('/crm_notifications?user_id=eq.'+s.uid+'&read_at=is.null', s.token, 'PATCH', {read_at:now}, {Prefer:'return=minimal'}); }catch(e){}
+  un.forEach(r=>r.read_at=now); const bd=document.getElementById('hzBellBadge'); if(bd) bd.hidden=true; };
 // ---- client auth state (login gate) ----
 // A logged-in visitor has a Supabase session token in localStorage. We don't
 // need supabase-js here: logout just clears that token and the head-guard on
@@ -685,7 +708,7 @@ async function checkBrokerAccount(){
       {headers:{apikey:SB_KEY, Authorization:'Bearer '+jwt}});
     if(!r.ok) return notBroker();
     const rows=await r.json();
-    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); HZ.loadPlan(); }
+    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); HZ.loadPlan(); HZ.initNotifs(); }
     else notBroker();
   }catch(e){ notBroker(); }
 }
