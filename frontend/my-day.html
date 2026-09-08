@@ -80,7 +80,8 @@ async function load(){
     <div class="row">${l.phone?`<a class="wa" target="_blank" href="https://wa.me/${waNum(l.phone)}" onclick="act('${l.id}','whatsapp')">واتساب</a><a href="tel:${tel(l.phone)}" onclick="act('${l.id}','call')">📞</a>`:''}<a href="/clients">فتح</a></div></div>`;
   const taskItem=(t,cls)=>`<div class="item ${cls}"><div class="t">${HZ.esc(t.title)}</div><div class="m">${t.due_at?new Date(t.due_at).toLocaleString(ar()?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):''} · ${t.priority}</div>
     <div class="row"><button class="done" onclick="doneTask(${t.id})">✔ تم</button>${t.lead_id?`<a href="/clients">العميل</a>`:''}</div></div>`;
-  const viewItem=(v)=>`<div class="item today"><div class="t">🏠 ${HZ.esc(v.property_title||'معاينة')}</div><div class="m">${v.scheduled_at?new Date(v.scheduled_at).toLocaleString(ar()?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):''}${v.location?(' · '+HZ.esc(v.location)):''}${v.lead_id?(' · '+HZ.esc(leadName[v.lead_id]||'')):''}</div></div>`;
+  const viewItem=(v)=>`<div class="item today"><div class="t">🏠 ${HZ.esc(v.property_title||'معاينة')}</div><div class="m">${v.scheduled_at?new Date(v.scheduled_at).toLocaleString(ar()?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):''}${v.location?(' · '+HZ.esc(v.location)):''}${v.lead_id?(' · '+HZ.esc(leadName[v.lead_id]||'')):''}</div>
+    <div class="row"><button class="done" onclick="doneView(${v.id},'completed')">✔ تمّت</button><button onclick="doneView(${v.id},'no_show')">لم يحضر</button></div></div>`;
   const sec=(title,ic,rows)=>`<div class="sec"><h2>${ic} ${title}</h2>${rows.length?rows.join(''):`<div class="empty">${ar()?'مفيش حاجة هنا 👌':'Nothing here 👌'}</div>`}</div>`;
 
   document.getElementById('app').innerHTML=`
@@ -98,6 +99,7 @@ async function load(){
 }
 window.act=async(id,kind)=>{ try{ await HZ.sbAuth('/rpc/crm_log_activity',S.token,'POST',{p_lead:id,p_kind:kind,p_body:null,p_meta:null}); }catch(e){} };
 window.doneTask=async(id)=>{ try{ await HZ.sbAuth('/crm_tasks?id=eq.'+id,S.token,'PATCH',{status:'done',completed_at:new Date().toISOString()},{Prefer:'return=minimal'}); }catch(e){} load(); };
+window.doneView=async(id,status)=>{ try{ await HZ.sbAuth('/rpc/crm_complete_viewing',S.token,'POST',{p_viewing:id,p_status:status,p_feedback:null}); }catch(e){} load(); };
 document.addEventListener('hz:lang', ()=>{ if(ISBROKER) load(); });
 boot();
 </script>

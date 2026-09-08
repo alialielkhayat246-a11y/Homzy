@@ -188,6 +188,19 @@
   </div>
 </div>
 
+<!-- schedule viewing modal -->
+<div class="ov" id="svOv">
+  <div class="modal" style="width:min(440px,100%)">
+    <div class="mh"><h3 id="svTitle">📅 حجز معاينة</h3><button class="mx" onclick="document.getElementById('svOv').classList.remove('open')">×</button></div>
+    <div class="mb">
+      <div><label style="font-size:12.5px;font-weight:700">الوحدة / العقار</label><input id="svProp" placeholder="مثال: شقة 180م — الشيخ زايد" style="width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:Cairo;margin-top:3px" /></div>
+      <div><label style="font-size:12.5px;font-weight:700">الموعد</label><input id="svWhen" type="datetime-local" style="width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:Cairo;margin-top:3px" /></div>
+      <div><label style="font-size:12.5px;font-weight:700">المكان (اختياري)</label><input id="svLoc" placeholder="العنوان / لوكيشن" style="width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:Cairo;margin-top:3px" /></div>
+      <button class="btn btn-teal" id="svSave" onclick="saveViewing()">حفظ المعاينة</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI lead intelligence modal -->
 <div class="ov" id="aiOv">
   <div class="modal">
@@ -300,6 +313,7 @@ function cardHTML(c){
       ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">واتساب</a>`:''}
       <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
       <button class="ai" onclick="aiLead('${c.id}')">🤖 تحليل AI</button>
+      <button onclick="schedView('${c.id}')">📅 معاينة</button>
       <button onclick="editClient('${c.id}')">تعديل</button>
       <button onclick="delClient('${c.id}')" style="color:#B42318">حذف</button>
     </div>
@@ -473,6 +487,27 @@ window.aiLead=async (id)=>{
     <div class="ai-eng">المحرّك: ${esc(r.engine||'—')} · التحليل استرشادي، القرار قرارك.</div>`;
 };
 window.copyAiMsg=()=>{ try{ navigator.clipboard.writeText(window.__aiMsg||''); }catch(e){} };
+
+/* ---------- schedule a viewing (Phase 5) ---------- */
+window.schedView=(id)=>{
+  const c=CLIENTS.find(x=>x.id===id); if(!c) return;
+  window.__svLead=id;
+  $('svTitle').textContent='📅 حجز معاينة لـ '+(c.name||'');
+  $('svProp').value=''; $('svLoc').value='';
+  const d=new Date(Date.now()+864e5); d.setHours(12,0,0,0); // default tomorrow noon
+  $('svWhen').value=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+  $('svOv').classList.add('open');
+};
+window.saveViewing=async()=>{
+  const id=window.__svLead, when=$('svWhen').value; if(!id||!when){ alert('اختر موعد'); return; }
+  $('svSave').disabled=true;
+  try{ const r=await HZ.sbAuth('/rpc/crm_schedule_viewing', TOKEN, 'POST',
+        {p_lead:id, p_title:$('svProp').value||null, p_when:new Date(when).toISOString(), p_location:$('svLoc').value||null, p_ref:null});
+    const c=CLIENTS.find(x=>x.id===id); if(c&&r&&r.temperature){ c.temperature=r.temperature; c.lead_score=r.score; renderBoard(); renderStats(); }
+    $('svOv').classList.remove('open');
+  }catch(e){ alert('حصل خطأ'); }
+  $('svSave').disabled=false;
+};
 
 // map a search_projects row to the chat-rec shape HZ.makeOffer expects, then generate the PDF
 window.offerFor=(i)=>{
