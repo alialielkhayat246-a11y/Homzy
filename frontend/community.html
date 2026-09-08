@@ -77,11 +77,27 @@ function areaOptions(){
     `<optgroup label="${gname}">`+(EG_AREAS[g]||[]).map(a=>`<option value="${a[0]}" ${a[0]===AREA?'selected':''}>${a[1]}</option>`).join('')+`</optgroup>`
   ).join('');
 }
-// area from the URL path (/community/<slug>) or ?area=, validated against the list
+// area from the URL path (/community/<slug>) or ?area=, resolved to a known area.
+// Falls back to a normalized match (HZ.normArea) so slugs coming from the SEO
+// area pages (e.g. "6th-of-october") still land on the right chat ("6-october").
+function resolveArea(raw){
+  if(!raw) return '';
+  raw = decodeURIComponent(raw);
+  if(AREA_LABEL[raw]) return raw;                       // exact slug
+  const norm = s => (window.HZ && HZ.normArea) ? HZ.normArea(String(s).replace(/-/g,' ')) : String(s).toLowerCase().replace(/-/g,' ').trim();
+  const target = norm(raw);
+  // try matching the normalized slug OR the Arabic/English label of each area
+  for(const [g] of (window.EG_AREA_GROUPS||[])){
+    for(const a of (EG_AREAS[g]||[])){
+      if(norm(a[0])===target || norm(a[1])===target) return a[0];
+    }
+  }
+  return '';
+}
 function areaFromUrl(){
   const parts=location.pathname.split('/').filter(Boolean);
-  let slug = (parts[0]==='community' && parts[1]) ? decodeURIComponent(parts[1]) : (new URLSearchParams(location.search).get('area')||'');
-  return AREA_LABEL[slug] ? slug : '';
+  const raw = (parts[0]==='community' && parts[1]) ? parts[1] : (new URLSearchParams(location.search).get('area')||'');
+  return resolveArea(raw);
 }
 let S=null, ISBROKER=false, AREA=areaFromUrl(), TIMER=null, COUNTS={};
 

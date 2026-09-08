@@ -549,7 +549,10 @@ def render_area(slug: str) -> str | None:
     <div class="sp-sub">{n} مشروع من كبار المطوّرين — أسعار وخطط تقسيط محدّثة.</div>
     {('<div class="sp-sec"><p>' + _esc(intro) + '</p></div>') if intro else ''}
     <div class="sp-sec"><h2>مشاريع {_esc(label)}</h2>{grid}</div>
-    <div class="sp-cta"><a class="btn btn-teal" href="/app?area={_esc(label)}">اتصفّح كل مشاريع {_esc(label)} ←</a></div>
+    <div class="sp-cta" style="display:flex;gap:10px;flex-wrap:wrap">
+      <a class="btn btn-teal" href="/app?area={_esc(label)}">اتصفّح كل مشاريع {_esc(label)} ←</a>
+      <a class="btn btn-ghost" href="/community/{area_slug(label)}">💬 شات بروكرز {_esc(label)}</a>
+    </div>
     """
     return _page(title, desc, canonical, cover, jsonld, body)
 
