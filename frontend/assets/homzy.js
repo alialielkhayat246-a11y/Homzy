@@ -130,7 +130,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/deals','deals'],['/my-listings','mylistings']],
+  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/deals','deals'],['/insights','insights'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;
