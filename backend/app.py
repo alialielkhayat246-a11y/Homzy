@@ -99,6 +99,15 @@ def my_day_page():
     return FileResponse(config.FRONTEND_DIR / "my-day.html")
 
 
+@app.get("/deals")
+def deals_page():
+    """Broker 'Deals & Commission' board (HOMZY OS Phase 6): crm_deals pipeline
+    (open/negotiation/reservation/won/lost) + the immutable crm_commission_ledger.
+    Winning a deal runs crm_win_deal (7% configurable) which appends one ledger
+    row. RLS scopes every row to owner_id = the signed-in broker."""
+    return FileResponse(config.FRONTEND_DIR / "deals.html")
+
+
 @app.get("/my-listings")
 def my_listings_page():
     """Broker dashboard: post / edit / delete their own units (listings) with

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/deals'));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — الصفقات والعمولات</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .wrap2{max-width:980px;margin:0 auto;padding:18px 14px 44px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 18px;}
+  @media(max-width:680px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center;}
+  .kpi .n{font-size:20px;font-weight:900;color:var(--navy);} .kpi .l{color:var(--muted);font-size:12px;margin-top:3px;}
+  .kpi.win .n{color:#137a3e;} .kpi.comm .n{color:var(--teal-d);}
+  .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;}
+  .toolbar h1{font-size:20px;}
+  .board{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px;}
+  @media(max-width:860px){.board{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:78%;}}
+  .col{background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:10px;min-width:0;}
+  .col-h{display:flex;justify-content:space-between;font-weight:800;font-size:13px;margin-bottom:8px;color:var(--navy);}
+  .col-h .cnt{background:#fff;border:1px solid var(--line);border-radius:100px;padding:1px 8px;font-size:11px;}
+  .dcard{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;margin-bottom:8px;}
+  .dcard .cn{font-weight:800;font-size:13.5px;color:var(--navy);}
+  .dcard .ti{color:var(--muted);font-size:12px;margin-top:2px;}
+  .dcard .vl{font-weight:800;color:var(--teal-d);font-size:13.5px;margin-top:4px;}
+  .dcard .cm{font-size:12px;color:#137a3e;font-weight:700;margin-top:2px;}
+  .dcard .acts{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+  .dcard .acts button{font-size:11px;font-weight:700;border-radius:7px;padding:5px 8px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);}
+  .dcard .acts .win{background:#137a3e;color:#fff;border-color:#137a3e;} .dcard .acts .lose{color:#B42318;}
+  .col-empty{color:var(--muted);font-size:12px;text-align:center;padding:8px;}
+  .ledger{margin-top:26px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;}
+  .ledger h2{font-size:16px;margin-bottom:4px;} .ledger .imm{color:var(--muted);font-size:11.5px;margin-bottom:10px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;} th,td{text-align:right;padding:8px 6px;border-bottom:1px solid var(--line);}
+  th{color:var(--muted);font-weight:700;font-size:11.5px;}
+  .badge{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:100px;background:var(--teal-l);color:var(--teal-d);}
+  .badge.paid{background:#DEF3E6;color:#137a3e;} .badge.adjustment{background:#FFF0E0;color:#B45309;}
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:60;}
+  .ov.open{display:flex;} .modal{background:var(--cream);width:min(460px,100%);border-radius:18px;overflow:hidden;}
+  .modal .mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);}
+  .modal .mb{padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .modal label{font-size:12.5px;font-weight:700;color:var(--navy);}
+  .modal input,.modal select{width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:"Cairo";font-size:13px;margin-top:3px;}
+  .mx{width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;font-size:18px;cursor:pointer;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="wrap2">
+  <div class="toolbar"><h1>💼 الصفقات والعمولات</h1><button class="btn btn-teal" onclick="openDeal()">＋ صفقة جديدة</button></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="board" id="board"><div style="padding:30px;color:var(--muted)">…</div></div>
+  <div class="ledger"><h2>📒 سجل العمولات</h2><div class="imm">سجل غير قابل للتعديل — أي تصحيح يُضاف كسطر جديد (append-only).</div><div id="ledger"></div></div>
+</div>
+
+<div class="ov" id="dealOv"><div class="modal">
+  <div class="mh"><h3 id="dTitle">صفقة جديدة</h3><button class="mx" onclick="closeDeal()">×</button></div>
+  <div class="mb">
+    <div><label>العميل</label><select id="dLead"></select></div>
+    <div><label>الوحدة / العقار</label><input id="dProp" placeholder="مثال: شقة 180م — الشيخ زايد" /></div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label>النوع</label><select id="dType"><option value="sale">بيع</option><option value="rent">إيجار</option><option value="short_stay">إقامة قصيرة</option></select></div>
+      <div style="flex:1"><label>القيمة (ج.م)</label><input id="dValue" type="number" inputmode="numeric" placeholder="1000000" /></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label>نسبة العمولة % (اختياري)</label><input id="dRate" type="number" step="0.01" placeholder="افتراضي 7%" /></div>
+      <div style="flex:1"><label>الإغلاق المتوقع</label><input id="dClose" type="date" /></div>
+    </div>
+    <button class="btn btn-teal" id="dSave" onclick="saveDeal()">حفظ الصفقة</button>
+  </div>
+</div></div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const money=n=>n==null?'—':Number(n).toLocaleString('ar-EG')+' ج.م';
+const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=null, DEALS=[], LEADS=[], LEDGER=[];
+const STAGES=[['open','مفتوحة'],['negotiation','تفاوض'],['reservation','حجز'],['won','مكسوبة'],['lost','خاسرة']];
+
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next=/deals'; return; }
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ document.querySelector('.wrap2').innerHTML='<div style="padding:60px;text-align:center"><h2>الصفقات</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
+  await load();
+}
+async function load(){
+  const uid=S.uid;
+  [DEALS, LEADS, LEDGER] = await Promise.all([
+    HZ.sbAuth('/crm_deals?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token).catch(()=>[]),
+    HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name&order=name.asc',S.token).catch(()=>[]),
+    HZ.sbAuth('/crm_commission_ledger?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token).catch(()=>[])
+  ]);
+  DEALS=DEALS||[]; LEADS=LEADS||[]; LEDGER=LEDGER||[];
+  renderKpis(); renderBoard(); renderLedger();
+}
+function renderKpis(){
+  const open=DEALS.filter(d=>['open','negotiation','reservation'].includes(d.status));
+  const pipeline=open.reduce((s,d)=>s+Number(d.value||0),0);
+  const won=DEALS.filter(d=>d.status==='won');
+  const comm=LEDGER.reduce((s,l)=>s+Number(l.commission_amount||0),0); // append-only incl. adjustments
+  $('kpis').innerHTML=`
+    <div class="kpi"><div class="n">${open.length}</div><div class="l">صفقات مفتوحة</div></div>
+    <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة خط الأنابيب</div></div>
+    <div class="kpi win"><div class="n">${won.length}</div><div class="l">صفقات مكسوبة</div></div>
+    <div class="kpi comm"><div class="n">${money(comm)}</div><div class="l">إجمالي العمولات</div></div>`;
+}
+function dcard(d){
+  const won=d.status==='won';
+  const acts = won
+    ? `<button onclick="location.href='/clients'">العميل</button>`
+    : (d.status==='lost'
+        ? `<button onclick="setStatus(${d.id},'open')">إعادة فتح</button>`
+        : `${d.status==='open'?`<button onclick="setStatus(${d.id},'negotiation')">تفاوض</button>`:''}
+           ${d.status!=='reservation'?`<button onclick="setStatus(${d.id},'reservation')">حجز</button>`:''}
+           <button class="win" onclick="winDeal(${d.id})">✔ اكسب</button>
+           <button class="lose" onclick="loseDeal(${d.id})">خسارة</button>`);
+  return `<div class="dcard"><div class="cn">${esc(d.customer_name||'—')}</div>
+    ${d.property_title?`<div class="ti">${esc(d.property_title)}</div>`:''}
+    <div class="vl">${money(d.value)}</div>
+    ${won&&d.commission_amount!=null?`<div class="cm">عمولة: ${money(d.commission_amount)} (${Math.round((d.commission_rate||0)*100)}%)</div>`:''}
+    ${d.lost_reason?`<div class="ti" style="color:#B42318">سبب: ${esc(d.lost_reason)}</div>`:''}
+    <div class="acts">${acts}</div></div>`;
+}
+function renderBoard(){
+  $('board').innerHTML=STAGES.map(([k,lab])=>{
+    const list=DEALS.filter(d=>(d.status||'open')===k);
+    const cards=list.map(dcard).join('')||'<div class="col-empty">—</div>';
+    return `<div class="col"><div class="col-h"><span>${lab}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
+  }).join('');
+}
+function renderLedger(){
+  if(!LEDGER.length){ $('ledger').innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px">لسه مفيش عمولات مسجّلة.</div>'; return; }
+  const rows=LEDGER.map(l=>`<tr>
+    <td>${esc(l.reference||('#'+l.deal_id))}</td>
+    <td>${money(l.gross_value)}</td>
+    <td>${Math.round((l.commission_rate||0)*100)}%</td>
+    <td style="font-weight:800">${money(l.commission_amount)}</td>
+    <td><span class="badge ${l.status}">${({accrued:'مستحقة',paid:'مدفوعة',adjustment:'تسوية'}[l.status]||l.status)}</span></td>
+    <td style="color:var(--muted)">${new Date(l.created_at).toLocaleDateString('ar-EG')}</td></tr>`).join('');
+  $('ledger').innerHTML=`<table><thead><tr><th>المرجع</th><th>قيمة الصفقة</th><th>النسبة</th><th>العمولة</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+window.openDeal=()=>{
+  $('dLead').innerHTML='<option value="">— اختر عميل —</option>'+LEADS.map(l=>`<option value="${l.id}">${esc(l.name||'—')}</option>`).join('');
+  $('dProp').value=''; $('dValue').value=''; $('dRate').value=''; $('dClose').value=''; $('dType').value='sale';
+  $('dealOv').classList.add('open');
+};
+window.closeDeal=()=>$('dealOv').classList.remove('open');
+window.saveDeal=async()=>{
+  const lead=$('dLead').value||null;
+  const name=lead?(LEADS.find(l=>l.id===lead)||{}).name:null;
+  const value=Number($('dValue').value||0);
+  if(!value){ alert('ادخل قيمة الصفقة'); return; }
+  const rate=$('dRate').value?Number($('dRate').value)/100:null;
+  const body={ owner_id:S.uid, lead_id:lead, customer_name:name, property_title:$('dProp').value||null,
+    deal_type:$('dType').value, value, commission_rate:rate, expected_close:$('dClose').value||null, status:'open' };
+  $('dSave').disabled=true;
+  try{ await HZ.sbAuth('/crm_deals',S.token,'POST',body,{Prefer:'return=minimal'}); closeDeal(); await load(); }
+  catch(e){ alert('حصل خطأ في الحفظ'); }
+  $('dSave').disabled=false;
+};
+window.setStatus=async(id,st)=>{ try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:st},{Prefer:'return=minimal'}); const d=DEALS.find(x=>x.id===id); if(d)d.status=st; renderBoard(); renderKpis(); }catch(e){} };
+window.winDeal=async(id)=>{
+  if(!confirm('تأكيد كسب الصفقة؟ هيتسجّل العمولة في السجل.')) return;
+  try{ const r=await HZ.sbAuth('/rpc/crm_win_deal',S.token,'POST',{p_deal:id}); await load();
+    if(r&&r.commission_amount!=null&&!r.already) alert('تم ✔ العمولة: '+money(r.commission_amount)); }
+  catch(e){ alert('حصل خطأ'); }
+};
+window.loseDeal=async(id)=>{
+  const reason=prompt('سبب خسارة الصفقة؟'); if(reason===null) return;
+  try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:'lost',lost_reason:reason||null,actual_close:new Date().toISOString().slice(0,10)},{Prefer:'return=minimal'});
+    const d=DEALS.find(x=>x.id===id); if(d){d.status='lost';d.lost_reason=reason;} renderBoard(); renderKpis(); }catch(e){}
+};
+boot();
+</script>
+</body>
+</html>
