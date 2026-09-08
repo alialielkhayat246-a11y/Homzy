@@ -1,0 +1,40 @@
+-- ============================================================================
+-- HOMZY OS — Phases 7 / 10 / 11 / 12 (applied 2026-09-08, verified)
+-- Non-destructive extensions of the broker CRM. Config-driven; RLS airtight.
+--
+-- Phase 7 — WhatsApp / messages (crm_phase7_messages, crm_ingest_wa_auth_fix,
+--   crm_log_outbound_wa):
+--   * crm_messages(lead_id, owner_id, direction, channel, wa_id UNIQUE,
+--     from/to_number, body, status, meta). RLS = owner/admin.
+--   * crm_phone_tail(p): last-10-digit phone key for matching.
+--   * crm_ingest_wa(key,from,to,body,wa_id,meta): SECRET-GATED (shared token),
+--     matches inbound to a lead by phone tail, logs message + 'whatsapp'
+--     activity + owner notification. Idempotent on wa_id.
+--   * crm_log_outbound(lead,to,body,wa_id,status): broker-JWT gated; logs a
+--     sent message + rescoring activity.
+--   Backend: backend/whatsapp.py + /api/wa/webhook (Meta verify + inbound),
+--   /api/wa/send, /api/wa/config. Verified: inbound matched, wrong key
+--   forbidden, no message leaked. NEEDS WA_PHONE_ID/WA_TOKEN/WA_VERIFY_TOKEN.
+--
+-- Phase 10 — attribution (crm_phase10_attribution):
+--   * crm_campaigns(owner, name, channel, spend) RLS owner/admin +
+--     crm_set_campaign_spend.
+--   * crm_attribution(since): leads grouped by campaign key (campaign ->
+--     utm_campaign -> source) with leads, won deals, commission, spend, ROI %,
+--     cost-per-lead. SECURITY DEFINER, own-rows-only.
+--
+-- Phase 11 — broker analytics (crm_phase11_broker_stats):
+--   * crm_broker_stats(since): funnel, conversion rate, temperature/stage
+--     breakdowns, sources, avg score, hot/overdue, commission totals. Own data.
+--
+-- Phase 12 — multi-tenant agencies (crm_phase12_agencies) — ADDITIVE:
+--   * agencies + agency_members(role owner/admin/agent) with own RLS.
+--   * is_agency_admin_of(user), my_agency_ids() (SECURITY DEFINER, no recursion).
+--   * EXTRA select policies (clients/crm_deals/crm_commission_ledger):
+--     is_agency_admin_of(owner_id). RLS OR-combines, so the existing owner-only
+--     policies STILL fully isolate brokers with no agency.
+--   * CRITICAL cross-tenant isolation test PASSED (enforced via
+--     set role authenticated): outsider sees 0; agent sees only own (no upward
+--     read); agency admin sees members' leads/deals/ledger via the added grant.
+-- ============================================================================
+-- (Full statements are in the applied migration history; safe/idempotent.)
