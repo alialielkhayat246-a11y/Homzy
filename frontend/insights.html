@@ -68,8 +68,12 @@ async function boot(){
 async function load(){
   $('app').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">…</div>';
   const since=new Date(Date.now()-DAYS*864e5).toISOString();
-  let r; try{ r=await HZ.sbAuth('/rpc/crm_broker_stats',S.token,'POST',{p_since:since}); }catch(e){ r=null; }
+  let r, attr; try{ [r, attr]=await Promise.all([
+    HZ.sbAuth('/rpc/crm_broker_stats',S.token,'POST',{p_since:since}),
+    HZ.sbAuth('/rpc/crm_attribution',S.token,'POST',{p_since:since}).catch(()=>null)
+  ]); }catch(e){ r=null; }
   if(!r||!r.ok){ $('app').innerHTML='<div class="empty">تعذّر تحميل الإحصائيات.</div>'; return; }
+  window.__attr=attr;
   const f=r.funnel||{};
   const tempColors={very_hot:'#B42318',hot:'#B45309',warm:'#C99700',cold:'#8894a6'};
   const tempLab={very_hot:'ساخن جدًا',hot:'ساخن',warm:'دافئ',cold:'بارد'};
@@ -114,8 +118,33 @@ async function load(){
       ${kpi('g', money(r.commission_period), 'عمولات الفترة')}
       ${kpi('', r.avg_score||0, 'متوسط السكور')}
       ${kpi('', (f.deals_lost||0), 'صفقات خاسرة')}
-    </div>`;
+    </div>
+    <div class="card" style="margin-top:16px"><h2>💰 عائد التسويق حسب الحملة (ROI)</h2>${attrHTML(attr)}</div>`;
 }
+function attrHTML(a){
+  const rows=(a&&a.ok&&a.rows)||[];
+  if(!rows.length) return '<div class="empty">لا توجد بيانات حملات بعد — العملاء بيتوسموا تلقائيًا بالمصدر/الحملة (source/utm).</div>';
+  const roiTxt=x=>x.roi==null?'—':`<b style="color:${x.roi>=0?'#137a3e':'#B42318'}">${x.roi>=0?'+':''}${x.roi}%</b>`;
+  const body=rows.map(x=>`<tr>
+    <td style="font-weight:800">${HZ.esc(x.campaign)}</td>
+    <td>${x.leads}</td><td>${x.deals_won}</td>
+    <td style="color:var(--teal-d);font-weight:700">${money(x.commission)}</td>
+    <td>${x.spend?money(x.spend):'<span style="color:var(--muted)">—</span>'}</td>
+    <td>${roiTxt(x)}</td>
+    <td>${x.cost_per_lead!=null?money(x.cost_per_lead):'—'}</td>
+    <td><button onclick="editSpend('${encodeURIComponent(x.campaign)}',${x.spend||0})" style="font-size:11px;border:1.5px solid var(--line-2);background:#fff;border-radius:7px;padding:4px 8px;cursor:pointer">✎ إنفاق</button></td></tr>`).join('');
+  return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <thead><tr style="color:var(--muted);font-size:11.5px;text-align:right">
+      <th style="padding:6px">الحملة</th><th>عملاء</th><th>صفقات</th><th>عمولة</th><th>إنفاق</th><th>ROI</th><th>تكلفة/عميل</th><th></th></tr></thead>
+    <tbody>${body}</tbody></table></div>
+    <style>#app table td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}</style>`;
+}
+window.editSpend=async(campEnc,cur)=>{
+  const camp=decodeURIComponent(campEnc);
+  const v=prompt('إنفاق حملة "'+camp+'" (ج.م):', cur||'');
+  if(v===null) return; const n=Number(v); if(isNaN(n)){ alert('رقم غير صحيح'); return; }
+  try{ await HZ.sbAuth('/rpc/crm_set_campaign_spend',S.token,'POST',{p_name:camp,p_spend:n,p_channel:null}); load(); }catch(e){ alert('حصل خطأ'); }
+};
 document.addEventListener('hz:lang', ()=>{ if(S) load(); });
 boot();
 </script>
