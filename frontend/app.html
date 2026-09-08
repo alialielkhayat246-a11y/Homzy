@@ -22,7 +22,7 @@
 <meta name="theme-color" content="#0B1D36" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
   .tabs{display:flex; gap:8px; padding:18px 0 0;}
   .tab{font-family:var(--ff); font-weight:700; font-size:15px; cursor:pointer; padding:10px 20px; border-radius:100px; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
@@ -225,7 +225,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js"></script>
+<script src="/assets/homzy.js?v=2"></script>
 <script>
 const sb=HZ.sb, esc=HZ.esc;
 const money=n=>{ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString('en-US')+(HZ.lang==='ar'?' ج.م':' EGP'); };

@@ -128,7 +128,7 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
 <script type="application/ld+json">{ld}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
   .sp-wrap{{max-width:900px; margin:0 auto; padding:18px 18px 60px;}}
   .sp-crumb{{font-size:13px; color:var(--muted); margin:10px 0 14px;}}
@@ -166,7 +166,7 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
 {body}
 </main>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js"></script>
+<script src="/assets/homzy.js?v=2"></script>
 <script>
 // Contact / viewing is gated: guests get sent to login, then straight back.
 function spViewing(ctx){{

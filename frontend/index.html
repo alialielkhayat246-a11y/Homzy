@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
   .hero{padding:60px 0 40px; position:relative;}
   .hero::before{content:""; position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(60% 50% at 85% 0%, rgba(11,85,99,.10), transparent 60%), radial-gradient(50% 40% at 5% 20%, rgba(11,29,54,.05), transparent 60%);}
@@ -138,7 +138,7 @@
 </section>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js"></script>
+<script src="/assets/homzy.js?v=2"></script>
 <script>
   // Reveal on scroll
   const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});

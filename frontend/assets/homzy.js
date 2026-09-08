@@ -101,6 +101,20 @@ const T = {
   myday:{ar:'يومي',en:'My Day'},
   deals:{ar:'الصفقات',en:'Deals'},
   insights:{ar:'أدائي',en:'Insights'},
+  crm:{ar:'CRM',en:'CRM'},
+  // CRM workspace sub-navigation
+  crmOverview:{ar:'نظرة عامة',en:'Overview'}, crmClients:{ar:'العملاء',en:'Clients'},
+  crmDeals:{ar:'الصفقات',en:'Deals'}, crmPerf:{ar:'الأداء',en:'Performance'},
+  // product switcher
+  prodHomzy:{ar:'Homzy',en:'Homzy'}, prodHomzyDesc:{ar:'العقارات',en:'Real estate'},
+  prodStays:{ar:'Homzy Stays',en:'Homzy Stays'}, prodStaysDesc:{ar:'الإقامات والحجوزات',en:'Stays & bookings'},
+  switchProduct:{ar:'المنتجات',en:'Products'},
+  // profile menu
+  account:{ar:'الحساب',en:'Account'}, feedback:{ar:'الشكاوى والمقترحات',en:'Feedback'},
+  becomeBroker:{ar:'ابدأ العمل كبروكر',en:'Start working as a broker'},
+  logout:{ar:'تسجيل الخروج',en:'Log out'}, login:{ar:'تسجيل الدخول',en:'Log in'},
+  roleBroker:{ar:'بروكر',en:'Broker'}, roleUser:{ar:'مستخدم',en:'User'},
+  menu:{ar:'القائمة',en:'Menu'}, notifications:{ar:'التنبيهات',en:'Notifications'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -113,83 +127,217 @@ HZ.applyLang = function(){
   });
   document.querySelectorAll('[data-ph-ar]').forEach(el=>{ el.placeholder = el.getAttribute('data-ph-'+HZ.lang) || ''; });
   const lb = document.getElementById('hzLang'); if(lb) lb.textContent = HZ.lang==='ar' ? 'EN' : 'ع';
-  buildNavLinks(); refreshTabbar(); setAuthBtn();
+  rebuildChrome();
   document.dispatchEvent(new CustomEvent('hz:lang', {detail:HZ.lang}));
 };
 HZ.toggleLang = function(){ HZ.lang = HZ.lang==='ar'?'en':'ar'; localStorage.setItem('hz_lang',HZ.lang); HZ.applyLang(); };
 
-/* ---------- Client / Broker mode ---------- */
+/* ---------- Product mode (role-driven; no visible toggle) ----------
+   `mode` still drives the sales-coach chat persona + any .only-broker/.only-client
+   elements, but it is now derived from the account role, not a manual switch. */
 HZ.setMode = function(m){
   HZ.mode = m; localStorage.setItem('hz_mode', m);
   document.body.setAttribute('data-mode', m);
-  const seg = document.getElementById('hzMode');
-  if(seg){ seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.m===m)); }
-  buildNavLinks(); refreshTabbar();
   document.dispatchEvent(new CustomEvent('hz:mode', {detail:m}));
 };
 
-/* ---------- Header / nav ---------- */
-const NAV = {
-  client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/deals','deals'],['/insights','insights'],['/community','communityNav'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
+/* ---------- Header / nav (role-aware, product-separated) ---------- */
+// Small inline icons (no icon package — matches the project's inline-SVG style).
+const SVG = {
+  crm:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 13h4l2 5 4-12 2 7h6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
+  stays:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 18v-6a2 2 0 0 1 2-2h10a4 4 0 0 1 4 4v4M3 18h18M3 18v2m18-2v2M7 10V8a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.6 2.4A.6.6 0 0 0 4.9 20h14.2a.6.6 0 0 0 .5-.9L18 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  chevron:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="chev"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  cog:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 13.4H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  building:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  people:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 12H4m0 0 3.5-3.5M4 12l3.5 3.5M9 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  badge:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2 4 5v6c0 4.5 3.2 7.9 8 9 4.8-1.1 8-4.5 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  hamburger:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
 };
-function navHTML(){
-  const links = NAV[HZ.mode]||NAV.client;
-  const path = location.pathname;
-  return links.map(([href,key])=>{
-    const active = (href===path) || (href!=='/' && path.startsWith(href.split('?')[0]) && href.split('?')[0]!=='/');
-    return `<a href="${href}" class="${active?'active':''}">${HZ.t(key)}</a>`;
+
+// The five main destinations. Brokers get the CRM-centric set; buyers get a
+// lean browse set. Homzy Stays is intentionally NOT here — it lives in the
+// product switcher on the left.
+function navItems(){
+  if(HZ.isBroker) return [['/','home'],['/crm','crm'],['/my-listings','mylistings'],['/community','communityNav'],['/app','browse']];
+  return [['/','home'],['/app','browse'],['/areas','areas']];
+}
+const CRM_PATHS=['/crm','/my-day','/clients','/deals','/insights'];
+function isCrmPath(p){ return CRM_PATHS.some(x=>p===x||p.startsWith(x+'/')); }
+function isStaysPath(p){ return /^\/(stays|my-stays|host)(\/|$)/.test(p); }
+function navActive(href){
+  const path=location.pathname;
+  if(href==='/crm') return isCrmPath(path);
+  if(href==='/') return path==='/';
+  const base=href.split('?')[0];
+  return path===base || path.startsWith(base+'/');
+}
+function navCenterHTML(){
+  return navItems().map(([href,key])=>{
+    const a=navActive(href);
+    return `<a href="${href}" class="hz-navlink${a?' active':''}"${a?' aria-current="page"':''}>${HZ.t(key)}</a>`;
   }).join('');
 }
 function buildNavLinks(){
-  const l=document.getElementById('hzLinks'); if(l) l.innerHTML=navHTML();
-  const m=document.getElementById('hzMobile'); if(m) m.innerHTML=navHTML();
+  const l=document.getElementById('hzLinks'); if(l) l.innerHTML=navCenterHTML();
+  const d=document.getElementById('hzDrawerNav'); if(d) d.innerHTML=drawerNavHTML();
 }
 const LOGO=`<svg class="mk" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg>`;
 
+// current product (real-estate vs Homzy Stays), and the "switch to" target
+function currentProduct(){ return isStaysPath(location.pathname) ? 'stays' : 'homzy'; }
+function productSwitcherHTML(){
+  const cur=currentProduct();
+  // The button surfaces the OTHER product as the switch entry (per spec: on the
+  // main Homzy nav it reads "Homzy Stays"); the dropdown marks the active one.
+  const target = cur==='stays' ? {ic:SVG.home, nm:HZ.t('prodHomzy')} : {ic:SVG.stays, nm:HZ.t('prodStays')};
+  return `<div class="hz-prod" id="hzProd">
+    <button class="hz-prod-btn" id="hzProdBtn" aria-haspopup="menu" aria-expanded="false" onclick="HZ.toggleProd(event)">
+      <span class="pi">${target.ic}</span><span class="pn">${target.nm}</span>${SVG.chevron}</button>
+    <div class="hz-menu hz-prod-menu" id="hzProdMenu" role="menu" aria-label="${HZ.t('switchProduct')}">
+      <a class="hz-menu-row${cur==='homzy'?' on':''}" role="menuitem" href="/">
+        <span class="ri">${SVG.home}</span><span class="rt"><b>${HZ.t('prodHomzy')}</b><small>${HZ.t('prodHomzyDesc')}</small></span>${cur==='homzy'?'<span class="dot" aria-hidden="true"></span>':''}</a>
+      <a class="hz-menu-row${cur==='stays'?' on':''}" role="menuitem" href="/stays">
+        <span class="ri">${SVG.stays}</span><span class="rt"><b>${HZ.t('prodStays')}</b><small>${HZ.t('prodStaysDesc')}</small></span>${cur==='stays'?'<span class="dot" aria-hidden="true"></span>':''}</a>
+    </div></div>`;
+}
+function profileHTML(){
+  if(!HZ.isLoggedIn())
+    return `<a class="hz-login" href="/login?next=${encodeURIComponent(location.pathname+location.search)}">${HZ.t('login')}</a>`;
+  const u=HZ.user||{}; const nm=u.name||(HZ.lang==='ar'?'حسابي':'My account');
+  const initial=(nm.trim()[0]||'H').toUpperCase();
+  const typ = HZ.isBroker ? HZ.t('roleBroker') : HZ.t('roleUser');
+  return `<div class="hz-prof" id="hzProf">
+    <button class="hz-prof-btn" id="hzProfBtn" aria-haspopup="menu" aria-expanded="false" aria-label="${HZ.t('account')}" onclick="HZ.toggleProfile(event)">
+      <span class="av">${HZ.esc(initial)}</span></button>
+    <div class="hz-menu hz-prof-menu" id="hzProfMenu" role="menu">
+      <div class="hz-prof-head"><span class="av lg">${HZ.esc(initial)}</span><span class="pn"><b>${HZ.esc(nm)}</b><small>${typ}</small></span></div>
+      <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.user}</span>${HZ.t('account')}</a>
+      <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.cog}</span>${HZ.t('settings')}</a>
+      <button class="hz-menu-item" role="menuitem" onclick="HZ.openFeedback()"><span class="mi">${SVG.chat}</span>${HZ.t('feedback')}</button>
+      ${HZ.isBroker?'':`<a class="hz-menu-item accent" role="menuitem" href="/account"><span class="mi">${SVG.badge}</span>${HZ.t('becomeBroker')}</a>`}
+      <div class="hz-menu-sep" role="separator"></div>
+      <button class="hz-menu-item danger" role="menuitem" onclick="HZ.logout()"><span class="mi">${SVG.logout}</span>${HZ.t('logout')}</button>
+    </div></div>`;
+}
+function bellHTML(){
+  return `<button class="hz-bell" id="hzBell" onclick="HZ.toggleNotifs(event)" aria-label="${HZ.t('notifications')}" hidden>${SVG.bell}<span class="hz-bell-badge" id="hzBellBadge" hidden>0</span></button>`;
+}
 function buildHeader(){
   const host=document.getElementById('hz-header'); if(!host) return;
   host.innerHTML=`
   <header class="hz-nav" id="hzNav">
     <div class="wrap hz-nav-in">
-      <a href="/" class="hz-logo"><span>${LOGO}</span><span class="nm">Hom<b>zy</b></span></a>
-      <nav class="hz-links" id="hzLinks"></nav>
+      <a href="/" class="hz-logo" aria-label="Homzy"><span>${LOGO}</span><span class="nm">Hom<b>zy</b></span></a>
+      <nav class="hz-links" id="hzLinks" aria-label="${HZ.t('menu')}"></nav>
       <div class="hz-nav-cta">
-        <div class="hz-mode" id="hzMode" title="Client / Broker">
-          <button class="c" data-m="client" onclick="HZ.setMode('client')">${HZ.t('client')}</button>
-          <button class="b" data-m="broker" onclick="HZ.setMode('broker')">${HZ.t('broker')}</button>
-        </div>
-        <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()">EN</button>
-        <button class="hz-bell" id="hzBell" onclick="HZ.toggleNotifs(event)" title="التنبيهات" hidden>🔔<span class="hz-bell-badge" id="hzBellBadge" hidden>0</span></button>
-        <a class="hz-lang hz-settings" href="/account" title="الإعدادات" style="text-decoration:none">⚙️</a>
-        <button class="hz-auth" id="hzAuth" onclick="HZ.authAction()"></button>
-        <button class="hz-menu-btn" onclick="document.getElementById('hzMobile').classList.toggle('open')" aria-label="menu">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="#0B1D36" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
+        ${productSwitcherHTML()}
+        <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()" aria-label="language">EN</button>
+        ${bellHTML()}
+        <span id="hzProfileSlot">${profileHTML()}</span>
+        <button class="hz-menu-btn" id="hzMenuBtn" onclick="HZ.toggleDrawer(event)" aria-label="${HZ.t('menu')}" aria-expanded="false">${SVG.hamburger}</button>
       </div>
     </div>
-    <div class="hz-mobile" id="hzMobile"></div>
-  </header>`;
-  addEventListener('scroll',()=>{ const n=document.getElementById('hzNav'); if(n) n.classList.toggle('scrolled', scrollY>8); });
-  document.getElementById('hzMobile').addEventListener('click',e=>{ if(e.target.tagName==='A') document.getElementById('hzMobile').classList.remove('open'); });
-  if(!document.getElementById('hzNotif')){ const nd=document.createElement('div'); nd.className='hz-notif'; nd.id='hzNotif'; document.body.appendChild(nd);
-    document.addEventListener('click',ev=>{ const p=document.getElementById('hzNotif'), b=document.getElementById('hzBell'); if(p&&p.classList.contains('open')&&!p.contains(ev.target)&&ev.target!==b&&!(b&&b.contains(ev.target))) p.classList.remove('open'); }); }
+  </header>
+  <div class="hz-crmsub" id="hzCrmSub" hidden></div>`;
+  buildNavLinks(); buildCrmSubnav();
+  addEventListener('scroll',()=>{ const n=document.getElementById('hzNav'); if(n) n.classList.toggle('scrolled', scrollY>8); }, {passive:true});
+  buildDrawer();
+  if(!document.getElementById('hzNotif')){ const nd=document.createElement('div'); nd.className='hz-notif'; nd.id='hzNotif'; document.body.appendChild(nd); }
+  // one global outside-click / Escape handler for every header dropdown
+  if(!HZ._navBound){ HZ._navBound=true;
+    document.addEventListener('click', HZ._closeMenusOutside);
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') HZ._closeMenus(); });
+  }
 }
+// ----- CRM workspace sub-navigation (only on CRM pages, for brokers) -----
+function buildCrmSubnav(){
+  const bar=document.getElementById('hzCrmSub'); if(!bar) return;
+  if(!(HZ.isBroker && isCrmPath(location.pathname))){ bar.hidden=true; bar.innerHTML=''; return; }
+  const path=location.pathname;
+  const tabs=[['/crm','crmOverview'],['/clients','crmClients'],['/deals','crmDeals'],['/insights','crmPerf']];
+  const act=h=> h==='/crm' ? (path==='/crm'||path==='/my-day') : (path===h||path.startsWith(h+'/'));
+  bar.hidden=false;
+  bar.innerHTML=`<div class="wrap hz-crmsub-in" role="tablist" aria-label="CRM">`
+    + tabs.map(([h,k])=>`<a href="${h}" class="hz-crmtab${act(h)?' active':''}"${act(h)?' aria-current="page"':''}>${HZ.t(k)}</a>`).join('')
+    + `</div>`;
+}
+// ----- dropdown open/close plumbing (shared, accessible) -----
+HZ._closeMenus=function(){ ['hzProdMenu','hzProfMenu','hzNotif'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('open'); });
+  ['hzProdBtn','hzProfBtn'].forEach(id=>{ const b=document.getElementById(id); if(b) b.setAttribute('aria-expanded','false'); });
+  document.querySelectorAll('.hz-prod,.hz-prof').forEach(el=>el.classList.remove('open')); };
+HZ._closeMenusOutside=function(ev){
+  const inHeaderMenu = ev.target.closest && ev.target.closest('.hz-prod,.hz-prof,#hzBell,#hzNotif');
+  if(!inHeaderMenu) HZ._closeMenus();
+};
+function _openMenu(wrapId, menuId, btnId, ev){ if(ev) ev.stopPropagation();
+  const menu=document.getElementById(menuId); if(!menu) return;
+  const willOpen=!menu.classList.contains('open'); HZ._closeMenus();
+  if(willOpen){ menu.classList.add('open'); const w=document.getElementById(wrapId); if(w) w.classList.add('open');
+    const b=document.getElementById(btnId); if(b) b.setAttribute('aria-expanded','true'); }
+}
+HZ.toggleProd=function(ev){ _openMenu('hzProd','hzProdMenu','hzProdBtn',ev); };
+HZ.toggleProfile=function(ev){ _openMenu('hzProf','hzProfMenu','hzProfBtn',ev); };
+// ----- mobile drawer -----
+function drawerNavHTML(){
+  return navItems().map(([href,key])=>{
+    const a=navActive(href);
+    return `<a href="${href}" class="hz-draw-link${a?' active':''}"${a?' aria-current="page"':''}>${HZ.t(key)}</a>`;
+  }).join('');
+}
+function buildDrawer(){
+  let bk=document.getElementById('hzDrawerBk');
+  if(!bk){ bk=document.createElement('div'); bk.className='hz-draw-bk'; bk.id='hzDrawerBk'; bk.onclick=()=>HZ.toggleDrawer(); document.body.appendChild(bk); }
+  let dr=document.getElementById('hzDrawer');
+  if(!dr){ dr=document.createElement('aside'); dr.className='hz-draw'; dr.id='hzDrawer'; dr.setAttribute('aria-hidden','true'); document.body.appendChild(dr); }
+  const loggedIn=HZ.isLoggedIn(); const u=HZ.user||{}; const nm=u.name||(HZ.lang==='ar'?'حسابي':'My account');
+  const initial=(nm.trim()[0]||'H').toUpperCase(); const typ=HZ.isBroker?HZ.t('roleBroker'):HZ.t('roleUser');
+  const prof = loggedIn ? `
+      <div class="hz-draw-prof"><span class="av lg">${HZ.esc(initial)}</span><span class="pn"><b>${HZ.esc(nm)}</b><small>${typ}</small></span></div>
+      <a class="hz-draw-item" href="/account">${SVG.user}${HZ.t('account')}</a>
+      <a class="hz-draw-item" href="/account">${SVG.cog}${HZ.t('settings')}</a>
+      <button class="hz-draw-item" onclick="HZ.openFeedback()">${SVG.chat}${HZ.t('feedback')}</button>
+      ${HZ.isBroker?'':`<a class="hz-draw-item accent" href="/account">${SVG.badge}${HZ.t('becomeBroker')}</a>`}
+      <button class="hz-draw-item danger" onclick="HZ.logout()">${SVG.logout}${HZ.t('logout')}</button>`
+    : `<a class="hz-draw-cta" href="/login?next=${encodeURIComponent(location.pathname+location.search)}">${HZ.t('login')}</a>`;
+  dr.innerHTML=`
+    <div class="hz-draw-head"><a href="/" class="hz-logo"><span>${LOGO}</span><span class="nm">Hom<b>zy</b></span></a>
+      <button class="hz-draw-x" onclick="HZ.toggleDrawer()" aria-label="${HZ.t('close')}">${SVG.x}</button></div>
+    <nav class="hz-draw-nav" id="hzDrawerNav" aria-label="${HZ.t('menu')}">${drawerNavHTML()}</nav>
+    <div class="hz-draw-prod">
+      <a class="hz-draw-link" href="/">${SVG.home}${HZ.t('prodHomzy')}</a>
+      <a class="hz-draw-link" href="/stays">${SVG.stays}${HZ.t('prodStays')}</a>
+    </div>
+    <div class="hz-draw-sep"></div>
+    ${prof}`;
+}
+HZ.toggleDrawer=function(ev){ if(ev) ev.stopPropagation();
+  const dr=document.getElementById('hzDrawer'), bk=document.getElementById('hzDrawerBk'), btn=document.getElementById('hzMenuBtn');
+  if(!dr) return; const open=!dr.classList.contains('open');
+  dr.classList.toggle('open',open); bk.classList.toggle('open',open);
+  dr.setAttribute('aria-hidden', open?'false':'true'); if(btn) btn.setAttribute('aria-expanded', open?'true':'false');
+  document.body.classList.toggle('hz-noscroll', open);
+};
 /* ---------- Broker in-app notifications (crm_notifications) ---------- */
 HZ.initNotifs=function(){ const b=document.getElementById('hzBell'); if(!b) return; b.hidden=false;
   HZ.loadNotifs(); if(HZ._notifTimer) clearInterval(HZ._notifTimer); HZ._notifTimer=setInterval(()=>HZ.loadNotifs(), 60000); };
 HZ.loadNotifs=async function(){ const s=HZ.session(); if(!s) return;
   let rows=[]; try{ rows=await HZ.sbAuth('/crm_notifications?user_id=eq.'+s.uid+'&select=*&order=created_at.desc&limit=20', s.token)||[]; }catch(e){ return; }
   HZ._notifs=rows; const un=rows.filter(r=>!r.read_at).length; const bd=document.getElementById('hzBellBadge');
-  if(bd){ bd.textContent=un>9?'9+':(''+un); bd.hidden=un===0; } if(document.getElementById('hzNotif')&&document.getElementById('hzNotif').classList.contains('open')) HZ._renderNotif(); };
+  if(bd){ bd.textContent=un>99?'99+':(''+un); bd.hidden=un===0; } if(document.getElementById('hzNotif')&&document.getElementById('hzNotif').classList.contains('open')) HZ._renderNotif(); };
 HZ._renderNotif=function(){ const p=document.getElementById('hzNotif'); if(!p) return; const rows=HZ._notifs||[];
   const ic={lead_new:'🎯',deal_won:'🎉',task:'✅',viewing:'🏠'};
   const body = rows.length ? rows.map(n=>{ const t=n.created_at?new Date(n.created_at).toLocaleString(HZ.lang==='ar'?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):'';
     return `<div class="hz-notif-item${n.read_at?'':' unread'}"><div class="i">${ic[n.type]||'🔔'}</div><div class="b"><div class="t">${HZ.esc(n.title||'')}</div>${n.body?`<div class="m">${HZ.esc(n.body)}</div>`:''}<div class="d">${t}</div></div></div>`;
   }).join('') : `<div class="hz-notif-empty">${HZ.lang==='ar'?'لا توجد تنبيهات':'No notifications'}</div>`;
-  p.innerHTML=`<div class="hz-notif-h"><span>${HZ.lang==='ar'?'التنبيهات':'Notifications'}</span><a href="/my-day">${HZ.lang==='ar'?'يومي':'My Day'}</a></div><div class="hz-notif-list">${body}</div>`; };
+  p.innerHTML=`<div class="hz-notif-h"><span>${HZ.lang==='ar'?'التنبيهات':'Notifications'}</span><a href="/crm">CRM</a></div><div class="hz-notif-list">${body}</div>`; };
 HZ.toggleNotifs=function(ev){ if(ev) ev.stopPropagation(); const p=document.getElementById('hzNotif'); if(!p) return;
-  const open=!p.classList.contains('open'); p.classList.toggle('open', open);
+  const open=!p.classList.contains('open'); if(HZ._closeMenus) HZ._closeMenus(); p.classList.toggle('open', open);
   if(open){ HZ._renderNotif(); HZ._markAllRead(); } };
 HZ._markAllRead=async function(){ const s=HZ.session(); if(!s) return; const un=(HZ._notifs||[]).filter(r=>!r.read_at);
   if(!un.length) return; const now=new Date().toISOString();
@@ -214,13 +362,48 @@ HZ.authAction = function(){
   if(HZ.isLoggedIn()) HZ.logout();
   else location.href='/login?next='+encodeURIComponent(location.pathname+location.search);
 };
-function setAuthBtn(){
-  const b=document.getElementById('hzAuth'); if(!b) return;
-  const inn=HZ.isLoggedIn();
-  b.textContent = inn ? (HZ.lang==='ar'?'خروج':'Log out') : (HZ.lang==='ar'?'دخول':'Log in');
-  b.classList.toggle('out', inn);
+/* ---------- Feedback (الشكاوى والمقترحات) ---------- */
+HZ.openFeedback = function(){
+  HZ._closeMenus && HZ._closeMenus(); const dr=document.getElementById('hzDrawer'); if(dr&&dr.classList.contains('open')) HZ.toggleDrawer();
+  const s=HZ.session();
+  if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  if(document.getElementById('hzFbOv')) { document.getElementById('hzFbOv').classList.add('open'); return; }
+  const ov=document.createElement('div'); ov.className='hz-fb-ov'; ov.id='hzFbOv';
+  ov.innerHTML=`<div class="hz-fb" role="dialog" aria-modal="true" aria-label="${HZ.t('feedback')}">
+      <div class="hz-fb-h"><b>${HZ.t('feedback')}</b><button class="hz-fb-x" aria-label="${HZ.t('close')}">${SVG.x}</button></div>
+      <p class="hz-fb-p">${HZ.lang==='ar'?'رأيك بيساعدنا نطوّر Homzy. اكتب شكوى أو اقتراح وهنراجعه.':'Your feedback helps us improve Homzy.'}</p>
+      <textarea id="hzFbBody" rows="4" placeholder="${HZ.lang==='ar'?'اكتب هنا…':'Write here…'}"></textarea>
+      <div class="hz-fb-msg" id="hzFbMsg"></div>
+      <div class="hz-fb-a"><button class="btn btn-teal" id="hzFbSend">${HZ.lang==='ar'?'إرسال':'Send'}</button>
+        <button class="btn btn-ghost" id="hzFbCancel">${HZ.lang==='ar'?'إلغاء':'Cancel'}</button></div></div>`;
+  document.body.appendChild(ov);
+  const close=()=>ov.classList.remove('open');
+  ov.querySelector('.hz-fb-x').onclick=close; ov.querySelector('#hzFbCancel').onclick=close;
+  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+  ov.querySelector('#hzFbSend').onclick=async ()=>{
+    const body=(document.getElementById('hzFbBody').value||'').trim(); const msg=document.getElementById('hzFbMsg');
+    if(body.length<4){ msg.style.color='#B42318'; msg.textContent=HZ.lang==='ar'?'اكتب رسالتك':'Please write a message'; return; }
+    const btn=document.getElementById('hzFbSend'); btn.disabled=true;
+    try{ await HZ.sbAuth('/app_feedback', s.token,'POST',{ body, page:location.pathname }, {Prefer:'return=minimal'});
+      msg.style.color='#137a3e'; msg.textContent=HZ.lang==='ar'?'وصلنا رأيك — شكرًا! 🙏':'Thanks for your feedback! 🙏';
+      document.getElementById('hzFbBody').value=''; setTimeout(close,1200);
+    }catch(e){ msg.style.color='#B42318'; msg.textContent=HZ.lang==='ar'?'تعذّر الإرسال، حاول تاني':'Could not send, try again'; }
+    btn.disabled=false;
+  };
+  requestAnimationFrame(()=>ov.classList.add('open'));
+  setTimeout(()=>{ const t=document.getElementById('hzFbBody'); if(t) t.focus(); }, 60);
+};
+// Re-render the dynamic header chrome (product switcher, profile/login, nav,
+// CRM sub-nav, drawer) after a language / role / login change.
+function rebuildChrome(){
+  const prod=document.getElementById('hzProd'); if(prod) prod.outerHTML=productSwitcherHTML();
+  const slot=document.getElementById('hzProfileSlot'); if(slot) slot.innerHTML=profileHTML();
+  const lb=document.getElementById('hzLang'); if(lb) lb.textContent = HZ.lang==='ar' ? 'EN' : 'ع';
+  buildNavLinks(); buildCrmSubnav(); buildDrawer();
 }
-HZ.refreshAuthBtn = setAuthBtn;
+function setAuthBtn(){ rebuildChrome(); }
+HZ.refreshAuthBtn = rebuildChrome;
 
 function buildFooter(){
   const host=document.getElementById('hz-footer'); if(!host) return;
@@ -247,56 +430,11 @@ function buildFooter(){
   </footer>`;
 }
 
-/* ---------- Mobile bottom tab bar + "More" sheet ---------- */
-const ICON={
-  home:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5V21H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
-  browse:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.6" stroke="currentColor" stroke-width="1.8"/></svg>',
-  chat:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1Z" fill="currentColor"/></svg>',
-  areas:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.8"/></svg>',
-  stays:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 18v-6a2 2 0 0 1 2-2h10a4 4 0 0 1 4 4v4M3 18h18M3 18v2m18-2v2M7 10V8a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  clients:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  mylistings:'<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  hosting:'<svg viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M10.6 12.4 20 3M17 6l2 2M15 8l1.6 1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  more:'<svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="19" cy="12" r="1.7" fill="currentColor"/></svg>',
-};
-const TAB_T={home:{ar:'الرئيسية',en:'Home'},browse:{ar:'تصفّح',en:'Browse'},chat:{ar:'الشات',en:'Chat'},areas:{ar:'المناطق',en:'Areas'},stays:{ar:'إقامات',en:'Stays'},hosting:{ar:'استضافة',en:'Hosting'},clients:{ar:'عملائي',en:'Clients'},mylistings:{ar:'وحداتي',en:'Units'},more:{ar:'المزيد',en:'More'}};
-function tt(k){return (TAB_T[k]||{})[HZ.lang]||HZ.t(k);}
-function tabActive(k){
-  const path=location.pathname;
-  if(k==='home') return path==='/';
-  if(k==='browse') return /^\/(app|browse|projects)/.test(path);
-  if(k==='stays') return /^\/(stays|my-stays)/.test(path);
-  if(k==='hosting') return path.startsWith('/host');
-  if(k==='clients') return path.startsWith('/clients');
-  if(k==='mylistings') return path.startsWith('/my-listings');
-  return false;
-}
-function buildTabbar(){
-  if(document.getElementById('hzTabbar')) return;
-  const broker = HZ.isBroker && HZ.mode==='broker';
-  const link=(href,k)=>`<a href="${href}" class="${tabActive(k)?'on':''}">${ICON[k]||ICON.browse}<span>${tt(k)}</span></a>`;
-  const bar=document.createElement('nav'); bar.className='hz-tabbar'; bar.id='hzTabbar';
-  const left  = broker ? link('/','home')+link('/clients','clients') : link('/','home')+link('/app','browse');
-  const right = broker ? link('/my-listings','mylistings') : link('/stays','stays');
-  bar.innerHTML = left
-    + `<button class="tb-chat" onclick="HZ.openChat()"><span class="tb-chat-ic">${ICON.chat}</span><span>${tt('chat')}</span></button>`
-    + right
-    + `<button onclick="HZ.toggleMore()">${ICON.more}<span>${tt('more')}</span></button>`;
-  document.body.appendChild(bar);
-  // "More" sheet — mode-aware so every destination is reachable on mobile
-  const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
-  const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
-  const items = broker
-    ? [['/my-day','🗓️','myday'],['/deals','💼','deals'],['/insights','📊','insights'],['/community','💬','community'],['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/account','👤','settings'],['/admin','⚙️','admin']]
-    : [['/areas','📍','areas'],['/features','✨','features'],['/brokers','🧰','forBrokers'],['/account','👤','settings'],['/download','📱','app']];
-  sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
-  document.body.appendChild(bk); document.body.appendChild(sheet);
-}
-HZ.toggleMore=function(){
-  const s=document.getElementById('hzSheet'), b=document.getElementById('hzSheetBk');
-  if(!s) return; const open=s.classList.toggle('open'); b.classList.toggle('open',open);
-};
-function refreshTabbar(){ const b=document.getElementById('hzTabbar'); if(b){ b.remove(); const s=document.getElementById('hzSheet'); if(s)s.remove(); const bk=document.getElementById('hzSheetBk'); if(bk)bk.remove(); buildTabbar(); } }
+/* The mobile bottom tab-bar + "More" sheet were replaced by the top-bar
+   hamburger → slide-in drawer (buildDrawer). refreshTabbar/toggleMore stay as
+   thin shims so any remaining callers keep working. */
+function refreshTabbar(){ rebuildChrome(); }
+HZ.toggleMore=function(){ HZ.toggleDrawer(); };
 
 /* ============================================================
    Chat widget — project-aware, persisted, lead-capturing.
@@ -706,15 +844,17 @@ async function checkBrokerAccount(){
     const tok=key?JSON.parse(localStorage.getItem(key)):null;
     const jwt=tok&&tok.access_token, uid=tok&&tok.user&&tok.user.id;
     if(!jwt||!uid) return notBroker();
-    const r=await fetch(SB_URL+'/rest/v1/profiles?select=role&id=eq.'+uid,
+    const r=await fetch(SB_URL+'/rest/v1/profiles?select=role,full_name&id=eq.'+uid,
       {headers:{apikey:SB_KEY, Authorization:'Bearer '+jwt}});
     if(!r.ok) return notBroker();
     const rows=await r.json();
-    if(rows&&rows[0]&&rows[0].role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; refreshTabbar(); HZ.loadPlan(); HZ.initNotifs(); }
+    const p=rows&&rows[0];
+    HZ.user={ name:(p&&p.full_name)||'', role:(p&&p.role)||'user' };
+    if(p&&p.role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; HZ.setMode('broker'); rebuildChrome(); HZ.loadPlan(); HZ.initNotifs(); }
     else notBroker();
   }catch(e){ notBroker(); }
 }
-function notBroker(){ document.body.classList.remove('hz-broker'); HZ.isBroker=false; if(HZ.mode!=='client') HZ.setMode('client'); }
+function notBroker(){ document.body.classList.remove('hz-broker'); HZ.isBroker=false; HZ.setMode('client'); rebuildChrome(); }
 
 /* ---------- Subscription plan (feature gating) ---------- */
 HZ.PLAN = null; // plan_limits row for the signed-in user (or free defaults)
@@ -774,10 +914,9 @@ HZ.initReveal = function(){
 function boot(){
   if(!chat) chat=newChatState();
   document.body.setAttribute('data-mode', HZ.mode);
-  buildHeader(); buildFooter(); buildChat(); buildTabbar();
-  HZ.setMode(HZ.mode);
+  buildHeader(); buildFooter(); buildChat();
   HZ.applyLang();
-  checkBrokerAccount();
+  checkBrokerAccount();   // sets role → nav set, product mode, profile chrome
   HZ.initReveal();
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();

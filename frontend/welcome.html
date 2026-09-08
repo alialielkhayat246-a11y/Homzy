@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#0B1D36" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
   body{background:linear-gradient(160deg,#0B1D36,#0B5563);min-height:100vh;}
   .wc{max-width:840px;margin:0 auto;padding:48px 22px;}
@@ -66,7 +66,7 @@
   <div class="msg" id="msg"></div>
   <button class="skip" onclick="choose('user')" data-ar="مش متأكد؟ ابدأ كمستخدم" data-en="Not sure? Start as a user">مش متأكد؟ ابدأ كمستخدم</button>
 </div>
-<script src="/assets/homzy.js"></script>
+<script src="/assets/homzy.js?v=2"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 function nextParam(){ const n=new URLSearchParams(location.search).get('next')||''; return (n.startsWith('/')&&!n.startsWith('//'))?n:''; }

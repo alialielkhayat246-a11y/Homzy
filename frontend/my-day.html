@@ -4,14 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <script>/* auth gate */
-(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/my-day'));}}catch(e){location.replace('/login');}})();</script>
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
 <title>Homzy — يومي</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
   .md{max-width:820px;margin:0 auto;padding:20px 16px 40px;}
   .brief{background:linear-gradient(160deg,#0B1D36,#0B5563);color:#fff;border-radius:18px;padding:20px;margin-bottom:18px;}
@@ -39,7 +39,7 @@
 <div id="hz-header"></div>
 <div class="md" id="app"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js"></script>
+<script src="/assets/homzy.js?v=2"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 let S=null, ISBROKER=false;
@@ -49,7 +49,7 @@ function waNum(p){let d=(p||'').replace(/\D/g,'');if(!d)return'';if(d.startsWith
 function tel(p){return (p||'').replace(/\s/g,'');}
 
 async function boot(){
-  S=HZ.session(); if(!S){ location.href='/login?next=/my-day'; return; }
+  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
   try{ const p=(await HZ.sbAuth('/profiles?select=role,full_name&id=eq.'+S.uid,S.token))[0]; ISBROKER=p&&p.role==='broker'; window._nm=(p&&p.full_name)||''; }catch(e){}
   if(!ISBROKER){ document.getElementById('app').innerHTML=`<div class="notbroker"><h2>${ar()?'يومي':'My Day'}</h2><p style="color:var(--muted);margin:12px 0 18px">${ar()?'مساحة عمل البروكر. فعّل حساب بروكر.':'Broker workspace. Become a broker.'}</p><a class="btn btn-navy" href="/account">${ar()?'ابقى بروكر':'Become a broker'}</a></div>`; return; }
   await load();

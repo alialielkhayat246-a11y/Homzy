@@ -90,6 +90,15 @@ def clients_page():
     return FileResponse(config.FRONTEND_DIR / "clients.html")
 
 
+@app.get("/crm")
+def crm_page():
+    """CRM workspace entry (HOMZY OS). Serves the My Day overview; the workspace
+    sub-navigation (Overview / Clients / Deals / Performance) links to the
+    existing /my-day, /clients, /deals, /insights routes so bookmarks keep
+    working while the broker gets one coherent 'CRM' home."""
+    return FileResponse(config.FRONTEND_DIR / "my-day.html")
+
+
 @app.get("/my-day")
 def my_day_page():
     """Broker 'My Day' workspace (HOMZY OS Phase 3): urgent/today/upcoming —
