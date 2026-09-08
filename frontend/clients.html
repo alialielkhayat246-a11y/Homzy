@@ -127,15 +127,11 @@
   <div class="sub" style="margin-top:14px">عايز حساب بروكر؟ <a href="/leads?register=1" style="color:var(--teal-d);font-weight:800">سجّل من هنا</a></div>
 </div>
 
+<!-- shared navbar + CRM sub-nav (same as the rest of the workspace) -->
+<div id="hz-header"></div>
+
 <!-- app -->
 <div id="app" style="display:none">
-  <div class="lx-top">
-    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>عملائي</b></span>
-    <span class="sp"></span>
-    <a href="/my-listings">وحداتي</a>
-    <a href="/leads">سوق الليدز</a>
-    <button onclick="signOut()">خروج</button>
-  </div>
   <div class="wrap">
     <div class="stats" id="stats"></div>
     <div class="bar">
@@ -264,7 +260,7 @@ $('authForm').addEventListener('submit', async e=>{
   const phone=normPhone($('phone').value), password=$('password').value;
   if(phone.length<11){ $('gMsg').textContent='رقم موبايل غير صحيح.'; $('gMsg').className='msg err'; return; }
   $('authBtn').disabled=true;
-  try{ const {error}=await sb.auth.signInWithPassword({ email:phoneEmail($('phone').value), password }); if(error) throw error; boot(); }
+  try{ const {error}=await sb.auth.signInWithPassword({ email:phoneEmail($('phone').value), password }); if(error) throw error; location.reload(); /* reload so the shared navbar re-inits as broker */ }
   catch(err){ $('gMsg').textContent=/Invalid login|credentials/i.test(err.message)?'الرقم أو كلمة المرور غلط.':err.message; $('gMsg').className='msg err'; }
   finally{ $('authBtn').disabled=false; }
 });

@@ -105,7 +105,7 @@ function renderKpis(){
   const comm=LEDGER.reduce((s,l)=>s+Number(l.commission_amount||0),0); // append-only incl. adjustments
   $('kpis').innerHTML=`
     <div class="kpi"><div class="n">${open.length}</div><div class="l">صفقات مفتوحة</div></div>
-    <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة خط الأنابيب</div></div>
+    <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة الصفقات الجارية</div></div>
     <div class="kpi win"><div class="n">${won.length}</div><div class="l">صفقات مكسوبة</div></div>
     <div class="kpi comm"><div class="n">${money(comm)}</div><div class="l">إجمالي العمولات</div></div>`;
 }
