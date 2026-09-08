@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Homzy — تسجيل الدخول</title>
 <meta name="description" content="سجّل دخولك إلى Homzy لتصفّح المشاريع والمناطق والتحدث مع المستشار العقاري." />
 <meta name="robots" content="noindex, follow" />
@@ -15,74 +15,174 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/homzy.css?v=2">
 <style>
-  .authwrap{min-height:calc(100vh - 60px); display:flex; align-items:center; justify-content:center; padding:32px 18px;}
-  .authcard{background:var(--card,#fff); border:1px solid var(--line,#E6DDCF); border-radius:22px; box-shadow:var(--shadow); width:100%; max-width:420px; padding:30px 26px;}
-  .authcard .brand{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:6px;}
-  .authcard .brand img{width:40px; height:40px;}
-  .authcard .brand b{font-family:var(--ff-h,'Poppins'); font-size:22px; color:var(--navy,#0B1D36);}
-  .authcard h1{text-align:center; font-size:21px; color:var(--navy,#0B1D36); margin:10px 0 4px;}
-  .authcard .sub{text-align:center; color:var(--muted,#66717F); font-size:14px; margin-bottom:20px; line-height:1.6;}
-  .authcard .fld{display:none; flex-direction:column; margin-bottom:12px;}
-  .authcard .fld.on{display:flex;}
-  .authcard label{font-size:13px; font-weight:700; color:var(--navy,#0B1D36); margin-bottom:6px;}
-  .authcard input{font-family:var(--ff,'Cairo'); font-size:15px; padding:12px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; background:#fff; color:var(--navy,#0B1D36); outline:none;}
-  .authcard input:focus{border-color:var(--teal,#0B5563);}
-  .authcard .btn{width:100%; margin-top:6px; font-size:16px; padding:13px;}
-  .authcard .msg{margin-top:12px; font-size:13.5px; font-weight:700; text-align:center; line-height:1.6; min-height:18px;}
-  .authcard .msg.err{color:#B42318;} .authcard .msg.ok{color:#1E8E5A;}
-  .authcard .switch{text-align:center; margin-top:16px; font-size:14px; color:var(--muted,#66717F);}
-  .authcard .switch a{color:var(--teal-d,#0B5563); font-weight:800; cursor:pointer; text-decoration:none;}
-  .authcard .back{text-align:center; margin-top:18px;}
-  .authcard .back a{color:var(--muted,#66717F); font-size:13px; text-decoration:none;}
-  .brokerhint{margin-top:14px; padding:11px 13px; background:var(--teal-l,#E7F0F0); border:1px solid var(--line,#E6DDCF); border-radius:12px; font-size:12.5px; color:var(--teal-d,#0B5563); text-align:center; line-height:1.6;}
-  .gbtn{width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:#fff; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; padding:13px; font-family:var(--ff,'Cairo'); font-weight:800; font-size:15.5px; color:var(--navy,#0B1D36); cursor:pointer;}
-  .gbtn:hover{border-color:var(--navy,#0B1D36); background:#fbfbfb;}
-  .gbtn img{width:20px; height:20px;}
-  .divider{display:flex; align-items:center; gap:12px; color:var(--muted,#66717F); font-size:12.5px; margin:18px 0 14px;}
+  /* ===== Auth page — mobile-first, premium, RTL ===== */
+  body{min-height:100svh; background:var(--cream,#F7F2EE);}
+  .authwrap{position:relative; min-height:100svh; display:flex; align-items:center; justify-content:center;
+    padding:24px 16px calc(24px + env(safe-area-inset-bottom)); overflow:hidden;}
+  /* faint architectural backdrop (desktop only) — inspired by the Homzy house mark */
+  .authbg{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:0; display:none;}
+  .authbg svg{position:absolute; opacity:.05;}
+  .authbg .s1{inset-inline-end:-80px; top:-40px; width:420px; color:var(--navy);}
+  .authbg .s2{inset-inline-start:-120px; bottom:-90px; width:520px; color:var(--teal);}
+
+  .authcard{position:relative; z-index:1; background:#fff; border:1px solid var(--line,#E6DDCF);
+    border-radius:20px; box-shadow:0 18px 50px -30px rgba(11,29,54,.28); width:100%; max-width:400px;
+    padding:26px 22px; }
+  .brand{display:flex; align-items:center; gap:8px; justify-content:center;}
+  .brand img{width:34px; height:34px;}
+  .brand b{font-family:var(--fd,'Poppins'); font-size:19px; color:var(--navy,#0B1D36);} .brand b span{color:var(--teal,#0B5563);}
+  h1{text-align:center; font-size:20px; color:var(--navy,#0B1D36); margin:14px 0 4px; font-weight:800;}
+  .sub{text-align:center; color:var(--muted,#66717F); font-size:13.5px; margin:0 0 18px;}
+
+  /* Google — full width, white, secondary look */
+  .gbtn{width:100%; display:flex; align-items:center; justify-content:center; gap:10px; min-height:48px;
+    background:#fff; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; padding:12px;
+    font-family:var(--ff,'Cairo'); font-weight:700; font-size:15px; color:var(--navy,#0B1D36); cursor:pointer;
+    transition:border-color .18s, background .18s, box-shadow .18s;}
+  .gbtn:hover{border-color:#c9bfae; background:#fcfbfa;}
+  .gbtn:active{background:#f5f2ee; transform:translateY(.5px);}
+  .gbtn img{width:19px; height:19px; flex:none;}
+
+  .divider{display:flex; align-items:center; gap:12px; color:var(--muted,#66717F); font-size:12.5px; margin:16px 0 14px;}
   .divider::before,.divider::after{content:""; flex:1; height:1px; background:var(--line,#E6DDCF);}
-  .pwtoggle{text-align:center; margin-top:4px;}
-  .pwtoggle a{color:var(--muted,#66717F); font-size:13px; cursor:pointer; text-decoration:underline;}
+
+  .fld{display:none; flex-direction:column; margin-bottom:12px;}
+  .fld.on{display:flex;}
+  label{font-size:13px; font-weight:700; color:var(--navy,#0B1D36); margin-bottom:6px;}
+  /* 16px inputs prevent iOS focus-zoom; 48px min height = comfy touch target */
+  input{font-family:var(--ff,'Cairo'); font-size:16px; padding:13px 14px; border:1.5px solid var(--line-2,#D8CFC0);
+    border-radius:12px; background:#fff; color:var(--navy,#0B1D36); outline:none; width:100%;
+    transition:border-color .18s, box-shadow .18s;}
+  input:focus{border-color:var(--teal,#0B5563); box-shadow:0 0 0 3px rgba(11,85,99,.12);}
+  input::placeholder{color:#a9a196;}
+
+  /* phone with Egypt country code (LTR group so +20 reads naturally) */
+  .phone-wrap{display:flex; align-items:stretch; direction:ltr; border:1.5px solid var(--line-2,#D8CFC0);
+    border-radius:12px; overflow:hidden; background:#fff; transition:border-color .18s, box-shadow .18s;}
+  .phone-wrap:focus-within{border-color:var(--teal,#0B5563); box-shadow:0 0 0 3px rgba(11,85,99,.12);}
+  .phone-wrap .cc{display:flex; align-items:center; gap:5px; padding:0 12px; background:#faf8f5;
+    border-inline-end:1.5px solid var(--line,#E6DDCF); color:var(--navy,#0B1D36); font-weight:700; font-size:15px; white-space:nowrap;}
+  .phone-wrap input{border:none; border-radius:0; box-shadow:none; flex:1; text-align:left; letter-spacing:.5px;}
+  .phone-wrap input:focus{box-shadow:none;}
+
+  /* password with eye toggle */
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-inline-end:46px;}
+  .eye{position:absolute; inset-inline-end:6px; top:50%; transform:translateY(-50%); width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center; border:none; background:none; cursor:pointer;
+    color:var(--muted,#66717F); border-radius:9px;}
+  .eye:hover{color:var(--navy,#0B1D36); background:var(--cream,#F7F2EE);} .eye svg{width:20px; height:20px;}
+
+  .forgot{text-align:end; margin:-4px 0 12px;}
+  .forgot a{color:var(--muted,#66717F); font-size:12.5px; cursor:pointer; text-decoration:none;}
+  .forgot a:hover{color:var(--teal-d,#08414C); text-decoration:underline;}
+
+  /* primary CTA — navy filled, dominant */
+  .cta{width:100%; min-height:50px; display:flex; align-items:center; justify-content:center; gap:9px;
+    background:var(--navy,#0B1D36); color:#fff; border:1.5px solid var(--navy,#0B1D36); border-radius:12px;
+    font-family:var(--ff,'Cairo'); font-weight:800; font-size:16px; cursor:pointer;
+    transition:background .18s, transform .06s, box-shadow .18s;}
+  .cta:hover{background:var(--navy-2,#122744);}
+  .cta:active{transform:translateY(1px);}
+  .cta:disabled{opacity:.7; cursor:default;}
+  .cta .spin{width:18px; height:18px; border:2.5px solid rgba(255,255,255,.35); border-top-color:#fff;
+    border-radius:50%; animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .msg{margin-top:12px; font-size:13px; font-weight:700; text-align:center; line-height:1.6; min-height:16px;}
+  .msg.err{color:#B42318;} .msg.ok{color:#137A3E;}
+
+  .switch{text-align:center; margin-top:16px; font-size:14px; color:var(--muted,#66717F);}
+  .switch a{color:var(--teal-d,#08414C); font-weight:800; cursor:pointer; text-decoration:none;}
+  .switch a:hover{text-decoration:underline;}
+
+  .legal{text-align:center; margin-top:18px; font-size:11.5px; color:#9a9186; line-height:1.7;}
+  .legal .lk{color:var(--muted,#66717F); font-weight:700; text-decoration:underline; cursor:default;}
+
+  .back{text-align:center; margin-top:14px;}
+  .back a{color:#9a9186; font-size:12.5px; text-decoration:none;}
+  .back a:hover{color:var(--muted,#66717F);}
+
+  @media(min-width:768px){
+    .authbg{display:block;}
+    .authcard{padding:32px 30px; border-radius:22px;}
+    h1{font-size:22px;}
+  }
+  @media(max-width:360px){ .authcard{padding:22px 16px;} .phone-wrap .cc{padding:0 9px; font-size:14px;} }
 </style>
 </head>
 <body data-mode="client">
 <div class="authwrap">
+  <!-- premium branded backdrop (desktop) -->
+  <div class="authbg" aria-hidden="true">
+    <svg class="s1" viewBox="0 0 64 64" fill="none"><path d="M6 60V30L32 8l26 22v30" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="24" y="38" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2.4"/></svg>
+    <svg class="s2" viewBox="0 0 64 64" fill="none"><path d="M6 60V30L32 8l26 22v30" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><rect x="24" y="38" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2.4"/></svg>
+  </div>
+
   <div class="authcard">
-    <div class="brand"><img src="/assets/icon.svg" alt="Homzy" /><b>Hom<span style="color:var(--teal,#0B5563)">zy</span></b></div>
+    <div class="brand"><img src="/assets/icon.svg" alt="Homzy" /><b>Hom<span>zy</span></b></div>
 
-    <!-- ===== Auth view (Google + optional phone/password) ===== -->
+    <!-- ===== Auth view (Google + phone/password) ===== -->
     <div id="authView">
-      <h1 id="title">أهلاً بيك في Homzy</h1>
-      <p class="sub" id="sub">سجّل دخولك عشان تتصفّح المشاريع والمناطق وتتكلم مع المستشار العقاري.</p>
+      <h1 id="title">أهلاً بيك في Homzy 👋</h1>
+      <p class="sub" id="sub">كل عقاراتك في مكان واحد</p>
 
-      <button class="gbtn" id="googleBtn" onclick="googleSignIn()">
+      <button class="gbtn" id="googleBtn" type="button" onclick="googleSignIn()">
         <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDJWMjBIMjR2OGgxMS4zMDNjLTEuNjQ5LDQuNjU3LTYuMDgsOC05LjMwMyw4Yy02LjYyNywwLTEyLTUuMzczLTEyLTEyYzAtNi42MjcsNS4zNzMtMTIsMTItMTJjMy4wNTksMCw1Ljg0MiwxLjE1NCw3Ljk2MSwzLjAzOWw1LjY1Ny01LjY1N0MzNC4wNDYsNi4wNTMsMjkuMjY4LDQsMjQsNEMxMi45NTUsNCw0LDEyLjk1NSw0LDI0YzAsMTEuMDQ1LDguOTU1LDIwLDIwLDIwYzExLjA0NSwwLDIwLTguOTU1LDIwLTIwQzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy0zLjIsMC01LjkxNC0yLjAzMy02Ljk1LTQuODdsLTYuNTIyLDUuMDI1QzEzLjA5OSwzOS4zLDE4LjE2Miw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUsNDMuNjExLDIwLjA4M3oiLz48L3N2Zz4=" alt="" />
-        الدخول / التسجيل بجوجل
+        المتابعة باستخدام Google
       </button>
 
       <div class="divider">أو برقم الموبايل</div>
 
-      <form id="authForm" autocomplete="on">
+      <form id="authForm" autocomplete="on" novalidate>
         <div class="fld" id="fldName"><label for="name">الاسم</label><input id="name" type="text" autocomplete="name" placeholder="اسمك" /></div>
-        <div class="fld on"><label for="phone">رقم الموبايل</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" /></div>
-        <div class="fld on"><label for="password">كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="٦ أحرف على الأقل" /></div>
-        <button class="btn btn-ghost" id="authBtn" type="submit">دخول برقم الموبايل</button>
-        <div class="msg" id="msg"></div>
+
+        <div class="fld on">
+          <label for="phone">رقم الموبايل</label>
+          <div class="phone-wrap">
+            <span class="cc" aria-hidden="true">🇪🇬 +20</span>
+            <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10XXXXXXXX" aria-label="رقم الموبايل" />
+          </div>
+        </div>
+
+        <div class="fld on">
+          <label for="password">كلمة المرور</label>
+          <div class="pw-wrap">
+            <input id="password" type="password" autocomplete="current-password" placeholder="أدخل كلمة المرور" />
+            <button type="button" class="eye" id="eyeBtn" aria-label="إظهار كلمة المرور" aria-pressed="false" onclick="togglePw()">
+              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="forgot"><a id="forgotLink" role="button" tabindex="0">نسيت كلمة المرور؟</a></div>
+
+        <button class="cta" id="authBtn" type="submit"><span id="authBtnTxt">تسجيل الدخول</span></button>
+        <div class="msg" id="msg" role="alert" aria-live="polite"></div>
       </form>
-      <div class="switch"><span id="switchTxt">لسه معندكش حساب؟</span> <a id="switchLink">اعمل حساب برقم الموبايل</a></div>
-      <div class="brokerhint">بروكر عقاري؟ <a href="/leads?register=1" style="color:inherit;font-weight:800;text-decoration:underline">سجّل من هنا</a> عشان تعرض وحداتك وتشتري ليدز.</div>
+
+      <div class="switch"><span id="switchTxt">مستخدم جديد؟</span> <a id="switchLink" role="button" tabindex="0">إنشاء حساب</a></div>
+
+      <p class="legal">بالمتابعة، أنت توافق على <span class="lk">شروط الاستخدام</span> و<span class="lk">سياسة الخصوصية</span></p>
     </div>
 
     <!-- ===== Complete-profile view (after Google, phone required) ===== -->
     <div id="completeView" style="display:none">
       <h1>خطوة أخيرة 🎉</h1>
-      <p class="sub">اكتب اسمك ورقم موبايلك عشان نقدر نتواصل معاك ونبعتلك المشاريع المناسبة.</p>
-      <form id="completeForm">
+      <p class="sub">اكتب اسمك ورقم موبايلك عشان نبعتلك المشاريع المناسبة.</p>
+      <form id="completeForm" novalidate>
         <div class="fld on"><label for="cName">الاسم</label><input id="cName" type="text" autocomplete="name" placeholder="اسمك الكامل" /></div>
-        <div class="fld on"><label for="cPhone">رقم الموبايل</label><input id="cPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01xxxxxxxxx" /></div>
-        <button class="btn btn-teal" id="cBtn" type="submit">يلا نبدأ</button>
-        <div class="msg" id="cMsg"></div>
+        <div class="fld on">
+          <label for="cPhone">رقم الموبايل</label>
+          <div class="phone-wrap">
+            <span class="cc" aria-hidden="true">🇪🇬 +20</span>
+            <input id="cPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10XXXXXXXX" aria-label="رقم الموبايل" />
+          </div>
+        </div>
+        <button class="cta" id="cBtn" type="submit"><span id="cBtnTxt">يلا نبدأ</span></button>
+        <div class="msg" id="cMsg" role="alert" aria-live="polite"></div>
       </form>
-      <div class="switch"><a onclick="signOutReset()">تسجيل الخروج</a></div>
+      <div class="switch"><a onclick="signOutReset()" role="button" tabindex="0">تسجيل الخروج</a></div>
     </div>
 
     <div class="back"><a href="/">← رجوع للرئيسية</a></div>
@@ -100,6 +200,8 @@ function nextPath(){
   const n=new URLSearchParams(location.search).get('next')||'';
   return (n.startsWith('/') && !n.startsWith('//')) ? n : '/app';
 }
+// Normalize any Egyptian input (01x…, +20…, 10x…) to the 20XXXXXXXXXX form the
+// backend already expects — so the visual "+20" prefix never breaks auth.
 function normPhone(v){
   let d=(v||'').replace(/[^\d]/g,'');
   if(d.startsWith('00')) d=d.slice(2);
@@ -116,43 +218,73 @@ async function api(path, opts){
   const t=await r.text(); return t?JSON.parse(t):null;
 }
 
-// ---- routing after any successful auth ----
+// spinner + text for any CTA; guards against double submission
+function setLoading(btn, txtEl, on, loadingText, idleText){
+  btn.disabled = on;
+  txtEl.innerHTML = on ? `<span class="spin" aria-hidden="true"></span>${loadingText}` : idleText;
+}
+
+// ---- routing after any successful auth (also handles OAuth redirect back) ----
 async function afterAuth(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ return; }
   let prof=null;
-  try{ prof=(await api('/profiles?select=phone,full_name,onboarded&id=eq.'+session.user.id))[0]; }catch(e){}
+  try{ prof=(await api('/profiles?select=phone,full_name,onboarded&id=eq.'+session.user.id))[0]; }catch(e){ console.warn('profile fetch failed', e); }
   const hasPhone = prof && prof.phone && (''+prof.phone).replace(/\D/g,'').length>=10;
   if(hasPhone){
     if(prof.onboarded){ location.replace(nextPath()); }
     else { location.replace('/welcome?next='+encodeURIComponent(nextPath())); }
     return;
   }
-  // needs profile completion
+  // Google user with no phone yet → completion step
   const meta=session.user.user_metadata||{};
   $('cName').value = (prof&&prof.full_name) || meta.full_name || meta.name || '';
   $('authView').style.display='none';
   $('completeView').style.display='block';
 }
-// run on load (handles the OAuth redirect back too)
 afterAuth();
 
 // ---- Google ----
 window.googleSignIn=async ()=>{
-  const redirectTo = location.origin + '/login?next=' + encodeURIComponent(nextPath());
-  const {error}=await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo } });
-  if(error){ cmsg('تعذّر الدخول بجوجل: '+error.message); }
+  const g=$('googleBtn'); g.disabled=true;
+  try{
+    const redirectTo = location.origin + '/login?next=' + encodeURIComponent(nextPath());
+    const {error}=await sb.auth.signInWithOAuth({ provider:'google', options:{ redirectTo } });
+    if(error) throw error;
+  }catch(err){ console.error('google signin', err); msg('تعذّر الدخول بجوجل، جرّب تاني.'); g.disabled=false; }
 };
 
-// ---- complete profile ----
+// ---- password show / hide ----
+window.togglePw=()=>{
+  const inp=$('password'), b=$('eyeBtn'), on=inp.type==='password';
+  inp.type = on?'text':'password';
+  b.setAttribute('aria-pressed', on?'true':'false');
+  b.setAttribute('aria-label', on?'إخفاء كلمة المرور':'إظهار كلمة المرور');
+  $('eyeIcon').innerHTML = on
+    ? '<path d="M3 3l18 18M10.6 10.7a3 3 0 0 0 4.2 4.2M9.9 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a15 15 0 0 1-3.3 3.9M6.1 7.1A15 15 0 0 0 2.5 12S6 18.5 12 18.5c1 0 1.9-.1 2.7-.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>';
+};
+
+// ---- forgot password ----
+// NOTE(TODO): phone accounts use synthetic p<phone>@homzy.app emails, so a
+// standard email reset link can't be delivered. A real reset needs a WhatsApp/SMS
+// OTP reset flow (the WhatsApp OTP hook exists for login OTP but isn't wired to
+// password reset yet). Until then we guide the user honestly — no fake backend.
+$('forgotLink').addEventListener('click', ()=>{
+  msg('لإعادة تعيين كلمة المرور تواصل معنا على hello@homzy-ai.com، أو ادخل باستخدام Google.', false);
+});
+$('forgotLink').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('forgotLink').click(); }});
+
+// ---- complete profile (Google users) ----
 function cmsg(t,ok){ const e=$('cMsg'); e.textContent=t; e.className='msg '+(ok?'ok':(t?'err':'')); }
 $('completeForm').addEventListener('submit', async(e)=>{
   e.preventDefault();
+  if($('cBtn').disabled) return;
   const name=$('cName').value.trim();
   const phoneRaw=$('cPhone').value.trim();
-  if(name.length<2){ cmsg('اكتب اسمك.'); return; }
-  if(normPhone(phoneRaw).length<11){ cmsg('اكتب رقم موبايل صحيح.'); return; }
-  $('cBtn').disabled=true;
+  if(name.length<2){ cmsg('اكتب اسمك.'); $('cName').focus(); return; }
+  if(normPhone(phoneRaw).length<11){ cmsg('تأكد من إدخال رقم موبايل مصري صحيح.'); $('cPhone').focus(); return; }
+  setLoading($('cBtn'), $('cBtnTxt'), true, 'جاري الحفظ...', 'يلا نبدأ');
   try{
     const {data:{session}}=await sb.auth.getSession();
     await api('/profiles?on_conflict=id', {
@@ -161,37 +293,44 @@ $('completeForm').addEventListener('submit', async(e)=>{
       body:JSON.stringify({ id:session.user.id, full_name:name, phone:normPhone(phoneRaw) })
     });
     location.replace('/welcome?next='+encodeURIComponent(nextPath()));
-  }catch(err){ cmsg('حصل خطأ، جرّب تاني.'); $('cBtn').disabled=false; }
+  }catch(err){ console.error('complete profile', err); cmsg('حصل خطأ، جرّب تاني.'); setLoading($('cBtn'), $('cBtnTxt'), false, '', 'يلا نبدأ'); }
 });
 window.signOutReset=async ()=>{ await sb.auth.signOut(); location.reload(); };
 
-// ---- phone + password (secondary) ----
+// ---- phone + password (login / register) ----
 let mode='login';
 function setMode(m){
   mode=m; const reg=m==='register';
   $('fldName').classList.toggle('on', reg);
-  $('authBtn').textContent = reg?'اعمل حساب برقم الموبايل':'دخول برقم الموبايل';
+  $('authBtnTxt').textContent = reg?'إنشاء حساب':'تسجيل الدخول';
   $('password').autocomplete = reg?'new-password':'current-password';
-  $('switchTxt').textContent = reg?'عندك حساب؟':'لسه معندكش حساب؟';
-  $('switchLink').textContent = reg?'سجّل دخول':'اعمل حساب برقم الموبايل';
+  $('password').placeholder = reg?'اختر كلمة مرور (٦ أحرف على الأقل)':'أدخل كلمة المرور';
+  $('switchTxt').textContent = reg?'عندك حساب؟':'مستخدم جديد؟';
+  $('switchLink').textContent = reg?'سجّل دخول':'إنشاء حساب';
+  $('forgotLink').parentElement.style.display = reg?'none':'block';
   msg('');
 }
 $('switchLink').onclick=()=>setMode(mode==='login'?'register':'login');
+$('switchLink').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('switchLink').click(); }});
+
 function msg(t,ok){ const el=$('msg'); el.textContent=t; el.className='msg '+(ok?'ok':(t?'err':'')); }
+// Map raw Supabase errors → clear Arabic (never surface technical text)
 function authErr(m){
-  if(/Invalid login|credentials/i.test(m||'')) return 'الرقم أو كلمة المرور غلط.';
+  if(/Invalid login|credentials/i.test(m||'')) return 'رقم الموبايل أو كلمة المرور غير صحيحة.';
   if(/already registered|already exists|User already/i.test(m||'')) return 'الرقم ده مسجّل قبل كده — سجّل دخول.';
   if(/at least 6|password/i.test(m||'')) return 'كلمة المرور لازم ٦ أحرف على الأقل.';
-  return m||'حصل خطأ، جرّب تاني.';
+  if(/network|fetch|Failed to/i.test(m||'')) return 'مشكلة في الاتصال — تأكد من النت وجرّب تاني.';
+  return 'حصل خطأ، جرّب تاني.';
 }
 $('authForm').addEventListener('submit', async(e)=>{
   e.preventDefault();
+  if($('authBtn').disabled) return;                 // prevent double submission
   const phone=normPhone($('phone').value), password=$('password').value;
-  if(phone.length<11){ msg('رقم موبايل غير صحيح.'); return; }
-  if(password.length<6){ msg('كلمة المرور لازم ٦ أحرف على الأقل.'); return; }
-  if(mode==='register' && $('name').value.trim().length<2){ msg('اكتب اسمك.'); return; }
+  if(phone.length<11){ msg('تأكد من إدخال رقم موبايل مصري صحيح.'); $('phone').focus(); return; }
+  if(password.length<6){ msg('كلمة المرور لازم ٦ أحرف على الأقل.'); $('password').focus(); return; }
+  if(mode==='register' && $('name').value.trim().length<2){ msg('اكتب اسمك.'); $('name').focus(); return; }
   const email=phoneEmail($('phone').value);
-  $('authBtn').disabled=true;
+  setLoading($('authBtn'), $('authBtnTxt'), true, mode==='register'?'جاري إنشاء الحساب...':'جاري تسجيل الدخول...', mode==='register'?'إنشاء حساب':'تسجيل الدخول');
   try{
     if(mode==='register'){
       const {error}=await sb.auth.signUp({ email, password, options:{ data:{ role:'client', phone, name:$('name').value.trim() } } });
@@ -201,9 +340,8 @@ $('authForm').addEventListener('submit', async(e)=>{
       if(error) throw error;
     }
     await afterAuth();
-    if(!(await sb.auth.getSession()).data.session){ msg('تم إنشاء الحساب — سجّل دخول.', true); setMode('login'); }
-  }catch(err){ msg(authErr(err.message)); }
-  finally{ $('authBtn').disabled=false; }
+    if(!(await sb.auth.getSession()).data.session){ msg('تم إنشاء الحساب — سجّل دخول.', true); setMode('login'); setLoading($('authBtn'), $('authBtnTxt'), false, '', 'تسجيل الدخول'); }
+  }catch(err){ console.error('auth', err); msg(authErr(err.message)); setLoading($('authBtn'), $('authBtnTxt'), false, '', mode==='register'?'إنشاء حساب':'تسجيل الدخول'); }
 });
 </script>
 </body>
