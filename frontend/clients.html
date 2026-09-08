@@ -92,7 +92,10 @@
   .mu-item .im{width:64px;height:64px;border-radius:10px;background:#e9e2da center/cover no-repeat;flex:none;}
   .mu-item .info{flex:1;} .mu-item .info .t{font-weight:800;color:var(--navy);font-size:14px;} .mu-item .info .m{color:var(--muted);font-size:12px;margin-top:2px;}
   .mu-item .info .pr{color:var(--teal-d);font-weight:800;font-size:13.5px;margin-top:3px;}
-  .mu-item .pdf{font-family:"Cairo";font-weight:800;font-size:12px;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:8px 11px;cursor:pointer;white-space:nowrap;}
+  .mu-item .pdf{font-family:"Cairo";font-weight:800;font-size:12px;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:8px 11px;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;text-align:center;}
+  .mu-sec{font-weight:800;color:var(--navy);font-size:13px;margin:4px 2px 2px;padding-top:4px;}
+  .mpct{width:56px;height:56px;border-radius:12px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;background:color-mix(in srgb,var(--c) 12%,#fff);color:var(--c);border:1.5px solid var(--c);}
+  .mpct b{font-size:16px;line-height:1;} .mpct span{font-size:9.5px;margin-top:2px;}
   @media(max-width:560px){ .row2{grid-template-columns:1fr;} }
 </style>
 </head>
@@ -366,15 +369,40 @@ window.delClient=async (id)=>{ if(!confirm('تمسح العميل ده؟')) retu
 /* matching units for a client → offer */
 window.matchUnits=async (id)=>{
   const c=CLIENTS.find(x=>x.id===id); if(!c) return;
+  window.__muLead=id;
   $('muTitle').textContent='وحدات مطابقة لـ '+(c.name||'');
   $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">…بدوّر</div>';
   $('muOv').classList.add('open');
-  try{
-    const args={ p_areas:c.area?[c.area]:null, p_max:c.budget||null, p_beds:(c.bedrooms!=null?c.bedrooms:null), p_sort:'recent', p_limit:6 };
-    const rows=(await HZ.rpc('search_projects', args))||[];
-    if(!rows.length){ $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">مفيش وحدات مطابقة بالضبط — جرّب توسّع المعايير.</div>'; return; }
-    window.__muClient=c.name||'';
-    $('muBody').innerHTML=rows.map((p,i)=>{
+  window.__muClient=c.name||'';
+  // Fetch both in parallel: marketplace listings (with match %) + primary projects.
+  const [listings, projects] = await Promise.all([
+    HZ.sbAuth('/rpc/crm_match_properties', TOKEN, 'POST', {p_lead:id, p_limit:8}).catch(()=>[]),
+    HZ.rpc('search_projects', { p_areas:c.area?[c.area]:null, p_max:c.budget||null, p_beds:(c.bedrooms!=null?c.bedrooms:null), p_sort:'recent', p_limit:6 }).catch(()=>[])
+  ]);
+  let html='';
+  // --- marketplace listings ranked by AI match % ---
+  if((listings||[]).length){
+    html += '<div class="mu-sec">🎯 وحدات من السوق — بترتيب نسبة التطابق</div>';
+    html += listings.map((l,i)=>{
+      window['__ml'+i]=l;
+      const pct=l.match_pct!=null?l.match_pct:0;
+      const col=pct>=80?'#137a3e':pct>=55?'#B45309':'#8894a6';
+      const wa=(''+(c.phone||'')).replace(/[^0-9]/g,'');
+      const txt=encodeURIComponent(`مرحبًا ${c.name||''}، لقيت لك ${l.title||'وحدة'}${l.area?(' في '+l.area):''}${l.price?(' بسعر '+money(l.price)):''} — تحب أبعتلك التفاصيل؟`);
+      return `<div class="mu-item">
+        <div class="mpct" style="--c:${col}"><b>${pct}%</b><span>تطابق</span></div>
+        <div class="info"><div class="t">${esc(l.title||'وحدة')}</div>
+          <div class="m">${esc(l.area||'')}${l.type?(' · '+esc(l.type)):''}${l.bedrooms!=null?(' · '+l.bedrooms+' غرف'):''}${l.size_sqm?(' · '+l.size_sqm+'م'):''}</div>
+          <div class="pr">${l.price!=null?money(l.price):''}</div></div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+        ${wa?`<a class="pdf" style="background:#25D366;border-color:#25D366" target="_blank" rel="noopener" href="https://wa.me/${wa.startsWith('2')?wa:('2'+wa.replace(/^0/,''))}?text=${txt}" onclick="sendMatch(${i})">📤 واتساب</a>`:''}
+        <button class="pdf" onclick="sendMatch(${i})">✔ سجّل الإرسال</button></div></div>`;
+    }).join('');
+  }
+  // --- primary-market projects → PDF offer (existing) ---
+  if((projects||[]).length){
+    html += '<div class="mu-sec">🏗️ مشاريع أولية — عرض PDF</div>';
+    html += projects.map((p,i)=>{
       const nm=p.name_ar||p.name||'مشروع';
       const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
       const pr=p.price_from_min!=null?('يبدأ من '+money(p.price_from_min)):'';
@@ -383,7 +411,15 @@ window.matchUnits=async (id)=>{
         <div class="info"><div class="t">${esc(nm)}</div><div class="m">${esc(p.area||'')}${p.developer_name?' · '+esc(p.developer_name):''}</div><div class="pr">${pr}</div></div>
         <button class="pdf" onclick="offerFor(${i})">📄 عرض PDF</button></div>`;
     }).join('');
-  }catch(e){ $('muBody').innerHTML='<div style="text-align:center;color:#B42318;padding:20px">حصل خطأ.</div>'; }
+  }
+  $('muBody').innerHTML = html || '<div style="text-align:center;color:#66717F;padding:20px">مفيش وحدات مطابقة بالضبط — جرّب توسّع معايير العميل (منطقة/ميزانية/غرف).</div>';
+};
+// record that a matched listing was sent to the lead → logs interaction + rescoring
+window.sendMatch=async (i)=>{
+  const l=window['__ml'+i], id=window.__muLead; if(!l||!id) return;
+  try{ const r=await HZ.sbAuth('/rpc/crm_log_interaction', TOKEN, 'POST', {p_lead:id, p_listing:l.listing_id, p_action:'sent', p_title:l.title||null, p_match:(l.match_pct!=null?l.match_pct:null), p_meta:{}});
+    const c=CLIENTS.find(x=>x.id===id); if(c&&r&&r.temperature){ c.temperature=r.temperature; c.lead_score=r.score; renderBoard(); renderStats(); }
+  }catch(e){}
 };
 // map a search_projects row to the chat-rec shape HZ.makeOffer expects, then generate the PDF
 window.offerFor=(i)=>{

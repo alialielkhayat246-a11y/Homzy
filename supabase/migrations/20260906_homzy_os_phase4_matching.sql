@@ -1,0 +1,33 @@
+-- ============================================================================
+-- HOMZY OS — Phase 4: Interaction graph + property matching % (applied 2026-09-06, verified)
+-- Non-destructive. Reuses the existing public.listings marketplace inventory.
+--
+--  * crm_property_interactions(lead_id, owner_id, listing_id -> listings(id),
+--    property_kind/ref/title, action[viewed|saved|shared|sent|requested|
+--    rejected], match_pct, meta, created_at). RLS = owner or admin. This is the
+--    lead<->property interaction graph that feeds scoring signals.
+--  * crm_settings.match_weights (jsonb) — config-driven, NOT hardcoded:
+--    {location:30, budget:30, type:15, bedrooms:15, size:10, purpose:10}.
+--  * crm_match_properties(lead, limit): SECURITY DEFINER, owner/admin-gated.
+--    Scores every AVAILABLE listing against the lead's stated requirements
+--    (area/budget[min..max]/type/bedrooms/size[area_min..max]/purpose).
+--    Weights are normalized by the *applicable* criteria only, so a lead who
+--    gave only budget+area is never penalised for unstated bedrooms. Returns
+--    listing + match_pct (0-100) + per-criterion 'matched' jsonb, ranked.
+--  * crm_log_interaction(lead, listing, action, title, match, meta):
+--    owner/admin-gated. Records the graph row AND maps the action to a scoring
+--    signal via crm_log_activity (sent/shared->property_sent,
+--    requested->property_requested, saved->saved, viewed->viewed), so sending a
+--    match warms the lead. Returns {ok,id,score,temperature}.
+--
+-- UI: frontend/clients.html "وحدات مطابقة" modal now shows a marketplace
+-- section ranked by match % (🎯) with WhatsApp send + "record" (logs the
+-- interaction, rescoring the lead) above the existing primary-projects PDF
+-- offers. Authed RPCs are called with the broker's JWT (HZ.sbAuth + TOKEN) so
+-- RLS/ownership apply.
+--
+-- Applied via the Supabase migration API step crm_phase4_matching. Verified:
+-- perfect unit -> 100%; over-budget/off-area 2BR -> 51%; wrong-everything villa
+-- -> 25% (bedrooms+purpose only); crm_log_interaction wrote 1 graph row + rescored.
+-- ============================================================================
+-- (Full statements are in the applied migration history; safe/idempotent.)
