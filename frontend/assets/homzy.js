@@ -97,6 +97,7 @@ const T = {
   pricing:{ar:'الباقات والأسعار',en:'Pricing'},
   settings:{ar:'الإعدادات',en:'Settings'},
   community:{ar:'مجتمع البروكرز',en:'Community'},
+  communityNav:{ar:'مجتمع',en:'Community'},
   myday:{ar:'يومي',en:'My Day'},
   deals:{ar:'الصفقات',en:'Deals'},
   insights:{ar:'أدائي',en:'Insights'},
@@ -130,7 +131,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/deals','deals'],['/insights','insights'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
+  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/deals','deals'],['/insights','insights'],['/community','communityNav'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;

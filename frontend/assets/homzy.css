@@ -45,9 +45,11 @@ header.hz-nav.scrolled{border-color:var(--line); background:rgba(247,242,238,.94
 .hz-logo .nm{font-size:21px; font-family:var(--fd); letter-spacing:-.5px;} .hz-logo .nm b{color:var(--teal);}
 .hz-links{display:flex; gap:24px; margin-inline-start:12px;}
 .hz-links a{font-weight:600; font-size:15px; opacity:.82; white-space:nowrap;}
-/* broker mode has more nav items — tighten so nothing overflows/hides */
-body.hz-broker .hz-links{gap:17px; margin-inline-start:8px;}
-body.hz-broker .hz-links a{font-size:14px;}
+/* broker mode has many nav items — tighten; on narrow desktops let the nav
+   scroll horizontally instead of colliding with the CTA (nothing gets hidden) */
+body.hz-broker .hz-links{gap:14px; margin-inline-start:6px; min-width:0; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
+body.hz-broker .hz-links::-webkit-scrollbar{display:none;}
+body.hz-broker .hz-links a{font-size:13.5px;}
 .hz-links a:hover,.hz-links a.active{opacity:1; color:var(--teal-d);}
 .hz-nav-cta{margin-inline-start:auto; display:flex; align-items:center; gap:10px;}
 /* Broker/client segmented toggle — shown ONLY for broker accounts (body.hz-broker) */
