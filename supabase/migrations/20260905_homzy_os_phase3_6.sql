@@ -1,0 +1,43 @@
+-- ============================================================================
+-- HOMZY OS — Phase 3 & 6: Tasks · Viewings · Deals · Commission (applied 2026-09-05, verified)
+-- Non-destructive extension of the broker CRM. All money rules are config-driven
+-- (crm_settings), NOT hardcoded. Commission ledger is append-only / immutable.
+--
+--  * crm_settings (kv): commission_rate 0.07, homzy_share_pct 1.0,
+--    broker_share_pct 0, agency_share_pct 0, contact_task_minutes 30,
+--    pipeline_stages[]. RLS: read all / admin write. -> business rules live here.
+--  * crm_tasks(lead_id, owner_id, kind, title, due_at, priority, status,
+--    meta, completed_at …). RLS = owner or admin.
+--  * crm_viewings(lead_id, owner_id, property_kind/ref/title, scheduled_at,
+--    location, status[scheduled/confirmed/completed/cancelled/no_show],
+--    feedback, notes). RLS = owner or admin.
+--  * crm_deals(lead_id, owner_id, customer_name, property_*, deal_type,
+--    value, commission_rate, commission_amount, status, lost_reason,
+--    expected/actual_close, company/agency/team_id). RLS = owner or admin.
+--  * crm_commission_ledger(deal_id, owner_id, gross_value, commission_rate,
+--    commission_amount, broker/agency/homzy_share, status[accrued/paid/
+--    adjustment], reference, note). IMMUTABLE: append-only; corrections are
+--    new 'adjustment' rows, never UPDATE/DELETE. RLS = owner/admin read.
+--  * crm_notifications(user_id, type, title, body, data, read_at). RLS = own.
+--
+--  Functions / triggers:
+--  * crm_notify(user,type,title,body,data) — SECURITY DEFINER insert.
+--  * trg_crm_new_lead (AFTER INSERT ON clients) -> crm_new_lead_task():
+--      auto 'call' task "تواصل مع العميل: <name>" due now()+contact_task_minutes
+--      (from crm_settings), priority high; crm_event 'lead.created';
+--      crm_notify 'lead_new'.  (Speed-to-lead.)
+--  * crm_add_task(lead,kind,title,due,priority) — owner/admin-gated.
+--  * crm_win_deal(deal) — owner/admin-gated, IDEMPOTENT (returns already:true
+--      if status='won'). rate = coalesce(deal.commission_rate, crm_settings
+--      commission_rate, 0.07); commission = round(value*rate,2); splits from
+--      homzy/broker/agency_share_pct. UPDATEs deal -> 'won'; INSERTs ONE
+--      immutable 'accrued' ledger row (ref 'DEAL-<id>'); crm_event 'deal.won';
+--      crm_notify 'deal_won'.
+--
+-- Applied via the Supabase migration API in steps crm_phase3_6_tables,
+-- crm_phase3_6_functions. This file is the consolidated source of truth.
+-- Verified: new lead -> auto contact task + event + notification; deal value
+-- 1,000,000 @ 0.07 -> commission 70,000 -> 1 ledger row (homzy_share 70,000);
+-- second win() -> already:true (no duplicate ledger).
+-- ============================================================================
+-- (Full statements are in the applied migration history; safe/idempotent.)

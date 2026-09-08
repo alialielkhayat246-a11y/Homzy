@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/my-day'));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — يومي</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .md{max-width:820px;margin:0 auto;padding:20px 16px 40px;}
+  .brief{background:linear-gradient(160deg,#0B1D36,#0B5563);color:#fff;border-radius:18px;padding:20px;margin-bottom:18px;}
+  .brief h1{font-size:22px;} .brief p{color:#d7e6ea;margin-top:8px;font-size:15px;line-height:1.8;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+  @media(max-width:640px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center;}
+  .kpi .n{font-size:24px;font-weight:900;} .kpi .l{color:var(--muted);font-size:12.5px;margin-top:3px;}
+  .kpi.hot .n{color:#B42318;} .kpi.over .n{color:#B45309;}
+  .sec{margin-bottom:22px;} .sec h2{font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;}
+  .item.urgent{border-inline-start:4px solid #B42318;} .item.today{border-inline-start:4px solid var(--teal);}
+  .item .t{font-weight:800;} .item .m{color:var(--muted);font-size:13px;margin-top:3px;}
+  .item .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .item .row a,.item .row button{font-size:13px;font-weight:700;padding:7px 12px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;text-decoration:none;color:var(--navy);}
+  .item .row .wa{background:var(--green);color:#fff;border-color:var(--green);}
+  .item .row .done{color:#137a3e;border-color:#bfe6cc;}
+  .temp{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:100px;}
+  .temp.very_hot{background:#FDE8E4;color:#B42318;} .temp.hot{background:#FFF0E0;color:#B45309;}
+  .empty{color:var(--muted);font-size:14px;padding:8px 2px;}
+  .notbroker{padding:60px 20px;text-align:center;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="md" id="app"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const ar=()=>HZ.lang==='ar';
+let S=null, ISBROKER=false;
+const today=()=>new Date().toISOString().slice(0,10);
+const now=()=>new Date().toISOString();
+function waNum(p){let d=(p||'').replace(/\D/g,'');if(!d)return'';if(d.startsWith('00'))d=d.slice(2);else if(d.startsWith('0'))d='2'+d;else if(!d.startsWith('2'))d='2'+d;return d;}
+function tel(p){return (p||'').replace(/\s/g,'');}
+
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next=/my-day'; return; }
+  try{ const p=(await HZ.sbAuth('/profiles?select=role,full_name&id=eq.'+S.uid,S.token))[0]; ISBROKER=p&&p.role==='broker'; window._nm=(p&&p.full_name)||''; }catch(e){}
+  if(!ISBROKER){ document.getElementById('app').innerHTML=`<div class="notbroker"><h2>${ar()?'يومي':'My Day'}</h2><p style="color:var(--muted);margin:12px 0 18px">${ar()?'مساحة عمل البروكر. فعّل حساب بروكر.':'Broker workspace. Become a broker.'}</p><a class="btn btn-navy" href="/account">${ar()?'ابقى بروكر':'Become a broker'}</a></div>`; return; }
+  await load();
+}
+async function load(){
+  const uid=S.uid;
+  const [leads,tasks,views] = await Promise.all([
+    HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name,phone,temperature,lead_score,stage,next_followup,area,budget&order=lead_score.desc',S.token).catch(()=>[]),
+    HZ.sbAuth('/crm_tasks?owner_id=eq.'+uid+'&status=eq.open&select=*&order=due_at.asc',S.token).catch(()=>[]),
+    HZ.sbAuth('/crm_viewings?owner_id=eq.'+uid+'&status=in.(scheduled,confirmed)&select=*&order=scheduled_at.asc',S.token).catch(()=>[])
+  ]);
+  const active=l=>l.stage!=='closed'&&l.stage!=='lost'&&l.stage!=='won';
+  const overdueF=(leads||[]).filter(l=>l.next_followup&&l.next_followup<today()&&active(l));
+  const hot=(leads||[]).filter(l=>['hot','very_hot'].includes(l.temperature)&&active(l));
+  const overdueT=(tasks||[]).filter(t=>t.due_at&&t.due_at<now());
+  const todayT=(tasks||[]).filter(t=>t.due_at&&t.due_at.slice(0,10)===today()&&t.due_at>=now());
+  const upT=(tasks||[]).filter(t=>t.due_at&&t.due_at.slice(0,10)>today());
+  const todayV=(views||[]).filter(v=>v.scheduled_at&&v.scheduled_at.slice(0,10)===today());
+  const upV=(views||[]).filter(v=>v.scheduled_at&&v.scheduled_at.slice(0,10)>today());
+  const leadName={}; (leads||[]).forEach(l=>leadName[l.id]=l.name);
+
+  const brief = ar()
+    ? `صباح الخير${window._nm?(' يا '+window._nm.split(' ')[0]):''} 👋 عندك <b>${todayT.length}</b> مهمة النهارده${overdueT.length?(' و<b>'+overdueT.length+'</b> متأخرة'):''}، <b>${hot.length}</b> عميل ساخن${todayV.length?(' و<b>'+todayV.length+'</b> معاينة'):''}.`
+    : `Good morning${window._nm?(' '+window._nm.split(' ')[0]):''} 👋 You have <b>${todayT.length}</b> tasks today${overdueT.length?(', <b>'+overdueT.length+'</b> overdue'):''}, <b>${hot.length}</b> hot leads${todayV.length?(', <b>'+todayV.length+'</b> viewings'):''}.`;
+
+  const leadItem=(l,cls)=>`<div class="item ${cls}"><div style="display:flex;justify-content:space-between;gap:6px"><span class="t">${HZ.esc(l.name||'—')}</span>${l.temperature?`<span class="temp ${l.temperature}">${({very_hot:'🔥',hot:'🟠',warm:'🟡',cold:'⚪'}[l.temperature])} ${l.lead_score||0}</span>`:''}</div>
+    <div class="m">${[l.area,l.budget?('حتى '+Number(l.budget).toLocaleString('ar-EG')):''].filter(Boolean).join(' · ')}${l.next_followup?(' · 📅 '+l.next_followup):''}</div>
+    <div class="row">${l.phone?`<a class="wa" target="_blank" href="https://wa.me/${waNum(l.phone)}" onclick="act('${l.id}','whatsapp')">واتساب</a><a href="tel:${tel(l.phone)}" onclick="act('${l.id}','call')">📞</a>`:''}<a href="/clients">فتح</a></div></div>`;
+  const taskItem=(t,cls)=>`<div class="item ${cls}"><div class="t">${HZ.esc(t.title)}</div><div class="m">${t.due_at?new Date(t.due_at).toLocaleString(ar()?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):''} · ${t.priority}</div>
+    <div class="row"><button class="done" onclick="doneTask(${t.id})">✔ تم</button>${t.lead_id?`<a href="/clients">العميل</a>`:''}</div></div>`;
+  const viewItem=(v)=>`<div class="item today"><div class="t">🏠 ${HZ.esc(v.property_title||'معاينة')}</div><div class="m">${v.scheduled_at?new Date(v.scheduled_at).toLocaleString(ar()?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):''}${v.location?(' · '+HZ.esc(v.location)):''}${v.lead_id?(' · '+HZ.esc(leadName[v.lead_id]||'')):''}</div></div>`;
+  const sec=(title,ic,rows)=>`<div class="sec"><h2>${ic} ${title}</h2>${rows.length?rows.join(''):`<div class="empty">${ar()?'مفيش حاجة هنا 👌':'Nothing here 👌'}</div>`}</div>`;
+
+  document.getElementById('app').innerHTML=`
+    <div class="brief"><h1>${ar()?'يومي':'My Day'}</h1><p>${brief}</p></div>
+    <div class="kpis">
+      <div class="kpi over"><div class="n">${overdueF.length+overdueT.length}</div><div class="l">${ar()?'متأخرة':'Overdue'}</div></div>
+      <div class="kpi hot"><div class="n">${hot.length}</div><div class="l">${ar()?'عملاء ساخنون':'Hot leads'}</div></div>
+      <div class="kpi"><div class="n">${todayT.length}</div><div class="l">${ar()?'مهام النهارده':'Tasks today'}</div></div>
+      <div class="kpi"><div class="n">${todayV.length}</div><div class="l">${ar()?'معاينات':'Viewings'}</div></div>
+    </div>
+    ${sec(ar()?'عاجل':'Urgent','🔴',[...overdueT.map(t=>taskItem(t,'urgent')),...overdueF.map(l=>leadItem(l,'urgent')),...hot.slice(0,5).map(l=>leadItem(l,'urgent'))])}
+    ${sec(ar()?'النهارده':'Today','📌',[...todayT.map(t=>taskItem(t,'today')),...todayV.map(viewItem)])}
+    ${sec(ar()?'قادم':'Upcoming','📅',[...upT.slice(0,10).map(t=>taskItem(t,'')),...upV.slice(0,10).map(viewItem)])}
+  `;
+}
+window.act=async(id,kind)=>{ try{ await HZ.sbAuth('/rpc/crm_log_activity',S.token,'POST',{p_lead:id,p_kind:kind,p_body:null,p_meta:null}); }catch(e){} };
+window.doneTask=async(id)=>{ try{ await HZ.sbAuth('/crm_tasks?id=eq.'+id,S.token,'PATCH',{status:'done',completed_at:new Date().toISOString()},{Prefer:'return=minimal'}); }catch(e){} load(); };
+document.addEventListener('hz:lang', ()=>{ if(ISBROKER) load(); });
+boot();
+</script>
+</body>
+</html>

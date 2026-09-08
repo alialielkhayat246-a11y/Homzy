@@ -90,6 +90,15 @@ def clients_page():
     return FileResponse(config.FRONTEND_DIR / "clients.html")
 
 
+@app.get("/my-day")
+def my_day_page():
+    """Broker 'My Day' workspace (HOMZY OS Phase 3): urgent/today/upcoming —
+    overdue follow-ups, hot leads, tasks (crm_tasks) and viewings (crm_viewings)
+    with one-click Call/WhatsApp/Complete. Data runs client-side over Supabase;
+    RLS scopes every row to the signed-in broker (owner_id = auth.uid())."""
+    return FileResponse(config.FRONTEND_DIR / "my-day.html")
+
+
 @app.get("/my-listings")
 def my_listings_page():
     """Broker dashboard: post / edit / delete their own units (listings) with

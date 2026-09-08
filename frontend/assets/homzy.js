@@ -97,6 +97,7 @@ const T = {
   pricing:{ar:'الباقات والأسعار',en:'Pricing'},
   settings:{ar:'الإعدادات',en:'Settings'},
   community:{ar:'مجتمع البروكرز',en:'Community'},
+  myday:{ar:'يومي',en:'My Day'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -127,7 +128,7 @@ HZ.setMode = function(m){
 /* ---------- Header / nav ---------- */
 const NAV = {
   client:[['/','home'],['/areas','areas'],['/stays','stays'],['/app','browse'],['/download','app']],
-  broker:[['/','home'],['/clients','clients'],['/my-listings','mylistings'],['/host/properties','hosting'],['/app','browse']],
+  broker:[['/','home'],['/my-day','myday'],['/clients','clients'],['/my-listings','mylistings'],['/host/properties','hosting']],
 };
 function navHTML(){
   const links = NAV[HZ.mode]||NAV.client;
@@ -260,7 +261,7 @@ function buildTabbar(){
   const bk=document.createElement('div'); bk.className='hz-sheet-bk'; bk.id='hzSheetBk'; bk.onclick=()=>HZ.toggleMore();
   const sheet=document.createElement('div'); sheet.className='hz-sheet'; sheet.id='hzSheet';
   const items = broker
-    ? [['/community','💬','community'],['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/account','👤','settings'],['/admin','⚙️','admin']]
+    ? [['/my-day','🗓️','myday'],['/community','💬','community'],['/host/properties','🏠','hosting'],['/pricing','💎','pricing'],['/stays','🛎️','stays'],['/leads','🎯','leads'],['/account','👤','settings'],['/admin','⚙️','admin']]
     : [['/areas','📍','areas'],['/features','✨','features'],['/brokers','🧰','forBrokers'],['/account','👤','settings'],['/download','📱','app']];
   sheet.innerHTML='<div class="handle"></div>'+items.map(([h,i,k])=>`<a href="${h}"><span class="ic">${i}</span><span>${HZ.t(k)}</span></a>`).join('');
   document.body.appendChild(bk); document.body.appendChild(sheet);
