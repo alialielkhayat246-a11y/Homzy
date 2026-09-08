@@ -10,12 +10,12 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
-                               Response, StreamingResponse)
+                               PlainTextResponse, Response, StreamingResponse)
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
 from . import (broker, config, crm_ai, listings as listings_mod, llm, notify,
-               payments, push, seo, valuation)
+               payments, push, seo, valuation, whatsapp)
 
 app = FastAPI(title="Homzy Broker")
 
@@ -556,6 +556,40 @@ async def crm_ai_lead(req: Request):
     when no AI engine is configured."""
     body = await req.json()
     return crm_ai.analyze_lead(body.get("token") or "", body.get("lead_id") or "")
+
+
+@app.get("/api/wa/webhook")
+async def wa_webhook_verify(req: Request):
+    """Meta WhatsApp Cloud API webhook verification handshake (GET)."""
+    q = req.query_params
+    code, body = whatsapp.verify_webhook(
+        q.get("hub.mode", ""), q.get("hub.verify_token", ""), q.get("hub.challenge", ""))
+    return PlainTextResponse(body, status_code=code)
+
+
+@app.post("/api/wa/webhook")
+async def wa_webhook_inbound(req: Request):
+    """Inbound WhatsApp messages from Meta → matched to a lead + logged. Always
+    200 so Meta does not retry-storm; parsing errors are swallowed inside."""
+    try:
+        payload = await req.json()
+    except Exception:
+        payload = {}
+    return whatsapp.handle_inbound(payload)
+
+
+@app.post("/api/wa/send")
+async def wa_send(req: Request):
+    """Send an outbound WhatsApp message on the broker's behalf. Body:
+    {token, lead_id?, to, text}. Returns not_configured until WA creds are set."""
+    body = await req.json()
+    return whatsapp.send(body.get("token") or "", body.get("lead_id"),
+                         body.get("to") or "", body.get("text") or "")
+
+
+@app.get("/api/wa/config")
+def wa_config():
+    return {"enabled": whatsapp.configured()}
 
 
 @app.get("/api/pay/config")

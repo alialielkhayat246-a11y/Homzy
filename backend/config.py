@@ -91,6 +91,21 @@ SMTP_PASS = _get("SMTP_PASS", "")
 LEAD_NOTIFY_FROM = _get("LEAD_NOTIFY_FROM", "") or SMTP_USER
 LEAD_NOTIFY_TO = _get("LEAD_NOTIFY_TO", "hello@homzy-ai.com")
 
+# --- WhatsApp Cloud API (HOMZY OS Phase 7) ---------------------------------
+# Meta WhatsApp Cloud API. Empty => the WhatsApp inbox is dormant (messages can
+# still be logged manually) and outbound send returns not_configured. To go
+# live, set these in the Vercel env:
+#   WA_PHONE_ID    the WhatsApp Business phone-number id (graph API)
+#   WA_TOKEN       a permanent access token for that number
+#   WA_VERIFY_TOKEN  an arbitrary string you also enter in Meta's webhook setup
+# The inbound webhook authenticates to Supabase with the shared PUSH_CRON_TOKEN
+# (secret-gated definer RPC), so no service_role key is needed.
+WA_PHONE_ID = _get("WA_PHONE_ID", "")
+WA_TOKEN = _get("WA_TOKEN", "")
+WA_VERIFY_TOKEN = _get("WA_VERIFY_TOKEN", "")
+WA_API_BASE = _get("WA_API_BASE", "https://graph.facebook.com/v21.0")
+
+
 # --- Payment gateway (Kashier default; Paymob also supported) --------------
 # Which provider to use: "kashier" or "paymob".
 PAYMENT_PROVIDER = _get("PAYMENT_PROVIDER", "kashier").lower()
