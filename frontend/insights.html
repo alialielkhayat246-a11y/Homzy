@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/insights'));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — أدائي</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css">
+<style>
+  .wrap2{max-width:940px;margin:0 auto;padding:18px 14px 44px;}
+  .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+  .top h1{font-size:21px;}
+  .seg{display:flex;background:#fff;border:1.5px solid var(--line-2);border-radius:100px;padding:3px;gap:2px;}
+  .seg button{border:none;background:none;font-family:Cairo;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:100px;cursor:pointer;color:var(--muted);}
+  .seg button.on{background:var(--navy);color:#fff;}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+  @media(max-width:760px){.kpis{grid-template-columns:1fr 1fr 1fr;}}
+  @media(max-width:460px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center;}
+  .kpi .n{font-size:19px;font-weight:900;color:var(--navy);} .kpi .l{color:var(--muted);font-size:11.5px;margin-top:3px;}
+  .kpi.g .n{color:#137a3e;} .kpi.t .n{color:var(--teal-d);} .kpi.o .n{color:#B45309;} .kpi.h .n{color:#B42318;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:760px){.grid{grid-template-columns:1fr;}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .card h2{font-size:15px;margin-bottom:14px;}
+  .funnel .row{margin-bottom:11px;}
+  .funnel .lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+  .funnel .bar{height:11px;border-radius:100px;background:var(--teal-l);overflow:hidden;}
+  .funnel .fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--teal),var(--navy));min-width:2px;}
+  .brk .row{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+  .brk .k{width:88px;font-size:12.5px;font-weight:700;color:var(--navy);flex:none;}
+  .brk .bar{flex:1;height:10px;border-radius:100px;background:var(--cream);overflow:hidden;}
+  .brk .fill{height:100%;border-radius:100px;}
+  .brk .v{width:34px;text-align:left;font-size:12px;color:var(--muted);flex:none;}
+  .src{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .src:last-child{border-bottom:none;}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:16px;}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="wrap2">
+  <div class="top"><h1>📊 أدائي</h1>
+    <div class="seg" id="seg">
+      <button data-d="7">7 أيام</button><button data-d="30" class="on">30 يوم</button><button data-d="90">90 يوم</button><button data-d="365">سنة</button>
+    </div>
+  </div>
+  <div id="app"><div style="padding:40px;text-align:center;color:var(--muted)">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const ar=()=>HZ.lang==='ar';
+const money=n=>Number(n||0).toLocaleString('ar-EG')+' ج.م';
+let S=null, DAYS=30;
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next=/insights'; return; }
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ $('app').innerHTML='<div style="padding:60px;text-align:center"><h2>أدائي</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
+  $('seg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    [...$('seg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); DAYS=+b.dataset.d; load(); });
+  load();
+}
+async function load(){
+  $('app').innerHTML='<div style="padding:40px;text-align:center;color:var(--muted)">…</div>';
+  const since=new Date(Date.now()-DAYS*864e5).toISOString();
+  let r; try{ r=await HZ.sbAuth('/rpc/crm_broker_stats',S.token,'POST',{p_since:since}); }catch(e){ r=null; }
+  if(!r||!r.ok){ $('app').innerHTML='<div class="empty">تعذّر تحميل الإحصائيات.</div>'; return; }
+  const f=r.funnel||{};
+  const tempColors={very_hot:'#B42318',hot:'#B45309',warm:'#C99700',cold:'#8894a6'};
+  const tempLab={very_hot:'ساخن جدًا',hot:'ساخن',warm:'دافئ',cold:'بارد'};
+  const stageLab={new:'جديد',contact:'تواصل',contacted:'تم التواصل',viewing:'معاينة',negotiation:'تفاوض',negotiate:'تفاوض',closed:'مغلق',won:'مكسوب',lost:'خسارة'};
+
+  const kpi=(cls,n,l)=>`<div class="kpi ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const maxF=Math.max(1,f.leads||0);
+  const frow=(lab,v,base)=>`<div class="row"><div class="lab"><span>${lab}</span><span>${v||0}</span></div><div class="bar"><div class="fill" style="width:${Math.round((v||0)/base*100)}%"></div></div></div>`;
+
+  const temps=r.by_temperature||{}; const tmax=Math.max(1,...Object.values(temps));
+  const tempRows=['very_hot','hot','warm','cold'].map(k=>temps[k]?`<div class="row"><div class="k">${tempLab[k]}</div><div class="bar"><div class="fill" style="width:${Math.round(temps[k]/tmax*100)}%;background:${tempColors[k]}"></div></div><div class="v">${temps[k]}</div></div>`:'').join('')||'<div class="empty">لا يوجد</div>';
+
+  const stages=r.by_stage||{}; const smax=Math.max(1,...Object.values(stages));
+  const stageRows=Object.entries(stages).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><div class="k">${stageLab[k]||k}</div><div class="bar"><div class="fill" style="width:${Math.round(v/smax*100)}%;background:var(--teal)"></div></div><div class="v">${v}</div></div>`).join('')||'<div class="empty">لا يوجد</div>';
+
+  const sources=(r.by_source||[]);
+  const srcRows=sources.length?sources.map(s=>`<div class="src"><span>${HZ.esc(s.source)}</span><span style="font-weight:800">${s.count}</span></div>`).join(''):'<div class="empty">لا يوجد</div>';
+
+  $('app').innerHTML=`
+    <div class="kpis">
+      ${kpi('t', r.leads_total||0, 'إجمالي العملاء')}
+      ${kpi('g', (r.conversion_rate||0)+'%', 'نسبة التحويل')}
+      ${kpi('g', money(r.commission_total), 'إجمالي العمولات')}
+      ${kpi('h', r.hot_now||0, 'ساخنون الآن')}
+      ${kpi('o', r.overdue_followups||0, 'متابعات متأخرة')}
+    </div>
+    <div class="grid">
+      <div class="card"><h2>🔻 قمع المبيعات (كل الوقت)</h2><div class="funnel">
+        ${frow('عملاء', f.leads, maxF)}
+        ${frow('تم التواصل', f.contacted, maxF)}
+        ${frow('معاينات تمّت', f.viewings, maxF)}
+        ${frow('صفقات مفتوحة', f.deals_open, maxF)}
+        ${frow('صفقات مكسوبة', f.deals_won, maxF)}
+      </div></div>
+      <div class="card"><h2>🌡️ حرارة العملاء</h2><div class="brk">${tempRows}</div></div>
+      <div class="card"><h2>📍 مراحل الأنابيب</h2><div class="brk">${stageRows}</div></div>
+      <div class="card"><h2>📥 مصادر العملاء</h2>${srcRows}</div>
+    </div>
+    <div class="kpis" style="margin-top:16px">
+      ${kpi('t', r.leads_period||0, 'عملاء جدد بالفترة')}
+      ${kpi('g', r.deals_won_period||0, 'صفقات مكسوبة بالفترة')}
+      ${kpi('g', money(r.commission_period), 'عمولات الفترة')}
+      ${kpi('', r.avg_score||0, 'متوسط السكور')}
+      ${kpi('', (f.deals_lost||0), 'صفقات خاسرة')}
+    </div>`;
+}
+document.addEventListener('hz:lang', ()=>{ if(S) load(); });
+boot();
+</script>
+</body>
+</html>

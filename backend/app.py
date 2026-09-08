@@ -99,6 +99,15 @@ def my_day_page():
     return FileResponse(config.FRONTEND_DIR / "my-day.html")
 
 
+@app.get("/insights")
+def insights_page():
+    """Broker performance analytics (HOMZY OS Phase 11): sales funnel, conversion
+    rate, lead temperature/stage breakdowns, sources, and commission totals —
+    aggregated by crm_broker_stats (SECURITY DEFINER, scoped to the caller's own
+    rows via auth.uid())."""
+    return FileResponse(config.FRONTEND_DIR / "insights.html")
+
+
 @app.get("/deals")
 def deals_page():
     """Broker 'Deals & Commission' board (HOMZY OS Phase 6): crm_deals pipeline
