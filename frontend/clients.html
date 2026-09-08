@@ -69,6 +69,18 @@
   .ccard .acts button, .ccard .acts a{font-family:"Cairo"; font-weight:700; font-size:11.5px; border-radius:8px; padding:6px 9px; cursor:pointer; border:1.5px solid var(--line-2); background:#fff; color:var(--navy); text-decoration:none;}
   .ccard .acts .wa{background:#25D366; color:#fff; border-color:#25D366;}
   .ccard .acts .mu{background:var(--teal-l); color:var(--teal-d); border-color:var(--teal-l);}
+  .ccard .acts .ai{background:#EEF0FF; color:#3A3F9E; border-color:#D8DCFB;}
+  .ai-prob{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .ai-prob .ring{width:60px;height:60px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:900;font-size:16px;color:#fff;}
+  .ai-prob .pl{font-size:12px;color:var(--muted);} .ai-prob .pt{font-weight:800;color:var(--navy);font-size:14px;}
+  .ai-block{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .ai-block h4{font-size:12.5px;color:var(--muted);margin:0 0 5px;font-weight:700;}
+  .ai-block p{font-size:13.5px;color:var(--navy);line-height:1.7;margin:0;white-space:pre-wrap;}
+  .ai-msg{background:var(--cream);border:1px dashed var(--line-2);border-radius:10px;padding:10px;margin-top:8px;font-size:13px;line-height:1.7;white-space:pre-wrap;}
+  .ai-acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .ai-acts button,.ai-acts a{font-size:12px;font-weight:700;border-radius:8px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
+  .ai-acts .wa{background:#25D366;color:#fff;border-color:#25D366;}
+  .ai-eng{font-size:10.5px;color:var(--muted);text-align:center;margin-top:2px;}
   .ccard .mv{margin-top:8px; width:100%; font-size:12px; padding:6px; border:1.5px solid var(--line-2); border-radius:8px; font-family:"Cairo"; color:var(--navy); background:var(--cream);}
   .col-empty{color:#b8ac97; font-size:12.5px; text-align:center; padding:16px 6px;}
 
@@ -176,6 +188,14 @@
   </div>
 </div>
 
+<!-- AI lead intelligence modal -->
+<div class="ov" id="aiOv">
+  <div class="modal">
+    <div class="mh"><h3 id="aiTitle">🤖 تحليل الليد</h3><button class="mx" onclick="document.getElementById('aiOv').classList.remove('open')">×</button></div>
+    <div class="mb" id="aiBody"></div>
+  </div>
+</div>
+
 <!-- matching units modal -->
 <div class="ov" id="muOv">
   <div class="modal">
@@ -279,6 +299,7 @@ function cardHTML(c){
       ${tel?`<a class="wa" href="tel:${tel}" onclick="logAct('${c.id}','call')">📞</a>`:''}
       ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">واتساب</a>`:''}
       <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
+      <button class="ai" onclick="aiLead('${c.id}')">🤖 تحليل AI</button>
       <button onclick="editClient('${c.id}')">تعديل</button>
       <button onclick="delClient('${c.id}')" style="color:#B42318">حذف</button>
     </div>
@@ -421,6 +442,38 @@ window.sendMatch=async (i)=>{
     const c=CLIENTS.find(x=>x.id===id); if(c&&r&&r.temperature){ c.temperature=r.temperature; c.lead_score=r.score; renderBoard(); renderStats(); }
   }catch(e){}
 };
+
+/* ---------- AI lead intelligence (Phase 9) ---------- */
+window.aiLead=async (id)=>{
+  const c=CLIENTS.find(x=>x.id===id); if(!c) return;
+  $('aiTitle').textContent='🤖 تحليل: '+(c.name||'');
+  $('aiBody').innerHTML='<div style="text-align:center;color:#66717F;padding:24px">…بحلّل الليد</div>';
+  $('aiOv').classList.add('open');
+  let r;
+  try{ r=await (await fetch('/api/crm/ai/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,lead_id:id})})).json(); }
+  catch(e){ r={ok:false}; }
+  if(!r||!r.ok){ $('aiBody').innerHTML='<div style="text-align:center;color:#B42318;padding:24px">تعذّر التحليل. جرّب تاني.</div>'; return; }
+  const prob=r.win_probability!=null?r.win_probability:0;
+  const col=prob>=70?'#137a3e':prob>=40?'#B45309':'#8894a6';
+  const prio={high:'أولوية عالية',medium:'أولوية متوسطة',low:'أولوية منخفضة'}[r.priority]||'';
+  const wa=(''+(c.phone||'')).replace(/[^0-9]/g,'');
+  const waN=wa?(wa.startsWith('2')?wa:('2'+wa.replace(/^0/,''))):'';
+  window.__aiMsg=r.suggested_message||'';
+  $('aiBody').innerHTML=`
+    <div class="ai-prob"><div class="ring" style="background:${col}">${prob}%</div>
+      <div><div class="pt">احتمال إتمام الصفقة</div><div class="pl">${prio}</div></div></div>
+    <div class="ai-block"><h4>ملخص</h4><p>${esc(r.summary||'')}</p></div>
+    <div class="ai-block"><h4>الخطوة التالية المقترحة</h4><p>${esc(r.next_best_action||'')}</p></div>
+    <div class="ai-block"><h4>رسالة مقترحة للعميل</h4>
+      <div class="ai-msg" id="aiMsg">${esc(r.suggested_message||'')}</div>
+      <div class="ai-acts">
+        <button onclick="copyAiMsg()">📋 نسخ</button>
+        ${waN?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waN}?text=${encodeURIComponent(r.suggested_message||'')}" onclick="logAct('${id}','whatsapp')">📤 إرسال واتساب</a>`:''}
+      </div></div>
+    <div class="ai-eng">المحرّك: ${esc(r.engine||'—')} · التحليل استرشادي، القرار قرارك.</div>`;
+};
+window.copyAiMsg=()=>{ try{ navigator.clipboard.writeText(window.__aiMsg||''); }catch(e){} };
+
 // map a search_projects row to the chat-rec shape HZ.makeOffer expects, then generate the PDF
 window.offerFor=(i)=>{
   const p=window['__mu'+i]; if(!p||!window.HZ||!HZ.makeOffer) return;

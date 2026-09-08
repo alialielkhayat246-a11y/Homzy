@@ -14,8 +14,8 @@ from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
 import json as _json
 from fastapi.staticfiles import StaticFiles
 
-from . import (broker, config, listings as listings_mod, llm, notify, payments,
-               push, seo, valuation)
+from . import (broker, config, crm_ai, listings as listings_mod, llm, notify,
+               payments, push, seo, valuation)
 
 app = FastAPI(title="Homzy Broker")
 
@@ -535,6 +535,18 @@ async def stays_cron(req: Request):
         except Exception as exc:  # pragma: no cover
             out[fn] = {"error": str(exc)}
     return {"ok": True, "results": out}
+
+
+@app.post("/api/crm/ai/lead")
+async def crm_ai_lead(req: Request):
+    """HOMZY OS Phase 9 — AI lead intelligence. Body: {token, lead_id}. The lead
+    and its activity are read with the BROKER'S OWN Supabase JWT so RLS applies
+    (a broker can only analyse a lead they own). Read-only: returns a summary,
+    next-best-action, a suggested WhatsApp draft, win-probability and priority.
+    Never sends messages or writes data. Falls back to a deterministic heuristic
+    when no AI engine is configured."""
+    body = await req.json()
+    return crm_ai.analyze_lead(body.get("token") or "", body.get("lead_id") or "")
 
 
 @app.get("/api/pay/config")
