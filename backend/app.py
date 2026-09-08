@@ -228,6 +228,32 @@ def pricing_page():
     return FileResponse(config.FRONTEND_DIR / "pricing.html")
 
 
+# Public legal / contact pages (required by the Kashier payment gateway).
+@app.get("/refund")
+@app.get("/refund-policy")
+def refund_page():
+    """Refund & cancellation policy (reflects the real stay cancellation rules)."""
+    return FileResponse(config.FRONTEND_DIR / "refund.html")
+
+
+@app.get("/terms")
+def terms_page():
+    """Terms of use."""
+    return FileResponse(config.FRONTEND_DIR / "terms.html")
+
+
+@app.get("/privacy")
+def privacy_page():
+    """Privacy policy."""
+    return FileResponse(config.FRONTEND_DIR / "privacy.html")
+
+
+@app.get("/contact")
+def contact_page():
+    """Contact us (email / phone / WhatsApp)."""
+    return FileResponse(config.FRONTEND_DIR / "contact.html")
+
+
 @app.get("/community")
 @app.get("/community/{area_slug}")
 def community_page(area_slug: str = ""):

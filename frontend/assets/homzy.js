@@ -115,6 +115,9 @@ const T = {
   logout:{ar:'تسجيل الخروج',en:'Log out'}, login:{ar:'تسجيل الدخول',en:'Log in'},
   roleBroker:{ar:'بروكر',en:'Broker'}, roleUser:{ar:'مستخدم',en:'User'},
   menu:{ar:'القائمة',en:'Menu'}, notifications:{ar:'التنبيهات',en:'Notifications'},
+  legalCol:{ar:'المساعدة والقانوني',en:'Help & legal'},
+  contact:{ar:'تواصل معنا',en:'Contact us'}, refundPol:{ar:'سياسة الاسترجاع',en:'Refund policy'},
+  termsPol:{ar:'شروط الاستخدام',en:'Terms of use'}, privacyPol:{ar:'سياسة الخصوصية',en:'Privacy policy'},
 };
 HZ.t = k => (T[k]||{})[HZ.lang] || k;
 
@@ -423,6 +426,10 @@ function buildFooter(){
         <div class="hz-foot-col">
           <h4>${HZ.t('forBrokers')}</h4>
           <a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a><a href="/pricing">${HZ.t('pricing')}</a>
+        </div>
+        <div class="hz-foot-col">
+          <h4>${HZ.t('legalCol')}</h4>
+          <a href="/contact">${HZ.t('contact')}</a><a href="/refund">${HZ.t('refundPol')}</a><a href="/terms">${HZ.t('termsPol')}</a><a href="/privacy">${HZ.t('privacyPol')}</a>
         </div>
       </div>
       <div class="hz-foot-bottom"><span>© ${new Date().getFullYear()} Homzy</span><span>${HZ.t('disclaimer')}</span></div>

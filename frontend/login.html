@@ -97,7 +97,8 @@
   .switch a:hover{text-decoration:underline;}
 
   .legal{text-align:center; margin-top:18px; font-size:11.5px; color:#9a9186; line-height:1.7;}
-  .legal .lk{color:var(--muted,#66717F); font-weight:700; text-decoration:underline; cursor:default;}
+  .legal .lk{color:var(--muted,#66717F); font-weight:700; text-decoration:underline; cursor:pointer;}
+  .legal .lk:hover{color:var(--teal-d,#08414C);}
 
   .back{text-align:center; margin-top:14px;}
   .back a{color:#9a9186; font-size:12.5px; text-decoration:none;}
@@ -163,7 +164,7 @@
 
       <div class="switch"><span id="switchTxt">مستخدم جديد؟</span> <a id="switchLink" role="button" tabindex="0">إنشاء حساب</a></div>
 
-      <p class="legal">بالمتابعة، أنت توافق على <span class="lk">شروط الاستخدام</span> و<span class="lk">سياسة الخصوصية</span></p>
+      <p class="legal">بالمتابعة، أنت توافق على <a class="lk" href="/terms">شروط الاستخدام</a> و<a class="lk" href="/privacy">سياسة الخصوصية</a></p>
     </div>
 
     <!-- ===== Complete-profile view (after Google, phone required) ===== -->

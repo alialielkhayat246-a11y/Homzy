@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>تواصل معنا — Homzy</title>
+<meta name="description" content="تواصل مع فريق Homzy عبر البريد الإلكتروني أو الهاتف أو واتساب." />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=2">
+<style>
+  .doc{max-width:680px;margin:0 auto;padding:32px 18px 60px;}
+  .doc h1{font-size:26px;color:var(--navy);margin-bottom:6px;}
+  .doc .sub{color:var(--muted);font-size:15px;margin-bottom:24px;line-height:1.8;}
+  .clist{display:flex;flex-direction:column;gap:12px;}
+  .crow{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 16px;text-decoration:none;transition:border-color .15s,transform .1s;}
+  .crow:hover{border-color:var(--teal);transform:translateY(-1px);}
+  .crow .ic{width:44px;height:44px;border-radius:11px;background:var(--teal-l);color:var(--teal-d);display:flex;align-items:center;justify-content:center;flex:none;}
+  .crow .ic svg{width:22px;height:22px;}
+  .crow .t{font-weight:800;color:var(--navy);font-size:15px;}
+  .crow .v{color:var(--muted);font-size:14px;margin-top:2px;direction:ltr;unicode-bidi:isolate;text-align:start;}
+  .doc .note{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;color:#40506a;margin-top:22px;line-height:1.8;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="doc">
+  <h1>تواصل معنا</h1>
+  <p class="sub">فريق Homzy جاهز لمساعدتك في أي استفسار عن العقارات، الإقامات، الحجوزات، أو المدفوعات.</p>
+
+  <div class="clist">
+    <a class="crow" href="mailto:hello@homzy-ai.com">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+      <span><span class="t">البريد الإلكتروني</span><span class="v">hello@homzy-ai.com</span></span>
+    </a>
+    <a class="crow" href="tel:+201505987996">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M5 4h3l1.6 4-2 1.4a12 12 0 0 0 5 5l1.4-2 4 1.6V19a2 2 0 0 1-2.2 2A16 16 0 0 1 3 6.2 2 2 0 0 1 5 4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+      <span><span class="t">الهاتف</span><span class="v">+20 1505987996</span></span>
+    </a>
+    <a class="crow" href="https://wa.me/201505987996" target="_blank" rel="noopener">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none"><path d="M20 12a8 8 0 0 1-11.9 7L4 20l1.1-4A8 8 0 1 1 20 12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9c0 3 3 6 6 6 .7 0 1-1 .6-1.6l-1.4-1-1 .8c-1-.4-1.8-1.2-2.2-2.2l.8-1-1-1.4C10.2 8 9 8.3 9 9Z" fill="currentColor"/></svg></span>
+      <span><span class="t">واتساب</span><span class="v">+20 1505987996</span></span>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>Homzy</b> — منصة عقارية وإقامات قصيرة المدى في مصر.<br>
+    تتم المدفوعات بأمان عبر بوابة الدفع Kashier. لأي استفسار عن حجز أو استرجاع، راجع <a href="/refund" style="color:var(--teal-d);font-weight:700">سياسة الاسترجاع</a>.
+  </div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=2"></script>
+</body>
+</html>
