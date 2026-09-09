@@ -132,7 +132,7 @@ function renderCurrentBanner(){
   const st = SUB && SUB.plan===CURRENT ? SUB.status : (CURRENT==='free'?'free':null);
   if(st==='trialing'){
     status='🎁 تجربة مجانية';
-    if(SUB&&SUB.trial_end) meta = 'تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end)+'</b> يوم';
+    if(SUB&&SUB.trial_end) meta = 'تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end).toLocaleString('ar-EG')+'</b> يوم';
   } else if(st==='active'){
     status='✅ مفعّلة'+(SUB&&SUB.billing_cycle?(' · '+(SUB.billing_cycle==='yearly'?'سنوي':'شهري')):'');
     if(SUB&&SUB.current_period_end) meta = 'تتجدد في '+fmtDate(SUB.current_period_end);
