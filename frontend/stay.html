@@ -87,6 +87,7 @@ let P=null, IMGS=[], AMEN=[], RULES=null, REVS=[], QUOTE=null, BOOKING=null, MAP
 
 async function load(){
   try{
+    await HZ.loadStaysRate();   // for inclusive guest prices (markup hidden)
     const rows=await HZ.sb('/stay_cards?id=eq.'+PID+'&select=*'); P=rows&&rows[0];
     if(!P){ document.getElementById('app').innerHTML=`<div class="loadwrap">${ar()?'الإقامة غير موجودة أو غير متاحة.':'This stay was not found or is unavailable.'}</div>`; return; }
     IMGS=await HZ.sb('/stay_property_images?property_id=eq.'+PID+'&select=url&order=is_cover.desc,sort.asc')||[];
@@ -151,7 +152,7 @@ function render(){
       </div>
       <div>
         <div class="bookcard">
-          <div class="price">${money(P.base_price)} <span class="u">${P.currency}/${ar()?'ليلة':'night'}</span></div>
+          <div class="price">${money(HZ.guestPrice(P.base_price))} <span class="u">${P.currency}/${ar()?'ليلة':'night'}</span></div>
           <div class="bkrow">
             <div class="fld"><label data-ar="الوصول" data-en="Check-in">الوصول</label><input type="date" id="bIn" onchange="quote()"/></div>
             <div class="fld"><label data-ar="المغادرة" data-en="Check-out">المغادرة</label><input type="date" id="bOut" onchange="quote()"/></div>
@@ -193,11 +194,15 @@ async function quote(){
     msg.className='bkmsg err'; msg.textContent=reasonText(QUOTE&&QUOTE.reason, QUOTE); return;
   }
   btn.disabled=false; btn.style.opacity=1;
-  const nightly = Number(QUOTE.gross_amount)/Number(QUOTE.nights);
+  // guest-facing (inclusive) amounts — the platform markup is baked in, never shown
+  const gstay = Number(QUOTE.guest_stay!=null?QUOTE.guest_stay:QUOTE.gross_amount);
+  const gclean = Number(QUOTE.guest_cleaning!=null?QUOTE.guest_cleaning:QUOTE.cleaning_fee);
+  const gextra = Number(QUOTE.guest_extra!=null?QUOTE.guest_extra:QUOTE.extra_fees);
+  const nightly = gstay/Number(QUOTE.nights);
   bd.innerHTML =
-     `<div class="r"><span>${money(Math.round(nightly))} × ${QUOTE.nights} ${ar()?'ليالي':'nights'}</span><span>${money(QUOTE.gross_amount)} ${QUOTE.currency}</span></div>`
-    + (Number(QUOTE.cleaning_fee)>0?`<div class="r"><span>${ar()?'رسوم النظافة':'Cleaning fee'}</span><span>${money(QUOTE.cleaning_fee)}</span></div>`:'')
-    + (Number(QUOTE.extra_fees)>0?`<div class="r"><span>${ar()?'ضيوف إضافيون':'Extra guests'}</span><span>${money(QUOTE.extra_fees)}</span></div>`:'')
+     `<div class="r"><span>${money(Math.round(nightly))} × ${QUOTE.nights} ${ar()?'ليالي':'nights'}</span><span>${money(gstay)} ${QUOTE.currency}</span></div>`
+    + (gclean>0?`<div class="r"><span>${ar()?'رسوم النظافة':'Cleaning fee'}</span><span>${money(gclean)}</span></div>`:'')
+    + (gextra>0?`<div class="r"><span>${ar()?'ضيوف إضافيون':'Extra guests'}</span><span>${money(gextra)}</span></div>`:'')
     + `<div class="r tot"><span>${ar()?'الإجمالي':'Total'}</span><span>${money(QUOTE.total_amount)} ${QUOTE.currency}</span></div>`;
 }
 function reasonText(reason,q){

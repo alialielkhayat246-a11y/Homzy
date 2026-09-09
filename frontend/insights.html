@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script>(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/insights'));}}catch(e){location.replace('/login');}})();</script>
+
 <title>Homzy — أدائي</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -40,8 +40,9 @@
   .src:last-child{border-bottom:none;}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:16px;}
 </style>
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
 </head>
-<body data-mode="broker">
+<body class="broker-workspace" data-mode="broker">
 <div id="hz-header"></div>
 <div class="wrap2">
   <div class="top"><h1>📊 أدائي</h1>
@@ -52,14 +53,15 @@
   <div id="app"><div style="padding:40px;text-align:center;color:var(--muted)">…</div></div>
 </div>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/homzy.js?v=3"></script>
+<script src="/assets/broker-session.js?v=1"></script>
 <script>
 const $=id=>document.getElementById(id);
 const ar=()=>HZ.lang==='ar';
 const money=n=>Number(n||0).toLocaleString('ar-EG')+' ج.م';
 let S=null, DAYS=30;
 async function boot(){
-  S=HZ.session(); if(!S){ location.href='/login?next=/insights'; return; }
+  S=await HZ.requireSession(); if(!S)return;
   try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ $('app').innerHTML='<div style="padding:60px;text-align:center"><h2>أدائي</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
   $('seg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
     [...$('seg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); DAYS=+b.dataset.d; load(); });

@@ -126,7 +126,7 @@
     <!-- state-aware host-join banner (Section 8) -->
     <div class="hostbanner" id="hostBanner" hidden>
       <div class="txt"><b data-ar="انضم كمضيف على Homzy Stays" data-en="Become a host on Homzy Stays">انضم كمضيف على Homzy Stays</b>
-        <p data-ar="اعرض شقتك أو فيلتك أو شاليهك، وحدّد سعرك. عمولة المنصة ٧٪." data-en="List your apartment, villa or chalet and set your price. 7% platform fee.">اعرض شقتك أو فيلتك أو شاليهك، وحدّد سعرك. عمولة المنصة ٧٪.</p></div>
+        <p data-ar="اعرض شقتك أو فيلتك أو شاليهك، وحدّد سعرك وتستلمه بالكامل." data-en="List your apartment, villa or chalet, set your price and keep it in full.">اعرض شقتك أو فيلتك أو شاليهك، وحدّد سعرك وتستلمه بالكامل.</p></div>
       <div id="hostBannerAction"></div>
     </div>
   </div>
@@ -168,7 +168,7 @@ function card(c){
       <div class="t">${HZ.esc(c.title)}</div>
       <div class="loc">${HZ.esc(type)} · ${HZ.esc(loc)}</div>
       <div class="meta">${num(c.max_guests)} ${ar()?'ضيوف':'guests'} · ${bedLabel(c.bedrooms)} · ${num(c.bathrooms)} ${ar()?'حمام':'ba'}</div>
-      <div class="pr"><span><b>${money(c.base_price)}</b> <span class="u">${curLabel(c.currency)} / ${ar()?'ليلة':'night'}</span></span>${rate}</div>
+      <div class="pr"><span><b>${money(HZ.guestPrice(c.base_price))}</b> <span class="u">${curLabel(c.currency)} / ${ar()?'ليلة':'night'}</span></span>${rate}</div>
     </div></div>`;
 }
 
@@ -262,6 +262,7 @@ async function boot(){
   sel.insertAdjacentHTML('beforeend', DESTS.map(d=>`<option value="${d.slug}" data-ar="${HZ.esc(d.name_ar)}" data-en="${HZ.esc(d.name_en)}">${HZ.esc(nm(d))}</option>`).join(''));
   document.getElementById('destChips').innerHTML = DESTS.slice(0,10).map(d=>`<div class="chip" data-slug="${d.slug}" onclick="chipPick('${d.slug}')" data-ar="${HZ.esc(d.name_ar)}" data-en="${HZ.esc(d.name_en)}">${HZ.esc(nm(d))}</div>`).join('');
 
+  await HZ.loadStaysRate();   // inclusive guest prices (platform markup hidden)
   try{ CARDS=await HZ.sb('/stay_cards?select=*&order=created_at.desc')||[]; }catch(e){ CARDS=[]; }
   renderSections();
   HZ.applyLang();

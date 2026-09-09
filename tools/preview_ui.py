@@ -13,6 +13,8 @@ class Preview(SimpleHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == '/':
             self.path = '/index.html'
+        elif path == '/crm':
+            self.path = '/my-day.html'
         elif '/' not in path[1:] and (ROOT / (path[1:] + '.html')).is_file():
             self.path = path + '.html'
         super().do_GET()

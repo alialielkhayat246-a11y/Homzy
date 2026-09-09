@@ -64,6 +64,19 @@ HZ.sbAuth = async function(path, token, method, body, extra){
   return t ? JSON.parse(t) : null;
 };
 
+// Homzy Stays pricing: the platform commission is a HIDDEN markup ADDED on top
+// of the host's price. The host sets (and receives) their own price; the guest
+// sees the inclusive price (host price + commission). We read the rate from the
+// one public config row and never show it in the UI.
+HZ.staysRate = null;
+HZ.loadStaysRate = async function(){
+  if(HZ.staysRate!=null) return HZ.staysRate;
+  try{ const r=await HZ.sb('/stay_settings?key=eq.commission_rate&select=value'); HZ.staysRate=(r&&r[0]&&r[0].value!=null)?Number(r[0].value):0.10; }
+  catch(e){ HZ.staysRate=0.10; }
+  return HZ.staysRate;
+};
+HZ.guestPrice = n => Math.round(Number(n||0) * (1 + (HZ.staysRate!=null?HZ.staysRate:0.10)));
+
 // Shared area-normalization KEY: folds near-duplicate area names to one bucket
 // so the Areas page and the browse filter agree (e.g. "New Zayed"/"Zayed",
 // "6th of October"/"6 October", "El Maadi"/"Maadi", "New Heliopolis"/"Heliopolis").
@@ -170,7 +183,8 @@ function navItems(){
   if(HZ.isBroker) return [['/','home'],['/crm','crm'],['/my-listings','mylistings'],['/community','communityNav'],['/app','browse']];
   return [['/','home'],['/app','browse'],['/areas','areas']];
 }
-const CRM_PATHS=['/crm','/my-day','/clients','/deals','/insights'];
+T.myDay={ar:'يومي',en:'My day'};
+const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights'];
 function isCrmPath(p){ return CRM_PATHS.some(x=>p===x||p.startsWith(x+'/')); }
 function isStaysPath(p){ return /^\/(stays|my-stays|host)(\/|$)/.test(p); }
 function navActive(href){
@@ -263,7 +277,7 @@ function buildCrmSubnav(){
   const bar=document.getElementById('hzCrmSub'); if(!bar) return;
   if(!(HZ.isBroker && isCrmPath(location.pathname))){ bar.hidden=true; bar.innerHTML=''; return; }
   const path=location.pathname;
-  const tabs=[['/crm','crmOverview'],['/clients','crmClients'],['/deals','crmDeals'],['/insights','crmPerf']];
+  const tabs=[['/crm','myDay'],['/clients','crmClients'],['/my-listings','mylistings'],['/deals','crmDeals'],['/insights','crmPerf'],['/app','browse'],['/community','communityNav']];
   const act=h=> h==='/crm' ? (path==='/crm'||path==='/my-day') : (path===h||path.startsWith(h+'/'));
   bar.hidden=false;
   bar.innerHTML=`<div class="wrap hz-crmsub-in" role="tablist" aria-label="CRM">`

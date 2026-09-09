@@ -401,16 +401,16 @@ window.submitHReview=async()=>{
 async function viewEarnings(){
   const bk=await HZ.sbAuth('/stay_bookings?host_id=eq.'+S.uid+'&select=status,host_net,commission_amount,total_amount,currency,check_out',S.token)||[];
   const earned=bk.filter(b=>['confirmed','completed'].includes(b.status)).reduce((s,b)=>s+ +b.host_net,0);
-  const comm=bk.filter(b=>['confirmed','completed'].includes(b.status)).reduce((s,b)=>s+ +b.commission_amount,0);
   const today=new Date().toISOString().slice(0,10);
+  const count=bk.filter(b=>['confirmed','completed'].includes(b.status)).length;
   const pending=bk.filter(b=>b.status==='confirmed'&&b.check_out>today).reduce((s,b)=>s+ +b.host_net,0);
   const done=bk.filter(b=>b.status==='completed').reduce((s,b)=>s+ +b.host_net,0);
   return `<div class="stats">
     <div class="stat"><div class="n">${money(earned)}</div><div class="l">${ar()?'إجمالي الأرباح (ج.م)':'Total earnings (EGP)'}</div></div>
     <div class="stat"><div class="n">${money(done)}</div><div class="l">${ar()?'محصّلة':'Completed'}</div></div>
     <div class="stat"><div class="n">${money(pending)}</div><div class="l">${ar()?'قادمة':'Upcoming'}</div></div>
-    <div class="stat"><div class="n">${money(comm)}</div><div class="l">${ar()?'عمولة Homzy (7%)':'Homzy commission'}</div></div>
-  </div><div style="color:var(--muted);font-size:13px">${ar()?'الأرباح صافية بعد خصم عمولة Homzy. الدفعات هتتفعّل مع ربط بوابة الدفع.':'Earnings are net of Homzy commission. Payouts activate once a payment gateway is connected.'}</div>`;
+    <div class="stat"><div class="n">${count}</div><div class="l">${ar()?'حجوزات':'Bookings'}</div></div>
+  </div><div style="color:var(--muted);font-size:13px">${ar()?'دي أرباحك من الحجوزات بسعرك الكامل. الدفعات هتتفعّل مع ربط بوابة الدفع.':'This is your earnings at your full listed price. Payouts activate once a payment gateway is connected.'}</div>`;
 }
 
 /* ---------- Reviews ---------- */

@@ -88,9 +88,11 @@
   .mf .btn{flex:1;}
   @media(max-width:560px){ .row2,.row3{grid-template-columns:1fr;} }
 </style>
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
 </head>
-<body>
+<body class="broker-workspace" data-mode="broker">
 
+<div id="hz-header"></div>
 <!-- gate -->
 <div id="gate" class="gate" style="display:none">
   <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
@@ -107,14 +109,14 @@
 
 <!-- dashboard -->
 <div id="app" style="display:none">
-  <div class="lx-top">
-    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>وحداتي</b></span>
-    <span class="sp"></span>
-    <a href="/leads">سوق الليدز</a>
-    <button onclick="signOut()">خروج</button>
-  </div>
   <div class="wrap">
-    <div class="company">
+    <div class="head">
+      <div><h1>وحداتي</h1><div class="n" id="count"></div></div>
+      <button class="btn btn-teal" onclick="openForm()">＋ أضف وحدة</button>
+    </div>
+    <div id="listingStats" class="stats"></div>
+    <div class="workspace-toolbar"><input id="listingSearch" type="search" aria-label="ابحث في وحداتك" placeholder="ابحث بالعنوان أو المنطقة…" oninput="renderListings()"><select id="listingStatus" aria-label="حالة الوحدة" onchange="renderListings()"><option value="">كل الوحدات</option><option value="active">منشورة</option><option value="draft">مسودات</option></select></div>
+    <details class="company-settings"><summary>إعدادات الشركة والعروض</summary>    <div class="company">
       <div class="co-logo">
         <div class="co-logo-img" id="coLogoImg"><span id="coLogoPh">📷</span></div>
         <label class="co-upload">تغيير اللوجو<input type="file" id="coLogo" accept="image/*" onchange="uploadLogo(event)" /></label>
@@ -131,10 +133,7 @@
         </div>
       </div>
     </div>
-    <div class="head">
-      <div><h1>وحداتي</h1><div class="n" id="count"></div></div>
-      <button class="btn btn-teal" onclick="openForm()">＋ أضف وحدة</button>
-    </div>
+</details>
     <div class="grid" id="grid"></div>
   </div>
 </div>
@@ -169,16 +168,18 @@
         <div class="thumbs" id="fThumbs"></div>
         <label class="upl">📷 اختار صور من جهازك<input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
       </div>
-      <div class="fld"><label>الحالة</label><select class="in" id="fStatus"><option value="active">منشور (يظهر في السوق)</option><option value="draft">مسودة (مش ظاهر)</option></select></div>
+      <input type="hidden" id="fStatus" value="draft"><div class="listing-preview" id="listingPreview" hidden></div>
       <div class="msg" id="fMsg"></div>
     </div>
     <div class="mf">
       <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
-      <button class="btn btn-teal" id="saveBtn" onclick="saveListing()">حفظ الوحدة</button>
+      <button class="btn btn-ghost" id="draftBtn" onclick="saveListing('draft')">حفظ كمسودة</button><button class="btn btn-teal" id="saveBtn" onclick="previewListing()">معاينة ونشر</button>
     </div>
   </div>
 </div>
 
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=3"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -220,7 +221,7 @@ async function boot(){
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
   HZ.loadPlan && HZ.loadPlan();
-  loadProfile(); loadMine();
+  loadProfile(); await loadMine(); if(new URLSearchParams(location.search).get("new")==="1")openForm();
 }
 let PROFILE={};
 async function loadProfile(){
@@ -266,8 +267,12 @@ window.loadMine=async ()=>{
 };
 function render(){
   $('count').textContent=LISTINGS.length?(LISTINGS.length+' وحدة'):'لسه مضفتش وحدات';
-  let html='<div class="addcard" onclick="openForm()">＋ أضف وحدة جديدة</div>';
-  html+=LISTINGS.map(l=>{
+  $('listingStats').innerHTML=[['إجمالي الوحدات',LISTINGS.length],['منشورة',LISTINGS.filter(l=>l.status==='active').length],['مسودات',LISTINGS.filter(l=>l.status==='draft').length]].map(([label,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${label}</div></div>`).join('');
+  const q=$('listingSearch').value.trim().toLowerCase(),status=$('listingStatus').value;
+  const visible=LISTINGS.filter(l=>(!status||l.status===status)&&(!q||((l.title||'')+' '+(l.area||'')).toLowerCase().includes(q)));
+  let html='';
+  if(!visible.length)html='<div class="workspace-empty"><h2>'+(!LISTINGS.length?'وحداتك تبدأ من هنا':'مفيش وحدات بالبحث ده')+'</h2><p>أضف بيانات الوحدة وصورها، واحفظها كمسودة لحد ما تكون جاهزة للنشر.</p><button class="btn btn-teal" onclick="openForm()">أضف وحدة</button></div>';
+  html+=visible.map(l=>{
     const media=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0));
     const cover=media[0]&&media[0].url;
     const on=l.status==='active';
@@ -282,7 +287,7 @@ function render(){
         <div class="mt">${esc(l.area||'')}${l.bedrooms?(' · '+l.bedrooms+' غرف'):''}${l.size_sqm?(' · '+l.size_sqm+' م²'):''}</div>
         <div class="acts">
           <button onclick="editListing('${l.id}')">✏️ تعديل</button>
-          <button class="pub" onclick="togglePub('${l.id}')">${on?'إخفاء':'نشر'}</button>
+          <button class="pub" onclick="${on?'togglePub':'editListing'}('${l.id}')">${on?'إخفاء':'معاينة ونشر'}</button>
           <button class="del" onclick="delListing('${l.id}')">🗑️</button>
         </div>
       </div>
@@ -291,6 +296,7 @@ function render(){
   $('grid').innerHTML=html;
 }
 
+window.renderListings=render;
 /* form */
 window.openForm=()=>{
   if(window.HZ && HZ.PLAN && HZ.PLAN.max_listings!=null && LISTINGS.length >= HZ.PLAN.max_listings){
@@ -299,8 +305,17 @@ window.openForm=()=>{
   }
   EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent='إضافة وحدة';
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
-  $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='active';
-  $('fThumbs').innerHTML=''; fmsg(''); $('formOv').classList.add('open'); };
+  $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft';
+  $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open'); };
+window.previewListing=()=>{
+  const box=$('listingPreview');
+  if($('fTitleTxt').value.trim().length<4){fmsg('اكتب عنوان واضح للإعلان.');return;}
+  box.hidden=false;
+  const facts=[$('fSize').value?esc($('fSize').value)+' م²':'',$('fBeds').value?esc($('fBeds').value)+' غرف':''].filter(Boolean).join(' · ');
+  box.innerHTML=`<h3>${esc($('fTitleTxt').value)}</h3><p>${esc($('fArea').value)} · ${money($('fPrice').value)}</p><p>${facts}</p><p>${esc($('fDesc').value)}</p><p>هتظهر الوحدة في السوق بعد النشر.</p><button class="btn btn-teal" onclick="saveListing('active')">تأكيد النشر</button>`;
+  if(NEW_FILES.length||KEEP_MEDIA.length){const img=document.createElement('img');img.alt='صورة الوحدة';img.src=NEW_FILES.length?URL.createObjectURL(NEW_FILES[0]):KEEP_MEDIA[0];if(NEW_FILES.length)img.onload=()=>URL.revokeObjectURL(img.src);box.prepend(img);}
+  box.scrollIntoView({block:'nearest'});
+};
 window.closeForm=()=>{ $('formOv').classList.remove('open'); };
 window.editListing=(id)=>{
   const l=LISTINGS.find(x=>x.id===id); if(!l) return;
@@ -311,7 +326,7 @@ window.editListing=(id)=>{
   $('fBaths').value=l.bathrooms||''; $('fFloor').value=l.floor||''; $('fDesc').value=l.description||'';
   $('fStatus').value=l.status||'active';
   KEEP_MEDIA=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0)).map(m=>m.url);
-  renderThumbs(); fmsg(''); $('formOv').classList.add('open');
+  renderThumbs(); fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open');
 };
 function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':'err'); }
 window.pickImages=(e)=>{ for(const f of e.target.files) NEW_FILES.push(f); e.target.value=''; renderThumbs(); };
@@ -347,7 +362,9 @@ async function watermark(file, logoUrl){
   }catch(e){ return file; }
 }
 
-window.saveListing=async ()=>{
+window.saveListing=async (status)=>{
+  if(window.listingSaving)return;
+  if(!['active','draft'].includes(status))return;
   const title=$('fTitleTxt').value.trim();
   if(title.length<4){ fmsg('اكتب عنوان واضح للإعلان.'); return; }
   const price=$('fPrice').value?Number($('fPrice').value):null;
@@ -358,16 +375,17 @@ window.saveListing=async ()=>{
     bedrooms:$('fBeds').value?Number($('fBeds').value):null,
     bathrooms:$('fBaths').value?Number($('fBaths').value):null,
     floor:$('fFloor').value?Number($('fFloor').value):null,
-    description:$('fDesc').value.trim()||null, status:$('fStatus').value
+    description:$('fDesc').value.trim()||null, status:'draft'
   };
-  $('saveBtn').disabled=true; fmsg('بحفظ…', true);
+  if(status==='active'&&(!price||price<=0||!rec.area)){fmsg('للنشر، أضف المنطقة وسعرًا أكبر من صفر.');return;}
+  window.listingSaving=true; $('draftBtn').disabled=true; $('saveBtn').disabled=true; fmsg('بحفظ…', true);
   try{
     let id=EDIT_ID;
     if(EDIT_ID){
       await api('/listings?id=eq.'+EDIT_ID, {method:'PATCH', body:JSON.stringify(rec)});
     }else{
       const rows=await api('/listings', {method:'POST', headers:{apikey:SB_KEY,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',Prefer:'return=representation'}, body:JSON.stringify(rec)});
-      id=rows[0].id;
+      id=rows[0].id; EDIT_ID=id;
     }
     // media: upload new files (auto-stamped with the broker's company logo),
     // then reconcile listing_media to KEEP_MEDIA + uploaded
@@ -387,9 +405,10 @@ window.saveListing=async ()=>{
     if(finalUrls.length){
       await api('/listing_media', {method:'POST', body:JSON.stringify(finalUrls.map((u,i)=>({listing_id:id, url:u, sort:i})))});
     }
+    if(status==='active')await api('/listings?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status:'active'})});
     closeForm(); loadMine();
   }catch(e){ fmsg('حصل خطأ في الحفظ: '+(e.message||e)); }
-  finally{ $('saveBtn').disabled=false; }
+  finally{window.listingSaving=false;$('draftBtn').disabled=false; $('saveBtn').disabled=false; }
 };
 
 window.togglePub=async (id)=>{

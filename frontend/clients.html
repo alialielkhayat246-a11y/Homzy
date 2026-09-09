@@ -110,8 +110,9 @@
   .mpct b{font-size:16px;line-height:1;} .mpct span{font-size:9.5px;margin-top:2px;}
   @media(max-width:560px){ .row2{grid-template-columns:1fr;} }
 </style>
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
 </head>
-<body>
+<body class="broker-workspace" data-mode="broker">
 
 <!-- gate -->
 <div id="gate" class="gate" style="display:none">
@@ -139,10 +140,10 @@
       <span class="sp"></span>
       <input id="search" placeholder="ابحث باسم / رقم / منطقة…" oninput="renderBoard()" />
       <button class="btn btn-ghost" id="bellBtn" onclick="toggleNotify()" title="تنبيهات المتابعة">🔔 فعّل التنبيهات</button>
-      <button class="btn btn-navy" onclick="voiceAdd()">🎤 عميل بالصوت</button>
+      <button class="btn btn-ghost" onclick="voiceAdd()">🎤 عميل بالصوت</button>
       <button class="btn btn-teal" onclick="openForm()">＋ أضف عميل</button>
     </div>
-    <div class="board" id="board"></div>
+    <div class="workspace-toolbar"><div class="view-switch" aria-label="طريقة عرض العملاء"><button id="listViewBtn" onclick="setClientView('list')">قائمة</button><button id="boardViewBtn" onclick="setClientView('board')">مراحل</button></div></div><div class="board" id="board"></div>
   </div>
 </div>
 
@@ -165,17 +166,19 @@
         <div class="fld"><label>الغرض</label><select class="in" id="cPurpose"><option value="sale">شراء</option><option value="rent">إيجار</option></select></div>
         <div class="fld"><label>النوع</label><select class="in" id="cType"><option value="">أي نوع</option><option value="apartment">شقة</option><option value="villa">فيلا</option><option value="duplex">دوبلكس</option><option value="penthouse">بنتهاوس</option><option value="studio">استوديو</option><option value="townhouse">تاون هاوس</option><option value="office">مكتب</option><option value="shop">محل</option></select></div>
       </div>
-      <div class="row2">
-        <div class="fld"><label>المنطقة</label><input class="in" id="cArea" placeholder="التجمع الخامس" /></div>
-        <div class="fld"><label>الميزانية (حتى)</label><input class="in" id="cBudget" type="number" inputmode="numeric" placeholder="6000000" /></div>
+<div class="fld"><label>موعد المتابعة القادم</label><input class="in" id="cFollow" type="date" /></div>
+<details class="optional-fields" id="clientOptional"><summary>تفاصيل إضافية (اختياري)</summary>      <div class="row2">
+        <div class="fld"><label>المنطقة</label><input class="in" id="cArea" list="clientAreas" placeholder="التجمع الخامس" /></div>
+        <div class="fld"><label>الميزانية (حتى)</label><input class="in" id="cBudget" type="number" inputmode="numeric" placeholder="6000000" oninput="document.getElementById('budgetHint').textContent=this.value?Number(this.value).toLocaleString('ar-EG')+' ج.م':''" /><span class="budget-hint" id="budgetHint"></span></div>
       </div>
       <div class="row2">
         <div class="fld"><label>عدد الغرف</label><input class="in" id="cBeds" type="number" inputmode="numeric" placeholder="3" /></div>
         <div class="fld"><label>المرحلة</label><select class="in" id="cStage"></select></div>
       </div>
-      <div class="fld"><label>موعد المتابعة القادم</label><input class="in" id="cFollow" type="date" /></div>
+
       <div class="fld"><label>ملاحظات</label><textarea class="in" id="cNotes" placeholder="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…"></textarea></div>
-      <div class="msg" id="fMsg"></div>
+</details>
+      <datalist id="clientAreas"><option value="القاهرة الجديدة"><option value="التجمع الخامس"><option value="العاصمة الإدارية"><option value="الشيخ زايد"><option value="٦ أكتوبر"><option value="الساحل الشمالي"></datalist><div class="msg" id="fMsg"></div>
     </div>
     <div class="mf">
       <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
@@ -229,7 +232,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/homzy.js?v=3"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -275,10 +278,10 @@ async function boot(){
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
   HZ.loadPlan && HZ.loadPlan();
-  loadClients();
+  await loadClients(); if(new URLSearchParams(location.search).get("new")==="1")openForm();
 }
 window.loadClients=async ()=>{
-  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){ CLIENTS=[]; }
+  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){$('board').innerHTML='<div class="workspace-empty" role="alert"><h2>تعذّر تحميل العملاء</h2><button class="btn btn-teal" onclick="loadClients()">إعادة المحاولة</button></div>';return;}
   renderStats(); renderBoard();
 };
 function isOverdue(d){ if(!d) return false; return new Date(d) < new Date(new Date().toDateString()); }
@@ -293,9 +296,16 @@ function renderStats(){
    +`<div class="stat"><div class="n">${won}</div><div class="l">تم البيع</div></div>`
    +`<div class="stat ${over?'warn':''}"><div class="n">${over}</div><div class="l">متابعات متأخرة</div></div>`;
 }
+let CLIENT_VIEW=localStorage.getItem('hz_client_view')||(matchMedia('(max-width:760px)').matches?'list':'board');
+window.setClientView=v=>{CLIENT_VIEW=v;localStorage.setItem('hz_client_view',v);renderBoard();};
 window.renderBoard=()=>{
   const q=($('search').value||'').trim().toLowerCase();
   const match=c=>!q||((c.name||'')+' '+(c.phone||'')+' '+(c.area||'')).toLowerCase().includes(q);
+  $('listViewBtn').setAttribute('aria-pressed',CLIENT_VIEW==='list');$('boardViewBtn').setAttribute('aria-pressed',CLIENT_VIEW==='board');
+  $('board').className=CLIENT_VIEW==='list'?'client-list':'board';
+  const matches=CLIENTS.filter(match);
+  if(!matches.length){$('board').innerHTML='<div class="workspace-empty"><h2>'+(!CLIENTS.length?'أضف أول عميل':'مفيش نتائج للبحث')+'</h2><p>'+(!CLIENTS.length?'سجّل احتياجات العميل وحدّد المتابعة القادمة عشان تبدأ يومك بخطة واضحة.':'جرّب اسم أو منطقة مختلفة.')+'</p>'+(!CLIENTS.length?'<button class="btn btn-teal" onclick="openForm()">أضف عميل</button>':'')+'</div>';return;}
+  if(CLIENT_VIEW==='list'){$('board').innerHTML=matches.map(cardHTML).join('');return;}
   $('board').innerHTML=STAGES.map(s=>{
     const list=CLIENTS.filter(c=>(c.stage||'new')===s.k && match(c));
     const cards=list.map(cardHTML).join('')||'<div class="col-empty">—</div>';
@@ -339,7 +349,7 @@ window.logAct=async(id,kind,body)=>{
 };
 
 /* form */
-window.openForm=()=>{ EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
+window.openForm=()=>{ $('clientOptional').open=false;$('budgetHint').textContent=''; EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
   ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes'].forEach(id=>$(id).value='');
   $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg(''); $('formOv').classList.add('open'); };
 window.closeForm=()=>{ stopVoice(true); $('voicebar').classList.remove('show'); $('formOv').classList.remove('open'); };
@@ -393,7 +403,7 @@ function fillFromFields(f){
 }
 window.editClient=(id)=>{ const c=CLIENTS.find(x=>x.id===id); if(!c) return; EDIT_ID=id; $('fTitle').textContent='تعديل العميل';
   $('cName').value=c.name||''; $('cPhone').value=c.phone||''; $('cPurpose').value=c.purpose||'sale'; $('cType').value=c.type||'';
-  $('cArea').value=c.area||''; $('cBudget').value=c.budget||''; $('cBeds').value=c.bedrooms||''; $('cStage').value=c.stage||'new';
+  $('clientOptional').open=true; $('budgetHint').textContent=c.budget?money(c.budget):''; $('cArea').value=c.area||''; $('cBudget').value=c.budget||''; $('cBeds').value=c.bedrooms||''; $('cStage').value=c.stage||'new';
   $('cFollow').value=c.next_followup||''; $('cNotes').value=c.notes||''; fmsg(''); $('formOv').classList.add('open'); };
 function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':(t?'err':'')); }
 window.saveClient=async ()=>{

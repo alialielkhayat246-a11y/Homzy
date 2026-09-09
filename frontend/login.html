@@ -230,10 +230,10 @@ async function afterAuth(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ return; }
   let prof=null;
-  try{ prof=(await api('/profiles?select=phone,full_name,onboarded&id=eq.'+session.user.id))[0]; }catch(e){ console.warn('profile fetch failed', e); }
+  try{ prof=(await api('/profiles?select=phone,full_name,onboarded,role&id=eq.'+session.user.id))[0]; }catch(e){ console.warn('profile fetch failed', e); }
   const hasPhone = prof && prof.phone && (''+prof.phone).replace(/\D/g,'').length>=10;
   if(hasPhone){
-    if(prof.onboarded){ location.replace(nextPath()); }
+    if(prof.onboarded){ const requested=new URLSearchParams(location.search).get('next'); location.replace(prof.role==='broker'&&(!requested||requested==='/app'||requested==='/')?'/crm':nextPath()); }
     else { location.replace('/welcome?next='+encodeURIComponent(nextPath())); }
     return;
   }

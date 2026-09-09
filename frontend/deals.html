@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<script>(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent('/deals'));}}catch(e){location.replace('/login');}})();</script>
+
 <title>Homzy — الصفقات والعمولات</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -47,14 +47,15 @@
   .modal input,.modal select{width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:"Cairo";font-size:13px;margin-top:3px;}
   .mx{width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;font-size:18px;cursor:pointer;}
 </style>
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
 </head>
-<body data-mode="broker">
+<body class="broker-workspace" data-mode="broker">
 <div id="hz-header"></div>
 <div class="wrap2">
-  <div class="toolbar"><h1>💼 الصفقات والعمولات</h1><button class="btn btn-teal" onclick="openDeal()">＋ صفقة جديدة</button></div>
+  <div class="toolbar"><h1>الصفقات والعمولات</h1><button class="btn btn-teal" onclick="openDeal()">＋ صفقة جديدة</button></div>
   <div class="kpis" id="kpis"></div>
-  <div class="board" id="board"><div style="padding:30px;color:var(--muted)">…</div></div>
-  <div class="ledger"><h2>📒 سجل العمولات</h2><div class="imm">سجل غير قابل للتعديل — أي تصحيح يُضاف كسطر جديد (append-only).</div><div id="ledger"></div></div>
+  <div class="workspace-toolbar"><label for="dealPeriod">الفترة</label><select id="dealPeriod" onchange="renderKpis();renderBoard();renderLedger()"><option value="0">كل الوقت</option><option value="30">آخر ٣٠ يوم</option><option value="90">آخر ٩٠ يوم</option><option value="365">آخر سنة</option></select></div><p class="budget-hint">الصفقات حسب تاريخ إضافتها، والعمولات حسب تاريخ تسجيلها.</p><div class="board" id="board"><div style="padding:30px;color:var(--muted)">…</div></div>
+  <div class="ledger"><h2>سجل العمولات</h2><div class="imm">أي تعديل بيُسجَّل مع الاحتفاظ بالسجل السابق.</div><div id="ledger"></div></div>
 </div>
 
 <div class="ov" id="dealOv"><div class="modal">
@@ -75,7 +76,8 @@
 </div></div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/homzy.js?v=3"></script>
+<script src="/assets/broker-session.js?v=1"></script>
 <script>
 const $=id=>document.getElementById(id);
 const money=n=>n==null?'—':Number(n).toLocaleString('ar-EG')+' ج.م';
@@ -84,30 +86,35 @@ let S=null, DEALS=[], LEADS=[], LEDGER=[];
 const STAGES=[['open','مفتوحة'],['negotiation','تفاوض'],['reservation','حجز'],['won','مكسوبة'],['lost','خاسرة']];
 
 async function boot(){
-  S=HZ.session(); if(!S){ location.href='/login?next=/deals'; return; }
+  S=await HZ.requireSession(); if(!S)return;
   try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ document.querySelector('.wrap2').innerHTML='<div style="padding:60px;text-align:center"><h2>الصفقات</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
   await load();
 }
 async function load(){
   const uid=S.uid;
-  [DEALS, LEADS, LEDGER] = await Promise.all([
-    HZ.sbAuth('/crm_deals?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token).catch(()=>[]),
-    HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name&order=name.asc',S.token).catch(()=>[]),
-    HZ.sbAuth('/crm_commission_ledger?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token).catch(()=>[])
-  ]);
+  try{[DEALS, LEADS, LEDGER] = await Promise.all([
+    HZ.sbAuth('/crm_deals?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token),
+    HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name&order=name.asc',S.token),
+    HZ.sbAuth('/crm_commission_ledger?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token)
+  ]);}catch(e){$('board').innerHTML='<div class="workspace-empty" role="alert"><h2>تعذّر تحميل الصفقات</h2><button class="btn btn-teal" onclick="load()">إعادة المحاولة</button></div>';return;}
   DEALS=DEALS||[]; LEADS=LEADS||[]; LEDGER=LEDGER||[];
   renderKpis(); renderBoard(); renderLedger();
 }
+function inPeriod(row){const days=Number($('dealPeriod').value);return !days||(row.created_at&&new Date(row.created_at)>=new Date(Date.now()-days*864e5));}
 function renderKpis(){
-  const open=DEALS.filter(d=>['open','negotiation','reservation'].includes(d.status));
+  const open=DEALS.filter(inPeriod).filter(d=>['open','negotiation','reservation'].includes(d.status));
   const pipeline=open.reduce((s,d)=>s+Number(d.value||0),0);
-  const won=DEALS.filter(d=>d.status==='won');
-  const comm=LEDGER.reduce((s,l)=>s+Number(l.commission_amount||0),0); // append-only incl. adjustments
+  const won=DEALS.filter(inPeriod).filter(d=>d.status==='won');
+  const periodLedger=LEDGER.filter(inPeriod);
+  const expected=open.reduce((sum,d)=>sum+Number(d.value||0)*Number(d.commission_rate||0),0);
+  const accrued=periodLedger.filter(l=>l.status==='accrued').reduce((sum,l)=>sum+Number(l.commission_amount||0),0);
+  const paid=periodLedger.filter(l=>l.status==='paid').reduce((sum,l)=>sum+Number(l.commission_amount||0),0);
+  const adjustments=periodLedger.filter(l=>l.status==='adjustment').reduce((sum,l)=>sum+Number(l.commission_amount||0),0); // append-only incl. adjustments
   $('kpis').innerHTML=`
     <div class="kpi"><div class="n">${open.length}</div><div class="l">صفقات مفتوحة</div></div>
     <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة الصفقات الجارية</div></div>
     <div class="kpi win"><div class="n">${won.length}</div><div class="l">صفقات مكسوبة</div></div>
-    <div class="kpi comm"><div class="n">${money(comm)}</div><div class="l">إجمالي العمولات</div></div>`;
+    <div class="kpi comm"><div class="n">${money(expected)}</div><div class="l">عمولات متوقعة للصفقات المفتوحة</div></div><div class="kpi"><div class="n">${money(accrued)}</div><div class="l">قيود استحقاق مسجّلة</div></div><div class="kpi win"><div class="n">${money(paid)}</div><div class="l">قيود تحصيل مسجّلة</div></div><div class="kpi"><div class="n">${money(adjustments)}</div><div class="l">تسويات مسجّلة</div></div>`;
 }
 function dcard(d){
   const won=d.status==='won';
@@ -127,15 +134,16 @@ function dcard(d){
     <div class="acts">${acts}</div></div>`;
 }
 function renderBoard(){
+  if(!DEALS.filter(inPeriod).length){$('board').innerHTML='<div class="workspace-empty"><h2>مفيش صفقات في الفترة دي</h2><p>اربط عميلًا بوحدة وسجّل قيمة الصفقة والعمولة المتوقعة.</p><button class="btn btn-teal" onclick="openDeal()">أضف صفقة</button></div>';return;}
   $('board').innerHTML=STAGES.map(([k,lab])=>{
-    const list=DEALS.filter(d=>(d.status||'open')===k);
+    const list=DEALS.filter(inPeriod).filter(d=>(d.status||'open')===k);
     const cards=list.map(dcard).join('')||'<div class="col-empty">—</div>';
     return `<div class="col"><div class="col-h"><span>${lab}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
   }).join('');
 }
 function renderLedger(){
-  if(!LEDGER.length){ $('ledger').innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px">لسه مفيش عمولات مسجّلة.</div>'; return; }
-  const rows=LEDGER.map(l=>`<tr>
+  if(!LEDGER.filter(inPeriod).length){ $('ledger').innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px">لسه مفيش عمولات مسجّلة.</div>'; return; }
+  const rows=LEDGER.filter(inPeriod).map(l=>`<tr>
     <td>${esc(l.reference||('#'+l.deal_id))}</td>
     <td>${money(l.gross_value)}</td>
     <td>${Math.round((l.commission_rate||0)*100)}%</td>

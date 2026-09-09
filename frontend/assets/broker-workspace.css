@@ -1,0 +1,30 @@
+/* Shared broker workspace; the public browsing layout stays unchanged. */
+.hz-bell-badge[hidden]{display:none!important;}
+.broker-workspace #hz-header .wrap{padding:0 20px;max-width:none;}
+.broker-workspace .hz-foot{background:transparent;color:var(--muted);padding:16px 0;}
+.broker-workspace .hz-foot-grid{display:none;}.broker-workspace .hz-foot-bottom{border:0;margin:0;padding:0;font-size:12px;}
+.broker-workspace .hz-foot-bottom span:last-child{display:none;}
+.workspace-empty{background:#fff;border:1px dashed var(--line-2);border-radius:18px;padding:28px;text-align:center;grid-column:1/-1;}
+.workspace-empty h2,.workspace-empty h3{font-size:21px;margin-bottom:10px;}.workspace-empty p{color:#526074;margin-bottom:18px;}
+.broker-workspace .workspace-empty{margin-bottom:18px;}
+.workspace-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;}.workspace-actions .btn{min-height:44px;}
+.workspace-toolbar{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;}.workspace-toolbar input,.workspace-toolbar select{font:inherit;padding:11px 14px;border:1px solid var(--line-2);border-radius:12px;background:white;min-width:0;}.workspace-toolbar input{flex:1;}
+.view-switch{display:flex;gap:4px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:4px;}.view-switch button{font:700 13px var(--ff);padding:8px 15px;background:none;border:0;border-radius:8px;cursor:pointer;}.view-switch button[aria-pressed=true]{background:var(--teal-l);color:var(--teal-d);}
+.client-list{display:grid;gap:12px;}.client-list .ccard{margin:0;}.client-list .acts{gap:8px;}.client-list .note{display:none;}
+.optional-fields{border:1px solid var(--line);border-radius:12px;padding:12px;}.optional-fields summary{cursor:pointer;color:var(--teal-d);font-weight:700;margin-bottom:10px;}
+.budget-hint{font-size:13px;color:var(--teal-d);min-height:20px;margin-top:5px;}
+.broker-workspace .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));}.broker-workspace .stat{min-width:0;}
+.broker-workspace .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}.broker-workspace .stat .n{font-size:24px;font-weight:800;}.broker-workspace .stat .l{font-size:13px;color:#526074;}.broker-workspace #listingStats{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+.broker-workspace .company-settings{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:18px;}.company-settings>summary{font-weight:700;cursor:pointer;}.company-settings .company{margin:16px 0 0;box-shadow:none;}
+.listing-preview{background:#fff;border:1px solid var(--line);padding:18px;border-radius:14px;}.listing-preview h3{margin:10px 0;}.listing-preview img{max-height:180px;border-radius:10px;object-fit:cover;}.listing-preview p{white-space:pre-wrap;overflow-wrap:anywhere;color:#526074;}
+.broker-workspace .mf{flex-wrap:wrap;}.broker-workspace .mf .btn{min-width:120px;}
+@media(min-width:1100px){
+ .broker-workspace.hz-broker{padding-inline-start:216px;}
+ .broker-workspace.hz-broker #hzCrmSub{position:fixed;inset-inline-start:0;top:0;bottom:0;width:216px;border-inline-end:1px solid var(--line);padding:30px 14px;background:#fff;z-index:65;overflow-y:auto;}
+ .broker-workspace.hz-broker .hz-crmsub-in{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:0!important;}
+ .broker-workspace.hz-broker .hz-crmsub-in::before{content:'Homzy / Workspace';font:700 16px var(--fd);padding:10px 12px 28px;color:var(--teal-d);}
+ .broker-workspace.hz-broker .hz-crmtab{border:0;border-radius:11px;padding:13px;}.broker-workspace.hz-broker .hz-crmtab.active{background:var(--teal-l);}
+ .broker-workspace .hz-links{display:none;}
+ html[lang="ar"] .broker-workspace.hz-broker .hz-crmsub-in::before{content:'Homzy / مساحة العمل';}
+}
+@media(max-width:640px){.broker-workspace .stats{grid-template-columns:1fr 1fr;}.broker-workspace .bar h1{flex-basis:100%;}.broker-workspace .bar #search{flex:1;min-width:0;}.broker-workspace .bar #bellBtn{font-size:12px;padding:10px;}.broker-workspace .modal .row2{grid-template-columns:1fr;}.broker-workspace .modal .mb{max-height:65vh;}.broker-workspace .workspace-toolbar input{flex-basis:100%;}.broker-workspace .btn{white-space:normal;}}
