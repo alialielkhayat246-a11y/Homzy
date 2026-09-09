@@ -37,6 +37,14 @@
   .plan .cta{width:100%;margin-top:8px;}
   .cur{text-align:center;font-weight:800;color:#137a3e;padding:12px;}
   .note{max-width:760px;margin:34px auto 0;color:var(--muted);font-size:13.5px;text-align:center;line-height:1.9;}
+  /* current-subscription banner */
+  .curplan{max-width:1000px;margin:26px auto 0;background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;border-radius:18px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:var(--shadow);}
+  .curplan .cp-badge{display:inline-block;background:rgba(255,255,255,.18);border-radius:100px;padding:3px 11px;font-size:12px;font-weight:800;margin-bottom:7px;}
+  .curplan b{font-size:23px;font-family:var(--fd);display:block;line-height:1.1;}
+  .curplan .cp-status{font-size:13px;opacity:.92;display:inline-block;margin-top:4px;}
+  .curplan .cp-r{text-align:end;font-size:13.5px;opacity:.95;line-height:1.75;}
+  .curplan .cp-r .up{display:inline-block;margin-top:8px;background:#fff;color:var(--navy);font-weight:800;font-size:13px;padding:8px 15px;border-radius:10px;text-decoration:none;}
+  @media(max-width:560px){.curplan{flex-direction:column;align-items:flex-start;} .curplan .cp-r{text-align:start;}}
 </style>
 </head>
 <body data-mode="broker">
@@ -48,6 +56,10 @@
       <h1>اختر باقتك</h1>
       <p>أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور.</p>
       <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')">شهري</button><button id="cY" onclick="setCyc('yearly')">سنوي · وفّر شهرين</button></div>
+    </div>
+    <div class="curplan" id="curplan" hidden>
+      <div><span class="cp-badge">باقتك الحالية</span><b id="cpName">—</b><span class="cp-status" id="cpStatus"></span></div>
+      <div class="cp-r" id="cpMeta"></div>
     </div>
     <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
     <div class="note">
@@ -107,13 +119,45 @@ window.subscribe=async(plan)=>{
   }
 };
 window.payPlan=async(plan)=>{ const r=await HZ.pay('subscription',{plan,cycle:CYC}); if(!(r&&r.ok)) alert('تعذّر فتح صفحة الدفع: '+((r&&r.error)||'')); };
+let SUB=null;
+const fmtDate=d=>{ try{ return new Date(d).toLocaleDateString('ar-EG',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } };
+const daysLeft=d=>{ const n=Math.ceil((new Date(d)-Date.now())/864e5); return n>0?n:0; };
+function renderCurrentBanner(){
+  const s=HZ.session(); const box=document.getElementById('curplan');
+  if(!s){ box.hidden=true; return; }
+  const plan=PLANS.find(p=>p.plan===CURRENT);
+  const name = plan ? plan.name_ar : (CURRENT==='free'?'المجانية':CURRENT.toUpperCase());
+  document.getElementById('cpName').textContent = name;
+  let status='', meta='';
+  const st = SUB && SUB.plan===CURRENT ? SUB.status : (CURRENT==='free'?'free':null);
+  if(st==='trialing'){
+    status='🎁 تجربة مجانية';
+    if(SUB&&SUB.trial_end) meta = 'تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end)+'</b> يوم';
+  } else if(st==='active'){
+    status='✅ مفعّلة'+(SUB&&SUB.billing_cycle?(' · '+(SUB.billing_cycle==='yearly'?'سنوي':'شهري')):'');
+    if(SUB&&SUB.current_period_end) meta = 'تتجدد في '+fmtDate(SUB.current_period_end);
+  } else if(CURRENT==='free'){
+    status='باقة مجانية';
+    meta = 'طوّر باقتك عشان تفتح كل الأدوات 👇';
+  } else {
+    status = st ? st : '';
+  }
+  document.getElementById('cpStatus').textContent = status;
+  document.getElementById('cpMeta').innerHTML = meta || '';
+  box.hidden=false;
+}
 async function boot(){
   try{ PAY_ON = await HZ.checkPay(); }catch(e){ PAY_ON=false; }
   try{ PLANS=await HZ.sb('/plan_limits?select=*&active=eq.true&order=sort')||[]; }catch(e){ PLANS=[]; }
   const s=HZ.session();
-  if(s){ try{ const cp=await HZ.rpc('current_plan',{p_uid:s.uid}); CURRENT=(typeof cp==='string')?cp:((cp&&cp[0])||'free'); }catch(e){} }
+  if(s){
+    try{ const cp=await HZ.rpc('current_plan',{p_uid:s.uid}); CURRENT=(typeof cp==='string')?cp:((cp&&cp[0])||'free'); }catch(e){}
+    try{ SUB=(await HZ.sbAuth('/subscriptions?user_id=eq.'+s.uid+'&select=plan,status,billing_cycle,trial_end,current_period_end', s.token))[0]||null; }catch(e){}
+  }
   render();
+  renderCurrentBanner();
 }
+document.addEventListener('hz:lang', ()=>{ if(PLANS.length){ render(); renderCurrentBanner(); } });
 boot();
 </script>
 </body>

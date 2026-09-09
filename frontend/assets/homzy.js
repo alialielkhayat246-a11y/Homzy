@@ -125,6 +125,7 @@ const T = {
   // profile menu
   account:{ar:'الحساب',en:'Account'}, feedback:{ar:'الشكاوى والمقترحات',en:'Feedback'},
   becomeBroker:{ar:'ابدأ العمل كبروكر',en:'Start working as a broker'},
+  plansMenu:{ar:'الباقات والاشتراك',en:'Plans & subscription'},
   logout:{ar:'تسجيل الخروج',en:'Log out'}, login:{ar:'تسجيل الدخول',en:'Log in'},
   roleBroker:{ar:'بروكر',en:'Broker'}, roleUser:{ar:'مستخدم',en:'User'},
   menu:{ar:'القائمة',en:'Menu'}, notifications:{ar:'التنبيهات',en:'Notifications'},
@@ -172,6 +173,7 @@ const SVG = {
   people:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 6.2a3 3 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-2-4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   logout:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 12H4m0 0 3.5-3.5M4 12l3.5 3.5M9 7V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   badge:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2 4 5v6c0 4.5 3.2 7.9 8 9 4.8-1.1 8-4.5 8-9V5l-8-3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  gem:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3h12l3 6-9 12L3 9l3-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M3 9h18M9 3l3 18M15 3l-3 18" stroke="currentColor" stroke-width="1.1"/></svg>',
   x:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   hamburger:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
 };
@@ -236,6 +238,7 @@ function profileHTML(){
       <div class="hz-prof-head"><span class="av lg">${HZ.esc(initial)}</span><span class="pn"><b>${HZ.esc(nm)}</b><small>${typ}</small></span></div>
       <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.user}</span>${HZ.t('account')}</a>
       <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.cog}</span>${HZ.t('settings')}</a>
+      ${HZ.isBroker?`<a class="hz-menu-item" role="menuitem" href="/pricing"><span class="mi">${SVG.gem}</span>${HZ.t('plansMenu')}</a>`:''}
       <button class="hz-menu-item" role="menuitem" onclick="HZ.openFeedback()"><span class="mi">${SVG.chat}</span>${HZ.t('feedback')}</button>
       ${HZ.isBroker?'':`<a class="hz-menu-item accent" role="menuitem" href="/account"><span class="mi">${SVG.badge}</span>${HZ.t('becomeBroker')}</a>`}
       <div class="hz-menu-sep" role="separator"></div>
@@ -318,6 +321,7 @@ function buildDrawer(){
       <div class="hz-draw-prof"><span class="av lg">${HZ.esc(initial)}</span><span class="pn"><b>${HZ.esc(nm)}</b><small>${typ}</small></span></div>
       <a class="hz-draw-item" href="/account">${SVG.user}${HZ.t('account')}</a>
       <a class="hz-draw-item" href="/account">${SVG.cog}${HZ.t('settings')}</a>
+      ${HZ.isBroker?`<a class="hz-draw-item" href="/pricing">${SVG.gem}${HZ.t('plansMenu')}</a>`:''}
       <button class="hz-draw-item" onclick="HZ.openFeedback()">${SVG.chat}${HZ.t('feedback')}</button>
       ${HZ.isBroker?'':`<a class="hz-draw-item accent" href="/account">${SVG.badge}${HZ.t('becomeBroker')}</a>`}
       <button class="hz-draw-item danger" onclick="HZ.logout()">${SVG.logout}${HZ.t('logout')}</button>`
