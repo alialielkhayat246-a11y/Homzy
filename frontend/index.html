@@ -71,8 +71,16 @@
   .xcard .fic{width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:16px; background:var(--teal-l);}
   .xcard h3{font-size:19px;} .xcard p{color:#5b6b82; font-size:15px; margin-top:9px;}
   .xcard .go{display:inline-flex; gap:6px; margin-top:12px; color:var(--teal-d); font-weight:700; font-size:14px;}
-  @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px;} .phone-stage{order:-1;} .explore{grid-template-columns:1fr 1fr;} .band-grid{grid-template-columns:1fr 1fr; gap:26px;} }
+  @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px;} .phone-stage{order:1;} .hero{padding:32px 0;} .phone{width:260px;} .phone .screen{height:510px;} .explore{grid-template-columns:1fr 1fr;} .band-grid{grid-template-columns:1fr 1fr; gap:26px;} }
   @media(max-width:560px){ .explore{grid-template-columns:1fr;} }
+  .hero-note{margin-top:22px;color:#526074;font-size:14px;}
+  .home-projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;}
+  .home-project{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .2s;}
+  .home-project:hover{transform:translateY(-3px);}
+  .home-project img{width:100%;aspect-ratio:16/10;object-fit:cover;}
+  .home-project .copy{padding:20px;}.home-project h3{font-size:20px;}.home-project p{color:#526074;margin:8px 0;}.home-project b{color:var(--teal-d);}
+  .home-areas{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;}.home-areas a{padding:9px 16px;background:#fff;border:1px solid var(--line);border-radius:100px;}
+  @media(max-width:600px){.home-projects{grid-template-columns:1fr;}.hero-cta{gap:10px;margin-top:22px;}.hero-cta .btn{flex:1;padding:12px;}.hero .lead{margin-top:16px;}.hero-grid{gap:28px;}.section{padding:48px 0;}}
 </style>
 </head>
 <body data-mode="client">
@@ -84,27 +92,23 @@
     <div>
       <span class="eyebrow">🏠 <span data-ar="مدعوم بالذكاء الاصطناعي" data-en="Powered by AI">مدعوم بالذكاء الاصطناعي</span></span>
       <h1 style="margin-top:18px" data-ar="مستشارك العقاري الذكي في <span class='hl'>مصر</span>" data-en="Your smart real-estate advisor in <span class='hl'>Egypt</span>">مستشارك العقاري الذكي في <span class="hl">مصر</span></h1>
-      <p class="lead" data-ar="كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية." data-en="Chat with Homzy in Arabic or English — tell it your budget, area and bedrooms, and it recommends the best-fit unit from developer projects (primary) and the resale market. All grounded in real data.">كلّم Homzy بالعربي أو الإنجليزي، قوله ميزانيتك ومنطقتك وعدد الغرف — وهو يفهم طلبك ويرشّحلك أنسب وحدة من مشاريع المطوّرين (primary) وسوق الـ resale. كله مبني على داتا حقيقية.</p>
+      <p class="lead" data-ar="قولنا ميزانيتك والمنطقة اللي بتحبها، وخلّي Homzy يساعدك تلاقي العقار المناسب من مشاريع المطوّرين وإعادة البيع." data-en="Chat with Homzy in Arabic or English — tell it your budget, area and bedrooms, and it recommends the best-fit unit from developer projects (primary) and the resale market. All grounded in real data.">قولنا ميزانيتك والمنطقة اللي بتحبها، وخلّي Homzy يساعدك تلاقي العقار المناسب من مشاريع المطوّرين وإعادة البيع.</p>
       <div class="hero-cta">
         <button class="btn btn-teal" onclick="HZ.openChat()" data-ar="ابدأ محادثة مجانية" data-en="Start a free chat">ابدأ محادثة مجانية</button>
         <a class="btn btn-ghost" href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</a>
       </div>
-      <div class="hero-trust">
-        <div class="t"><b id="stProjects"><i>922</i></b><span data-ar="مشروع عقاري" data-en="projects">مشروع عقاري</span></div>
-        <div class="t"><b id="stDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
-        <div class="t"><b><i>Primary</i> + Resale</b><span data-ar="داتا حقيقية" data-en="real data">داتا حقيقية</span></div>
-      </div>
+      <p class="hero-note" data-ar="بالعربي والإنجليزي · ترشيحات من بيانات فعلية" data-en="Arabic & English · Recommendations from real listings">بالعربي والإنجليزي · ترشيحات من بيانات فعلية</p>
     </div>
     <div class="phone-stage">
       <div class="blob"></div>
       <div class="phone"><div class="screen">
         <div class="ph-top"><div class="a"><svg width="20" height="20" viewBox="0 0 64 64"><path d="M17 47V31l15-12 15 12v16" stroke="#fff" stroke-width="5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#0B5563"/></svg></div><div class="nm">Homzy</div><div class="st" data-ar="متصل" data-en="online">متصل</div></div>
-        <div class="ph-body" dir="rtl">
-          <div class="pm bot">أهلاً بيك 👋 أنا Homzy. بتدوّر على إيجار ولا تمليك؟</div>
-          <div class="pm me">تمليك 3 غرف في التجمع، حوالي 6 مليون</div>
-          <div class="pm bot">تمام! عندي وحدة resale جاهزة تناسبك 👇</div>
-          <div class="pm-rec"><span class="bd">RESALE · جاهزة</span><div class="t">شقة 3 غرف — النرجس</div><div class="a">التجمع الخامس</div><div class="pr">3,850,000 ج.م</div><div class="meta"><span>3 غرف</span><span>160 م²</span><span>استلام فوري</span></div></div>
-          <div class="pm bot">أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟</div>
+        <div class="ph-body">
+          <div class="pm bot" data-ar="أهلاً بيك، أنا Homzy. بتدوّر على إيجار ولا تمليك؟" data-en="Hi, I’m Homzy. Are you looking to rent or buy?">أهلاً بيك، أنا Homzy. بتدوّر على إيجار ولا تمليك؟</div>
+          <div class="pm me" data-ar="تمليك 3 غرف في التجمع، حوالي 6 مليون" data-en="A 3-bedroom home in New Cairo, around 6 million.">تمليك 3 غرف في التجمع، حوالي 6 مليون</div>
+          <div class="pm bot" data-ar="تمام! عندي وحدة إعادة بيع جاهزة تناسبك" data-en="Here’s a ready resale home to explore.">تمام! عندي وحدة إعادة بيع جاهزة تناسبك</div>
+          <div class="pm-rec"><span class="bd" data-ar="إعادة بيع · جاهزة" data-en="Resale · Ready">إعادة بيع · جاهزة</span><div class="t" data-ar="شقة 3 غرف — النرجس" data-en="3-bedroom apartment — El Narges">شقة 3 غرف — النرجس</div><div class="a" data-ar="التجمع الخامس" data-en="Fifth Settlement">التجمع الخامس</div><div class="pr" data-ar="3,850,000 ج.م" data-en="3,850,000 EGP">3,850,000 ج.م</div><div class="meta"><span data-ar="3 غرف" data-en="3 beds">3 غرف</span><span data-ar="160 م²" data-en="160 m²">160 م²</span><span data-ar="استلام فوري" data-en="Ready to move">استلام فوري</span></div></div>
+          <div class="pm bot" data-ar="أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟" data-en="Within your budget. Shall we arrange a viewing?">أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟</div>
         </div>
       </div></div>
     </div>
@@ -115,19 +119,22 @@
 <div class="band"><div class="wrap band-grid">
   <div class="s"><b id="bProjects"><i>922</i></b><span data-ar="مشروع من المطوّرين" data-en="developer projects">مشروع من المطوّرين</span></div>
   <div class="s"><b id="bDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
-  <div class="s"><b id="bUnits"><i>Primary</i> + Resale</b><span id="bUnitsLbl" data-ar="سوقين في مكان واحد" data-en="two markets, one place">سوقين في مكان واحد</span></div>
+  <div class="s"><b id="bUnits"><i data-ar="جديد وإعادة بيع" data-en="New & resale">جديد وإعادة بيع</i></b><span id="bUnitsLbl" data-ar="سوقين في مكان واحد" data-en="two markets, one place">سوقين في مكان واحد</span></div>
   <div class="s"><b><i>24/7</i></b><span data-ar="مستشار ذكي" data-en="AI advisor">مستشار ذكي</span></div>
 </div></div>
 
+<section class="section" id="homeDiscover" hidden>
+  <div class="wrap"><div class="sec-head"><span class="eyebrow" data-ar="من مشاريعنا" data-en="From our catalog">من مشاريعنا</span><h2 data-ar="اكتشف فرصتك القادمة" data-en="Discover your next move">اكتشف فرصتك القادمة</h2><p data-ar="مشاريع من الكتالوج الفعلي — استكشف التفاصيل وقارن بنفسك." data-en="Projects from our live catalog. Explore the details and compare.">مشاريع من الكتالوج الفعلي — استكشف التفاصيل وقارن بنفسك.</p></div><div class="home-projects" id="homeProjects"></div><div class="home-areas" id="homeAreas"></div></div>
+</section>
 <!-- Explore (links to section pages) -->
 <section class="section">
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow" data-ar="استكشف Homzy" data-en="Explore Homzy">استكشف Homzy</span>
-      <h2 data-ar="كل قسم في صفحته الخاصة" data-en="Every section on its own page">كل قسم في صفحته الخاصة</h2>
+      <h2 data-ar="ابدأ رحلتك العقارية" data-en="Find your next place">ابدأ رحلتك العقارية</h2>
     </div>
     <div class="explore">
-      <a class="xcard reveal" href="/features"><div class="fic">✨</div><h3 data-ar="المميزات" data-en="Features">المميزات</h3><p data-ar="مستشار AI، primary/resale، سوق العقارات، خرائط، لانشات، وأدوات البروكر." data-en="AI advisor, primary/resale, marketplace, maps, launches, and broker tools.">مستشار AI، primary/resale، سوق العقارات، خرائط، لانشات، وأدوات البروكر.</p><span class="go" data-ar="اعرف أكتر ←" data-en="Learn more →">اعرف أكتر ←</span></a>
+      <a class="xcard reveal" href="/features"><div class="fic">✨</div><h3 data-ar="المميزات" data-en="Features">المميزات</h3><p data-ar="ترشيحات ذكية، مشاريع جديدة وإعادة بيع، خرائط، وأدوات تساعدك تختار." data-en="AI advisor, primary/resale, marketplace, maps, launches, and broker tools.">ترشيحات ذكية، مشاريع جديدة وإعادة بيع، خرائط، وأدوات تساعدك تختار.</p><span class="go" data-ar="اعرف أكتر ←" data-en="Learn more →">اعرف أكتر ←</span></a>
       <a class="xcard reveal" href="/areas"><div class="fic">🗺️</div><h3 data-ar="المناطق" data-en="Areas">المناطق</h3><p data-ar="اتصفّح أهم مناطق مصر بأعداد المشاريع الحقيقية." data-en="Browse Egypt's top areas with real project counts.">اتصفّح أهم مناطق مصر بأعداد المشاريع الحقيقية.</p><span class="go" data-ar="شوف المناطق ←" data-en="See areas →">شوف المناطق ←</span></a>
       <a class="xcard reveal" href="/app"><div class="fic">🏗️</div><h3 data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</h3><p data-ar="مشاريع المطوّرين وسوق العقارات بفلاتر وتفاصيل وأسعار." data-en="Developer projects & the marketplace with filters, details and prices.">مشاريع المطوّرين وسوق العقارات بفلاتر وتفاصيل وأسعار.</p><span class="go" data-ar="افتح التصفّح ←" data-en="Open browse →">افتح التصفّح ←</span></a>
       <a class="xcard reveal only-client" href="/brokers"><div class="fic">🧰</div><h3 data-ar="للبروكرز" data-en="For brokers">للبروكرز</h3><p data-ar="أدوات تخلّي شغلك أسهل: CRM، مشاركة مبراندة، co-broking." data-en="Tools that make your work easier: CRM, branded sharing, co-broking.">أدوات تخلّي شغلك أسهل: CRM، مشاركة مبراندة، co-broking.</p><span class="go" data-ar="أدوات البروكر ←" data-en="Broker tools →">أدوات البروكر ←</span></a>
@@ -139,6 +146,8 @@
 
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/catalog-ui.js?v=1"></script>
+<script src="/assets/home-discover.js?v=1"></script>
 <script>
   // Reveal on scroll
   const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});

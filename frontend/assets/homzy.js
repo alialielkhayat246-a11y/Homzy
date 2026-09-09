@@ -133,7 +133,7 @@ HZ.applyLang = function(){
   rebuildChrome();
   document.dispatchEvent(new CustomEvent('hz:lang', {detail:HZ.lang}));
 };
-HZ.toggleLang = function(){ HZ.lang = HZ.lang==='ar'?'en':'ar'; localStorage.setItem('hz_lang',HZ.lang); HZ.applyLang(); };
+HZ.toggleLang = function(){ HZ.lang = HZ.lang==='ar'?'en':'ar'; localStorage.setItem('hz_lang',HZ.lang); HZ.applyLang(); buildFooter(); };
 
 /* ---------- Product mode (role-driven; no visible toggle) ----------
    `mode` still drives the sales-coach chat persona + any .only-broker/.only-client

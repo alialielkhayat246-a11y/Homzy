@@ -136,16 +136,33 @@
   .savedchip .nb.zero{background:var(--line-2); color:var(--muted);}
   .savedchip .rm{border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:15px; line-height:1; padding:0 2px;}
   .savedchip .rm:hover{color:#B42318;}
+  .browse-intro{padding:32px 0 8px;}.browse-intro h1{font-size:clamp(26px,3vw,36px);}.browse-intro p{color:#526074;margin-top:10px;}
+  #projFilters{background:#fff;border:1px solid var(--line);padding:20px;border-radius:18px;margin:20px 0;gap:12px;}
+  #projFilters #q{flex-basis:100%;min-width:0;font-size:16px;padding:14px 16px;}
+  #projFilters>select{flex:1;min-width:140px;max-width:100%;}
+  .advanced-filters{flex-basis:100%;}.advanced-filters summary{cursor:pointer;font-weight:700;color:var(--teal-d);padding:8px 0;}
+  .advanced-fields{display:flex;gap:12px;flex-wrap:wrap;padding-top:8px;}.advanced-fields select{flex:1;min-width:130px;}
+  .active-filters{display:flex;gap:8px;flex-wrap:wrap;flex-basis:100%;}.active-filters:empty{display:none;}
+  .filter-chip,.filter-clear{font:600 13px var(--ff);cursor:pointer;padding:7px 12px;border:1px solid var(--line);border-radius:100px;background:var(--teal-l);color:var(--teal-d);}.filter-clear{background:#fff;text-decoration:underline;}
+  .savebtn:disabled{opacity:.55;cursor:not-allowed;}
+  .pcard{display:flex;flex-direction:column;}.pcard .img{height:auto;aspect-ratio:16/10;flex-shrink:0;}.pcard .b{display:flex;flex-direction:column;flex:1;}.pcard .b .pr{font-size:19px;margin-top:14px;line-height:1.5;}.pcard .b .det{margin-top:auto;min-height:44px;}.pcard .b .meta2{font-size:12px;color:#526074;margin-bottom:14px;}.pcard .b .dv{color:#526074;}
+  .unit-kinds{font-size:13px;font-weight:700;color:var(--teal-d);margin-top:7px;min-height:20px;}.range-note{font-size:12px;line-height:1.7;color:#526074;margin:10px 0 0;}
+  .detail-skeleton{height:180px;border-radius:16px;margin-top:20px;}.detail-line{height:36px;border-radius:10px;margin-top:16px;}
+  .dbody .dchips .c{font-size:14px;}.dbody .dchips{gap:10px;}.gallery img{width:160px;}.dactions{background:var(--cream);border-top:1px solid var(--line);padding-bottom:max(10px,env(safe-area-inset-bottom));}
+  @media(max-width:600px){.tabs{flex-wrap:wrap;}.tab{padding:10px 13px;font-size:13px;}#projFilters{padding:14px;}#projFilters>select{min-width:calc(50% - 12px);}.grid{gap:14px;}.drawer{width:100%;}.dbody{padding:16px;}.utable thead{display:none;}.utscroll{overflow:visible;}.utscroll .utable{min-width:0;}.utable,.utable tbody{display:block;}.utable tr{display:block;border:1px solid var(--line);border-radius:12px;margin-bottom:14px;padding:10px;}.utable td{display:flex;justify-content:space-between;gap:14px;text-align:end;overflow-wrap:anywhere;}.utable td::before{content:attr(data-label);font-weight:600;color:#526074;flex-shrink:0;}.utable td:last-child{border:0;}.utable td.pr{white-space:normal;}.dactions .btn{min-width:0;font-size:13px;padding:12px;}}
+  @media(prefers-reduced-motion:reduce){.overlay.open,.drawer{animation:none;}.skeleton{animation:none;}}
+
 </style>
 </head>
 <body data-mode="client">
 <div id="hz-header"></div>
 
 <div class="wrap">
+  <div class="browse-intro"><h1 data-ar="اكتشف عقارك المناسب" data-en="Find a place that fits">اكتشف عقارك المناسب</h1><p data-ar="استكشف المشاريع، قارن الخيارات، واعرف تفاصيل كل وحدة." data-en="Explore projects, compare options, and see every unit’s details.">استكشف المشاريع، قارن الخيارات، واعرف تفاصيل كل وحدة.</p></div>
   <div class="tabs">
     <button class="tab on" id="tabProjects" onclick="switchTab('projects')" data-ar="مشاريع المطوّرين" data-en="Developer projects">مشاريع المطوّرين</button>
     <button class="tab" id="tabMarket" onclick="switchTab('market')" data-ar="سوق العقارات" data-en="Marketplace">سوق العقارات</button>
-    <a class="tab" href="/map" style="text-decoration:none;margin-inline-start:auto" data-ar="🗺️ الخريطة" data-en="🗺️ Map">🗺️ الخريطة</a>
+    <a class="tab" href="/map" style="text-decoration:none;margin-inline-start:auto" data-ar="الخريطة" data-en="Map">الخريطة</a>
   </div>
   <a class="only-broker" href="/community" style="display:flex;align-items:center;gap:10px;background:var(--teal-l);color:var(--teal-d);border-radius:12px;padding:12px 16px;margin:10px 0;font-weight:800;text-decoration:none">💬 <span data-ar="مجتمع البروكرز — اعرض طلب عميلك أو اقفل ديل مع بروكر في نفس المنطقة" data-en="Brokers community — post your client's request or co-broke a deal in the same area">مجتمع البروكرز — اعرض طلب عميلك أو اقفل ديل مع بروكر في نفس المنطقة</span></a>
   <div class="infobar" id="listInfo">
@@ -156,15 +173,7 @@
   <div class="filters" id="projFilters">
     <input type="search" id="q" data-ph-ar="ابحث باسم المشروع أو المطوّر…" data-ph-en="Search by project or developer…" oninput="debouncedLoad()" />
     <select id="fArea" onchange="loadProjects(true)"><option value="" data-ar="كل المناطق" data-en="All areas">كل المناطق</option></select>
-    <select id="fBeds" onchange="loadProjects(true)">
-      <option value="" data-ar="كل الغرف" data-en="Any rooms">كل الغرف</option>
-      <option value="0" data-ar="استوديو" data-en="Studio">استوديو</option>
-      <option value="1" data-ar="غرفة" data-en="1 bed">غرفة</option>
-      <option value="2" data-ar="غرفتين" data-en="2 beds">غرفتين</option>
-      <option value="3" data-ar="٣ غرف" data-en="3 beds">٣ غرف</option>
-      <option value="4" data-ar="٤ غرف" data-en="4 beds">٤ غرف</option>
-      <option value="5" data-ar="٥+ غرف" data-en="5+ beds">٥+ غرف</option>
-    </select>
+    <select id="fType" onchange="loadProjects(true)" aria-label="نوع العقار"><option value="" data-ar="كل الأنواع" data-en="All property types">كل الأنواع</option><option value="residential" data-ar="سكني" data-en="Residential">سكني</option><option value="commercial" data-ar="تجاري" data-en="Commercial">تجاري</option><option value="office" data-ar="إداري" data-en="Office">إداري</option><option value="medical" data-ar="طبي" data-en="Medical">طبي</option></select>
     <select id="fBudget" onchange="loadProjects(true)">
       <option value="" data-ar="أي ميزانية" data-en="Any budget">أي ميزانية</option>
       <option value="-2000000" data-ar="حتى ٢ مليون" data-en="Up to 2M">حتى ٢ مليون</option>
@@ -173,6 +182,15 @@
       <option value="6000000-10000000" data-ar="٦ – ١٠ مليون" data-en="6 – 10M">٦ – ١٠ مليون</option>
       <option value="10000000-20000000" data-ar="١٠ – ٢٠ مليون" data-en="10 – 20M">١٠ – ٢٠ مليون</option>
       <option value="20000000-" data-ar="أكتر من ٢٠ مليون" data-en="20M+">أكتر من ٢٠ مليون</option>
+    </select>
+    <details class="advanced-filters"><summary data-ar="فلاتر إضافية" data-en="More filters">فلاتر إضافية</summary><div class="advanced-fields">    <select id="fBeds" onchange="loadProjects(true)">
+      <option value="" data-ar="كل الغرف" data-en="Any rooms">كل الغرف</option>
+      <option value="0" data-ar="استوديو" data-en="Studio">استوديو</option>
+      <option value="1" data-ar="غرفة" data-en="1 bed">غرفة</option>
+      <option value="2" data-ar="غرفتين" data-en="2 beds">غرفتين</option>
+      <option value="3" data-ar="٣ غرف" data-en="3 beds">٣ غرف</option>
+      <option value="4" data-ar="٤ غرف" data-en="4 beds">٤ غرف</option>
+      <option value="5" data-ar="٥+ غرف" data-en="5+ beds">٥+ غرف</option>
     </select>
     <select id="fReady" onchange="loadProjects(true)">
       <option value="" data-ar="كل الحالات" data-en="Any status">كل الحالات</option>
@@ -184,7 +202,9 @@
       <option value="price_asc" data-ar="السعر: من الأقل" data-en="Price: low to high">السعر: من الأقل</option>
       <option value="price_desc" data-ar="السعر: من الأعلى" data-en="Price: high to low">السعر: من الأعلى</option>
     </select>
-    <button class="savebtn" id="saveSearchBtn" onclick="saveCurrentSearch()" data-ar="⭐ احفظ البحث" data-en="⭐ Save search">⭐ احفظ البحث</button>
+</div></details>
+    <div id="activeFilters" class="active-filters" aria-live="polite"></div>
+    <button class="savebtn" id="saveSearchBtn" onclick="saveCurrentSearch()" data-ar="احفظ البحث" data-en="Save search">احفظ البحث</button>
     <span class="rescount" id="projCount"></span>
   </div>
 
@@ -226,6 +246,7 @@
 
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/catalog-ui.js?v=1"></script>
 <script>
 const sb=HZ.sb, esc=HZ.esc;
 const money=n=>{ if(n==null||isNaN(n)) return ''; return Number(n).toLocaleString('en-US')+(HZ.lang==='ar'?' ج.م':' EGP'); };
@@ -251,7 +272,7 @@ function switchTab(tab){
 }
 
 /* Projects */
-let projOffset=0; const PAGE=12; let projLoading=false; let projTotal=0;
+let projOffset=0; const PAGE=12; let projLoading=false; let projTotal=0; let projectReloadPending=false;
 function skeletons(n){ document.getElementById('grid').innerHTML=Array.from({length:n}).map(()=>'<div class="pcard skeleton" style="height:300px"></div>').join(''); }
 let AREA_GROUPS={};   // display label -> { variants:[raw area strings], projects }
 async function loadAreas(){
@@ -268,7 +289,7 @@ async function loadAreas(){
     const groups=[...map.values()].sort((a,b)=>b.projects-a.projects).slice(0,30);
     const sel=document.getElementById('fArea'); AREA_GROUPS={};
     groups.forEach(g=>{ AREA_GROUPS[g.label]=g; const o=document.createElement('option');
-      o.value=g.label; o.textContent=`${g.label} (${g.projects})`; sel.appendChild(o); });
+      o.value=g.label; o.textContent=`${HZ.catalog.area(g.label)} (${g.projects})`; sel.appendChild(o); });
     const qa=new URLSearchParams(location.search).get('area');
     if(qa){ sel.value=qa;
       if(sel.value!==qa){ const k=HZ.normArea(qa); const g=groups.find(x=>HZ.normArea(x.label)===k); if(g) sel.value=g.label; }
@@ -280,7 +301,8 @@ function budgetRange(){
   const [a,b]=v.split('-'); return [a?+a:null, b?+b:null];
 }
 async function loadProjects(reset){
-  if(projLoading) return; projLoading=true;
+  renderActiveFilters();
+  if(projLoading){ projectReloadPending=true; return; } projLoading=true;
   if(reset){ projOffset=0; skeletons(6); }
   const q=document.getElementById('q').value.trim();
   const areaLabel=document.getElementById('fArea').value;
@@ -295,7 +317,9 @@ async function loadProjects(reset){
     p_beds:beds===''?null:+beds, p_ready:ready||null, p_sort:sort,
     p_limit:PAGE, p_offset:projOffset };
   try{
-    const rows=(await HZ.rpc('search_projects', args))||[];
+    const rows=await fetchProjectRows(args, document.getElementById('fType').value);
+    await enrichTypes(rows);
+    if(TAB!=='projects')return;
     const grid=document.getElementById('grid');
     if(reset) grid.innerHTML='';
     if(reset && rows.length===0) grid.innerHTML='<div class="empty">'+t('noproj')+'</div>';
@@ -306,17 +330,15 @@ async function loadProjects(reset){
     document.getElementById('projCount').textContent = projTotal
       ? projTotal.toLocaleString('en-US')+(HZ.lang==='ar'?' مشروع':' projects') : '';
     HZ.applyLang();
-  }catch(e){ if(reset) document.getElementById('grid').innerHTML='<div class="empty">'+t('noproj')+'</div>'; }
-  finally{ projLoading=false; }
+  }catch(e){ if(reset) document.getElementById('grid').innerHTML='<div class="empty">'+(HZ.lang==='ar'?'تعذّر تحميل المشاريع.':'Could not load projects.')+' <button class="btn btn-ghost" onclick="loadProjects(true)">'+(HZ.lang==='ar'?'حاول تاني':'Retry')+'</button></div>'; }
+  finally{ projLoading=false; if(projectReloadPending){ projectReloadPending=false; if(TAB==='projects')loadProjects(true); } }
 }
 function relTime(iso){
-  if(!iso) return ''; const dt=new Date(iso); const days=Math.floor((Date.now()-dt)/86400000);
-  const ar=HZ.lang==='ar';
-  if(days<=0) return ar?'اتحدّث النهارده':'updated today';
-  if(days===1) return ar?'اتحدّث امبارح':'updated yesterday';
-  if(days<30) return ar?`اتحدّث من ${days} يوم`:`updated ${days}d ago`;
-  const mo=Math.floor(days/30);
-  return ar?`اتحدّث من ${mo} شهر`:`updated ${mo}mo ago`;
+  if(!iso || isNaN(Date.parse(iso))) return '';
+  const days=Math.max(0,Math.floor((Date.now()-new Date(iso))/86400000));
+  const locale=HZ.lang==='ar'?'ar':'en';
+  const relative=new Intl.RelativeTimeFormat(locale,{numeric:'auto'});
+  return (HZ.lang==='ar'?'آخر تحديث: ':'Updated: ')+relative.format(days<30?-days:-Math.floor(days/30),days<30?'day':'month');
 }
 function bedsLabel(p){
   if(p.beds_min==null) return '';
@@ -333,20 +355,22 @@ function projectCard(p){
   const stTxt=ready?(HZ.lang==='ar'?'استلام فوري':'Ready'):(HZ.lang==='ar'?'تحت الإنشاء':'Off-plan');
   const price=p.price_from_min!=null?`<div class="pr">${t('from')} ${money(p.price_from_min)}</div>`:'';
   const chips=[];
-  if(p.size_from_min!=null){ const s=p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):''); chips.push(`<span class="pill">${s} ${t('sqm')}</span>`); }
+  if(p.size_from_min!=null){ const s=p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):''); chips.push(`<span class="pill">${HZ.lang==='ar'?'المساحات من':'Sizes from'} ${s} ${t('sqm')}</span>`); }
   const bl=bedsLabel(p); if(bl) chips.push(`<span class="pill">${bl}</span>`);
-  if(p.installment_years_max) chips.push(`<span class="pill">${HZ.lang==='ar'?('تقسيط '+p.installment_years_max+' سنة'):(p.installment_years_max+'y plan')}</span>`);
-  const delTxt=p.delivery?esc(p.delivery):(ready?(HZ.lang==='ar'?'جاهز':'ready'):'');
+  if(p.installment_years_max) chips.push(`<span class="pill">${HZ.lang==='ar'?('تقسيط حتى '+p.installment_years_max+' سنة'):('Up to '+p.installment_years_max+'y plan')}</span>`);
+  const delTxt=p.delivery?esc(HZ.catalog.text(p.delivery)):(ready?(HZ.lang==='ar'?'جاهز':'ready'):'');
   const inCmp=COMPARE.has(p.id);
-  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(p.area)}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span>
+  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(HZ.catalog.area(p.area))}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span>
       <button class="cmpchk${inCmp?' on':''}" title="${t('compare')}">${inCmp?'✓':'⇄'}<span>${t('compare')}</span></button></div>
     <div class="b">
       <div class="nm">${esc(name)}</div>
       ${dev?`<div class="dv">${esc(dev)}</div>`:''}
+      <div class="unit-kinds">${(p.unitKinds||[]).map(type=>esc(unitTypeLabel({type}))).join(' · ')}</div>
       ${price}
       <div class="row">${chips.join('')}</div>
-      <div class="meta2"><span class="del">${delTxt?('🔑 '+delTxt):''}</span><span class="upd">${relTime(p.updated_at)}</span></div>
-      <button class="det" data-ar="اطلب التفاصيل" data-en="Request details">اطلب التفاصيل</button>
+      <p class="range-note">${HZ.lang==='ar'?'الأسعار والمساحات حدود بداية مستقلة؛ اختار وحدة لعرض سعرها ومساحتها معًا.':'Prices and sizes are independent starting values. See units for exact combinations.'}</p>
+      <div class="meta2"><span class="del">${delTxt?delTxt:''}</span><span class="upd">${relTime(p.updated_at)}</span></div>
+      <button class="det" data-ar="عرض التفاصيل" data-en="View details">عرض التفاصيل</button>
     </div>`;
   d.querySelector('.det').onclick=(e)=>{ e.stopPropagation(); openProject(p.id); };
   d.querySelector('.cmpchk').onclick=(e)=>{ e.stopPropagation(); toggleCompare(p, d); };
@@ -424,14 +448,14 @@ function openCompare(){
   const insts=items.map(p=>p.installment_years_max||0);
   const bestInst=insts.reduce((bi,v,i,a)=>v>a[bi]?i:bi,0);
   const rows=[
-    cmpRow(t('area'), items.map(p=>esc(p.area||'—'))),
+    cmpRow(t('area'), items.map(p=>esc(HZ.catalog.area(p.area)||'—'))),
     cmpRow(t('dev'), items.map(p=>esc(p.developer_name||'—'))),
     cmpRow(t('from'), items.map(p=>p.price_from_min!=null?money(p.price_from_min):'—'), prices.some(x=>x!=null)?bestPrice:-1),
     cmpRow(t('size'), items.map(p=>p.size_from_min!=null?(p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):'')+' '+t('sqm')):'—')),
     cmpRow(t('beds'), items.map(p=>bedsLabel(p)||'—')),
     cmpRow(t('down'), items.map(p=>esc(p.down_payment||'—'))),
     cmpRow(t('install'), items.map(p=>p.installment_years_max?(p.installment_years_max+' '+t('years')):'—'), insts.some(x=>x>0)?bestInst:-1),
-    cmpRow(t('delivery'), items.map(p=>esc(p.delivery||'—'))),
+    cmpRow(t('delivery'), items.map(p=>esc(HZ.catalog.text(p.delivery)||'—'))),
     cmpRow(t('status'), items.map(p=>{const r=p.status&&/ready|available/i.test(p.status); return `<span class="cmp-st ${r?'rdy':'off'}">${r?t('statusReady'):t('statusOff')}</span>`;})),
   ].join('');
   document.getElementById('cmpModal').innerHTML=`
@@ -450,6 +474,7 @@ function currentCriteria(){
   const g=areaLabel?AREA_GROUPS[areaLabel]:null;
   return {
     q:document.getElementById('q').value.trim()||null,
+    category:document.getElementById('fType').value||null,
     areaLabel:areaLabel||null,
     areas:(g&&g.variants&&g.variants.length)?g.variants:(areaLabel?[areaLabel]:null),
     beds:document.getElementById('fBeds').value||null,
@@ -460,6 +485,7 @@ function currentCriteria(){
 }
 function criteriaLabel(c){
   const p=[];
+  if(c.category){const option=[...document.getElementById('fType').options].find(o=>o.value===c.category);if(option)p.push(option.textContent);}
   if(c.areaLabel) p.push(c.areaLabel);
   if(c.beds!=null) p.push(c.beds==='0'?t('studio'):(c.beds==='5'?'٥+ غرف':c.beds+' '+t('br')));
   if(c.budget){ const [a,b]=c.budget.split('-'); const m=v=>Math.round(v/1000000); p.push((a?('من '+m(a)):'')+(b?(' حتى '+m(b)+'م'):(a?'+ مليون':''))); }
@@ -468,6 +494,7 @@ function criteriaLabel(c){
   return p.join(' · ')||'كل المشاريع';
 }
 function applyCriteria(c){
+  document.getElementById('fType').value=c.category||'';
   document.getElementById('q').value=c.q||'';
   document.getElementById('fBeds').value=c.beds||'';
   document.getElementById('fBudget').value=c.budget||'';
@@ -502,7 +529,7 @@ async function loadSaved(){
   await Promise.all(SAVED.map(async ss=>{
     try{
       const c=ss.criteria||{}; const [pMin,pMax]=budgetToRange(c.budget);
-      const rows=await HZ.rpc('search_projects',{p_q:c.q||null,p_areas:c.areas||null,p_min:pMin,p_max:pMax,p_beds:c.beds===''||c.beds==null?null:+c.beds,p_ready:c.ready||null,p_sort:'recent',p_limit:1,p_offset:0,p_since:ss.last_checked});
+      const rows=await fetchProjectRows({p_q:c.q||null,p_areas:c.areas||null,p_min:pMin,p_max:pMax,p_beds:c.beds===''||c.beds==null?null:+c.beds,p_ready:c.ready||null,p_sort:'recent',p_limit:1,p_offset:0,p_since:ss.last_checked},c.category||'');
       ss._new=(rows&&rows[0])?rows[0].total_count:0;
     }catch(e){ ss._new=0; }
   }));
@@ -535,9 +562,11 @@ async function deleteSaved(id){
   try{ await HZ.sbAuth('/saved_searches?id=eq.'+id, s.token, 'DELETE'); }catch(e){}
   SAVED=SAVED.filter(x=>x.id!==id); renderSavedBar();
 }
+let detailRequest=0;
 async function openProject(id){
+  const request=++detailRequest;
   const ov=document.getElementById('overlay'), dr=document.getElementById('drawer');
-  dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">…</div>';
+  dr.innerHTML=detailLoading(); dr.scrollTop=0;
   ov.classList.add('open'); document.body.style.overflow='hidden';
   try{
     const p=(await sb('/projects?select=id,developer_id,name,name_ar,area,description,delivery,status,amenities,cover_image_url,developer:developers(name,about,track_record,phone,website)&id=eq.'+id))[0];
@@ -548,12 +577,13 @@ async function openProject(id){
     if(p.developer_id){
       try{ others=await sb('/projects?select=id,name,name_ar,area&developer_id=eq.'+p.developer_id+'&id=neq.'+id+'&area=not.is.null&order=updated_at.desc&limit=8'); }catch(_){}
     }
+    if(request!==detailRequest)return;
     dr.innerHTML=projectDetail(p,units,media,others);
     HZ.applyLang();
-  }catch(e){ dr.innerHTML='<div style="padding:40px;text-align:center;color:#6B7280">تعذّر تحميل التفاصيل.</div>'; }
+  }catch(e){ if(request!==detailRequest)return; dr.innerHTML='<div class="dbody"><button class="btn btn-ghost" onclick="closeDetail()">'+(HZ.lang==='ar'?'إغلاق':'Close')+'</button><p role="alert">'+(HZ.lang==='ar'?'تعذّر تحميل التفاصيل. حاول تاني.':'Could not load details. Please try again.')+'</p></div>'; }
 }
 function unitTypeLabel(u){
-  const map={apartment:{ar:'شقة',en:'Apartment'},duplex:{ar:'دوبلكس',en:'Duplex'},penthouse:{ar:'بنتهاوس',en:'Penthouse'},studio:{ar:'استوديو',en:'Studio'},townhouse:{ar:'تاون هاوس',en:'Townhouse'},villa:{ar:'فيلا',en:'Villa'},office:{ar:'مكتب',en:'Office'},clinic:{ar:'عيادة',en:'Clinic'},shop:{ar:'محل',en:'Shop'}};
+  const map={apartment:{ar:'شقة',en:'Apartment'},duplex:{ar:'دوبلكس',en:'Duplex'},penthouse:{ar:'بنتهاوس',en:'Penthouse'},studio:{ar:'استوديو',en:'Studio'},townhouse:{ar:'تاون هاوس',en:'Townhouse'},villa:{ar:'فيلا',en:'Villa'},chalet:{ar:'شاليه',en:'Chalet'},twinhouse:{ar:'توين هاوس',en:'Twin house'},office:{ar:'مكتب',en:'Office'},clinic:{ar:'عيادة',en:'Clinic'},shop:{ar:'محل',en:'Shop'}};
   const m=map[u.type]; return m?m[HZ.lang]:(u.type||'');
 }
 let VIEW_CTX=null;   // project context for the active viewing-request form
@@ -569,17 +599,17 @@ function projectDetail(p,units,media,others){
     const beds=u.bedrooms!=null?(u.bedrooms===0?t('studio'):u.bedrooms+' '+t('br')):'—';
     const size=u.size_from?(u.size_from+(u.size_to&&u.size_to!=u.size_from?('–'+u.size_to):'')+' '+t('sqm')):'—';
     const pr=u.price_from?money(u.price_from):'—';
-    const dp=u.down_payment?esc(u.down_payment):'—';
+    const dp=u.down_payment?esc(HZ.catalog.text(u.down_payment)):'—';
     const inst=u.installment_years?(u.installment_years+' '+t('years')):'—';
-    const dl=u.delivery?esc(u.delivery):'—';
-    return `<tr><td>${esc(unitTypeLabel(u))}</td><td>${beds}</td><td>${size}</td><td class="pr">${pr}</td><td>${dp}</td><td>${inst}</td><td>${dl}</td></tr>`;
+    const dl=u.delivery?esc(HZ.catalog.text(u.delivery)):'—';
+    return `<tr><td data-label="${t('type')}">${esc(unitTypeLabel(u))}</td><td data-label="${t('beds')}">${beds}</td><td data-label="${t('size')}">${size}</td><td data-label="${t('price')}" class="pr">${pr}</td><td data-label="${t('down')}">${dp}</td><td data-label="${t('install')}">${inst}</td><td data-label="${t('delivery')}">${dl}</td></tr>`;
   }).join('');
   // Distinct payment plans across the units (not just the first one).
   const plans=[...new Set(units.map(u=>u.payment_plan).filter(Boolean))].slice(0,3);
-  const broch=brochure?`<a class="btn btn-ghost" target="_blank" rel="noopener" href="${esc(brochure)}">📄 ${t('brochure')}</a>`:'';
+  const broch=brochure?`<a class="btn btn-ghost" target="_blank" rel="noopener" href="${esc(brochure)}">${t('brochure')}</a>`:'';
   const othersHtml=others.length?`<div class="dsec"><h3>${t('othersby')}</h3><div class="devgrid">${
     others.map(o=>{const nm=HZ.lang==='ar'?(o.name_ar||o.name):(o.name||o.name_ar);
-      return `<button class="devchip" onclick="openProject('${o.id}')"><b>${esc(nm)}</b>${o.area?`<span>${esc(o.area)}</span>`:''}</button>`;}).join('')
+      return `<button class="devchip" onclick="openProject('${o.id}')"><b>${esc(nm)}</b>${o.area?`<span>${esc(HZ.catalog.area(o.area))}</span>`:''}</button>`;}).join('')
   }</div></div>`:'';
   // PRIMARY (developer project): NO WhatsApp — a viewing request captures the lead
   // (name+phone+project) and the Homzy advisor / team follows up.
@@ -588,28 +618,28 @@ function projectDetail(p,units,media,others){
   return `
   <div class="dhead" style="${cover?`background-image:url('${esc(cover)}')`:''}">
     <button class="close" onclick="closeDetail()">×</button>
-    <span class="mk2">PRIMARY${p.area?' · '+esc(p.area):''}</span>
+    <span class="mk2">${HZ.lang==='ar'?'من المطوّر':'Developer project'}${p.area?' · '+esc(HZ.catalog.area(p.area)):''}</span>
   </div>
   <div class="dbody">
     <h2>${esc(name)}</h2>
-    <div class="sub">${dev.name?esc(dev.name):''}${p.area?' · '+esc(p.area):''}</div>
+    <div class="sub">${dev.name?esc(dev.name):''}${p.area?' · '+esc(HZ.catalog.area(p.area)):''}</div>
     <div class="dchips">
-      ${p.delivery?`<span class="c">🗓️ ${t('delivery')}: ${esc(p.delivery)}</span>`:''}
-      ${p.status?`<span class="c">${esc(p.status)}</span>`:''}
-      ${minPrice?`<span class="c">💰 ${t('from')} ${money(minPrice)}</span>`:''}
+      ${minPrice?`<span class="c">${t('from')} ${money(minPrice)}</span>`:''}
+      ${p.delivery?`<span class="c">${t('delivery')}: ${esc(HZ.catalog.text(p.delivery))}</span>`:''}
+      ${p.status?`<span class="c">${esc(HZ.catalog.text(p.status))}</span>`:''}
     </div>
     ${p.description?`<div class="dsec"><p>${esc(p.description)}</p></div>`:''}
     ${images.length?`<div class="dsec"><div class="gallery">${images.map(m=>`<img loading="lazy" src="${esc(m.url)}" alt="">`).join('')}</div></div>`:''}
     ${units.length?`<div class="dsec"><h3>${t('units')}</h3>
       <div class="utscroll"><table class="utable"><thead><tr><th>${t('type')}</th><th>${t('beds')}</th><th>${t('size')}</th><th>${t('price')}</th><th>${t('down')}</th><th>${t('install')}</th><th>${t('delivery')}</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
-      ${plans.length?`<div class="plans">${plans.map(pl=>`<p>💳 ${esc(pl)}</p>`).join('')}</div>`:''}</div>`:''}
+      ${plans.length?`<div class="plans">${plans.map(pl=>`<p>${esc(HZ.catalog.text(pl))}</p>`).join('')}</div>`:''}</div>`:''}
     ${(dev.about||dev.track_record)?`<div class="dsec"><h3>${t('about')}${dev.name?' — '+esc(dev.name):''}</h3><p>${esc(dev.about||'')} ${esc(dev.track_record||'')}</p>${dev.website?`<a class="devlink" target="_blank" rel="noopener" href="${esc(dev.website)}">🌐 ${esc(dev.website)}</a>`:''}</div>`:''}
     ${othersHtml}
     ${p.amenities?`<div class="dsec"><h3>${t('amen')}</h3><p>${esc(p.amenities)}</p></div>`:''}
 
     <div class="dsec viewbox" id="viewBox">
-      <h3>📅 ${t('viewtitle')}</h3>
+      <h3>${t('viewtitle')}</h3>
       <div id="viewForm">
         <input class="vin" id="vName" placeholder="${t('ph_name')}" />
         <input class="vin" id="vPhone" type="tel" inputmode="tel" placeholder="${t('ph_phone')}" />
@@ -621,7 +651,7 @@ function projectDetail(p,units,media,others){
     </div>
 
     <div class="dactions">
-      <button class="btn btn-teal" onclick='closeDetail();HZ.openChat({context:${ctx.replace(/'/g,"&#39;")}})'>💬 ${t('homzy')}</button>
+      <button class="btn btn-teal" onclick='closeDetail();HZ.openChat({context:${ctx.replace(/'/g,"&#39;")}})'>${t('homzy')}</button>
       ${broch}
     </div>
   </div>`;
@@ -693,7 +723,7 @@ function listingCard(l){
   const beds=l.bedrooms?`<span class="pill">${l.bedrooms} ${t('br')}</span>`:'';
   const size=l.size_sqm?`<span class="pill">${l.size_sqm} ${t('sqm')}</span>`:'';
   const pur=l.purpose==='rent'?(HZ.lang==='ar'?'إيجار':'Rent'):(HZ.lang==='ar'?'بيع':'Sale');
-  d.innerHTML=`<div class="img" style="${img}">${l.area?`<span class="tag">${esc(l.area)}</span>`:''}<span class="mk2" style="background:${l.purpose==='rent'?'#0B5563':'#122744'}">${pur}</span></div>
+  d.innerHTML=`<div class="img" style="${img}">${l.area?`<span class="tag">${esc(HZ.catalog.area(l.area))}</span>`:''}<span class="mk2" style="background:${l.purpose==='rent'?'#0B5563':'#122744'}">${pur}</span></div>
     <div class="b"><div class="nm">${esc(l.title||'')}</div><div class="row">${beds}${size}</div>
     <div class="pr">${l.price?money(l.price)+(l.purpose==='rent'?(HZ.lang==='ar'?' /شهر':' /mo'):''):''}</div></div>`;
   d.onclick=()=>openListing(l);
@@ -718,7 +748,7 @@ function openListing(l){
   </div>
   <div class="dbody">
     <h2>${esc(title)}</h2>
-    <div class="sub">${l.area?esc(l.area):''}${l.address?' · '+esc(l.address):''}</div>
+    <div class="sub">${l.area?esc(HZ.catalog.area(l.area)):''}${l.address?' · '+esc(l.address):''}</div>
     <div class="dchips">
       ${l.price?`<span class="c">💰 ${money(l.price)}${l.purpose==='rent'?(HZ.lang==='ar'?' /شهر':' /mo'):''}</span>`:''}
       ${l.bedrooms?`<span class="c">🛏️ ${l.bedrooms} ${t('br')}</span>`:''}
@@ -728,7 +758,7 @@ function openListing(l){
     ${l.description?`<div class="dsec"><p>${esc(l.description)}</p></div>`:''}
     ${media.length>1?`<div class="dsec"><div class="gallery">${media.map(u=>`<img loading="lazy" src="${esc(u)}" alt="">`).join('')}</div></div>`:''}
     <div class="dactions">
-      <button class="btn btn-teal" onclick='closeDetail();HZ.openChat({context:${ctx.replace(/'/g,"&#39;")}})'>💬 ${t('homzy')}</button>
+      <button class="btn btn-teal" onclick='closeDetail();HZ.openChat({context:${ctx.replace(/'/g,"&#39;")}})'>${t('homzy')}</button>
       ${wa}
     </div>
   </div>`;
@@ -741,11 +771,64 @@ let dt; function debouncedLoad(){ clearTimeout(dt); dt=setTimeout(()=>loadProjec
 let dm; function debouncedLoadMarket(){ clearTimeout(dm); dm=setTimeout(()=>loadMarket(),350); }
 
 /* React to language changes from the shared toggle. */
-document.addEventListener('hz:lang',()=>{ if(TAB==='projects') loadProjects(true); else loadMarket(); if(COMPARE.size) updateCmpTray(); });
+let renderedLanguage=HZ.lang;
+document.addEventListener('hz:lang',()=>{ if(renderedLanguage===HZ.lang)return; renderedLanguage=HZ.lang; for(const o of document.getElementById('fArea').options){const g=AREA_GROUPS[o.value];if(g)o.textContent=HZ.catalog.area(g.label)+' ('+g.projects+')';} if(TAB==='projects') loadProjects(true); else loadMarket(); if(COMPARE.size) updateCmpTray(); });
+
+const TYPE_CACHE=new Map();
+let filteredCatalog=null;
+async function enrichTypes(rows){
+  const ids=rows.map(p=>p.id).filter(id=>!TYPE_CACHE.has(id));
+  for(let offset=0;offset<ids.length;offset+=100){
+    const group=ids.slice(offset,offset+100), found=new Map(group.map(id=>[id,new Set()]));
+    // Paginate child rows as a project can have many unit types.
+    for(let skip=0;;skip+=1000){
+      const units=await sb('/unit_types?select=project_id,type&project_id=in.('+group.join(',')+')&order=id&limit=1000&offset='+skip);
+      units.forEach(u=>found.get(u.project_id)?.add(u.type));
+      if(units.length<1000)break;
+    }
+    found.forEach((types,id)=>TYPE_CACHE.set(id,[...types]));
+  }
+  rows.forEach(p=>p.unitKinds=TYPE_CACHE.get(p.id)||[]);
+}
+async function fetchProjectRows(args,category){
+  if(!category)return (await HZ.rpc('search_projects',args))||[];
+  const key=JSON.stringify({...args,p_limit:0,p_offset:0,category});
+  if(!filteredCatalog || filteredCatalog.key!==key){
+    const all=[];
+    for(let offset=0;;){
+      const page=(await HZ.rpc('search_projects',{...args,p_limit:200,p_offset:offset}))||[];
+      all.push(...page); offset+=page.length;
+      if(!page.length || offset>=Number(page[0].total_count))break;
+    }
+    await enrichTypes(all);
+    const rows=all.filter(p=>p.unitKinds.some(type=>HZ.catalog.category(type)===category));
+    filteredCatalog={key,rows};
+  }
+  return filteredCatalog.rows.slice(args.p_offset,args.p_offset+args.p_limit).map(p=>({...p,total_count:filteredCatalog.rows.length}));
+}
+function renderActiveFilters(){
+  const box=document.getElementById('activeFilters');box.replaceChildren();
+  for(const id of ['q','fArea','fType','fBudget','fBeds','fReady','fSort']){
+    const field=document.getElementById(id);
+    if(!field.value || (id==='fSort' && field.value==='recent'))continue;
+    const button=document.createElement('button');button.className='filter-chip';button.type='button';
+    const label=field.tagName==='SELECT'?field.selectedOptions[0].textContent:field.value;
+    button.textContent=label+' ×';button.setAttribute('aria-label',(HZ.lang==='ar'?'إزالة: ':'Remove: ')+label);
+    button.onclick=()=>{field.value=id==='fSort'?'recent':'';loadProjects(true);};box.append(button);
+  }
+  if(box.children.length){const clear=document.createElement('button');clear.className='filter-clear';clear.textContent=HZ.lang==='ar'?'مسح الكل':'Clear all';clear.onclick=()=>{for(const id of ['q','fArea','fType','fBudget','fBeds','fReady'])document.getElementById(id).value='';document.getElementById('fSort').value='recent';loadProjects(true);};box.append(clear);}
+}
+function detailLoading(){
+  return `<div class="dbody" role="status" aria-live="polite"><button class="btn btn-ghost" onclick="closeDetail()">${HZ.lang==='ar'?'إغلاق':'Close'}</button><p>${HZ.lang==='ar'?'جاري تحميل تفاصيل المشروع…':'Loading project details…'}</p><div class="skeleton detail-skeleton"></div><div class="skeleton detail-line"></div><div class="skeleton detail-line"></div></div>`;
+}
+for(const [id,ar,en] of [['q','ابحث باسم المشروع أو المطوّر','Search projects or developers'],['fArea','المنطقة','Area'],['fType','نوع العقار','Property type'],['fBudget','الميزانية','Budget'],['fBeds','عدد الغرف','Bedrooms'],['fReady','حالة التسليم','Delivery status'],['fSort','ترتيب النتائج','Sort results']]){
+  const field=document.getElementById(id);field.setAttribute('aria-label',HZ.lang==='ar'?ar:en);
+  document.addEventListener('hz:lang',()=>field.setAttribute('aria-label',HZ.lang==='ar'?ar:en));
+}
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
-loadAreas().then(()=>{ loadProjects(true); loadSaved(); });
+loadAreas().then(()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); });
 </script>
 </body>
 </html>
