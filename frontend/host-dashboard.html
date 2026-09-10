@@ -11,7 +11,7 @@
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css?v=4">
+<link rel="stylesheet" href="/assets/homzy.css?v=5">
 <style>
   .hd{max-width:1080px;margin:0 auto;padding:22px;}
   .hnav{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 24px;border-bottom:1px solid var(--line);padding-bottom:12px;}
@@ -73,7 +73,7 @@
 <div class="hd">
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
     <h1 data-ar="لوحة المضيف" data-en="Host dashboard">لوحة المضيف</h1>
-    <a class="btn btn-teal btn-sm" onclick="go('new')" data-ar="＋ أضف وحدة" data-en="＋ Add a property">＋ أضف وحدة</a>
+    <a class="btn btn-teal btn-sm" href="/host/properties/new" data-ar="＋ أضف وحدة" data-en="＋ Add a property">＋ أضف وحدة</a>
   </div>
   <div class="hnav" id="hnav"></div>
   <div id="notif"></div>
@@ -101,11 +101,11 @@
 <div id="hz-footer"></div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="/assets/homzy.js?v=4"></script>
+<script src="/assets/homzy.js?v=5"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 const money=n=> n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
-let S=null, TYPES=[], AMENS=[], DESTS=[], PROPS=[], TAB='properties', EDIT=null, MAP=null, MARKER=null, CALPROP=null;
+let S=null, TYPES=[], AMENS=[], DESTS=[], PROPS=[], TAB='properties', EDIT=null, MAP=null, MARKER=null, CALPROP=null, READY=false;
 const TABS=[['properties','وحداتي','My properties'],['calendar','التقويم','Calendar'],['bookings','الحجوزات','Bookings'],['earnings','الأرباح','Earnings'],['reviews','المراجعات','Reviews'],['verification','التوثيق','Verification']];
 
 function parsePath(){
@@ -122,11 +122,17 @@ function go(tab,id){
   else if(tab!=='properties') url='/host/'+tab;
   history.pushState({},'',url); route();
 }
+window.go=go;
 window.onpopstate=route;
 function route(){ const r=parsePath(); TAB=r.tab; EDIT=r.id||null; renderNav(); renderTab(); }
 function renderNav(){
   const active = TAB==='new'||TAB==='edit' ? 'properties' : TAB;
-  document.getElementById('hnav').innerHTML=TABS.map(([k,a,e])=>`<a class="${k===active?'on':''}" onclick="go('${k}')">${ar()?a:e}</a>`).join('');
+  document.getElementById('hnav').innerHTML=TABS.map(([k,a,e])=>`<a class="${k===active?'on':''}" href="/host/${k}">${ar()?a:e}</a>`).join('');
+}
+
+function applyContentLang(root){
+  root.querySelectorAll('[data-ar]').forEach(el=>{const value=el.getAttribute('data-'+HZ.lang);if(value!=null)el.innerHTML=value;});
+  root.querySelectorAll('[data-ph-ar]').forEach(el=>{el.placeholder=el.getAttribute('data-ph-'+HZ.lang)||'';});
 }
 
 async function ensureHost(){
@@ -149,14 +155,14 @@ async function renderTab(){
     else if(TAB==='earnings'){ c.innerHTML=await viewEarnings(); }
     else if(TAB==='reviews'){ c.innerHTML=await viewReviews(); }
     else if(TAB==='verification'){ c.innerHTML=await viewVerification(); }
-    HZ.applyLang();
+    applyContentLang(c);
   }catch(e){ c.innerHTML='<div style="padding:30px;color:#B42318">'+(ar()?'حصل خطأ في التحميل.':'Load error.')+' '+HZ.esc(e.message||'')+'</div>'; }
 }
 
 /* ---------- Properties list ---------- */
 function stLabel(s){ return ({draft:['مسودة','Draft'],pending:['قيد المراجعة','Pending review'],approved:['منشورة','Published'],rejected:['مرفوضة','Rejected'],suspended:['موقوفة','Suspended']}[s]||[s,s])[ar()?0:1]; }
 function viewProps(){
-  if(!PROPS.length) return `<div style="padding:50px;text-align:center;color:var(--muted)">${ar()?'لسه مضفتش أي وحدة.':'No properties yet.'}<br><br><button class="btn btn-teal" onclick="go('new')">${ar()?'أضف أول وحدة':'Add your first property'}</button></div>`;
+  if(!PROPS.length) return `<div style="padding:50px;text-align:center;color:var(--muted)">${ar()?'لسه مضفتش أي وحدة.':'No properties yet.'}<br><br><a class="btn btn-teal" href="/host/properties/new">${ar()?'أضف أول وحدة':'Add your first property'}</a></div>`;
   return `<div class="grid">`+PROPS.map(p=>{
     const cov=(p.stay_property_images||[]).sort((a,b)=>b.is_cover-a.is_cover||a.sort-b.sort)[0];
     const price=(p.stay_pricing&&p.stay_pricing.base_price)||0;
@@ -424,7 +430,7 @@ async function viewReviews(){
 async function viewVerification(){
   const h=await ensureHost();
   const vs=h.verification_status||'pending';
-  const lab={pending:['قيد المراجعة','Pending'],verified:['موثّق ✅','Verified ✅'],rejected:['مرفوض','Rejected'],suspended:['موقوف','Suspended']}[vs];
+  const lab={pending:['بانتظار استكمال المستندات','Waiting for documents'],verified:['موثّق ✅','Verified ✅'],rejected:['مرفوض','Rejected'],suspended:['موقوف','Suspended']}[vs]||[vs,vs];
   const docs=await HZ.sbAuth('/stay_verifications?user_id=eq.'+S.uid+'&select=doc_type,status,created_at&order=created_at.desc',S.token)||[];
   return `<div class="form">
     <h3 data-ar="حالة التوثيق" data-en="Verification status">حالة التوثيق</h3>
@@ -455,7 +461,7 @@ async function boot(){
     AMENS=await HZ.sb('/stay_amenities?select=*&active=eq.true&order=sort')||[];
     DESTS=await HZ.sb('/stay_destinations?select=*&active=eq.true&order=sort')||[];
   }catch(e){}
-  route(); renderNotif();
+  READY=true; route(); renderNotif();
 }
 async function renderNotif(){
   const el=document.getElementById('notif'); if(!el||!S) return;
@@ -477,7 +483,7 @@ async function loadMsgs(){
 }
 document.getElementById('msgForm').addEventListener('submit',async e=>{ e.preventDefault(); const inp=document.getElementById('msgInput'); const body=(inp.value||'').trim(); if(!body||!MSG_BK) return; inp.value=''; try{ await HZ.sbAuth('/stay_messages',S.token,'POST',{booking_id:MSG_BK,sender_id:S.uid,body},{Prefer:'return=minimal'}); }catch(e){} loadMsgs(); });
 window.cancelBk=async(bid)=>{ if(!confirm(ar()?'متأكد إنك عايز تلغي الحجز؟ الضيف هياخد استرجاع كامل.':'Cancel this booking? The guest gets a full refund.')) return; let r; try{ r=await HZ.sbAuth('/rpc/stay_cancel_booking',S.token,'POST',{p_booking:bid}); }catch(e){ r={ok:false}; } if(r&&r.ok){ alert(ar()?'تم الإلغاء':'Cancelled'); renderTab(); } else alert((ar()?'تعذّر: ':'Failed: ')+((r&&r.error)||'')); };
-document.addEventListener('hz:lang', ()=>{ renderNav(); renderTab(); });
+document.addEventListener('hz:lang', ()=>{ if(READY){renderNav();renderTab();} });
 boot();
 </script>
 </body>
