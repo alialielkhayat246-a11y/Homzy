@@ -96,39 +96,39 @@
 <!-- gate -->
 <div id="gate" class="gate" style="display:none">
   <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
-  <h1 id="gTitle">دخول البروكر</h1>
-  <p class="sub" id="gSub">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير وحداتك.</p>
+  <h1 id="gTitle" data-ar="دخول البروكر" data-en="Broker sign-in">دخول البروكر</h1>
+  <p class="sub" id="gSub" data-ar="سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير وحداتك." data-en="Sign in with your mobile number and password to manage your units.">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير وحداتك.</p>
   <form id="authForm">
-    <div class="fld"><label>رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
-    <div class="fld"><label>كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" required /></div>
-    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%">دخول</button>
+    <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
+    <div class="fld"><label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" data-ph-ar="٦ أحرف على الأقل" data-ph-en="6 characters minimum" required /></div>
+    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%" data-ar="دخول" data-en="Sign in">دخول</button>
     <div class="msg" id="gMsg"></div>
   </form>
-  <div class="switch">عايز تعمل حساب بروكر (باسم شركتك)؟ <a href="/leads?register=1">سجّل من هنا</a></div>
+  <div class="switch" data-ar="عايز تعمل حساب بروكر (باسم شركتك)؟ <a href=&quot;/leads?register=1&quot;>سجّل من هنا</a>" data-en="Want a broker account (in your company name)? <a href=&quot;/leads?register=1&quot;>Register here</a>">عايز تعمل حساب بروكر (باسم شركتك)؟ <a href="/leads?register=1">سجّل من هنا</a></div>
 </div>
 
 <!-- dashboard -->
 <div id="app" style="display:none">
   <div class="wrap">
     <div class="head">
-      <div><h1>وحداتي</h1><div class="n" id="count"></div></div>
-      <button class="btn btn-teal" onclick="openForm()">＋ أضف وحدة</button>
+      <div><h1 data-ar="وحداتي" data-en="My units">وحداتي</h1><div class="n" id="count"></div></div>
+      <button class="btn btn-teal" onclick="openForm()" data-ar="＋ أضف وحدة" data-en="＋ Add unit">＋ أضف وحدة</button>
     </div>
     <div id="listingStats" class="stats"></div>
-    <div class="workspace-toolbar"><input id="listingSearch" type="search" aria-label="ابحث في وحداتك" placeholder="ابحث بالعنوان أو المنطقة…" oninput="renderListings()"><select id="listingStatus" aria-label="حالة الوحدة" onchange="renderListings()"><option value="">كل الوحدات</option><option value="active">منشورة</option><option value="draft">مسودات</option></select></div>
-    <details class="company-settings"><summary>إعدادات الشركة والعروض</summary>    <div class="company">
+    <div class="workspace-toolbar"><input id="listingSearch" type="search" aria-label="ابحث في وحداتك" placeholder="ابحث بالعنوان أو المنطقة…" data-ph-ar="ابحث بالعنوان أو المنطقة…" data-ph-en="Search by title or area…" oninput="renderListings()"><select id="listingStatus" aria-label="حالة الوحدة" onchange="renderListings()"><option value="" data-ar="كل الوحدات" data-en="All units">كل الوحدات</option><option value="active" data-ar="منشورة" data-en="Published">منشورة</option><option value="draft" data-ar="مسودات" data-en="Drafts">مسودات</option></select></div>
+    <details class="company-settings"><summary data-ar="إعدادات الشركة والعروض" data-en="Company & offers settings">إعدادات الشركة والعروض</summary>    <div class="company">
       <div class="co-logo">
         <div class="co-logo-img" id="coLogoImg"><span id="coLogoPh">📷</span></div>
-        <label class="co-upload">تغيير اللوجو<input type="file" id="coLogo" accept="image/*" onchange="uploadLogo(event)" /></label>
+        <label class="co-upload" data-ar="تغيير اللوجو" data-en="Change logo"><span data-ar="تغيير اللوجو" data-en="Change logo">تغيير اللوجو</span><input type="file" id="coLogo" accept="image/*" onchange="uploadLogo(event)" /></label>
       </div>
       <div class="co-fields">
-        <div class="co-title">بيانات شركتك <span>— بتظهر في عروض الـPDF اللي تبعتها للعملاء</span></div>
+        <div class="co-title" data-ar="بيانات شركتك <span>— بتظهر في عروض الـPDF اللي تبعتها للعملاء</span>" data-en="Your company details <span>— shown on the PDF offers you send clients</span>">بيانات شركتك <span>— بتظهر في عروض الـPDF اللي تبعتها للعملاء</span></div>
         <div class="co-row">
-          <input class="in" id="coName" placeholder="اسم الشركة / البروكر" />
-          <input class="in" id="coPhone" type="tel" inputmode="tel" placeholder="رقم الموبايل" />
+          <input class="in" id="coName" placeholder="اسم الشركة / البروكر" data-ph-ar="اسم الشركة / البروكر" data-ph-en="Company / broker name" />
+          <input class="in" id="coPhone" type="tel" inputmode="tel" placeholder="رقم الموبايل" data-ph-ar="رقم الموبايل" data-ph-en="Mobile number" />
         </div>
         <div class="co-actions">
-          <button class="btn btn-teal btn-sm" id="coSave" onclick="saveProfile()">حفظ بيانات الشركة</button>
+          <button class="btn btn-teal btn-sm" id="coSave" onclick="saveProfile()" data-ar="حفظ بيانات الشركة" data-en="Save company details">حفظ بيانات الشركة</button>
           <span class="co-msg" id="coMsg"></span>
         </div>
       </div>
@@ -141,39 +141,39 @@
 <!-- form modal -->
 <div class="ov" id="formOv">
   <div class="modal">
-    <div class="mh"><h3 id="fTitle">إضافة وحدة</h3><button class="mx" onclick="closeForm()">×</button></div>
+    <div class="mh"><h3 id="fTitle" data-ar="إضافة وحدة" data-en="Add unit">إضافة وحدة</h3><button class="mx" onclick="closeForm()">×</button></div>
     <div class="mb">
       <div class="row2">
-        <div class="fld"><label>الغرض</label><select class="in" id="fPurpose"><option value="sale">للبيع</option><option value="rent">للإيجار</option></select></div>
-        <div class="fld"><label>النوع</label><select class="in" id="fType">
-          <option value="apartment">شقة</option><option value="duplex">دوبلكس</option><option value="penthouse">بنتهاوس</option><option value="studio">استوديو</option><option value="townhouse">تاون هاوس</option><option value="villa">فيلا</option><option value="office">مكتب</option><option value="shop">محل</option><option value="clinic">عيادة</option>
+        <div class="fld"><label data-ar="الغرض" data-en="Purpose">الغرض</label><select class="in" id="fPurpose"><option value="sale" data-ar="للبيع" data-en="For sale">للبيع</option><option value="rent" data-ar="للإيجار" data-en="For rent">للإيجار</option></select></div>
+        <div class="fld"><label data-ar="النوع" data-en="Type">النوع</label><select class="in" id="fType">
+          <option value="apartment" data-ar="شقة" data-en="Apartment">شقة</option><option value="duplex" data-ar="دوبلكس" data-en="Duplex">دوبلكس</option><option value="penthouse" data-ar="بنتهاوس" data-en="Penthouse">بنتهاوس</option><option value="studio" data-ar="استوديو" data-en="Studio">استوديو</option><option value="townhouse" data-ar="تاون هاوس" data-en="Townhouse">تاون هاوس</option><option value="villa" data-ar="فيلا" data-en="Villa">فيلا</option><option value="office" data-ar="مكتب" data-en="Office">مكتب</option><option value="shop" data-ar="محل" data-en="Shop">محل</option><option value="clinic" data-ar="عيادة" data-en="Clinic">عيادة</option>
         </select></div>
       </div>
-      <div class="fld"><label>عنوان الإعلان</label><input class="in" id="fTitleTxt" placeholder="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" maxlength="120" /></div>
+      <div class="fld"><label data-ar="عنوان الإعلان" data-en="Listing title">عنوان الإعلان</label><input class="in" id="fTitleTxt" placeholder="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" data-ph-ar="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" data-ph-en="e.g. 160m² apartment with garden – Fifth Settlement" maxlength="120" /></div>
       <div class="row2">
-        <div class="fld"><label>المنطقة</label><input class="in" id="fArea" placeholder="التجمع الخامس" /></div>
-        <div class="fld"><label>العنوان التفصيلي (اختياري)</label><input class="in" id="fAddress" placeholder="الحي / الكمبوند" /></div>
+        <div class="fld"><label data-ar="المنطقة" data-en="Area">المنطقة</label><input class="in" id="fArea" placeholder="التجمع الخامس" data-ph-ar="التجمع الخامس" data-ph-en="Fifth Settlement" /></div>
+        <div class="fld"><label data-ar="العنوان التفصيلي (اختياري)" data-en="Detailed address (optional)">العنوان التفصيلي (اختياري)</label><input class="in" id="fAddress" placeholder="الحي / الكمبوند" data-ph-ar="الحي / الكمبوند" data-ph-en="District / compound" /></div>
       </div>
       <div class="row2">
-        <div class="fld"><label>السعر (ج.م)</label><input class="in" id="fPrice" type="number" inputmode="numeric" placeholder="4500000" /></div>
-        <div class="fld"><label>المساحة (م²)</label><input class="in" id="fSize" type="number" inputmode="numeric" placeholder="160" /></div>
+        <div class="fld"><label data-ar="السعر (ج.م)" data-en="Price (EGP)">السعر (ج.م)</label><input class="in" id="fPrice" type="number" inputmode="numeric" placeholder="4500000" /></div>
+        <div class="fld"><label data-ar="المساحة (م²)" data-en="Size (m²)">المساحة (م²)</label><input class="in" id="fSize" type="number" inputmode="numeric" placeholder="160" /></div>
       </div>
       <div class="row3">
-        <div class="fld"><label>غرف</label><input class="in" id="fBeds" type="number" inputmode="numeric" placeholder="3" /></div>
-        <div class="fld"><label>حمامات</label><input class="in" id="fBaths" type="number" inputmode="numeric" placeholder="2" /></div>
-        <div class="fld"><label>الدور</label><input class="in" id="fFloor" type="number" inputmode="numeric" placeholder="4" /></div>
+        <div class="fld"><label data-ar="غرف" data-en="Beds">غرف</label><input class="in" id="fBeds" type="number" inputmode="numeric" placeholder="3" /></div>
+        <div class="fld"><label data-ar="حمامات" data-en="Baths">حمامات</label><input class="in" id="fBaths" type="number" inputmode="numeric" placeholder="2" /></div>
+        <div class="fld"><label data-ar="الدور" data-en="Floor">الدور</label><input class="in" id="fFloor" type="number" inputmode="numeric" placeholder="4" /></div>
       </div>
-      <div class="fld"><label>الوصف</label><textarea class="in" id="fDesc" placeholder="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…"></textarea></div>
-      <div class="fld"><label>الصور</label>
+      <div class="fld"><label data-ar="الوصف" data-en="Description">الوصف</label><textarea class="in" id="fDesc" placeholder="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…" data-ph-ar="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…" data-ph-en="Unit details, finishing, features, payment…"></textarea></div>
+      <div class="fld"><label data-ar="الصور" data-en="Photos">الصور</label>
         <div class="thumbs" id="fThumbs"></div>
-        <label class="upl">📷 اختار صور من جهازك<input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
+        <label class="upl" data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device"><span data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device">📷 اختار صور من جهازك</span><input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
       </div>
       <input type="hidden" id="fStatus" value="draft"><div class="listing-preview" id="listingPreview" hidden></div>
       <div class="msg" id="fMsg"></div>
     </div>
     <div class="mf">
-      <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
-      <button class="btn btn-ghost" id="draftBtn" onclick="saveListing('draft')">حفظ كمسودة</button><button class="btn btn-teal" id="saveBtn" onclick="previewListing()">معاينة ونشر</button>
+      <button class="btn btn-ghost" onclick="closeForm()" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+      <button class="btn btn-ghost" id="draftBtn" onclick="saveListing('draft')" data-ar="حفظ كمسودة" data-en="Save as draft">حفظ كمسودة</button><button class="btn btn-teal" id="saveBtn" onclick="previewListing()" data-ar="معاينة ونشر" data-en="Preview & publish">معاينة ونشر</button>
     </div>
   </div>
 </div>
@@ -189,7 +189,9 @@ const $=id=>document.getElementById(id);
 let TOKEN=null, UID=null, LISTINGS=[], EDIT_ID=null, NEW_FILES=[], KEEP_MEDIA=[];
 
 const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money=n=>n==null?'':Number(n).toLocaleString('en-US')+' ج.م';
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const money=n=>n==null?'':Number(n).toLocaleString('en-US')+' '+L('ج.م','EGP');
 function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
 const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
 
@@ -259,19 +261,19 @@ window.saveProfile=async ()=>{
   finally{ $('coSave').disabled=false; }
 };
 window.loadMine=async ()=>{
-  $('grid').innerHTML='<div class="empty">…بحمّل</div>';
+  $('grid').innerHTML=`<div class="empty">${L('…بحمّل','Loading…')}</div>`;
   try{
     LISTINGS=await api('/listings?select=*,listing_media(url,sort)&owner_id=eq.'+UID+'&order=created_at.desc');
     render();
-  }catch(e){ $('grid').innerHTML='<div class="empty">تعذّر تحميل وحداتك.</div>'; }
+  }catch(e){ $('grid').innerHTML=`<div class="empty">${L('تعذّر تحميل وحداتك.','Could not load your units.')}</div>`; }
 };
 function render(){
-  $('count').textContent=LISTINGS.length?(LISTINGS.length+' وحدة'):'لسه مضفتش وحدات';
-  $('listingStats').innerHTML=[['إجمالي الوحدات',LISTINGS.length],['منشورة',LISTINGS.filter(l=>l.status==='active').length],['مسودات',LISTINGS.filter(l=>l.status==='draft').length]].map(([label,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${label}</div></div>`).join('');
+  $('count').textContent=LISTINGS.length?(LISTINGS.length+' '+L('وحدة','units')):L('لسه مضفتش وحدات','No units yet');
+  $('listingStats').innerHTML=[[L('إجمالي الوحدات','Total units'),LISTINGS.length],[L('منشورة','Published'),LISTINGS.filter(l=>l.status==='active').length],[L('مسودات','Drafts'),LISTINGS.filter(l=>l.status==='draft').length]].map(([label,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${label}</div></div>`).join('');
   const q=$('listingSearch').value.trim().toLowerCase(),status=$('listingStatus').value;
   const visible=LISTINGS.filter(l=>(!status||l.status===status)&&(!q||((l.title||'')+' '+(l.area||'')).toLowerCase().includes(q)));
   let html='';
-  if(!visible.length)html='<div class="workspace-empty"><h2>'+(!LISTINGS.length?'وحداتك تبدأ من هنا':'مفيش وحدات بالبحث ده')+'</h2><p>أضف بيانات الوحدة وصورها، واحفظها كمسودة لحد ما تكون جاهزة للنشر.</p><button class="btn btn-teal" onclick="openForm()">أضف وحدة</button></div>';
+  if(!visible.length)html=`<div class="workspace-empty"><h2>${!LISTINGS.length?L('وحداتك تبدأ من هنا','Your units start here'):L('مفيش وحدات بالبحث ده','No units match this search')}</h2><p>${L('أضف بيانات الوحدة وصورها، واحفظها كمسودة لحد ما تكون جاهزة للنشر.','Add the unit details and photos, and save as a draft until ready to publish.')}</p><button class="btn btn-teal" onclick="openForm()">${L('أضف وحدة','Add unit')}</button></div>`;
   html+=visible.map(l=>{
     const media=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0));
     const cover=media[0]&&media[0].url;
@@ -279,15 +281,15 @@ function render(){
     return `<div class="ucard">
       <div class="img" style="${cover?`background-image:url('${esc(cover)}')`:''}">
         ${cover?'':'<div class="no-img">🏠</div>'}
-        <span class="st ${on?'on':'off'}">${on?'منشور':'مسودة'}</span>
+        <span class="st ${on?'on':'off'}">${on?L('منشور','Published'):L('مسودة','Draft')}</span>
       </div>
       <div class="b">
-        <div class="t">${esc(l.title||'وحدة')}</div>
-        <div class="pr">${l.price?money(l.price):'—'}${l.purpose==='rent'?' / شهر':''}</div>
-        <div class="mt">${esc(l.area||'')}${l.bedrooms?(' · '+l.bedrooms+' غرف'):''}${l.size_sqm?(' · '+l.size_sqm+' م²'):''}</div>
+        <div class="t">${esc(l.title||L('وحدة','Unit'))}</div>
+        <div class="pr">${l.price?money(l.price):'—'}${l.purpose==='rent'?L(' / شهر',' / mo'):''}</div>
+        <div class="mt">${esc(l.area||'')}${l.bedrooms?(' · '+l.bedrooms+' '+L('غرف','beds')):''}${l.size_sqm?(' · '+l.size_sqm+' '+L('م²','m²')):''}</div>
         <div class="acts">
-          <button onclick="editListing('${l.id}')">✏️ تعديل</button>
-          <button class="pub" onclick="${on?'togglePub':'editListing'}('${l.id}')">${on?'إخفاء':'معاينة ونشر'}</button>
+          <button onclick="editListing('${l.id}')">✏️ ${L('تعديل','Edit')}</button>
+          <button class="pub" onclick="${on?'togglePub':'editListing'}('${l.id}')">${on?L('إخفاء','Hide'):L('معاينة ونشر','Preview & publish')}</button>
           <button class="del" onclick="delListing('${l.id}')">🗑️</button>
         </div>
       </div>
@@ -297,29 +299,30 @@ function render(){
 }
 
 window.renderListings=render;
+document.addEventListener('hz:lang', ()=>{ if(UID) render(); });
 /* form */
 window.openForm=()=>{
   if(window.HZ && HZ.PLAN && HZ.PLAN.max_listings!=null && LISTINGS.length >= HZ.PLAN.max_listings){
-    if(confirm('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك المجانية. تحب ترقّي لباقة أعلى ووحدات غير محدودة؟')) location.href='/pricing';
+    if(confirm(L('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك المجانية. تحب ترقّي لباقة أعلى ووحدات غير محدودة؟','You reached the limit ('+HZ.PLAN.max_listings+' units) on your free plan. Upgrade for unlimited units?'))) location.href='/pricing';
     return;
   }
-  EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent='إضافة وحدة';
+  EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
   $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft';
   $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open'); };
 window.previewListing=()=>{
   const box=$('listingPreview');
-  if($('fTitleTxt').value.trim().length<4){fmsg('اكتب عنوان واضح للإعلان.');return;}
+  if($('fTitleTxt').value.trim().length<4){fmsg(L('اكتب عنوان واضح للإعلان.','Write a clear listing title.'));return;}
   box.hidden=false;
-  const facts=[$('fSize').value?esc($('fSize').value)+' م²':'',$('fBeds').value?esc($('fBeds').value)+' غرف':''].filter(Boolean).join(' · ');
-  box.innerHTML=`<h3>${esc($('fTitleTxt').value)}</h3><p>${esc($('fArea').value)} · ${money($('fPrice').value)}</p><p>${facts}</p><p>${esc($('fDesc').value)}</p><p>هتظهر الوحدة في السوق بعد النشر.</p><button class="btn btn-teal" onclick="saveListing('active')">تأكيد النشر</button>`;
-  if(NEW_FILES.length||KEEP_MEDIA.length){const img=document.createElement('img');img.alt='صورة الوحدة';img.src=NEW_FILES.length?URL.createObjectURL(NEW_FILES[0]):KEEP_MEDIA[0];if(NEW_FILES.length)img.onload=()=>URL.revokeObjectURL(img.src);box.prepend(img);}
+  const facts=[$('fSize').value?esc($('fSize').value)+' '+L('م²','m²'):'',$('fBeds').value?esc($('fBeds').value)+' '+L('غرف','beds'):''].filter(Boolean).join(' · ');
+  box.innerHTML=`<h3>${esc($('fTitleTxt').value)}</h3><p>${esc($('fArea').value)} · ${money($('fPrice').value)}</p><p>${facts}</p><p>${esc($('fDesc').value)}</p><p>${L('هتظهر الوحدة في السوق بعد النشر.','The unit will appear in the market after publishing.')}</p><button class="btn btn-teal" onclick="saveListing('active')">${L('تأكيد النشر','Confirm & publish')}</button>`;
+  if(NEW_FILES.length||KEEP_MEDIA.length){const img=document.createElement('img');img.alt=L('صورة الوحدة','Unit photo');img.src=NEW_FILES.length?URL.createObjectURL(NEW_FILES[0]):KEEP_MEDIA[0];if(NEW_FILES.length)img.onload=()=>URL.revokeObjectURL(img.src);box.prepend(img);}
   box.scrollIntoView({block:'nearest'});
 };
 window.closeForm=()=>{ $('formOv').classList.remove('open'); };
 window.editListing=(id)=>{
   const l=LISTINGS.find(x=>x.id===id); if(!l) return;
-  EDIT_ID=id; NEW_FILES=[]; $('fTitle').textContent='تعديل الوحدة';
+  EDIT_ID=id; NEW_FILES=[]; $('fTitle').textContent=L('تعديل الوحدة','Edit unit');
   $('fPurpose').value=l.purpose||'sale'; $('fType').value=l.type||'apartment';
   $('fTitleTxt').value=l.title||''; $('fArea').value=l.area||''; $('fAddress').value=l.address||'';
   $('fPrice').value=l.price||''; $('fSize').value=l.size_sqm||''; $('fBeds').value=l.bedrooms||'';
