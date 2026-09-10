@@ -46,9 +46,9 @@
 <div id="hz-header"></div>
 <div class="wrap2"><a class="btn btn-teal" href="/clients?overview=1" data-ar="كفاءة المبيعات وتوصيات الذكاء الاصطناعي" data-en="Sales efficiency and AI recommendations">كفاءة المبيعات وتوصيات الذكاء الاصطناعي</a></div>
 <div class="wrap2">
-  <div class="top"><h1>📊 أدائي</h1>
+  <div class="top"><h1 data-ar="📊 أدائي" data-en="📊 My performance">📊 أدائي</h1>
     <div class="seg" id="seg">
-      <button data-d="7">7 أيام</button><button data-d="30" class="on">30 يوم</button><button data-d="90">90 يوم</button><button data-d="365">سنة</button>
+      <button data-d="7" data-ar="7 أيام" data-en="7 days">7 أيام</button><button data-d="30" class="on" data-ar="30 يوم" data-en="30 days">30 يوم</button><button data-d="90" data-ar="90 يوم" data-en="90 days">90 يوم</button><button data-d="365" data-ar="سنة" data-en="1 year">سنة</button>
     </div>
   </div>
   <div id="app"><div style="padding:40px;text-align:center;color:var(--muted)">…</div></div>
@@ -59,11 +59,12 @@
 <script>
 const $=id=>document.getElementById(id);
 const ar=()=>HZ.lang==='ar';
-const money=n=>Number(n||0).toLocaleString('ar-EG')+' ج.م';
+const L=(a,e)=>ar()?a:e;
+const money=n=>Number(n||0).toLocaleString(ar()?'ar-EG':'en-US')+' '+L('ج.م','EGP');
 let S=null, DAYS=30;
 async function boot(){
   S=await HZ.requireSession(); if(!S)return;
-  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ $('app').innerHTML='<div style="padding:60px;text-align:center"><h2>أدائي</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ $('app').innerHTML=`<div style="padding:60px;text-align:center"><h2>${L('أدائي','My performance')}</h2><p style="color:var(--muted);margin:12px 0 18px">${L('مساحة عمل البروكر.','Broker workspace.')}</p><a class="btn btn-navy" href="/account">${L('ابقى بروكر','Become a broker')}</a></div>`; return; } }catch(e){}
   $('seg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
     [...$('seg').children].forEach(x=>x.classList.remove('on')); b.classList.add('on'); DAYS=+b.dataset.d; load(); });
   load();
@@ -75,58 +76,59 @@ async function load(){
     HZ.sbAuth('/rpc/crm_broker_stats',S.token,'POST',{p_since:since}),
     HZ.sbAuth('/rpc/crm_attribution',S.token,'POST',{p_since:since}).catch(()=>null)
   ]); }catch(e){ r=null; }
-  if(!r||!r.ok){ $('app').innerHTML='<div class="empty">تعذّر تحميل الإحصائيات.</div>'; return; }
+  if(!r||!r.ok){ $('app').innerHTML=`<div class="empty">${L('تعذّر تحميل الإحصائيات.','Could not load stats.')}</div>`; return; }
   window.__attr=attr;
   const f=r.funnel||{};
   const tempColors={very_hot:'#B42318',hot:'#B45309',warm:'#C99700',cold:'#8894a6'};
-  const tempLab={very_hot:'ساخن جدًا',hot:'ساخن',warm:'دافئ',cold:'بارد'};
-  const stageLab={new:'جديد',contact:'تواصل',contacted:'تم التواصل',viewing:'معاينة',negotiation:'تفاوض',negotiate:'تفاوض',closed:'مغلق',won:'مكسوب',lost:'خسارة'};
+  const tempLab=ar()?{very_hot:'ساخن جدًا',hot:'ساخن',warm:'دافئ',cold:'بارد'}:{very_hot:'Very hot',hot:'Hot',warm:'Warm',cold:'Cold'};
+  const stageLab=ar()?{new:'جديد',contact:'تواصل',contacted:'تم التواصل',viewing:'معاينة',negotiation:'تفاوض',negotiate:'تفاوض',closed:'مغلق',won:'مكسوب',lost:'خسارة'}:{new:'New',contact:'Contact',contacted:'Contacted',viewing:'Viewing',negotiation:'Negotiation',negotiate:'Negotiation',closed:'Closed',won:'Won',lost:'Lost'};
 
   const kpi=(cls,n,l)=>`<div class="kpi ${cls}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
   const maxF=Math.max(1,f.leads||0);
   const frow=(lab,v,base)=>`<div class="row"><div class="lab"><span>${lab}</span><span>${v||0}</span></div><div class="bar"><div class="fill" style="width:${Math.round((v||0)/base*100)}%"></div></div></div>`;
 
   const temps=r.by_temperature||{}; const tmax=Math.max(1,...Object.values(temps));
-  const tempRows=['very_hot','hot','warm','cold'].map(k=>temps[k]?`<div class="row"><div class="k">${tempLab[k]}</div><div class="bar"><div class="fill" style="width:${Math.round(temps[k]/tmax*100)}%;background:${tempColors[k]}"></div></div><div class="v">${temps[k]}</div></div>`:'').join('')||'<div class="empty">لا يوجد</div>';
+  const none=`<div class="empty">${L('لا يوجد','None')}</div>`;
+  const tempRows=['very_hot','hot','warm','cold'].map(k=>temps[k]?`<div class="row"><div class="k">${tempLab[k]}</div><div class="bar"><div class="fill" style="width:${Math.round(temps[k]/tmax*100)}%;background:${tempColors[k]}"></div></div><div class="v">${temps[k]}</div></div>`:'').join('')||none;
 
   const stages=r.by_stage||{}; const smax=Math.max(1,...Object.values(stages));
-  const stageRows=Object.entries(stages).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><div class="k">${stageLab[k]||k}</div><div class="bar"><div class="fill" style="width:${Math.round(v/smax*100)}%;background:var(--teal)"></div></div><div class="v">${v}</div></div>`).join('')||'<div class="empty">لا يوجد</div>';
+  const stageRows=Object.entries(stages).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="row"><div class="k">${stageLab[k]||k}</div><div class="bar"><div class="fill" style="width:${Math.round(v/smax*100)}%;background:var(--teal)"></div></div><div class="v">${v}</div></div>`).join('')||none;
 
   const sources=(r.by_source||[]);
-  const srcRows=sources.length?sources.map(s=>`<div class="src"><span>${HZ.esc(s.source)}</span><span style="font-weight:800">${s.count}</span></div>`).join(''):'<div class="empty">لا يوجد</div>';
+  const srcRows=sources.length?sources.map(s=>`<div class="src"><span>${HZ.esc(s.source)}</span><span style="font-weight:800">${s.count}</span></div>`).join(''):none;
 
   $('app').innerHTML=`
     <div class="kpis">
-      ${kpi('t', r.leads_total||0, 'إجمالي العملاء')}
-      ${kpi('g', (r.conversion_rate||0)+'%', 'نسبة التحويل')}
-      ${kpi('g', money(r.commission_total), 'إجمالي العمولات')}
-      ${kpi('h', r.hot_now||0, 'ساخنون الآن')}
-      ${kpi('o', r.overdue_followups||0, 'متابعات متأخرة')}
+      ${kpi('t', r.leads_total||0, L('إجمالي العملاء','Total clients'))}
+      ${kpi('g', (r.conversion_rate||0)+'%', L('نسبة التحويل','Conversion rate'))}
+      ${kpi('g', money(r.commission_total), L('إجمالي العمولات','Total commissions'))}
+      ${kpi('h', r.hot_now||0, L('ساخنون الآن','Hot now'))}
+      ${kpi('o', r.overdue_followups||0, L('متابعات متأخرة','Overdue follow-ups'))}
     </div>
     <div class="grid">
-      <div class="card"><h2>🔻 قمع المبيعات (كل الوقت)</h2><div class="funnel">
-        ${frow('عملاء', f.leads, maxF)}
-        ${frow('تم التواصل', f.contacted, maxF)}
-        ${frow('معاينات تمّت', f.viewings, maxF)}
-        ${frow('صفقات مفتوحة', f.deals_open, maxF)}
-        ${frow('صفقات مكسوبة', f.deals_won, maxF)}
+      <div class="card"><h2>🔻 ${L('قمع المبيعات (كل الوقت)','Sales funnel (all-time)')}</h2><div class="funnel">
+        ${frow(L('عملاء','Leads'), f.leads, maxF)}
+        ${frow(L('تم التواصل','Contacted'), f.contacted, maxF)}
+        ${frow(L('معاينات تمّت','Viewings done'), f.viewings, maxF)}
+        ${frow(L('صفقات مفتوحة','Open deals'), f.deals_open, maxF)}
+        ${frow(L('صفقات مكسوبة','Won deals'), f.deals_won, maxF)}
       </div></div>
-      <div class="card"><h2>🌡️ حرارة العملاء</h2><div class="brk">${tempRows}</div></div>
-      <div class="card"><h2>📍 مراحل خط سير العملاء</h2><div class="brk">${stageRows}</div></div>
-      <div class="card"><h2>📥 مصادر العملاء</h2>${srcRows}</div>
+      <div class="card"><h2>🌡️ ${L('حرارة العملاء','Lead temperature')}</h2><div class="brk">${tempRows}</div></div>
+      <div class="card"><h2>📍 ${L('مراحل خط سير العملاء','Pipeline stages')}</h2><div class="brk">${stageRows}</div></div>
+      <div class="card"><h2>📥 ${L('مصادر العملاء','Lead sources')}</h2>${srcRows}</div>
     </div>
     <div class="kpis" style="margin-top:16px">
-      ${kpi('t', r.leads_period||0, 'عملاء جدد بالفترة')}
-      ${kpi('g', r.deals_won_period||0, 'صفقات مكسوبة بالفترة')}
-      ${kpi('g', money(r.commission_period), 'عمولات الفترة')}
-      ${kpi('', r.avg_score||0, 'متوسط السكور')}
-      ${kpi('', (f.deals_lost||0), 'صفقات خاسرة')}
+      ${kpi('t', r.leads_period||0, L('عملاء جدد بالفترة','New leads (period)'))}
+      ${kpi('g', r.deals_won_period||0, L('صفقات مكسوبة بالفترة','Won deals (period)'))}
+      ${kpi('g', money(r.commission_period), L('عمولات الفترة','Commissions (period)'))}
+      ${kpi('', r.avg_score||0, L('متوسط السكور','Avg. score'))}
+      ${kpi('', (f.deals_lost||0), L('صفقات خاسرة','Lost deals'))}
     </div>
-    <div class="card" style="margin-top:16px"><h2>💰 عائد التسويق حسب الحملة (ROI)</h2>${attrHTML(attr)}</div>`;
+    <div class="card" style="margin-top:16px"><h2>💰 ${L('عائد التسويق حسب الحملة (ROI)','Marketing ROI by campaign')}</h2>${attrHTML(attr)}</div>`;
 }
 function attrHTML(a){
   const rows=(a&&a.ok&&a.rows)||[];
-  if(!rows.length) return '<div class="empty">لا توجد بيانات حملات بعد — العملاء بيتوسموا تلقائيًا بالمصدر/الحملة (source/utm).</div>';
+  if(!rows.length) return `<div class="empty">${L('لا توجد بيانات حملات بعد — العملاء بيتوسموا تلقائيًا بالمصدر/الحملة (source/utm).','No campaign data yet — leads are auto-tagged by source/utm.')}</div>`;
   const roiTxt=x=>x.roi==null?'—':`<b style="color:${x.roi>=0?'#137a3e':'#B42318'}">${x.roi>=0?'+':''}${x.roi}%</b>`;
   const body=rows.map(x=>`<tr>
     <td style="font-weight:800">${HZ.esc(x.campaign)}</td>
@@ -135,18 +137,18 @@ function attrHTML(a){
     <td>${x.spend?money(x.spend):'<span style="color:var(--muted)">—</span>'}</td>
     <td>${roiTxt(x)}</td>
     <td>${x.cost_per_lead!=null?money(x.cost_per_lead):'—'}</td>
-    <td><button onclick="editSpend('${encodeURIComponent(x.campaign)}',${x.spend||0})" style="font-size:11px;border:1.5px solid var(--line-2);background:#fff;border-radius:7px;padding:4px 8px;cursor:pointer">✎ إنفاق</button></td></tr>`).join('');
+    <td><button onclick="editSpend('${encodeURIComponent(x.campaign)}',${x.spend||0})" style="font-size:11px;border:1.5px solid var(--line-2);background:#fff;border-radius:7px;padding:4px 8px;cursor:pointer">✎ ${L('إنفاق','Spend')}</button></td></tr>`).join('');
   return `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
-    <thead><tr style="color:var(--muted);font-size:11.5px;text-align:right">
-      <th style="padding:6px">الحملة</th><th>عملاء</th><th>صفقات</th><th>عمولة</th><th>إنفاق</th><th>ROI</th><th>تكلفة/عميل</th><th></th></tr></thead>
+    <thead><tr style="color:var(--muted);font-size:11.5px;text-align:${ar()?'right':'left'}">
+      <th style="padding:6px">${L('الحملة','Campaign')}</th><th>${L('عملاء','Leads')}</th><th>${L('صفقات','Deals')}</th><th>${L('عمولة','Commission')}</th><th>${L('إنفاق','Spend')}</th><th>ROI</th><th>${L('تكلفة/عميل','Cost/lead')}</th><th></th></tr></thead>
     <tbody>${body}</tbody></table></div>
     <style>#app table td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}</style>`;
 }
 window.editSpend=async(campEnc,cur)=>{
   const camp=decodeURIComponent(campEnc);
-  const v=prompt('إنفاق حملة "'+camp+'" (ج.م):', cur||'');
-  if(v===null) return; const n=Number(v); if(isNaN(n)){ alert('رقم غير صحيح'); return; }
-  try{ await HZ.sbAuth('/rpc/crm_set_campaign_spend',S.token,'POST',{p_name:camp,p_spend:n,p_channel:null}); load(); }catch(e){ alert('حصل خطأ'); }
+  const v=prompt(L('إنفاق حملة "'+camp+'" (ج.م):','Spend for "'+camp+'" (EGP):'), cur||'');
+  if(v===null) return; const n=Number(v); if(isNaN(n)){ alert(L('رقم غير صحيح','Invalid number')); return; }
+  try{ await HZ.sbAuth('/rpc/crm_set_campaign_spend',S.token,'POST',{p_name:camp,p_spend:n,p_channel:null}); load(); }catch(e){ alert(L('حصل خطأ','Something went wrong')); }
 };
 document.addEventListener('hz:lang', ()=>{ if(S) load(); });
 boot();
