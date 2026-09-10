@@ -17,6 +17,10 @@ from . import config, crm_ai
 from . import crm_sales as sales
 
 router = APIRouter(prefix="/api/crm/sales", tags=["CRM Sales"])
+CRM_CATALOG_SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
+                      "installment_years,payment_plan,finishing,delivery,"
+                      "project:projects!inner(id,name,name_ar,area,description,delivery,cover_image_url,"
+                      "developer:developers(name))")
 _calls = defaultdict(deque)
 _lock = Lock()
 
@@ -160,7 +164,7 @@ def profile(lead_id: UUID, body: Profile, gateway: UserGateway):
     return result
 
 
-def context(gateway, lead_id):
+def context(gateway, lead_id, language="ar"):
     lead = gateway.owned_lead(lead_id)
     activities = gateway.rows("crm_lead_activities", lead_id="eq." + str(lead_id),
                               select="*", order="created_at.desc", limit=10000)
@@ -173,12 +177,24 @@ def context(gateway, lead_id):
         inventory.extend(page)
         if len(page) < 500:
             break
-    return lead, req, activities, sales.find_property_matches(req, inventory), len(inventory) >= 10000
+    catalog_units = []
+    try:
+        # Catalog projects are joined to their real unit types. The caller JWT
+        # remains subject to the existing Supabase policies.
+        catalog_units = gateway.rows("unit_types", select=CRM_CATALOG_SELECT,
+                                     order="id", limit=5000)
+    except HTTPException:
+        # Marketplace matching and the rest of the CRM stay usable during a
+        # temporary catalog failure; the response exposes the limitation.
+        catalog_units = []
+    return (lead, req, activities, sales.find_property_matches(req, inventory),
+            sales.find_project_matches(req, catalog_units, language),
+            len(inventory) >= 10000, len(catalog_units) >= 5000)
 
 
 @router.get("/clients/{lead_id}/copilot")
 def copilot(lead_id: UUID, gateway: UserGateway, language: Literal["ar", "en"] = "ar"):
-    lead, req, activities, matches, limited = context(gateway, lead_id)
+    lead, req, activities, matches, project_matches, limited, catalog_limited = context(gateway, lead_id, language)
     lead["last_contact"] = next((a.get("created_at") for a in activities if a.get("kind") in ("call", "whatsapp", "email")), None)
     broker_profile = gateway.rows("profiles", id="eq." + gateway.uid, select="full_name,company,phone")
     tasks = gateway.rows("crm_tasks", lead_id="eq." + str(lead_id), owner_id="eq." + gateway.uid,
@@ -200,8 +216,9 @@ def copilot(lead_id: UUID, gateway: UserGateway, language: Literal["ar", "en"] =
     timeline = sorted(timeline, key=lambda a: a.get("created_at") or "", reverse=True)[:200]
     return {"client": lead, "broker": broker_profile[0] if broker_profile else {}, "requirements": req, "activities": timeline,
             "lead_score": sales.calculate_lead_score(req, combined), "matches": matches[:20],
-            **sales.generate_advice(lead, req, combined, matches, language),
-            "inventory_limited": limited, "activity_limit": 200,
+            "project_matches": project_matches[:20],
+            **sales.generate_advice(lead, req, combined, matches, language, project_matches),
+            "inventory_limited": limited, "catalog_limited": catalog_limited, "activity_limit": 200,
             "score_limited": max(len(activities),len(behavior)) >= 10000}
 
 

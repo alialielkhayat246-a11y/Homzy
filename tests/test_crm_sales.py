@@ -90,6 +90,43 @@ class SalesTests(unittest.TestCase):
     def test_no_requirements_not_perfect(self):
         self.assertEqual(sales.find_property_matches({}, [self.property])[0]["score"], 0)
 
+    def test_project_match_uses_complete_saved_profile_and_best_unit(self):
+        requirements = {"purpose": "sale", "category": "residential", "locations": ["التجمع"],
+                        "type": "شقة", "bedrooms": 3, "budget_max": 12000000,
+                        "down_payment": 1500000, "installment_years": 8,
+                        "developers": ["Acme"], "finishing": "finished"}
+        project = {"id": "project-one", "name": "Garden View", "name_ar": "جاردن فيو",
+                   "area": "New Cairo", "developer": {"name": "Acme"}}
+        units = [
+            {"id": "wrong", "type": "villa", "bedrooms": 5, "price_from": 25000000,
+             "down_payment": "20%", "installment_years": 5, "finishing": "core", "project": project},
+            {"id": "best", "type": "apartment", "bedrooms": 3, "price_from": 10000000,
+             "price_to": 12000000, "down_payment": "10%", "installment_years": 8,
+             "finishing": "finished", "project": project},
+        ]
+        result = sales.find_project_matches(requirements, units, "ar")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["unit"]["id"], "best")
+        self.assertEqual(result[0]["score"], 100)
+        self.assertEqual(result[0]["coverage"], 100)
+        self.assertEqual(result[0]["display_name"], "جاردن فيو")
+        deposit = next(item for item in result[0]["evidence"] if item["criterion"] == "down_payment")
+        self.assertEqual(deposit["status"], "matched")
+        self.assertEqual(deposit["actual"], 1000000)
+
+    def test_saved_sales_profile_overrides_legacy_client_fields(self):
+        lead = {"area": "Sheikh Zayed", "budget": 3000000,
+                "custom": {"sales_requirements": {"locations": ["New Cairo"],
+                    "budget_max": 12000000, "down_payment": 1500000, "installment_years": 8}}}
+        result = sales.profile_requirements(lead)
+        self.assertEqual(result["locations"], ["New Cairo"])
+        self.assertEqual(result["budget_max"], 12000000)
+        self.assertEqual(result["down_payment"], 1500000)
+        self.assertEqual(result["installment_years"], 8)
+
+    def test_primary_projects_are_not_suggested_for_rent(self):
+        self.assertEqual(sales.find_project_matches({"purpose": "rent"}, [{"project": {"id": "one"}}]), [])
+
     def test_outbound_messages_do_not_warm_lead(self):
         now = datetime(2026, 9, 9, tzinfo=timezone.utc)
         activity = [{"kind": "property_sent", "created_at": now.isoformat()}] * 100

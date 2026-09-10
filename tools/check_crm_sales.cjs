@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..');
 const lead='11111111-1111-4111-8111-111111111111';
 const property='22222222-2222-4222-8222-222222222222';
 const now='2026-09-09T10:00:00Z';
-const profile={client:{id:lead,name:'أحمد Ahmed <script>alert(1)</script>',phone:'01000000000',updated_at:now},requirements:{purpose:'sale',locations:['New Cairo'],budget_max:12000000,bedrooms:3},activities:[{kind:'note',body:'Client requested a viewing',created_at:now}],lead_score:{score:45,temperature:'warm',signals:[{signal:'budget_clarity',points:15}]},matches:[{property:{id:property,title:'New Cairo apartment',area:'New Cairo',price:11000000,currency:'EGP'},score:92,coverage:100,evidence:[{criterion:'budget',status:'matched',actual:11000000}]}],summary:'أحمد يبحث عن شقة · Ahmed is looking for an apartment.',next_best_action:'راجع المتطلبات · Review requirements',missing_information:['type'],risks:[],followup_recommendation:'Tomorrow',engine:'rules'};
+const profile={client:{id:lead,name:'أحمد Ahmed <script>alert(1)</script>',phone:'01000000000',updated_at:now},requirements:{purpose:'sale',locations:['New Cairo'],budget_max:12000000,bedrooms:3},activities:[{kind:'note',body:'Client requested a viewing',created_at:now}],lead_score:{score:45,temperature:'warm',signals:[{signal:'budget_clarity',points:15}]},matches:[{property:{id:property,title:'New Cairo apartment',area:'New Cairo',price:11000000,currency:'EGP'},score:92,coverage:100,evidence:[{criterion:'budget',status:'matched',actual:11000000}]}],project_matches:[{project:{id:'33333333-3333-4333-8333-333333333333',name:'Garden View',name_ar:'جاردن فيو',area:'New Cairo',developer_name:'Acme'},unit:{id:'unit-one',type:'apartment',bedrooms:3,price_from:10000000,down_payment:'10%',installment_years:8},display_name:'Garden View',score:96,coverage:100,fit_summary:'Fits location, budget and bedrooms',evidence:[{criterion:'location',status:'matched'},{criterion:'budget',status:'matched'}]}],summary:'أحمد يبحث عن شقة · Ahmed is looking for an apartment.',next_best_action:'راجع مشروع Garden View · Review Garden View',missing_information:['type'],risks:[],followup_recommendation:'Tomorrow',engine:'rules'};
 let writes=[];
 const server=http.createServer((req,res)=>{
   if(req.url.startsWith('/api/')){let raw='';req.on('data',d=>raw+=d);req.on('end',()=>{const body=raw?JSON.parse(raw):{};if(req.method!=='GET')writes.push({url:req.url,body});let value=profile;
@@ -35,6 +35,8 @@ const server=http.createServer((req,res)=>{
       assert(await page.locator('dialog').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Dialog horizontally overflows');
       await page.screenshot({path:path.join(out,`${language}-${width}.png`)});
     }
+    await page.locator('[data-tab="copilot"]').click();assert((await page.locator('#sales-content').innerText()).includes('Garden View'));
+    await page.locator('[data-tab="profile"]').click();
     writes=[];
     await page.locator('#sales-extract').fill('Budget 20 million, down payment 9 million');await page.locator('#sales-parse').click();
     await page.locator('#sales-apply').waitFor();

@@ -505,49 +505,52 @@ window.delClient=async (id)=>{ if(!confirm('تمسح العميل ده؟')) retu
 window.matchUnits=async (id)=>{
   const c=CLIENTS.find(x=>x.id===id); if(!c) return;
   window.__muLead=id;
-  $('muTitle').textContent='وحدات مطابقة لـ '+(c.name||'');
-  $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">…بدوّر</div>';
+  $('muTitle').textContent=L('وحدات ومشروعات مطابقة لـ ','Matching units and projects for ')+(c.name||'');
+  $('muBody').innerHTML='<div style="text-align:center;color:#66717F;padding:20px">'+L('…براجع ملف العميل والمخزون','Reviewing the saved client profile and inventory…')+'</div>';
   $('muOv').classList.add('open');
   window.__muClient=c.name||'';
-  // Fetch both in parallel: marketplace listings (with match %) + primary projects.
-  const [listings, projects] = await Promise.all([
-    HZ.sbAuth('/rpc/crm_match_properties', TOKEN, 'POST', {p_lead:id, p_limit:8}).catch(()=>[]),
-    HZ.rpc('search_projects', { p_areas:c.area?[c.area]:null, p_max:c.budget||null, p_beds:(c.bedrooms!=null?c.bedrooms:null), p_sort:'recent', p_limit:6 }).catch(()=>[])
-  ]);
+  let data;
+  try{
+    const response=await fetch('/api/crm/sales/clients/'+encodeURIComponent(id)+'/copilot?language='+(HZ.lang==='en'?'en':'ar'),{headers:{Authorization:'Bearer '+TOKEN},signal:AbortSignal.timeout(60000)});
+    data=await response.json();if(!response.ok)throw Error(data.detail||'match failed');
+  }catch(e){$('muBody').innerHTML='<div style="text-align:center;color:#B42318;padding:20px">'+L('تعذّر تحميل المطابقات. حاول مرة أخرى.','Could not load matches. Please retry.')+'</div>';return;}
+  const listings=(data.matches||[]).slice(0,8).map(m=>({...m.property,listing_id:m.property.id,match_pct:m.score,coverage:m.coverage,evidence:m.evidence||[]}));
+  const projects=(data.project_matches||[]).slice(0,8);
   let html='';
-  // --- marketplace listings ranked by AI match % ---
+  const req=data.requirements||{};
+  const reqBits=[...(req.locations||[]),req.type,req.bedrooms!=null?(req.bedrooms+' '+L('غرف','beds')):null,req.budget_max!=null?(L('ميزانية حتى ','Budget up to ')+money(req.budget_max)):null,req.down_payment!=null?(L('مقدم ','Down payment ')+money(req.down_payment)):null,req.installment_years!=null?(req.installment_years+' '+L('سنوات تقسيط','installment years')):null].filter(Boolean);
+  html+='<div style="font-size:12px;color:#66717F;margin-bottom:10px">'+L('الترتيب مبني على البيانات المحفوظة: ','Ranked from the saved profile: ')+esc(reqBits.join(' · ')||L('لا توجد احتياجات كافية بعد','Not enough requirements saved yet'))+'</div>';
+  if(projects.length){
+    html += '<div class="mu-sec">🏗️ '+L('مشروعات المطورين الأنسب','Best-fit developer projects')+'</div>';
+    html += projects.map((m,i)=>{
+      const p=m.project||{},u=m.unit||{},nm=m.display_name||p.name_ar||p.name||L('مشروع','Project');
+      const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+      const facts=[p.area,p.developer_name,u.type,u.bedrooms!=null?(u.bedrooms+' '+L('غرف','beds')):null,u.price_from!=null?(L('يبدأ من ','From ')+money(u.price_from)):null,u.down_payment?(L('مقدم ','Down payment ')+u.down_payment):null,u.installment_years?(u.installment_years+' '+L('سنوات','years')):null].filter(Boolean);
+      window['__mu'+i]=m;
+      return `<div class="mu-item"><div class="im" style="${bg}"></div><div class="mpct"><b>${m.score}%</b><span>${L('توافق','fit')}</span></div>
+        <div class="info"><div class="t">${esc(nm)}</div><div class="m">${esc(facts.join(' · '))}</div><div class="pr">${esc(m.fit_summary||'')} · ${L('اكتمال البيانات','coverage')} ${m.coverage}%</div></div>
+        <div style="display:flex;flex-direction:column;gap:5px">${p.id?`<a class="pdf" href="/app?project=${encodeURIComponent(p.id)}">${L('فتح المشروع','Open project')}</a>`:''}<button class="pdf" onclick="offerFor(${i})">📄 PDF</button></div></div>`;
+    }).join('');
+  }
   if((listings||[]).length){
-    html += '<div class="mu-sec">🎯 وحدات من السوق — بترتيب نسبة التطابق</div>';
+    html += '<div class="mu-sec">🎯 '+L('وحدات السوق المسجلة','Recorded marketplace listings')+'</div>';
     html += listings.map((l,i)=>{
       window['__ml'+i]=l;
       const pct=l.match_pct!=null?l.match_pct:0;
       const col=pct>=80?'#137a3e':pct>=55?'#B45309':'#8894a6';
       const wa=(''+(c.phone||'')).replace(/[^0-9]/g,'');
-      const txt=encodeURIComponent(`مرحبًا ${c.name||''}، لقيت لك ${l.title||'وحدة'}${l.area?(' في '+l.area):''}${l.price?(' بسعر '+money(l.price)):''} — تحب أبعتلك التفاصيل؟`);
+      const txt=encodeURIComponent(L(`مرحبًا ${c.name||''}، لقيت لك ${l.title||'وحدة'}${l.area?(' في '+l.area):''}${l.price?(' بسعر '+money(l.price)):''} — تحب أبعتلك التفاصيل؟`,`Hello ${c.name||''}, I found ${l.title||'a property'}${l.area?(' in '+l.area):''}${l.price?(' for '+money(l.price)):''}. Would you like the details?`));
       return `<div class="mu-item">
-        <div class="mpct" style="--c:${col}"><b>${pct}%</b><span>تطابق</span></div>
+        <div class="mpct" style="--c:${col}"><b>${pct}%</b><span>${L('توافق','fit')}</span></div>
         <div class="info"><div class="t">${esc(l.title||'وحدة')}</div>
-          <div class="m">${esc(l.area||'')}${l.type?(' · '+esc(l.type)):''}${l.bedrooms!=null?(' · '+l.bedrooms+' غرف'):''}${l.size_sqm?(' · '+l.size_sqm+'م'):''}</div>
+          <div class="m">${esc(l.area||'')}${l.type?(' · '+esc(l.type)):''}${l.bedrooms!=null?(' · '+l.bedrooms+' '+L('غرف','beds')):''}${l.size_sqm?(' · '+l.size_sqm+'m²'):''} · ${L('اكتمال البيانات','coverage')} ${l.coverage}%</div>
           <div class="pr">${l.price!=null?money(l.price):''}</div></div>
         <div style="display:flex;flex-direction:column;gap:5px">
-        ${wa?`<a class="pdf" style="background:#25D366;border-color:#25D366" target="_blank" rel="noopener" href="https://wa.me/${wa.startsWith('2')?wa:('2'+wa.replace(/^0/,''))}?text=${txt}" onclick="sendMatch(${i})">📤 واتساب</a>`:''}
-        <button class="pdf" onclick="sendMatch(${i})">✔ سجّل الإرسال</button></div></div>`;
+        ${wa?`<a class="pdf" style="background:#25D366;border-color:#25D366" target="_blank" rel="noopener" href="https://wa.me/${wa.startsWith('2')?wa:('2'+wa.replace(/^0/,''))}?text=${txt}" onclick="sendMatch(${i})">📤 WhatsApp</a>`:''}
+        <button class="pdf" onclick="sendMatch(${i})">✔ ${L('سجّل الإرسال','Log sent')}</button></div></div>`;
     }).join('');
   }
-  // --- primary-market projects → PDF offer (existing) ---
-  if((projects||[]).length){
-    html += '<div class="mu-sec">🏗️ مشاريع أولية — عرض PDF</div>';
-    html += projects.map((p,i)=>{
-      const nm=p.name_ar||p.name||'مشروع';
-      const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
-      const pr=p.price_from_min!=null?('يبدأ من '+money(p.price_from_min)):'';
-      window['__mu'+i]=p;
-      return `<div class="mu-item"><div class="im" style="${bg}"></div>
-        <div class="info"><div class="t">${esc(nm)}</div><div class="m">${esc(p.area||'')}${p.developer_name?' · '+esc(p.developer_name):''}</div><div class="pr">${pr}</div></div>
-        <button class="pdf" onclick="offerFor(${i})">📄 عرض PDF</button></div>`;
-    }).join('');
-  }
-  $('muBody').innerHTML = html || '<div style="text-align:center;color:#66717F;padding:20px">مفيش وحدات مطابقة بالضبط — جرّب توسّع معايير العميل (منطقة/ميزانية/غرف).</div>';
+  $('muBody').innerHTML = (projects.length||listings.length)?html:'<div style="text-align:center;color:#66717F;padding:20px">'+L('مفيش وحدات أو مشروعات مطابقة حاليًا — راجع احتياجات العميل المحفوظة.','No matching units or projects currently. Review the saved client requirements.')+'</div>';
 };
 // record that a matched listing was sent to the lead → logs interaction + rescoring
 window.sendMatch=async (i)=>{
@@ -652,14 +655,15 @@ window.saveViewing=async()=>{
 
 // map a search_projects row to the chat-rec shape HZ.makeOffer expects, then generate the PDF
 window.offerFor=(i)=>{
-  const p=window['__mu'+i]; if(!p||!window.HZ||!HZ.makeOffer) return;
+  const match=window['__mu'+i]; if(!match||!window.HZ||!HZ.makeOffer) return;
+  const p=match.project||match,u=match.unit||match;
   const rec={ compound:p.name, compound_ar:p.name_ar, area:p.area, area_ar:p.area,
-    developer:p.developer_name, bedrooms:(p.beds_min!=null?p.beds_min:null),
-    size_sqm:(p.size_from_min!=null?(p.size_to_max&&p.size_to_max>p.size_from_min?(p.size_from_min+'–'+p.size_to_max):p.size_from_min):null),
-    price_ar:(p.price_from_min!=null?('يبدأ من '+money(p.price_from_min)):''),
-    price_en:(p.price_from_min!=null?('from '+Number(p.price_from_min).toLocaleString('en-US')+' EGP'):''),
-    down_payment:p.down_payment||null, installment_years:p.installment_years_max||null,
-    delivery:p.delivery||null, market:'primary', cover_image:p.cover_image_url||null };
+    developer:p.developer_name, bedrooms:(u.bedrooms!=null?u.bedrooms:null), type:u.type||null,
+    size_sqm:(u.size_from!=null?(u.size_to&&u.size_to>u.size_from?(u.size_from+'–'+u.size_to):u.size_from):null),
+    price_ar:(u.price_from!=null?('يبدأ من '+money(u.price_from)):''),
+    price_en:(u.price_from!=null?('from '+Number(u.price_from).toLocaleString('en-US')+' EGP'):''),
+    down_payment:u.down_payment||null, installment_years:u.installment_years||null,
+    delivery:u.delivery||p.delivery||null, finishing:u.finishing||null, market:'primary', cover_image:p.cover_image_url||null };
   HZ.makeOffer(rec, null, window.__muClient||'');
 };
 

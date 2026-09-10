@@ -211,6 +211,118 @@ def find_property_matches(req, inventory, weights=None):
     return sorted(results, key=lambda row: (-row["score"], -row["coverage"], str(row["property"].get("id"))))
 
 
+def _interval_matches(requested_min, requested_max, actual_min, actual_max):
+    """Return whether two known numeric ranges overlap."""
+    actual_min, actual_max = _number(actual_min), _number(actual_max)
+    if actual_min is None and actual_max is None:
+        return None
+    actual_min = actual_min if actual_min is not None else actual_max
+    actual_max = actual_max if actual_max is not None else actual_min
+    return (requested_max is None or actual_min <= requested_max) and (requested_min is None or actual_max >= requested_min)
+
+
+def _down_payment_amount(value, price):
+    """Translate catalog amounts such as ``10%`` or ``1.5 million`` to EGP."""
+    numeric = _number(value)
+    if numeric is not None:
+        return numeric
+    text = str(value or "").translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")).lower().replace(",", "")
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(%|percent|million|m\b|مليون|thousand|k\b|ألف|الف)?", text)
+    if not match:
+        return None
+    amount, unit = float(match[1]), match[2] or ""
+    if unit in ("%", "percent"):
+        return round(price * amount / 100, 2) if _number(price) is not None else None
+    return amount * (1e6 if unit in ("million", "m", "مليون") else 1e3 if unit in ("thousand", "k", "ألف", "الف") else 1)
+
+
+def find_project_matches(req, unit_types, language="ar", weights=None):
+    """Rank real primary-market projects against the complete saved client profile."""
+    if req.get("purpose") == "rent":
+        return []
+    if not any(req.get(key) for key in ("locations", "type", "bedrooms", "budget_min", "budget_max",
+                                         "down_payment", "installment_years", "developers", "delivery", "finishing")):
+        return []
+    weights = weights or MATCH_WEIGHTS
+    results = []
+    residential = {"apartment", "villa", "duplex", "penthouse", "studio", "townhouse", "chalet"}
+    commercial = {"office", "shop", "clinic", "warehouse", "retail"}
+    for raw in unit_types:
+        project = raw.get("project") if isinstance(raw.get("project"), dict) else {}
+        if not project:
+            continue
+        developer = project.get("developer") if isinstance(project.get("developer"), dict) else {}
+        unit_type = normalize_property_type(raw.get("type"))
+        category = "residential" if unit_type in residential else "commercial" if unit_type in commercial else None
+        evidence = []
+
+        def add(key, requested, actual, matched):
+            if requested is None or requested == [] or requested == "":
+                return
+            known = actual is not None and actual != "" and actual != {"min": None, "max": None}
+            evidence.append({"criterion": key, "status": "unknown" if not known else "matched" if matched else "mismatch",
+                             "requested": requested, "actual": actual, "weight": weights[key]})
+
+        locations = req.get("locations") or []
+        add("location", locations, project.get("area"), _canonical(project.get("area")) in {_canonical(value) for value in locations})
+        add("purpose", req.get("purpose"), "sale", req.get("purpose") == "sale")
+        add("category", req.get("category"), category, category == req.get("category"))
+        add("type", req.get("type"), raw.get("type"), unit_type == normalize_property_type(req.get("type")))
+        bedrooms = _number(raw.get("bedrooms"))
+        add("bedrooms", req.get("bedrooms"), bedrooms, bedrooms == _number(req.get("bedrooms")))
+        add("bathrooms", req.get("bathrooms"), None, False)
+        if req.get("budget_min") is not None or req.get("budget_max") is not None:
+            budget_actual = {"min": _number(raw.get("price_from")), "max": _number(raw.get("price_to"))}
+            add("budget", {"min": req.get("budget_min"), "max": req.get("budget_max")}, budget_actual,
+                _interval_matches(req.get("budget_min"), req.get("budget_max"), raw.get("price_from"), raw.get("price_to")) is True)
+        if req.get("area_min") is not None or req.get("area_max") is not None:
+            size_actual = {"min": _number(raw.get("size_from")), "max": _number(raw.get("size_to"))}
+            add("size", {"min": req.get("area_min"), "max": req.get("area_max")}, size_actual,
+                _interval_matches(req.get("area_min"), req.get("area_max"), raw.get("size_from"), raw.get("size_to")) is True)
+        price = _number(raw.get("price_from")) or _number(raw.get("price_to"))
+        deposit = _down_payment_amount(raw.get("down_payment"), price)
+        add("down_payment", req.get("down_payment"), deposit, deposit is not None and deposit <= req.get("down_payment", 0))
+        years = _number(raw.get("installment_years"))
+        add("installment_years", req.get("installment_years"), years, years is not None and years >= req.get("installment_years", 0))
+        wanted_developers = req.get("developers") or []
+        add("developer", wanted_developers, developer.get("name"), _canonical(developer.get("name")) in {_canonical(value) for value in wanted_developers})
+        for key in ("delivery", "finishing"):
+            wanted = req.get(key)
+            actual = raw.get(key) or (project.get("delivery") if key == "delivery" else None)
+            add(key, wanted, actual, bool(_canonical(wanted)) and (_canonical(wanted) in _canonical(actual) or _canonical(actual) in _canonical(wanted)))
+
+        total = sum(item["weight"] for item in evidence)
+        score = round(100 * sum(item["weight"] for item in evidence if item["status"] == "matched") / total) if total else 0
+        coverage = round(100 * sum(item["weight"] for item in evidence if item["status"] != "unknown") / total) if total else 0
+        matched = [item["criterion"] for item in evidence if item["status"] == "matched"]
+        unknown = [item["criterion"] for item in evidence if item["status"] == "unknown"]
+        name = (project.get("name_ar") if language == "ar" else project.get("name")) or project.get("name") or project.get("name_ar") or "Project"
+        labels = {"location": ("المنطقة", "location"), "budget": ("الميزانية", "budget"), "type": ("نوع الوحدة", "unit type"),
+                  "bedrooms": ("الغرف", "bedrooms"), "down_payment": ("المقدم", "down payment"),
+                  "installment_years": ("التقسيط", "installments"), "developer": ("المطور", "developer"),
+                  "delivery": ("التسليم", "delivery"), "finishing": ("التشطيب", "finishing"),
+                  "category": ("الفئة", "category"), "purpose": ("الغرض", "purpose"), "size": ("المساحة", "area")}
+        display = [labels[key][0 if language == "ar" else 1] for key in matched[:4]]
+        summary = (("يناسب " if language == "ar" else "Fits ") + "، ".join(display)) if display else (
+            "أقرب اختيار متاح ويحتاج مراجعة التفاصيل." if language == "ar" else "Closest available option; review the tradeoffs.")
+        results.append({"project": {"id": project.get("id"), "name": project.get("name"), "name_ar": project.get("name_ar"),
+            "area": project.get("area"), "delivery": project.get("delivery"), "description": project.get("description"),
+            "cover_image_url": project.get("cover_image_url"), "developer_name": developer.get("name")},
+            "unit": {key: raw.get(key) for key in ("id", "type", "bedrooms", "size_from", "size_to", "price_from", "price_to",
+                "down_payment", "installment_years", "payment_plan", "finishing", "delivery")},
+            "score": score, "coverage": coverage, "evidence": evidence, "fit_summary": summary,
+            "unknown_criteria": unknown, "display_name": name})
+    best = {}
+    for result in results:
+        key = result["project"].get("id") or result["display_name"]
+        current = best.get(key)
+        new_rank = (result["score"], result["coverage"], -(_number(result["unit"].get("price_from")) or math.inf))
+        old_rank = None if current is None else (current["score"], current["coverage"], -(_number(current["unit"].get("price_from")) or math.inf))
+        if current is None or new_rank > old_rank:
+            best[key] = result
+    return sorted(best.values(), key=lambda row: (-row["score"], -row["coverage"], row["display_name"]))
+
+
 SCORE_WEIGHTS = {"budget_clarity": 15, "location_clarity": 10, "financing_clarity": 10,
                  "recent_activity": 10, "viewed": 2, "saved": 5, "search": 1,
                  "inquiry": 12, "response": 10, "viewing_attended": 15, "offer_requested": 12}
@@ -268,12 +380,19 @@ def generate_client_summary(lead, req, language):
     return " · ".join(str(x) for x in bits)
 
 
-def generate_next_best_action(lead, req, matches, language):
+def generate_next_best_action(lead, req, matches, language, project_matches=None):
     ar = language == "ar"
     missing = [key for key in ("purpose", "locations", "budget_max", "type") if not req.get(key)]
     risks = []
     if missing:
         action = "استكمل احتياجات العميل قبل إرسال عرض." if ar else "Clarify the missing requirements before preparing an offer."
+    elif project_matches:
+        project = project_matches[0]
+        name = project.get("display_name") or project.get("project", {}).get("name") or ""
+        action = (f"راجع مشروع {name} مع العميل واشرح أسباب التوافق ثم أكّد التوافر." if ar else
+                  f"Review {name} with the client, explain why it fits, then confirm availability.")
+        if project.get("score", 0) < 70:
+            risks.append("أفضل مشروع متاح يحتاج مناقشة نقاط التنازل." if ar else "The closest project requires discussing tradeoffs.")
     elif matches:
         action = "راجع أفضل وحدة مع العميل واقترح موعد معاينة." if ar else "Review the best matching property with the client and propose a viewing."
         if matches[0]["score"] < 70:
@@ -342,15 +461,20 @@ def _ai_json(instruction, context, schema):
         return None, "rules"
 
 
-def generate_advice(lead, req, activities, matches, language):
+def generate_advice(lead, req, activities, matches, language, project_matches=None):
+    project_matches = project_matches or []
     fallback = {"summary": generate_client_summary(lead, req, language),
-                **generate_next_best_action(lead, req, matches, language), "engine": "rules"}
-    result, engine = _ai_json("Summarize this real-estate client and propose one next sales action. "
+                **generate_next_best_action(lead, req, matches, language, project_matches), "engine": "rules"}
+    result, engine = _ai_json("Summarize this real-estate client and guide the broker toward the supplied best-fit projects. "
         "Use the requested language. For closed/lost leads recommend reviewing the outcome. "
-        "No inferred promises, availability or closing probabilities.",
+        "Name a project only when supplied, explain its recorded fit, and ask the broker to confirm current availability. "
+        "No inferred promises, availability, prices or closing probabilities.",
         {"name": lead.get("name"), "stage": lead.get("stage"), "requirements": req,
          "language": language, "recent_activities": [{"kind": a.get("kind"), "date": a.get("created_at")} for a in activities[:20]],
-         "matches": [{"title": m["property"].get("title"), "score": m["score"], "evidence": m["evidence"]} for m in matches[:3]]}, Advice)
+         "project_matches": [{"name": m["display_name"], "score": m["score"], "fit": m["fit_summary"],
+             "area": m["project"].get("area"), "developer": m["project"].get("developer_name"),
+             "unit": m["unit"], "evidence": m["evidence"]} for m in project_matches[:3]],
+         "listing_matches": [{"title": m["property"].get("title"), "score": m["score"], "evidence": m["evidence"]} for m in matches[:3]]}, Advice)
     if result:
         fallback.update(result.model_dump(), engine=engine)
     return fallback
