@@ -57,7 +57,9 @@
   .pcard .ph .noimg svg{width:34px; height:34px;} .pcard .ph .noimg span{font-size:12px; font-weight:700;}
   .pcard .ph.nocover img{display:none;} .pcard .ph.nocover{background:#eef2f4;}
 
-  .chips{display:flex; gap:10px; overflow-x:auto; padding:6px 0 2px; margin-top:18px; scrollbar-width:none;}
+  .chips{display:flex; flex-wrap:wrap; gap:10px; padding:6px 2px 2px; margin-top:18px;}
+  /* on phones: one smooth horizontal-scroll row instead of wrapping */
+  @media(max-width:640px){ .chips{flex-wrap:nowrap; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; -webkit-overflow-scrolling:touch;} .chips .chip{scroll-snap-align:start;} }
   .chips::-webkit-scrollbar{display:none;}
   .chip{flex:none; background:#fff; border:1.5px solid var(--line-2); border-radius:100px; padding:9px 16px; font-weight:700; font-size:14px; cursor:pointer; color:var(--navy); transition:.15s;}
   .chip:hover,.chip.on{background:var(--navy); color:#fff; border-color:var(--navy);}
