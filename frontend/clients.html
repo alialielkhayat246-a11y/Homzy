@@ -117,15 +117,15 @@
 <!-- gate -->
 <div id="gate" class="gate" style="display:none">
   <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
-  <h1>عملائي</h1>
-  <p class="sub">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير عملاءك.</p>
+  <h1 data-ar="عملائي" data-en="My clients">عملائي</h1>
+  <p class="sub" data-ar="سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير عملاءك." data-en="Sign in with your mobile number and password to manage your clients.">سجّل دخولك برقم موبايلك وكلمة المرور عشان تدير عملاءك.</p>
   <form id="authForm">
-    <div class="fld"><label>رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
-    <div class="fld"><label>كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" required /></div>
-    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%">دخول</button>
+    <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
+    <div class="fld"><label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label><input class="in" id="password" type="password" placeholder="٦ أحرف على الأقل" data-ph-ar="٦ أحرف على الأقل" data-ph-en="6 characters minimum" required /></div>
+    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%" data-ar="دخول" data-en="Sign in">دخول</button>
     <div class="msg" id="gMsg"></div>
   </form>
-  <div class="sub" style="margin-top:14px">عايز حساب بروكر؟ <a href="/leads?register=1" style="color:var(--teal-d);font-weight:800">سجّل من هنا</a></div>
+  <div class="sub" style="margin-top:14px" data-ar="عايز حساب بروكر؟ <a href=&quot;/leads?register=1&quot; style=&quot;color:var(--teal-d);font-weight:800&quot;>سجّل من هنا</a>" data-en="Want a broker account? <a href=&quot;/leads?register=1&quot; style=&quot;color:var(--teal-d);font-weight:800&quot;>Register here</a>">عايز حساب بروكر؟ <a href="/leads?register=1" style="color:var(--teal-d);font-weight:800">سجّل من هنا</a></div>
 </div>
 
 <!-- shared navbar + CRM sub-nav (same as the rest of the workspace) -->
@@ -136,54 +136,54 @@
   <div class="wrap">
     <div class="stats" id="stats"></div>
     <div class="bar">
-      <h1>خط سير العملاء</h1>
+      <h1 data-ar="خط سير العملاء" data-en="Client pipeline">خط سير العملاء</h1>
       <span class="sp"></span>
-      <input id="search" placeholder="ابحث باسم / رقم / منطقة…" oninput="renderBoard()" />
-      <button class="btn btn-ghost" id="bellBtn" onclick="toggleNotify()" title="تنبيهات المتابعة">🔔 فعّل التنبيهات</button>
-      <button class="btn btn-ghost" onclick="voiceAdd()">🎤 عميل بالصوت</button>
-      <button class="btn btn-teal" onclick="openForm()">＋ أضف عميل</button>
+      <input id="search" placeholder="ابحث باسم / رقم / منطقة…" data-ph-ar="ابحث باسم / رقم / منطقة…" data-ph-en="Search by name / phone / area…" oninput="renderBoard()" />
+      <button class="btn btn-ghost" id="bellBtn" onclick="toggleNotify()" title="تنبيهات المتابعة" data-ar="🔔 فعّل التنبيهات" data-en="🔔 Enable alerts">🔔 فعّل التنبيهات</button>
+      <button class="btn btn-ghost" onclick="voiceAdd()" data-ar="🎤 عميل بالصوت" data-en="🎤 Add by voice">🎤 عميل بالصوت</button>
+      <button class="btn btn-teal" onclick="openForm()" data-ar="＋ أضف عميل" data-en="＋ Add client">＋ أضف عميل</button>
     </div>
-    <div class="workspace-toolbar"><div class="view-switch" aria-label="طريقة عرض العملاء"><button id="listViewBtn" onclick="setClientView('list')">قائمة</button><button id="boardViewBtn" onclick="setClientView('board')">مراحل</button></div></div><div class="board" id="board"></div>
+    <div class="workspace-toolbar"><div class="view-switch" aria-label="طريقة عرض العملاء"><button id="listViewBtn" onclick="setClientView('list')" data-ar="قائمة" data-en="List">قائمة</button><button id="boardViewBtn" onclick="setClientView('board')" data-ar="مراحل" data-en="Stages">مراحل</button></div></div><div class="board" id="board"></div>
   </div>
 </div>
 
 <!-- client form modal -->
 <div class="ov" id="formOv">
   <div class="modal">
-    <div class="mh"><h3 id="fTitle">إضافة عميل</h3>
+    <div class="mh"><h3 id="fTitle" data-ar="إضافة عميل" data-en="Add client">إضافة عميل</h3>
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="mic" id="micBtn" onclick="toggleVoice()" title="إملأ بصوتك">🎤 بالصوت</button>
+        <button class="mic" id="micBtn" onclick="toggleVoice()" title="إملأ بصوتك" data-ar="🎤 بالصوت" data-en="🎤 By voice">🎤 بالصوت</button>
         <button class="mx" onclick="closeForm()">×</button>
       </div>
     </div>
     <div class="voicebar" id="voicebar"></div>
     <div class="mb">
       <div class="row2">
-        <div class="fld"><label>الاسم</label><input class="in" id="cName" placeholder="اسم العميل" /></div>
-        <div class="fld"><label>رقم الموبايل</label><input class="in" id="cPhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" /></div>
+        <div class="fld"><label data-ar="الاسم" data-en="Name">الاسم</label><input class="in" id="cName" placeholder="اسم العميل" data-ph-ar="اسم العميل" data-ph-en="Client name" /></div>
+        <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="cPhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" /></div>
       </div>
       <div class="row2">
-        <div class="fld"><label>الغرض</label><select class="in" id="cPurpose"><option value="sale">شراء</option><option value="rent">إيجار</option></select></div>
-        <div class="fld"><label>النوع</label><select class="in" id="cType"><option value="">أي نوع</option><option value="apartment">شقة</option><option value="villa">فيلا</option><option value="duplex">دوبلكس</option><option value="penthouse">بنتهاوس</option><option value="studio">استوديو</option><option value="townhouse">تاون هاوس</option><option value="office">مكتب</option><option value="shop">محل</option></select></div>
+        <div class="fld"><label data-ar="الغرض" data-en="Purpose">الغرض</label><select class="in" id="cPurpose"><option value="sale" data-ar="شراء" data-en="Buy">شراء</option><option value="rent" data-ar="إيجار" data-en="Rent">إيجار</option></select></div>
+        <div class="fld"><label data-ar="النوع" data-en="Type">النوع</label><select class="in" id="cType"><option value="" data-ar="أي نوع" data-en="Any type">أي نوع</option><option value="apartment" data-ar="شقة" data-en="Apartment">شقة</option><option value="villa" data-ar="فيلا" data-en="Villa">فيلا</option><option value="duplex" data-ar="دوبلكس" data-en="Duplex">دوبلكس</option><option value="penthouse" data-ar="بنتهاوس" data-en="Penthouse">بنتهاوس</option><option value="studio" data-ar="استوديو" data-en="Studio">استوديو</option><option value="townhouse" data-ar="تاون هاوس" data-en="Townhouse">تاون هاوس</option><option value="office" data-ar="مكتب" data-en="Office">مكتب</option><option value="shop" data-ar="محل" data-en="Shop">محل</option></select></div>
       </div>
-<div class="fld"><label>موعد المتابعة القادم</label><input class="in" id="cFollow" type="date" /></div>
-<details class="optional-fields" id="clientOptional"><summary>تفاصيل إضافية (اختياري)</summary>      <div class="row2">
-        <div class="fld"><label>المنطقة</label><input class="in" id="cArea" list="clientAreas" placeholder="التجمع الخامس" /></div>
-        <div class="fld"><label>الميزانية (حتى)</label><input class="in" id="cBudget" type="number" inputmode="numeric" placeholder="6000000" oninput="document.getElementById('budgetHint').textContent=this.value?Number(this.value).toLocaleString('ar-EG')+' ج.م':''" /><span class="budget-hint" id="budgetHint"></span></div>
+<div class="fld"><label data-ar="موعد المتابعة القادم" data-en="Next follow-up date">موعد المتابعة القادم</label><input class="in" id="cFollow" type="date" /></div>
+<details class="optional-fields" id="clientOptional"><summary data-ar="تفاصيل إضافية (اختياري)" data-en="More details (optional)">تفاصيل إضافية (اختياري)</summary>      <div class="row2">
+        <div class="fld"><label data-ar="المنطقة" data-en="Area">المنطقة</label><input class="in" id="cArea" list="clientAreas" placeholder="التجمع الخامس" data-ph-ar="التجمع الخامس" data-ph-en="Fifth Settlement" /></div>
+        <div class="fld"><label data-ar="الميزانية (حتى)" data-en="Budget (up to)">الميزانية (حتى)</label><input class="in" id="cBudget" type="number" inputmode="numeric" placeholder="6000000" oninput="document.getElementById('budgetHint').textContent=this.value?Number(this.value).toLocaleString('ar-EG')+' ج.م':''" /><span class="budget-hint" id="budgetHint"></span></div>
       </div>
       <div class="row2">
-        <div class="fld"><label>عدد الغرف</label><input class="in" id="cBeds" type="number" inputmode="numeric" placeholder="3" /></div>
-        <div class="fld"><label>المرحلة</label><select class="in" id="cStage"></select></div>
+        <div class="fld"><label data-ar="عدد الغرف" data-en="Bedrooms">عدد الغرف</label><input class="in" id="cBeds" type="number" inputmode="numeric" placeholder="3" /></div>
+        <div class="fld"><label data-ar="المرحلة" data-en="Stage">المرحلة</label><select class="in" id="cStage"></select></div>
       </div>
 
-      <div class="fld"><label>ملاحظات</label><textarea class="in" id="cNotes" placeholder="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…"></textarea></div>
-      <div class="fld"><label>مصدر العميل / Lead source</label><input class="in" id="cSource" maxlength="100" placeholder="Referral / Marketplace / Campaign" /></div>
+      <div class="fld"><label data-ar="ملاحظات" data-en="Notes">ملاحظات</label><textarea class="in" id="cNotes" placeholder="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…" data-ph-ar="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…" data-ph-en="Any details about the client, preferences, last call…"></textarea></div>
+      <div class="fld"><label data-ar="مصدر العميل" data-en="Lead source">مصدر العميل</label><input class="in" id="cSource" maxlength="100" placeholder="Referral / Marketplace / Campaign" /></div>
 </details>
       <datalist id="clientAreas"><option value="القاهرة الجديدة"><option value="التجمع الخامس"><option value="العاصمة الإدارية"><option value="الشيخ زايد"><option value="٦ أكتوبر"><option value="الساحل الشمالي"></datalist><div class="msg" id="fMsg"></div>
     </div>
     <div class="mf">
-      <button class="btn btn-ghost" onclick="closeForm()">إلغاء</button>
-      <button class="btn btn-teal" id="saveBtn" onclick="saveClient()">حفظ العميل</button>
+      <button class="btn btn-ghost" onclick="closeForm()" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+      <button class="btn btn-teal" id="saveBtn" onclick="saveClient()" data-ar="حفظ العميل" data-en="Save client">حفظ العميل</button>
     </div>
   </div>
 </div>
@@ -244,14 +244,16 @@ const $=id=>document.getElementById(id);
 let TOKEN=null, UID=null, CLIENTS=[], EDIT_ID=null;
 sb.auth.onAuthStateChange((_event,session)=>{TOKEN=session?.access_token||null;UID=session?.user.id||null;});
 const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const money=n=>n==null||n===''?'':Number(n).toLocaleString('en-US')+' ج.م';
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const money=n=>n==null||n===''?'':Number(n).toLocaleString('en-US')+' '+L('ج.م','EGP');
 
 const STAGES=[
-  {k:'new',label:'جديد'},{k:'contact',label:'تواصل'},{k:'qualified',label:'مؤهل'},
-  {k:'matching',label:'مطابقة'},{k:'viewing',label:'معاينة'},{k:'offer_sent',label:'عرض مرسل'},
-  {k:'negotiate',label:'تفاوض'},{k:'reservation',label:'حجز'},{k:'closed',label:'تم البيع'},{k:'lost',label:'خسارة'}
+  {k:'new',label:['جديد','New']},{k:'contact',label:['تواصل','Contact']},{k:'qualified',label:['مؤهل','Qualified']},
+  {k:'matching',label:['مطابقة','Matching']},{k:'viewing',label:['معاينة','Viewing']},{k:'offer_sent',label:['عرض مرسل','Offer sent']},
+  {k:'negotiate',label:['تفاوض','Negotiation']},{k:'reservation',label:['حجز','Reservation']},{k:'closed',label:['تم البيع','Closed']},{k:'lost',label:['خسارة','Lost']}
 ];
-const stageLabel=k=>(STAGES.find(s=>s.k===k)||{label:'جديد'}).label;
+const stageLabel=k=>{const s=(STAGES.find(s=>s.k===k)||{label:['جديد','New']}).label;return L(s[0],s[1]);};
 
 function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
 const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
@@ -274,7 +276,7 @@ $('authForm').addEventListener('submit', async e=>{
 window.signOut=async ()=>{ await sb.auth.signOut(); location.reload(); };
 
 // populate stage select
-$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
+$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${L(s.label[0],s.label[1])}</option>`).join('');
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
@@ -288,7 +290,7 @@ async function boot(){
   else if(new URLSearchParams(location.search).has('overview'))openSalesOverview();
 }
 window.loadClients=async ()=>{
-  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){$('board').innerHTML='<div class="workspace-empty" role="alert"><h2>تعذّر تحميل العملاء</h2><button class="btn btn-teal" onclick="loadClients()">إعادة المحاولة</button></div>';return;}
+  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){$('board').innerHTML=`<div class="workspace-empty" role="alert"><h2>${L('تعذّر تحميل العملاء','Could not load clients')}</h2><button class="btn btn-teal" onclick="loadClients()">${L('إعادة المحاولة','Retry')}</button></div>`;return;}
   let scoreNotice=$('salesScoreNotice');if(!scoreNotice){scoreNotice=document.createElement('p');scoreNotice.id='salesScoreNotice';scoreNotice.setAttribute('role','status');$('board').before(scoreNotice);}
   CLIENTS.forEach(c=>{c.stage=({contacted:'contact',negotiation:'negotiate',won:'closed'})[c.stage]||c.stage||'new';});
   try{const response=await fetch('/api/crm/sales/scores',{headers:{Authorization:'Bearer '+TOKEN},signal:AbortSignal.timeout(30000)});if(!response.ok)throw Error('scores');const result=await response.json();CLIENTS.forEach(c=>{const score=result.scores[c.id];if(score){c.lead_score=score.score;c.temperature=score.temperature;}});scoreNotice.textContent=result.limited?(HZ.lang==='en'?'Scores reflect the available sample.':'الدرجات مبنية على السجلات المتاحة ضمن حد التحميل.') : '';}
@@ -302,10 +304,10 @@ function renderStats(){
   const won=CLIENTS.filter(c=>c.stage==='closed').length;
   const over=CLIENTS.filter(c=>isOverdue(c.next_followup)&&c.stage!=='closed'&&c.stage!=='lost').length;
   $('stats').innerHTML=
-    `<div class="stat"><div class="n">${total}</div><div class="l">إجمالي العملاء</div></div>`
-   +`<div class="stat"><div class="n">${open}</div><div class="l">صفقات مفتوحة</div></div>`
-   +`<div class="stat"><div class="n">${won}</div><div class="l">تم البيع</div></div>`
-   +`<div class="stat ${over?'warn':''}"><div class="n">${over}</div><div class="l">متابعات متأخرة</div></div>`;
+    `<div class="stat"><div class="n">${total}</div><div class="l">${L('إجمالي العملاء','Total clients')}</div></div>`
+   +`<div class="stat"><div class="n">${open}</div><div class="l">${L('صفقات مفتوحة','Open')}</div></div>`
+   +`<div class="stat"><div class="n">${won}</div><div class="l">${L('تم البيع','Closed')}</div></div>`
+   +`<div class="stat ${over?'warn':''}"><div class="n">${over}</div><div class="l">${L('متابعات متأخرة','Overdue follow-ups')}</div></div>`;
 }
 let CLIENT_VIEW=localStorage.getItem('hz_client_view')||(matchMedia('(max-width:760px)').matches?'list':'board');
 window.setClientView=v=>{CLIENT_VIEW=v;localStorage.setItem('hz_client_view',v);renderBoard();};
@@ -315,21 +317,21 @@ window.renderBoard=()=>{
   $('listViewBtn').setAttribute('aria-pressed',CLIENT_VIEW==='list');$('boardViewBtn').setAttribute('aria-pressed',CLIENT_VIEW==='board');
   $('board').className=CLIENT_VIEW==='list'?'client-list':'board';
   const matches=CLIENTS.filter(match);
-  if(!matches.length){$('board').innerHTML='<div class="workspace-empty"><h2>'+(!CLIENTS.length?'أضف أول عميل':'مفيش نتائج للبحث')+'</h2><p>'+(!CLIENTS.length?'سجّل احتياجات العميل وحدّد المتابعة القادمة عشان تبدأ يومك بخطة واضحة.':'جرّب اسم أو منطقة مختلفة.')+'</p>'+(!CLIENTS.length?'<button class="btn btn-teal" onclick="openForm()">أضف عميل</button>':'')+'</div>';return;}
+  if(!matches.length){$('board').innerHTML='<div class="workspace-empty"><h2>'+(!CLIENTS.length?L('أضف أول عميل','Add your first client'):L('مفيش نتائج للبحث','No search results'))+'</h2><p>'+(!CLIENTS.length?L('سجّل احتياجات العميل وحدّد المتابعة القادمة عشان تبدأ يومك بخطة واضحة.','Log the client\'s needs and set the next follow-up to start your day with a clear plan.'):L('جرّب اسم أو منطقة مختلفة.','Try a different name or area.'))+'</p>'+(!CLIENTS.length?'<button class="btn btn-teal" onclick="openForm()">'+L('أضف عميل','Add client')+'</button>':'')+'</div>';return;}
   if(CLIENT_VIEW==='list'){$('board').innerHTML=matches.map(cardHTML).join('');return;}
   $('board').innerHTML=STAGES.map(s=>{
     const list=CLIENTS.filter(c=>(c.stage||'new')===s.k && match(c));
     const cards=list.map(cardHTML).join('')||'<div class="col-empty">—</div>';
-    return `<div class="col ${s.k}" data-stage="${s.k}"><div class="col-h"><span>${s.label}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
+    return `<div class="col ${s.k}" data-stage="${s.k}"><div class="col-h"><span>${L(s.label[0],s.label[1])}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
   }).join('');
 };
 function cardHTML(c){
   const wa=c.phone?normPhone(c.phone):'';
   const req=[c.area, c.budget?('حتى '+money(c.budget)):'', c.bedrooms?(c.bedrooms+' غرف'):'', c.purpose==='rent'?'إيجار':'شراء'].filter(Boolean).join(' · ');
   const fu=c.next_followup?`<div class="fu ${isOverdue(c.next_followup)&&c.stage!=='closed'&&c.stage!=='lost'?'over':''}">📅 متابعة: ${esc(c.next_followup)}</div>`:'';
-  const opts=STAGES.map(s=>`<option value="${s.k}"${(c.stage||'new')===s.k?' selected':''}>${s.label}</option>`).join('');
+  const opts=STAGES.map(s=>`<option value="${s.k}"${(c.stage||'new')===s.k?' selected':''}>${L(s.label[0],s.label[1])}</option>`).join('');
   const tp=c.temperature||'cold';
-  const tlab={very_hot:'🔥 ساخن جدًا',hot:'🟠 ساخن',warm:'🟡 دافئ',cold:'⚪ بارد'}[tp]||tp;
+  const tlab=(ar()?{very_hot:'🔥 ساخن جدًا',hot:'🟠 ساخن',warm:'🟡 دافئ',cold:'⚪ بارد'}:{very_hot:'🔥 Very hot',hot:'🟠 Hot',warm:'🟡 Warm',cold:'⚪ Cold'})[tp]||tp;
   const tel=c.phone?(''+c.phone).replace(/\s/g,''):'';
   return `<div class="ccard" draggable="true" data-client="${c.id}">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
@@ -342,13 +344,13 @@ function cardHTML(c){
     ${c.notes?`<div class="note">${esc(c.notes)}</div>`:''}
     <div class="acts">
       ${tel?`<a class="wa" href="tel:${tel}" onclick="logAct('${c.id}','call')">📞</a>`:''}
-      ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">واتساب</a>`:''}
-      <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
-      <button class="ai" onclick="openSales('${c.id}')">${HZ.lang==='en'?'AI Sales Copilot':'مساعد المبيعات AI'}</button>
-      <button onclick="schedView('${c.id}')">📅 معاينة</button>
-      ${wa?`<button onclick="chatLead('${c.id}')">💬 محادثة</button>`:''}
-      <button onclick="editClient('${c.id}')">تعديل</button>
-      <button onclick="delClient('${c.id}')" style="color:#B42318">حذف</button>
+      ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(L('مرحبًا ','Hi ')+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">${L('واتساب','WhatsApp')}</a>`:''}
+      <button class="mu" onclick="matchUnits('${c.id}')">🏠 ${L('وحدات مطابقة','Matching units')}</button>
+      <button class="ai" onclick="openSales('${c.id}')">${L('مساعد المبيعات AI','AI Sales Copilot')}</button>
+      <button onclick="schedView('${c.id}')">📅 ${L('معاينة','Viewing')}</button>
+      ${wa?`<button onclick="chatLead('${c.id}')">💬 ${L('محادثة','Chat')}</button>`:''}
+      <button onclick="editClient('${c.id}')">${L('تعديل','Edit')}</button>
+      <button onclick="delClient('${c.id}')" style="color:#B42318">${L('حذف','Delete')}</button>
     </div>
     <select class="mv" onchange="moveStage('${c.id}',this.value)">${opts}</select>
   </div>`;
@@ -679,10 +681,11 @@ installSalesWorkspace({session:async()=>{
 const salesOverview=document.createElement('button');salesOverview.className='btn btn-teal';
 salesOverview.textContent=HZ.lang==='en'?'Sales overview':'نظرة عامة على المبيعات';salesOverview.onclick=()=>openSalesOverview();
 document.querySelector('.bar').append(salesOverview);
-$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
+$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${L(s.label[0],s.label[1])}</option>`).join('');
 $('board').addEventListener('dragstart',e=>{const card=e.target.closest('[data-client]');if(card)e.dataTransfer.setData('text/plain',card.dataset.client);});
 $('board').addEventListener('dragover',e=>{if(e.target.closest('[data-stage]'))e.preventDefault();});
 $('board').addEventListener('drop',e=>{const col=e.target.closest('[data-stage]');if(!col)return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(CLIENTS.some(c=>c.id===id))moveStage(id,col.dataset.stage);});
+document.addEventListener('hz:lang', ()=>{ if(UID){ renderStats(); renderBoard(); } });
 boot();
 </script>
 </body>
