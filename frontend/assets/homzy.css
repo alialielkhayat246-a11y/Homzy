@@ -62,6 +62,7 @@ header.hz-nav.scrolled{background:rgba(255,255,255,.97); box-shadow:0 4px 22px -
 .hz-nav-cta{margin-inline-start:auto; display:flex; align-items:center; gap:8px; flex:none;}
 .hz-lang{font-family:var(--ff); font-weight:700; font-size:13px; cursor:pointer; background:#fff; border:1px solid var(--line-2); border-radius:10px; padding:0 11px; height:40px; color:var(--navy); transition:border-color .15s, background .15s;}
 .hz-lang:hover{border-color:var(--navy); background:var(--teal-l);}
+.hz-crm-entry{display:none;align-items:center;justify-content:center;height:40px;padding:0 10px;border:1px solid var(--line-2);border-radius:10px;color:var(--teal-d);font:700 13px var(--ff);white-space:nowrap;}
 
 /* icon buttons (bell) */
 .hz-bell{position:relative; display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; cursor:pointer; background:#fff; border:1px solid var(--line-2); border-radius:11px; color:var(--navy); transition:border-color .15s, background .15s;}

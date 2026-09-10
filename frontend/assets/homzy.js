@@ -178,12 +178,14 @@ const SVG = {
   hamburger:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
 };
 
-// The five main destinations. Brokers get the CRM-centric set; buyers get a
-// lean browse set. Homzy Stays is intentionally NOT here — it lives in the
+// Keep the CRM entry discoverable in both languages, including while the role
+// lookup is pending or unavailable. Protected pages still enforce sign-in and
+// broker permissions. Brokers get the full workspace set; buyers get a lean
+// browse set. Homzy Stays is intentionally NOT here — it lives in the
 // product switcher on the left.
 function navItems(){
   if(HZ.isBroker) return [['/','home'],['/crm','crm'],['/my-listings','mylistings'],['/community','communityNav'],['/app','browse']];
-  return [['/','home'],['/app','browse'],['/areas','areas']];
+  return [['/','home'],['/app','browse'],['/areas','areas'],['/crm','crm']];
 }
 T.myDay={ar:'يومي',en:'My day'};
 const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights'];
@@ -256,6 +258,7 @@ function buildHeader(){
       <a href="/" class="hz-logo" aria-label="Homzy"><span>${LOGO}</span><span class="nm">Hom<b>zy</b></span></a>
       <nav class="hz-links" id="hzLinks" aria-label="${HZ.t('menu')}"></nav>
       <div class="hz-nav-cta">
+        <a class="hz-crm-entry" id="hzCrmEntry" href="/crm" aria-label="CRM">CRM</a>
         ${productSwitcherHTML()}
         <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()" aria-label="language">EN</button>
         ${bellHTML()}
@@ -443,7 +446,7 @@ function buildFooter(){
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('forBrokers')}</h4>
-          <a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a><a href="/pricing">${HZ.t('pricing')}</a>
+          <a href="/crm">${HZ.t('crm')}</a><a href="/sell">${HZ.t('sell')}</a><a href="/my-listings">${HZ.t('mylistings')}</a><a href="/leads">${HZ.t('leads')}</a><a href="/pricing">${HZ.t('pricing')}</a>
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('legalCol')}</h4>

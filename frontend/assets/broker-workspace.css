@@ -25,6 +25,7 @@
  .broker-workspace.hz-broker .hz-crmsub-in::before{content:'Homzy / Workspace';font:700 16px var(--fd);padding:10px 12px 28px;color:var(--teal-d);}
  .broker-workspace.hz-broker .hz-crmtab{border:0;border-radius:11px;padding:13px;}.broker-workspace.hz-broker .hz-crmtab.active{background:var(--teal-l);}
  .broker-workspace .hz-links{display:none;}
+ .broker-workspace .hz-crm-entry{display:inline-flex;}
  html[lang="ar"] .broker-workspace.hz-broker .hz-crmsub-in::before{content:'Homzy / مساحة العمل';}
 }
 @media(max-width:640px){.broker-workspace .stats{grid-template-columns:1fr 1fr;}.broker-workspace .bar h1{flex-basis:100%;}.broker-workspace .bar #search{flex:1;min-width:0;}.broker-workspace .bar #bellBtn{font-size:12px;padding:10px;}.broker-workspace .modal .row2{grid-template-columns:1fr;}.broker-workspace .modal .mb{max-height:65vh;}.broker-workspace .workspace-toolbar input{flex-basis:100%;}.broker-workspace .btn{white-space:normal;}}
