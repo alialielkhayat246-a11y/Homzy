@@ -177,6 +177,7 @@
       </div>
 
       <div class="fld"><label>ملاحظات</label><textarea class="in" id="cNotes" placeholder="أي تفاصيل عن العميل، تفضيلاته، آخر مكالمة…"></textarea></div>
+      <div class="fld"><label>مصدر العميل / Lead source</label><input class="in" id="cSource" maxlength="100" placeholder="Referral / Marketplace / Campaign" /></div>
 </details>
       <datalist id="clientAreas"><option value="القاهرة الجديدة"><option value="التجمع الخامس"><option value="العاصمة الإدارية"><option value="الشيخ زايد"><option value="٦ أكتوبر"><option value="الساحل الشمالي"></datalist><div class="msg" id="fMsg"></div>
     </div>
@@ -235,17 +236,20 @@
 <script src="/assets/homzy.js?v=3"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { installSalesWorkspace } from '/assets/crm-sales.js';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
 const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
 const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
 const $=id=>document.getElementById(id);
 let TOKEN=null, UID=null, CLIENTS=[], EDIT_ID=null;
+sb.auth.onAuthStateChange((_event,session)=>{TOKEN=session?.access_token||null;UID=session?.user.id||null;});
 const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const money=n=>n==null||n===''?'':Number(n).toLocaleString('en-US')+' ج.م';
 
 const STAGES=[
-  {k:'new',label:'جديد'},{k:'contact',label:'تواصل'},{k:'viewing',label:'معاينة'},
-  {k:'negotiate',label:'تفاوض'},{k:'closed',label:'تم البيع'},{k:'lost',label:'خسارة'}
+  {k:'new',label:'جديد'},{k:'contact',label:'تواصل'},{k:'qualified',label:'مؤهل'},
+  {k:'matching',label:'مطابقة'},{k:'viewing',label:'معاينة'},{k:'offer_sent',label:'عرض مرسل'},
+  {k:'negotiate',label:'تفاوض'},{k:'reservation',label:'حجز'},{k:'closed',label:'تم البيع'},{k:'lost',label:'خسارة'}
 ];
 const stageLabel=k=>(STAGES.find(s=>s.k===k)||{label:'جديد'}).label;
 
@@ -279,9 +283,16 @@ async function boot(){
   $('gate').style.display='none'; $('app').style.display='block';
   HZ.loadPlan && HZ.loadPlan();
   await loadClients(); if(new URLSearchParams(location.search).get("new")==="1")openForm();
+  const salesLead=new URLSearchParams(location.search).get('lead');
+  if(salesLead && CLIENTS.some(c=>c.id===salesLead))openSales(salesLead);
+  else if(new URLSearchParams(location.search).has('overview'))openSalesOverview();
 }
 window.loadClients=async ()=>{
   try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){$('board').innerHTML='<div class="workspace-empty" role="alert"><h2>تعذّر تحميل العملاء</h2><button class="btn btn-teal" onclick="loadClients()">إعادة المحاولة</button></div>';return;}
+  let scoreNotice=$('salesScoreNotice');if(!scoreNotice){scoreNotice=document.createElement('p');scoreNotice.id='salesScoreNotice';scoreNotice.setAttribute('role','status');$('board').before(scoreNotice);}
+  CLIENTS.forEach(c=>{c.stage=({contacted:'contact',negotiation:'negotiate',won:'closed'})[c.stage]||c.stage||'new';});
+  try{const response=await fetch('/api/crm/sales/scores',{headers:{Authorization:'Bearer '+TOKEN},signal:AbortSignal.timeout(30000)});if(!response.ok)throw Error('scores');const result=await response.json();CLIENTS.forEach(c=>{const score=result.scores[c.id];if(score){c.lead_score=score.score;c.temperature=score.temperature;}});scoreNotice.textContent=result.limited?(HZ.lang==='en'?'Scores reflect the available sample.':'الدرجات مبنية على السجلات المتاحة ضمن حد التحميل.') : '';}
+  catch{scoreNotice.textContent=HZ.lang==='en'?'Live intent scores unavailable; showing saved CRM scores.':'تعذّر تحديث درجات الاهتمام؛ معروض آخر تقييم محفوظ.';}
   renderStats(); renderBoard();
 };
 function isOverdue(d){ if(!d) return false; return new Date(d) < new Date(new Date().toDateString()); }
@@ -309,7 +320,7 @@ window.renderBoard=()=>{
   $('board').innerHTML=STAGES.map(s=>{
     const list=CLIENTS.filter(c=>(c.stage||'new')===s.k && match(c));
     const cards=list.map(cardHTML).join('')||'<div class="col-empty">—</div>';
-    return `<div class="col ${s.k}"><div class="col-h"><span>${s.label}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
+    return `<div class="col ${s.k}" data-stage="${s.k}"><div class="col-h"><span>${s.label}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
   }).join('');
 };
 function cardHTML(c){
@@ -320,7 +331,7 @@ function cardHTML(c){
   const tp=c.temperature||'cold';
   const tlab={very_hot:'🔥 ساخن جدًا',hot:'🟠 ساخن',warm:'🟡 دافئ',cold:'⚪ بارد'}[tp]||tp;
   const tel=c.phone?(''+c.phone).replace(/\s/g,''):'';
-  return `<div class="ccard">
+  return `<div class="ccard" draggable="true" data-client="${c.id}">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
       <div class="nm">${esc(c.name||'—')}</div>
       <span class="temp ${tp}">${tlab} · ${c.lead_score||0}</span>
@@ -333,7 +344,7 @@ function cardHTML(c){
       ${tel?`<a class="wa" href="tel:${tel}" onclick="logAct('${c.id}','call')">📞</a>`:''}
       ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('مرحبًا '+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">واتساب</a>`:''}
       <button class="mu" onclick="matchUnits('${c.id}')">🏠 وحدات مطابقة</button>
-      <button class="ai" onclick="aiLead('${c.id}')">🤖 تحليل AI</button>
+      <button class="ai" onclick="openSales('${c.id}')">${HZ.lang==='en'?'AI Sales Copilot':'مساعد المبيعات AI'}</button>
       <button onclick="schedView('${c.id}')">📅 معاينة</button>
       ${wa?`<button onclick="chatLead('${c.id}')">💬 محادثة</button>`:''}
       <button onclick="editClient('${c.id}')">تعديل</button>
@@ -350,7 +361,7 @@ window.logAct=async(id,kind,body)=>{
 
 /* form */
 window.openForm=()=>{ $('clientOptional').open=false;$('budgetHint').textContent=''; EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
-  ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes'].forEach(id=>$(id).value='');
+  ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes','cSource'].forEach(id=>$(id).value='');
   $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg(''); $('formOv').classList.add('open'); };
 window.closeForm=()=>{ stopVoice(true); $('voicebar').classList.remove('show'); $('formOv').classList.remove('open'); };
 
@@ -402,6 +413,7 @@ function fillFromFields(f){
   return n;
 }
 window.editClient=(id)=>{ const c=CLIENTS.find(x=>x.id===id); if(!c) return; EDIT_ID=id; $('fTitle').textContent='تعديل العميل';
+  $('cSource').value=c.source||'';
   $('cName').value=c.name||''; $('cPhone').value=c.phone||''; $('cPurpose').value=c.purpose||'sale'; $('cType').value=c.type||'';
   $('clientOptional').open=true; $('budgetHint').textContent=c.budget?money(c.budget):''; $('cArea').value=c.area||''; $('cBudget').value=c.budget||''; $('cBeds').value=c.bedrooms||''; $('cStage').value=c.stage||'new';
   $('cFollow').value=c.next_followup||''; $('cNotes').value=c.notes||''; fmsg(''); $('formOv').classList.add('open'); };
@@ -412,15 +424,39 @@ window.saveClient=async ()=>{
   const rec={ owner_id:UID, name, phone:$('cPhone').value.trim()||null, purpose:$('cPurpose').value, type:$('cType').value||null,
     area:$('cArea').value.trim()||null, budget:$('cBudget').value?Number($('cBudget').value):null,
     bedrooms:$('cBeds').value?Number($('cBeds').value):null, stage:$('cStage').value,
-    next_followup:$('cFollow').value||null, notes:$('cNotes').value.trim()||null };
+    next_followup:$('cFollow').value||null, notes:$('cNotes').value.trim()||null, source:$('cSource').value.trim()||'manual' };
+  const previous=EDIT_ID?CLIENTS.find(c=>c.id===EDIT_ID):null;
+  const requestedStage=rec.stage;
+  const lostReason=requestedStage==='lost'&&previous?.stage!=='lost'?prompt(HZ.lang==='en'?'Lost reason (required)':'سبب الخسارة (مطلوب)'):null;
+  if(requestedStage==='lost'&&previous?.stage!=='lost'&&!lostReason?.trim())return;
+  if(previous){
+    rec.stage=previous.stage;
+    // Keep the legacy editor and the detailed profile aligned without deleting other custom data.
+    if(previous.custom?.sales_requirements)rec.custom={...previous.custom,sales_requirements:{...previous.custom.sales_requirements,
+      purpose:rec.purpose,type:rec.type,locations:rec.area?rec.area.split(/[,،]/).map(s=>s.trim()):[],
+      bedrooms:rec.bedrooms,budget_max:rec.budget}};
+  }
+  rec.budget_max=rec.budget;
   $('saveBtn').disabled=true;
   try{
     if(EDIT_ID) await api('/clients?id=eq.'+EDIT_ID,{method:'PATCH',body:JSON.stringify(rec)});
-    else await api('/clients',{method:'POST',body:JSON.stringify(rec)});
+    else {
+      // Creation stays on the initial stage; transitions must record their history.
+      rec.stage='new';
+      const created=await api('/clients',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify(rec)});
+      EDIT_ID=created[0].id;CLIENTS.push(created[0]);
+      if(requestedStage!=='new')await HZ.sbAuth('/rpc/crm_sales_move_stage',TOKEN,'POST',{p_lead:created[0].id,p_stage:requestedStage,p_reason:lostReason});
+    }
+    if(previous&&requestedStage!==previous.stage)await HZ.sbAuth('/rpc/crm_sales_move_stage',TOKEN,'POST',{p_lead:EDIT_ID,p_stage:requestedStage,p_reason:lostReason});
     closeForm(); loadClients();
   }catch(e){ fmsg('تعذّر الحفظ.'); } finally{ $('saveBtn').disabled=false; }
 };
-window.moveStage=async (id,stage)=>{ try{ await api('/clients?id=eq.'+id,{method:'PATCH',body:JSON.stringify({stage})}); const c=CLIENTS.find(x=>x.id===id); if(c)c.stage=stage; renderStats(); renderBoard(); }catch(e){} };
+window.moveStage=async (id,stage)=>{
+  const reason=stage==='lost'?prompt(HZ.lang==='en'?'Lost reason (required)':'سبب الخسارة (مطلوب)'):null;
+  if(stage==='lost'&&!reason?.trim()){renderBoard();return;}
+  try{await HZ.sbAuth('/rpc/crm_sales_move_stage',TOKEN,'POST',{p_lead:id,p_stage:stage,p_reason:reason});await loadClients();}
+  catch(e){alert(HZ.lang==='en'?'Stage could not be saved. Please retry.':'تعذّر حفظ المرحلة. حاول تاني.');renderBoard();}
+};
 window.delClient=async (id)=>{ if(!confirm('تمسح العميل ده؟')) return; try{ await api('/clients?id=eq.'+id,{method:'DELETE'}); CLIENTS=CLIENTS.filter(x=>x.id!==id); renderStats(); renderBoard(); }catch(e){} };
 
 /* matching units for a client → offer */
@@ -635,6 +671,18 @@ window.toggleNotify=async ()=>{
 const _origBoot=boot;
 boot=async function(){ await _origBoot(); try{ if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{}); }catch(e){} updateBell(); };
 
+installSalesWorkspace({session:async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)throw Error(HZ.lang==='en'?'Sign in required':'سجّل الدخول');
+  TOKEN=session.access_token;return {token:TOKEN,uid:session.user.id};
+},reload:()=>loadClients()});
+const salesOverview=document.createElement('button');salesOverview.className='btn btn-teal';
+salesOverview.textContent=HZ.lang==='en'?'Sales overview':'نظرة عامة على المبيعات';salesOverview.onclick=()=>openSalesOverview();
+document.querySelector('.bar').append(salesOverview);
+$('cStage').innerHTML=STAGES.map(s=>`<option value="${s.k}">${s.label}</option>`).join('');
+$('board').addEventListener('dragstart',e=>{const card=e.target.closest('[data-client]');if(card)e.dataTransfer.setData('text/plain',card.dataset.client);});
+$('board').addEventListener('dragover',e=>{if(e.target.closest('[data-stage]'))e.preventDefault();});
+$('board').addEventListener('drop',e=>{const col=e.target.closest('[data-stage]');if(!col)return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(CLIENTS.some(c=>c.id===id))moveStage(id,col.dataset.stage);});
 boot();
 </script>
 </body>

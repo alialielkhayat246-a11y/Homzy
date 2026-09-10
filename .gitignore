@@ -9,3 +9,5 @@ data/byit_properties.json
 
 # Local-only developer contact spreadsheets (private phone numbers)
 data/*.xlsx
+# Local validation dependencies and browser screenshots.
+.tmp/

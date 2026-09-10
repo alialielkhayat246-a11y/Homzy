@@ -13,11 +13,14 @@ from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
                                PlainTextResponse, Response, StreamingResponse)
 import json as _json
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 
-from . import (broker, config, crm_ai, listings as listings_mod, llm, notify,
+from . import (broker, config, listings as listings_mod, llm, notify,
                payments, push, seo, valuation, whatsapp)
+from .crm_routes import legacy_lead_analysis, router as crm_sales_router
 
 app = FastAPI(title="Homzy Broker")
+app.include_router(crm_sales_router)
 
 # Allow the web build (hosted on a different origin) to call the API.
 app.add_middleware(
@@ -97,6 +100,11 @@ def crm_page():
     existing /my-day, /clients, /deals, /insights routes so bookmarks keep
     working while the broker gets one coherent 'CRM' home."""
     return FileResponse(config.FRONTEND_DIR / "my-day.html")
+
+
+@app.get("/crm-offer")
+def crm_offer_page():
+    return FileResponse(config.FRONTEND_DIR / "crm-offer.html", headers={"Referrer-Policy": "no-referrer", "Cache-Control": "no-store"})
 
 
 @app.get("/my-day")
@@ -593,7 +601,9 @@ async def crm_ai_lead(req: Request):
     Never sends messages or writes data. Falls back to a deterministic heuristic
     when no AI engine is configured."""
     body = await req.json()
-    return crm_ai.analyze_lead(body.get("token") or "", body.get("lead_id") or "")
+    if not isinstance(body, dict):
+        raise HTTPException(422, "Expected a JSON object")
+    return await run_in_threadpool(legacy_lead_analysis, body.get("token"), body.get("lead_id"))
 
 
 @app.get("/api/wa/webhook")

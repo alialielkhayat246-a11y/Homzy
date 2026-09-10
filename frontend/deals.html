@@ -46,6 +46,9 @@
   .modal label{font-size:12.5px;font-weight:700;color:var(--navy);}
   .modal input,.modal select{width:100%;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:"Cairo";font-size:13px;margin-top:3px;}
   .mx{width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;font-size:18px;cursor:pointer;}
+  #dNotes{display:block;width:100%;box-sizing:border-box;min-height:84px;font:inherit;border:1px solid var(--line-2);border-radius:10px;padding:10px;resize:vertical;}
+  .deal-finance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}.deal-finance>div{min-width:0;}
+  @media(max-width:560px){.deal-finance{grid-template-columns:repeat(2,minmax(0,1fr));}.deal-finance>div:last-child{grid-column:1/-1;}}
 </style>
 <link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
 </head>
@@ -63,14 +66,17 @@
   <div class="mb">
     <div><label>العميل</label><select id="dLead"></select></div>
     <div><label>الوحدة / العقار</label><input id="dProp" placeholder="مثال: شقة 180م — الشيخ زايد" /></div>
-    <div style="display:flex;gap:8px">
+    <div><label>ربط بوحدة في المخزون / Link inventory property</label><select id="dListing"><option value="">—</option></select></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <div style="flex:1"><label>النوع</label><select id="dType"><option value="sale">بيع</option><option value="rent">إيجار</option><option value="short_stay">إقامة قصيرة</option></select></div>
       <div style="flex:1"><label>القيمة (ج.م)</label><input id="dValue" type="number" inputmode="numeric" placeholder="1000000" /></div>
     </div>
-    <div style="display:flex;gap:8px">
+    <div class="deal-finance">
       <div style="flex:1"><label>نسبة العمولة % (اختياري)</label><input id="dRate" type="number" step="0.01" placeholder="افتراضي 7%" /></div>
+      <div style="flex:1"><label>احتمال الإتمام % / Probability</label><input id="dProbability" type="number" min="0" max="100" value="0" /></div>
       <div style="flex:1"><label>الإغلاق المتوقع</label><input id="dClose" type="date" /></div>
     </div>
+    <div><label>ملاحظات / Notes</label><textarea id="dNotes" maxlength="2000"></textarea></div>
     <button class="btn btn-teal" id="dSave" onclick="saveDeal()">حفظ الصفقة</button>
   </div>
 </div></div>
@@ -113,6 +119,7 @@ function renderKpis(){
   $('kpis').innerHTML=`
     <div class="kpi"><div class="n">${open.length}</div><div class="l">صفقات مفتوحة</div></div>
     <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة الصفقات الجارية</div></div>
+    <div class="kpi"><div class="n">${money(open.reduce((sum,d)=>sum+Number(d.value||0)*Number(d.probability||0)/100,0))}</div><div class="l">القيمة المرجحة / Weighted pipeline</div></div>
     <div class="kpi win"><div class="n">${won.length}</div><div class="l">صفقات مكسوبة</div></div>
     <div class="kpi comm"><div class="n">${money(expected)}</div><div class="l">عمولات متوقعة للصفقات المفتوحة</div></div><div class="kpi"><div class="n">${money(accrued)}</div><div class="l">قيود استحقاق مسجّلة</div></div><div class="kpi win"><div class="n">${money(paid)}</div><div class="l">قيود تحصيل مسجّلة</div></div><div class="kpi"><div class="n">${money(adjustments)}</div><div class="l">تسويات مسجّلة</div></div>`;
 }
@@ -131,6 +138,8 @@ function dcard(d){
     <div class="vl">${money(d.value)}</div>
     ${won&&d.commission_amount!=null?`<div class="cm">عمولة: ${money(d.commission_amount)} (${Math.round((d.commission_rate||0)*100)}%)</div>`:''}
     ${d.lost_reason?`<div class="ti" style="color:#B42318">سبب: ${esc(d.lost_reason)}</div>`:''}
+    ${d.notes?`<div class="ti">${esc(d.notes)}</div>`:''}
+    ${!won&&d.status!=='lost'?`<label>احتمال الإتمام % / Probability<input type="number" min="0" max="100" value="${Number(d.probability)||0}" onchange="updateProbability(${d.id},this.value)"></label>`:''}
     <div class="acts">${acts}</div></div>`;
 }
 function renderBoard(){
@@ -153,26 +162,32 @@ function renderLedger(){
   $('ledger').innerHTML=`<table><thead><tr><th>المرجع</th><th>قيمة الصفقة</th><th>النسبة</th><th>العمولة</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-window.openDeal=()=>{
+window.openDeal=async()=>{
+  $('dProbability').value='0';
+  $('dNotes').value='';$('dListing').innerHTML='<option value="">—</option>';
   $('dLead').innerHTML='<option value="">— اختر عميل —</option>'+LEADS.map(l=>`<option value="${l.id}">${esc(l.name||'—')}</option>`).join('');
   $('dProp').value=''; $('dValue').value=''; $('dRate').value=''; $('dClose').value=''; $('dType').value='sale';
   $('dealOv').classList.add('open');
+  try{const listings=await HZ.sbAuth('/listings?status=eq.active&select=id,title,price&order=title&limit=100',S.token);$('dListing').innerHTML='<option value="">اختياري / Optional</option>'+listings.map(l=>`<option value="${esc(l.id)}">${esc(l.title)}</option>`).join('');$('dListing').onchange=()=>{const l=listings.find(row=>row.id===$('dListing').value);if(l){$('dProp').value=l.title;if(l.price!=null)$('dValue').value=l.price;}};}catch{$('dListing').innerHTML='<option value="">تعذّر تحميل المخزون / Inventory unavailable</option>';}
 };
 window.closeDeal=()=>$('dealOv').classList.remove('open');
 window.saveDeal=async()=>{
   const lead=$('dLead').value||null;
   const name=lead?(LEADS.find(l=>l.id===lead)||{}).name:null;
   const value=Number($('dValue').value||0);
-  if(!value){ alert('ادخل قيمة الصفقة'); return; }
+  if(!Number.isFinite(value)||value<=0){ alert('ادخل قيمة صحيحة للصفقة'); return; }
   const rate=$('dRate').value?Number($('dRate').value)/100:null;
+  const probability=Number($('dProbability').value);
+  if(!Number.isFinite(probability)||probability<0||probability>100){alert('Probability must be 0–100');return;}
   const body={ owner_id:S.uid, lead_id:lead, customer_name:name, property_title:$('dProp').value||null,
-    deal_type:$('dType').value, value, commission_rate:rate, expected_close:$('dClose').value||null, status:'open' };
+    deal_type:$('dType').value, value, probability, listing_id:$('dListing').value||null, notes:$('dNotes').value.trim()||null, commission_rate:rate, expected_close:$('dClose').value||null, status:'open' };
   $('dSave').disabled=true;
   try{ await HZ.sbAuth('/crm_deals',S.token,'POST',body,{Prefer:'return=minimal'}); closeDeal(); await load(); }
   catch(e){ alert('حصل خطأ في الحفظ'); }
   $('dSave').disabled=false;
 };
 window.setStatus=async(id,st)=>{ try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:st},{Prefer:'return=minimal'}); const d=DEALS.find(x=>x.id===id); if(d)d.status=st; renderBoard(); renderKpis(); }catch(e){} };
+window.updateProbability=async(id,value)=>{const probability=Number(value);if(!Number.isFinite(probability)||probability<0||probability>100){alert('Probability must be 0–100');renderBoard();return;}try{await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{probability},{Prefer:'return=minimal'});const deal=DEALS.find(d=>d.id===id);if(deal)deal.probability=probability;renderKpis();}catch{alert('تعذّر الحفظ / Could not save');renderBoard();}};
 window.winDeal=async(id)=>{
   if(!confirm('تأكيد كسب الصفقة؟ هيتسجّل العمولة في السجل.')) return;
   try{ const r=await HZ.sbAuth('/rpc/crm_win_deal',S.token,'POST',{p_deal:id}); await load();
@@ -181,6 +196,7 @@ window.winDeal=async(id)=>{
 };
 window.loseDeal=async(id)=>{
   const reason=prompt('سبب خسارة الصفقة؟'); if(reason===null) return;
+  if(!reason.trim()){alert('سبب الخسارة مطلوب / Lost reason is required');return;}
   try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:'lost',lost_reason:reason||null,actual_close:new Date().toISOString().slice(0,10)},{Prefer:'return=minimal'});
     const d=DEALS.find(x=>x.id===id); if(d){d.status='lost';d.lost_reason=reason;} renderBoard(); renderKpis(); }catch(e){}
 };

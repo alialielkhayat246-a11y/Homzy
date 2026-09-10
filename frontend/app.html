@@ -246,6 +246,7 @@
 
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/crm-behavior.js"></script>
 <script src="/assets/catalog-ui.js?v=1"></script>
 <script>
 const sb=HZ.sb, esc=HZ.esc;
@@ -730,6 +731,7 @@ function listingCard(l){
   return d;
 }
 function openListing(l){
+  HZ.trackBehavior?.('viewed',l.id,{area:l.area||'',type:l.type||''});
   const media=(l.listing_media||[]).map(m=>m.url).filter(Boolean);
   const cover=media[0]||'';
   const pur=l.purpose==='rent'?(HZ.lang==='ar'?'للإيجار':'For rent'):(HZ.lang==='ar'?'للبيع':'For sale');
@@ -763,12 +765,16 @@ function openListing(l){
     </div>
   </div>`;
   document.getElementById('overlay').classList.add('open'); document.body.style.overflow='hidden';
+  document.querySelector('#drawer .btn-wa')?.addEventListener('click',()=>HZ.trackBehavior?.('inquiry',l.id));
+  const share=document.createElement('button');share.className='btn';share.textContent=HZ.lang==='ar'?'مشاركة العرض':'Share listing';
+  share.onclick=async()=>{const url=location.origin+'/app?listing='+encodeURIComponent(l.id);try{if(navigator.share)await navigator.share({title:l.title,url});else{await navigator.clipboard.writeText(url);share.textContent=HZ.lang==='ar'?'تم نسخ الرابط':'Link copied';}HZ.trackBehavior?.('shared',l.id);}catch{/* A cancelled share is not recorded. */}};
+  document.querySelector('#drawer .dactions').append(share);
 }
 function closeDetail(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
 addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
 
-let dt; function debouncedLoad(){ clearTimeout(dt); dt=setTimeout(()=>loadProjects(true),350); }
-let dm; function debouncedLoadMarket(){ clearTimeout(dm); dm=setTimeout(()=>loadMarket(),350); }
+let dt; function debouncedLoad(){ clearTimeout(dt); dt=setTimeout(()=>{const c=currentCriteria();HZ.trackBehavior?.('search',null,{query:c.q||'',area:c.areaLabel||'',type:c.category||'',budget_max:c.budget||''});loadProjects(true);},350); }
+let dm; function debouncedLoadMarket(){ clearTimeout(dm); dm=setTimeout(()=>{HZ.trackBehavior?.('search',null,{query:document.getElementById('mq').value.trim()});loadMarket();},350); }
 
 /* React to language changes from the shared toggle. */
 let renderedLanguage=HZ.lang;
@@ -828,7 +834,7 @@ for(const [id,ar,en] of [['q','ابحث باسم المشروع أو المطو�
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
-loadAreas().then(()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); });
+loadAreas().then(async()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); const listing=new URLSearchParams(location.search).get('listing');if(listing&&/^[0-9a-f-]{36}$/i.test(listing)){try{const rows=await sb('/listings?id=eq.'+listing+'&status=eq.active&select=*,listing_media(url,sort)');if(rows?.[0])openListing(rows[0]);}catch{/* Existing marketplace remains available. */}} });
 </script>
 </body>
 </html>

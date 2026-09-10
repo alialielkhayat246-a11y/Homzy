@@ -41,7 +41,7 @@ class OllamaClient:
         if force_json:
             payload["format"] = "json"
         try:
-            resp = requests.post(f"{self.host}/api/chat", json=payload, timeout=180)
+            resp = requests.post(f"{self.host}/api/chat", json=payload, timeout=getattr(self, "request_timeout", 180))
             resp.raise_for_status()
         except Exception as exc:  # connection refused, timeout, model missing...
             raise LLMUnavailable(f"Ollama not reachable at {self.host}: {exc}")
@@ -97,7 +97,7 @@ class GeminiClient:
         if max_tokens:
             base_cfg["maxOutputTokens"] = max_tokens
 
-        models = [self.model] + [m for m in self._FALLBACKS if m != self.model]
+        models = ([self.model] + [m for m in self._FALLBACKS if m != self.model])[:getattr(self, "max_attempts", 4)]
         last_err = "no model tried"
         for model in models:
             gen_cfg = dict(base_cfg)
@@ -115,7 +115,7 @@ class GeminiClient:
                     headers={"x-goog-api-key": self.api_key,
                              "Content-Type": "application/json"},
                     json=payload,
-                    timeout=60,
+                    timeout=getattr(self, "request_timeout", 60),
                 )
             except Exception as exc:
                 last_err = f"{model}: {exc}"

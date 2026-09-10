@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Homzy · Property offer</title><link rel="stylesheet" href="/assets/homzy.css"><style>body{max-width:850px;margin:auto;padding:24px;color:#0d1b2a}header{border-bottom:4px solid #2563eb;padding:20px}article{margin-block:24px}img{max-width:100%;max-height:350px;object-fit:contain}dl{display:grid;grid-template-columns:1fr 2fr;gap:10px}dd{margin:0;overflow-wrap:anywhere}button{padding:12px;margin:16px;font:inherit}footer{border-top:1px solid #ddd;padding:20px}@page{size:A4;margin:16mm}@media print{button{display:none}article{break-before:page}article:first-of-type{break-before:auto}body{padding:0}}</style></head>
+<body><header><h1><img src="/assets/icon.svg" width="44" height="44" alt=""> Homzy</h1><p id="status" role="status">جاري تحميل العرض · Loading offer…</p></header><main id="offer"></main>
+<script type="module">
+const token=new URLSearchParams(location.search).get('token');
+const status=document.querySelector('#status');
+try{
+  if(!/^[0-9a-f-]{36}$/i.test(token||''))throw Error('رابط غير صالح · Invalid link');
+  const response=await fetch('/api/crm/sales/public-offers/'+token,{cache:'no-store'});
+  if(!response.ok)throw Error('العرض انتهى أو غير متاح · Offer expired or unavailable');
+  const offer=await response.json(),ar=offer.language==='ar';document.documentElement.dir=ar?'rtl':'ltr';document.documentElement.lang=ar?'ar':'en';
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const titles={area:['الموقع','Location'],type:['النوع','Type'],bedrooms:['الغرف','Bedrooms'],bathrooms:['الحمامات','Bathrooms'],price:['السعر','Price'],currency:['العملة','Currency'],developer:['المطور','Developer'],project:['المشروع','Project'],size_sqm:['المساحة م²','Area m²'],down_payment_amount:['المقدم','Down payment'],installment_years:['سنوات التقسيط','Installment years'],delivery:['التسليم','Delivery'],finishing:['التشطيب','Finishing'],amenities:['المرافق','Amenities']};
+  status.textContent=offer.client_name+' · '+new Date(offer.created_at).toLocaleDateString();
+  document.querySelector('#offer').innerHTML=offer.items.map(p=>`<article><h2>${esc(p.title)}</h2>${(p.images||[]).filter(u=>typeof u==='string'&&u.startsWith('https://')).slice(0,1).map(u=>`<img src="${esc(u)}" alt="${esc(p.title)}" referrerpolicy="no-referrer">`).join('')}<dl>${Object.keys(titles).filter(k=>p[k]!=null).map(k=>`<dt>${titles[k][ar?0:1]}</dt><dd>${esc(typeof p[k]==='object'?JSON.stringify(p[k]):p[k])}</dd>`).join('')}</dl></article>`).join('')+`<footer>${esc(Object.values(offer.broker_info||{}).filter(Boolean).join(' · '))}<p>${ar?'الأسعار والتوافر تخضع للتأكيد.':'Prices and availability are subject to confirmation.'}</p></footer>`;
+  const print=document.createElement('button');print.textContent=ar?'طباعة / حفظ PDF':'Print / Save PDF';print.onclick=async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));window.print();};document.body.prepend(print);
+}catch(e){status.textContent=e.message;}
+</script></body></html>
