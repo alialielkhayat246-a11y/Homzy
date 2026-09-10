@@ -1,6 +1,6 @@
 # Homzy CRM sales upgrade — implementation report
 
-Implemented as an extension of the existing FastAPI, static HTML/JavaScript and Supabase application. Marketplace, broker accounts, legacy project offers, commissions, WhatsApp integration, and Homzy Stays remain in place. The five migrations were applied to production Supabase on 2026-09-09 after transaction rollback validation. Application deployment follows through the existing Vercel production branch.
+Implemented as an extension of the existing FastAPI, static HTML/JavaScript and Supabase application. Marketplace, broker accounts, legacy project offers, commissions, WhatsApp integration, and Homzy Stays remain in place. The five migrations were applied to production Supabase on 2026-09-09 after transaction rollback validation. The application was deployed successfully to https://homzy-ai.com through the existing Vercel production branch (application revision `8bb6ed575ae98f3ea0ec63a133a944ac9a0d6f74`, deployment `8jfxHAXKxAWEd3uu2DFGaPh3jBkU`).
 
 ## Delivered
 
@@ -66,7 +66,7 @@ No new secrets. Reuse `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `LLM_PROVIDER`, `OLLA
 - Ruff: new backend modules and tests checked; fatal syntax/undefined-name checks cover touched existing backend modules.
 - Python compilation, Vercel entry-point import and OpenAPI generation: passed. Mock broker pipeline smoke: passed.
 - SQL parsed locally and executed in PostgreSQL rollback tests against the live schema, including the favorite trigger and RLS behavior.
-- This is a static-frontend/FastAPI repository with no `package.json` or production bundle script. No Vercel production build or deployment was performed.
+- Vercel production build completed successfully in 18 seconds. Public HTTP checks passed for health (200), clients (200), sales JavaScript (200), offer page (200), unauthenticated scores (401), and an unavailable offer capability (404). Served client, JavaScript and offer page contents matched the local application source. The authenticated browser workspace still requires a broker login; the opened production tab correctly shows that login gate.
 
 ## Remaining limits
 
