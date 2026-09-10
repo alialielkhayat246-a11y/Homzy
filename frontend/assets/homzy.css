@@ -219,6 +219,46 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
 .reveal{opacity:0; transform:translateY(22px); transition:opacity .6s ease, transform .6s ease;}
 .reveal.in{opacity:1; transform:none;}
 
+/* ---------- Launch splash (shown once when the app is opened) ---------- */
+.hz-splash{position:fixed; inset:0; z-index:2147483000; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(120% 90% at 50% 12%, #12335a 0%, var(--navy,#0B1D36) 62%);
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); overflow:hidden;
+  opacity:1; transition:opacity .5s ease;}
+.hz-splash.out{opacity:0; pointer-events:none;}
+.hz-splash::after{content:""; position:absolute; width:520px; height:520px; border-radius:50%;
+  background:radial-gradient(circle, rgba(11,85,99,.38), transparent 62%); filter:blur(6px);
+  animation:hzsGlow 2.4s ease-in-out infinite;}
+/* Base state (no animation) is the final, fully-visible state so the splash is
+   always readable — even in webviews that throttle/freeze CSS animations. The
+   animations only add the entrance motion; `.settled` (set by JS after a short
+   grace) strips them as a guaranteed floor. */
+.hz-splash .hz-s-in{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; text-align:center; padding:0 26px;}
+.hz-splash .hz-s-logo{width:104px; height:104px; display:flex; align-items:center; justify-content:center;
+  border-radius:28px; background:rgba(255,255,255,.06); box-shadow:0 20px 60px rgba(0,0,0,.35);
+  opacity:1; animation:hzsLogo .9s cubic-bezier(.2,.8,.2,1) backwards;}
+.hz-splash .hz-s-logo svg{width:66px; height:66px;}
+.hz-splash .hz-s-logo svg path{stroke-dasharray:180; stroke-dashoffset:0; animation:hzsDraw 1s ease .25s backwards;}
+.hz-splash .hz-s-name{margin-top:20px; color:#fff; font-family:var(--fd,'Poppins',sans-serif); font-weight:800;
+  font-size:40px; letter-spacing:.5px; opacity:1; animation:hzsRise .7s ease .35s backwards;}
+.hz-splash .hz-s-slogan{margin-top:10px; color:rgba(255,255,255,.82); font-family:var(--ff,'Cairo',sans-serif);
+  font-weight:600; font-size:16px; max-width:22em; line-height:1.5; opacity:1; animation:hzsRise .7s ease .55s backwards;}
+.hz-splash .hz-s-bar{margin-top:26px; width:120px; height:3px; border-radius:100px; overflow:hidden;
+  background:rgba(255,255,255,.14); opacity:1; animation:hzsRise .6s ease .7s backwards;}
+.hz-splash .hz-s-bar i{display:block; height:100%; width:40%; border-radius:100px; background:var(--teal,#0B5563);
+  animation:hzsBar 1.3s ease-in-out .8s infinite;}
+.hz-splash.settled *{animation:none !important;}
+.hz-splash.settled .hz-s-logo svg path{stroke-dashoffset:0;}
+.hz-splash.settled .hz-s-bar i{width:100%;}
+@keyframes hzsLogo{from{opacity:0; transform:translateY(14px) scale(.86);} to{opacity:1; transform:none;}}
+@keyframes hzsDraw{from{stroke-dashoffset:180;} to{stroke-dashoffset:0;}}
+@keyframes hzsRise{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;}}
+@keyframes hzsBar{0%{transform:translateX(-140%);}100%{transform:translateX(340%);}}
+@keyframes hzsGlow{0%,100%{transform:scale(.9); opacity:.55;}50%{transform:scale(1.06); opacity:.9;}}
+@media(prefers-reduced-motion:reduce){
+  .hz-splash *{animation:none !important;}
+  .hz-splash .hz-s-logo svg path{stroke-dashoffset:0;}
+}
+
 /* ---------- Chat widget ---------- */
 .chat-fab{position:fixed; inset-inline-end:22px; bottom:22px; z-index:80; width:60px; height:60px; border-radius:50%; background:var(--teal); color:#fff; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(11,85,99,.42); display:flex; align-items:center; justify-content:center; transition:transform .16s;}
 .chat-fab:hover{transform:scale(1.06);} .chat-fab svg{width:28px; height:28px;}
@@ -278,7 +318,9 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
   .hz-login{display:none;}                  /* login CTA is in the drawer */
   .hz-prod-btn .pn,.hz-prod-btn .chev{display:none;} /* compact switcher: icon only */
   .hz-prod-btn{width:40px; padding:0; justify-content:center;}
-  .chat-panel{inset-inline:0; bottom:0; top:0; width:100%; max-width:100%; height:100%; border-radius:0;}
+  .chat-panel{inset:0; width:100%; max-width:100%; height:100vh; height:100dvh; border-radius:0;}
+  .chat-panel .cp-head{padding-top:calc(13px + env(safe-area-inset-top));}
+  .chat-panel .cp-form{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
   .grid-3{grid-template-columns:1fr 1fr;} .grid-4{grid-template-columns:1fr 1fr;}
 }
 

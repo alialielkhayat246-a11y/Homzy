@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#0B1D36" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css?v=2">
+<link rel="stylesheet" href="/assets/homzy.css?v=4">
 <style>
   body{background:var(--cream,#F7F3EC);}
   .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
@@ -160,7 +160,12 @@
     <div class="mb">
       <div class="row2">
         <div class="fld"><label data-ar="الاسم" data-en="Name">الاسم</label><input class="in" id="cName" placeholder="اسم العميل" data-ph-ar="اسم العميل" data-ph-en="Client name" /></div>
-        <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="cPhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" /></div>
+        <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label>
+          <div style="display:flex;gap:6px;align-items:stretch">
+            <input class="in" id="cPhone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" style="flex:1" />
+            <button type="button" id="pickContactBtn" onclick="pickFromContacts()" title="اختَر من جهات الاتصال" data-ar="📇 جهات الاتصال" data-en="📇 Contacts" style="display:none;flex:none;white-space:nowrap;border:1.5px solid var(--line-2);background:var(--cream);border-radius:10px;padding:0 12px;font-family:var(--ff);font-weight:700;font-size:13px;color:var(--navy);cursor:pointer">📇</button>
+          </div>
+        </div>
       </div>
       <div class="row2">
         <div class="fld"><label data-ar="الغرض" data-en="Purpose">الغرض</label><select class="in" id="cPurpose"><option value="sale" data-ar="شراء" data-en="Buy">شراء</option><option value="rent" data-ar="إيجار" data-en="Rent">إيجار</option></select></div>
@@ -233,7 +238,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=3"></script>
+<script src="/assets/homzy.js?v=4"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { installSalesWorkspace } from '/assets/crm-sales.js';
@@ -283,6 +288,7 @@ async function boot(){
   if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
   TOKEN=session.access_token; UID=session.user.id;
   $('gate').style.display='none'; $('app').style.display='block';
+  { const pb=$('pickContactBtn'); if(pb&&contactsSupported()) pb.style.display='inline-flex'; }
   HZ.loadPlan && HZ.loadPlan();
   await loadClients(); if(new URLSearchParams(location.search).get("new")==="1")openForm();
   const salesLead=new URLSearchParams(location.search).get('lead');
@@ -364,11 +370,31 @@ window.logAct=async(id,kind,body)=>{
 /* form */
 window.openForm=()=>{ $('clientOptional').open=false;$('budgetHint').textContent=''; EDIT_ID=null; $('fTitle').textContent='إضافة عميل';
   ['cName','cPhone','cArea','cBudget','cBeds','cFollow','cNotes','cSource'].forEach(id=>$(id).value='');
-  $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg(''); $('formOv').classList.add('open'); };
+  $('cPurpose').value='sale'; $('cType').value=''; $('cStage').value='new'; fmsg('');
+  { const pb=$('pickContactBtn'); if(pb) pb.style.display=contactsSupported()?'inline-flex':'none'; }
+  $('formOv').classList.add('open'); };
 window.closeForm=()=>{ stopVoice(true); $('voicebar').classList.remove('show'); $('formOv').classList.remove('open'); };
 
+/* ---------- Pick a number from the phone's contacts ----------
+   The browser can't read the call log (no web API for recent calls), but the
+   Contact Picker API lets the broker tap to pull a saved contact's number in
+   without typing it. Shown only where supported (Android Chrome, HTTPS). */
+const contactsSupported = () => !!(navigator.contacts && navigator.contacts.select);
+window.pickFromContacts = async () => {
+  if(!contactsSupported()){ vbar('اختيار جهات الاتصال مدعوم على Chrome للأندرويد. اكتب الرقم يدويًا.', true); return; }
+  try{
+    const props = ['tel']; if(!$('cName').value.trim()) props.push('name');
+    const sel = await navigator.contacts.select(props, {multiple:false});
+    if(!sel || !sel.length) return;
+    const c = sel[0];
+    const tel = (c.tel && c.tel[0]) ? String(c.tel[0]).replace(/\s+/g,'') : '';
+    if(tel) $('cPhone').value = tel;
+    if(!$('cName').value.trim() && c.name && c.name[0]) $('cName').value = c.name[0];
+  }catch(e){ /* user cancelled or blocked — ignore */ }
+};
+
 /* ---------- Voice entry (AI-parsed) ---------- */
-let REC=null, VOICE_ON=false, VOICE_TXT='';
+let REC=null, VOICE_ON=false, VOICE_TXT='', VOICE_DONE=false, VOICE_TIMER=null;
 const speechSupported=()=>!!(window.SpeechRecognition||window.webkitSpeechRecognition);
 window.voiceAdd=()=>{
   if(window.HZ && HZ.PLAN && !HZ.hasFeature('voice')){
@@ -380,19 +406,33 @@ window.voiceAdd=()=>{
 function vbar(t,err){ const v=$('voicebar'); v.classList.add('show'); v.innerHTML=err?('<span style="color:#B42318">'+esc(t)+'</span>'):t; }
 function micUI(on){ const b=$('micBtn'); if(!b) return; b.classList.toggle('rec',on); b.textContent=on?'⏹ إيقاف':'🎤 بالصوت'; }
 window.toggleVoice=()=>{
-  if(VOICE_ON){ VOICE_ON=false; try{REC&&REC.stop();}catch(e){} return; }   // stop → onend → process
+  if(VOICE_ON){ finishVoice(); return; }   // user pressed stop → analyse what we heard
   if(!speechSupported()){ vbar('المتصفح ده مش بيدعم الإدخال الصوتي — جرّب Chrome على الموبايل أو الكمبيوتر.', true); return; }
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  REC=new SR(); REC.lang='ar-EG'; REC.interimResults=true; REC.continuous=true; VOICE_TXT='';
+  try{ REC=new SR(); }catch(e){ vbar('تعذّر بدء التسجيل.', true); return; }
+  REC.lang='ar-EG'; REC.interimResults=true; REC.continuous=true; VOICE_TXT=''; VOICE_DONE=false;
   REC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript+' '; VOICE_TXT=t.trim(); vbar('🎤 بسمعك… «'+esc(VOICE_TXT)+'»'); };
-  REC.onerror=(e)=>{ VOICE_ON=false; micUI(false); vbar('تعذّر التسجيل ('+(e.error||'')+'). اسمح للميكروفون وجرّب تاني.', true); };
-  REC.onend=()=>{ if(VOICE_ON){ VOICE_ON=false; micUI(false); processVoice(); } };
+  REC.onerror=(e)=>{ const err=e.error||''; if(err==='no-speech'||err==='aborted') return; // transient — let onend decide
+    VOICE_ON=false; micUI(false); clearTimeout(VOICE_TIMER); vbar('تعذّر التسجيل ('+err+'). اسمح للميكروفون وجرّب تاني.', true); };
+  REC.onend=()=>{ clearTimeout(VOICE_TIMER);
+    if(!VOICE_ON){ processVoice(); return; }              // manual stop / final end → analyse
+    if(VOICE_TXT){ VOICE_ON=false; micUI(false); processVoice(); }  // ended on its own with speech
+    else { try{ REC.start(); }catch(e){ VOICE_ON=false; micUI(false); } } // silence timeout → keep listening
+  };
   try{ REC.start(); VOICE_ON=true; micUI(true);
     vbar('🎤 اتكلم دلوقتي… مثلاً: «عميل اسمه أحمد، رقمه ٠١٠١٢٣٤٥٦٧٨، عايز يشتري شقة في التجمع بـ٦ مليون، ٣ غرف، متابعة الخميس الجاي». ودوس ⏹ لما تخلص.');
-  }catch(e){ vbar('تعذّر بدء التسجيل.', true); }
+  }catch(e){ VOICE_ON=false; micUI(false); vbar('تعذّر بدء التسجيل.', true); }
 };
-function stopVoice(silent){ if(VOICE_ON){ VOICE_ON=false; try{REC&&REC.stop();}catch(e){} micUI(false); } }
+// Stop listening and analyse. A fallback timer guarantees processing even if the
+// browser never fires `onend` (common hang on mobile Chrome with continuous mode).
+function finishVoice(){
+  VOICE_ON=false; micUI(false); vbar('🧠 بحلّل كلامك…');
+  try{ REC&&REC.stop(); }catch(e){}
+  clearTimeout(VOICE_TIMER); VOICE_TIMER=setTimeout(processVoice, 1400);
+}
+function stopVoice(silent){ if(VOICE_ON||REC){ VOICE_ON=false; VOICE_DONE=true; clearTimeout(VOICE_TIMER); try{REC&&REC.stop();}catch(e){} micUI(false); } }
 async function processVoice(){
+  if(VOICE_DONE) return; VOICE_DONE=true; clearTimeout(VOICE_TIMER);
   const text=(VOICE_TXT||'').trim();
   if(!text){ vbar('مسمعتش حاجة واضحة — جرّب تاني.', true); return; }
   vbar('🧠 بحلّل كلامك…');

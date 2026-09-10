@@ -818,6 +818,10 @@ HZ.openChat = function(opts){
   }
   const panel=document.getElementById('hzChatPanel'), fab=document.getElementById('hzChatFab');
   panel.classList.add('open'); fab.style.display='none'; panel.dir=HZ.lang==='ar'?'rtl':'ltr';
+  // Safety: some mobile webviews throttle/freeze the entrance animation at frame 0,
+  // leaving the panel scaled+shifted (looks "zoomed" and clipped). Force it to its
+  // resting geometry shortly after opening so the window is always full & crisp.
+  setTimeout(()=>{ try{ panel.getAnimations && panel.getAnimations().forEach(a=>a.finish()); }catch(e){} }, 260);
   document.getElementById('hzCpSub').textContent=HZ.t('advisor');
   renderChat();
   if(!chat.history.length && !opts.context) seedGreeting();
@@ -938,9 +942,34 @@ HZ.initReveal = function(){
   }catch(e){ document.querySelectorAll('.reveal').forEach(e=>e.classList.add('in')); }
 };
 
+/* ---------- Launch splash ----------
+   A short, branded splash shown once per app-open (session-gated so internal
+   navigations don't replay it). Auto-dismisses; tap to skip. */
+function buildSplash(){
+  try{ if(sessionStorage.getItem('hz_splash')==='1') return; sessionStorage.setItem('hz_splash','1'); }catch(e){}
+  if(document.getElementById('hzSplash')||!document.body) return;
+  const ar = HZ.lang!=='en';
+  const el=document.createElement('div');
+  el.className='hz-splash'; el.id='hzSplash'; el.setAttribute('role','status'); el.setAttribute('aria-label','Homzy');
+  el.innerHTML=`<div class="hz-s-in">
+    <div class="hz-s-logo"><svg viewBox="0 0 64 64" fill="none"><path d="M14 30 32 14 50 30 M18 27V50h28V27" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><rect x="27" y="34" width="10" height="10" rx="2" fill="#0B5563"/></svg></div>
+    <div class="hz-s-name">Homzy</div>
+    <div class="hz-s-slogan">${ar?'ذكاء عقاري في جيبك — عقارك الصح، أسرع':'Real-estate intelligence in your pocket'}</div>
+    <div class="hz-s-bar"><i></i></div>
+  </div>`;
+  document.body.appendChild(el);
+  // Guaranteed floor: strip the entrance animations after a short grace so the
+  // logo/name/slogan are always visible, even if the webview froze the anims.
+  const settle=setTimeout(()=>el.classList.add('settled'), 1100);
+  const kill=()=>{ clearTimeout(settle); el.classList.add('out'); setTimeout(()=>{ el.remove(); }, 560); };
+  const t=setTimeout(kill, 2100);
+  el.addEventListener('click', ()=>{ clearTimeout(t); kill(); });
+}
+
 /* ---------- boot ---------- */
 function boot(){
   if(!chat) chat=newChatState();
+  buildSplash();
   document.body.setAttribute('data-mode', HZ.mode);
   buildHeader(); buildFooter(); buildChat();
   HZ.applyLang();
