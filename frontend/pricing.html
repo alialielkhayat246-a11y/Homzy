@@ -58,19 +58,19 @@
 <section class="section" style="padding-top:20px">
   <div class="wrap">
     <div class="price-hero">
-      <span class="eyebrow">Homzy للمحترفين</span>
-      <h1>اختر باقتك</h1>
-      <p>أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور.</p>
-      <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')">شهري</button><button id="cY" onclick="setCyc('yearly')">سنوي · وفّر شهرين</button></div>
+      <span class="eyebrow" data-ar="Homzy للمحترفين" data-en="Homzy for pros">Homzy للمحترفين</span>
+      <h1 data-ar="اختر باقتك" data-en="Choose your plan">اختر باقتك</h1>
+      <p data-ar="أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور." data-en="Professional tools for brokers and agencies — pay monthly, start with a free 3-month trial.">أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور.</p>
+      <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')" data-ar="شهري" data-en="Monthly">شهري</button><button id="cY" onclick="setCyc('yearly')" data-ar="سنوي · وفّر شهرين" data-en="Yearly · save 2 months">سنوي · وفّر شهرين</button></div>
     </div>
     <div class="curplan" id="curplan" hidden>
-      <div><span class="cp-badge">باقتك الحالية</span><b id="cpName">—</b><span class="cp-status" id="cpStatus"></span></div>
+      <div><span class="cp-badge" data-ar="باقتك الحالية" data-en="Your current plan">باقتك الحالية</span><b id="cpName">—</b><span class="cp-status" id="cpStatus"></span></div>
       <div class="cp-r" id="cpMeta"></div>
     </div>
     <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
     <div class="note">
-      💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>.<br>
-      الأسعار بالجنيه المصري شاملة، وممكن تتغير.
+      <span data-ar="💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>." data-en="💳 Monthly payment via the payment gateway — coming soon. For now you can start a <b>free 3-month trial</b>.">💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>.</span><br>
+      <span data-ar="الأسعار بالجنيه المصري شاملة، وممكن تتغير." data-en="Prices are in EGP, inclusive, and may change.">الأسعار بالجنيه المصري شاملة، وممكن تتغير.</span>
     </div>
   </div>
 </section>
@@ -78,37 +78,40 @@
 <script src="/assets/homzy.js?v=2"></script>
 <script>
 let PLANS=[], CYC='monthly', CURRENT='free', PAY_ON=false;
-const money=n=>Number(n).toLocaleString('ar-EG');
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const money=n=>Number(n).toLocaleString(ar()?'ar-EG':'en-US');
+const cur=()=>L('ج.م','EGP');
 function featRow(on,txt){ return `<li class="${on?'':'off'}"><span class="ic">${on?'✓':'—'}</span><span>${txt}</span></li>`; }
 function planCard(p){
   const f=p.features||{};
   const price = CYC==='yearly' ? p.price_yearly : p.price_monthly;
-  const per = CYC==='yearly' ? 'سنويًا' : 'شهريًا';
-  const yr = (CYC==='monthly' && p.price_yearly>0) ? ('أو '+money(p.price_yearly)+' ج.م سنويًا (وفّر شهرين)') : '';
+  const per = CYC==='yearly' ? L('سنويًا','yr') : L('شهريًا','mo');
+  const yr = (CYC==='monthly' && p.price_yearly>0) ? L('أو '+money(p.price_yearly)+' ج.م سنويًا (وفّر شهرين)','or '+money(p.price_yearly)+' EGP/yr (save 2 months)') : '';
   const isCur = p.plan===CURRENT;
   const feats = [
-    featRow(true, p.max_listings==null?'وحدات غير محدودة':('حتى '+p.max_listings+' وحدات')),
-    featRow(true, p.max_clients==null?'عملاء بلا حدود (CRM)':('CRM حتى '+p.max_clients+' عميل')),
-    featRow(f.ai_sales, 'مساعد المبيعات الذكي'),
-    featRow(f.branded_pdf, 'عروض PDF باسمك ولوجوك'),
-    featRow(f.logo_watermark, 'لوجوك تلقائيًا على صور الوحدات'),
-    featRow(f.voice, 'إدخال صوتي في الـCRM'),
-    featRow(p.leads_included>0, p.leads_included>0?(p.leads_included+' ليد مضمّنة/شهر'):'ليدز مضمّنة'),
-    featRow(true, 'استضافة Homzy Stays'),
-    featRow(p.team_seats>1, p.team_seats>1?(p.team_seats+' حسابات فريق'):'حساب واحد'),
-    featRow(f.featured, 'وحدات مميّزة في البحث'),
-    featRow(f.analytics, 'تحليلات + دعم أولوية'),
+    featRow(true, p.max_listings==null?L('وحدات غير محدودة','Unlimited listings'):L('حتى '+p.max_listings+' وحدات','Up to '+p.max_listings+' listings')),
+    featRow(true, p.max_clients==null?L('عملاء بلا حدود (CRM)','Unlimited CRM clients'):L('CRM حتى '+p.max_clients+' عميل','CRM up to '+p.max_clients+' clients')),
+    featRow(f.ai_sales, L('مساعد المبيعات الذكي','AI sales assistant')),
+    featRow(f.branded_pdf, L('عروض PDF باسمك ولوجوك','Branded PDF offers')),
+    featRow(f.logo_watermark, L('لوجوك تلقائيًا على صور الوحدات','Auto logo watermark on photos')),
+    featRow(f.voice, L('إدخال صوتي في الـCRM','Voice input in the CRM')),
+    featRow(p.leads_included>0, p.leads_included>0?L(p.leads_included+' ليد مضمّنة/شهر',p.leads_included+' leads included/mo'):L('ليدز مضمّنة','Included leads')),
+    featRow(true, L('استضافة Homzy Stays','Homzy Stays hosting')),
+    featRow(p.team_seats>1, p.team_seats>1?L(p.team_seats+' حسابات فريق',p.team_seats+' team seats'):L('حساب واحد','Single seat')),
+    featRow(f.featured, L('وحدات مميّزة في البحث','Featured units in search')),
+    featRow(f.analytics, L('تحليلات + دعم أولوية','Analytics + priority support')),
   ].join('');
   let cta;
-  if(p.plan==='free') cta = isCur?`<div class="cur">باقتك الحالية</div>`:`<a class="btn btn-ghost cta" href="/my-listings">ابدأ مجانًا</a>`;
-  else if(isCur) cta = `<div class="cur">باقتك الحالية ✓</div>`;
+  if(p.plan==='free') cta = isCur?`<div class="cur">${L('باقتك الحالية','Your current plan')}</div>`:`<a class="btn btn-ghost cta" href="/my-listings">${L('ابدأ مجانًا','Start free')}</a>`;
+  else if(isCur) cta = `<div class="cur">${L('باقتك الحالية ✓','Your current plan ✓')}</div>`;
   else {
-    const payBtn = PAY_ON ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">اشترك الآن · ${money(price)} ج.م</button>` : '';
-    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">ابدأ تجربة 3 شهور مجانًا</button>`;
+    const payBtn = PAY_ON ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">${L('اشترك الآن','Subscribe now')} · ${money(price)} ${cur()}</button>` : '';
+    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('ابدأ تجربة 3 شهور مجانًا','Start 3-month free trial')}</button>`;
   }
-  return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?'<span class="tag">الأكثر رواجًا</span>':''}
-    <h3>${HZ.esc(p.name_ar)}</h3>
-    <div class="price">${price>0?`<b>${money(price)}</b> <span>ج.م/${per}</span>`:`<b>مجاني</b>`}</div>
+  return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?`<span class="tag">${L('الأكثر رواجًا','Most popular')}</span>`:''}
+    <h3>${HZ.esc(ar()?p.name_ar:(p.name_en||p.name_ar))}</h3>
+    <div class="price">${price>0?`<b>${money(price)}</b> <span>${cur()} / ${per}</span>`:`<b>${L('مجاني','Free')}</b>`}</div>
     <div class="yr">${yr}</div>
     <ul>${feats}</ul>
     ${cta}</div>`;
@@ -118,33 +121,34 @@ window.setCyc=(c)=>{ CYC=c; document.getElementById('cM').classList.toggle('on',
 window.subscribe=async(plan)=>{
   const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
   let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan}); }catch(e){ r={ok:false}; }
-  if(r&&r.ok){ alert('تم تفعيل تجربتك المجانية 3 شهور لباقة '+plan.toUpperCase()+' 🎉'); location.href='/my-listings'; }
+  if(r&&r.ok){ alert(L('تم تفعيل تجربتك المجانية 3 شهور لباقة '+plan.toUpperCase()+' 🎉','Your 3-month free trial of '+plan.toUpperCase()+' is active 🎉')); location.href='/my-listings'; }
   else{
-    const m={already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — الدفع هيتفعّل قريبًا عبر Paymob.',not_authenticated:'سجّل دخولك الأول.'};
-    alert(m[r&&r.error]||'تعذّر التفعيل — حاول تاني.');
+    const m=ar()?{already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — الدفع هيتفعّل قريبًا.',not_authenticated:'سجّل دخولك الأول.'}
+                :{already_subscribed:'You already have an active subscription.',trial_used:'You already used the free trial — paid activation is coming soon.',not_authenticated:'Please sign in first.'};
+    alert(m[r&&r.error]||L('تعذّر التفعيل — حاول تاني.','Could not activate — try again.'));
   }
 };
-window.payPlan=async(plan)=>{ const r=await HZ.pay('subscription',{plan,cycle:CYC}); if(!(r&&r.ok)) alert('تعذّر فتح صفحة الدفع: '+((r&&r.error)||'')); };
+window.payPlan=async(plan)=>{ const r=await HZ.pay('subscription',{plan,cycle:CYC}); if(!(r&&r.ok)) alert(L('تعذّر فتح صفحة الدفع: ','Could not open checkout: ')+((r&&r.error)||'')); };
 let SUB=null;
-const fmtDate=d=>{ try{ return new Date(d).toLocaleDateString('ar-EG',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } };
+const fmtDate=d=>{ try{ return new Date(d).toLocaleDateString(ar()?'ar-EG':'en-US',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } };
 const daysLeft=d=>{ const n=Math.ceil((new Date(d)-Date.now())/864e5); return n>0?n:0; };
 function renderCurrentBanner(){
   const s=HZ.session(); const box=document.getElementById('curplan');
   if(!s){ box.hidden=true; return; }
   const plan=PLANS.find(p=>p.plan===CURRENT);
-  const name = plan ? plan.name_ar : (CURRENT==='free'?'المجانية':CURRENT.toUpperCase());
+  const name = plan ? (ar()?plan.name_ar:(plan.name_en||plan.name_ar)) : (CURRENT==='free'?L('المجانية','Free'):CURRENT.toUpperCase());
   document.getElementById('cpName').textContent = name;
   let status='', meta='';
   const st = SUB && SUB.plan===CURRENT ? SUB.status : (CURRENT==='free'?'free':null);
   if(st==='trialing'){
-    status='🎁 تجربة مجانية';
-    if(SUB&&SUB.trial_end) meta = 'تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end).toLocaleString('ar-EG')+'</b> يوم';
+    status=L('🎁 تجربة مجانية','🎁 Free trial');
+    if(SUB&&SUB.trial_end) meta = L('تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end).toLocaleString('ar-EG')+'</b> يوم','Trial ends '+fmtDate(SUB.trial_end)+' · <b>'+daysLeft(SUB.trial_end)+'</b> days left');
   } else if(st==='active'){
-    status='✅ مفعّلة'+(SUB&&SUB.billing_cycle?(' · '+(SUB.billing_cycle==='yearly'?'سنوي':'شهري')):'');
-    if(SUB&&SUB.current_period_end) meta = 'تتجدد في '+fmtDate(SUB.current_period_end);
+    status=L('✅ مفعّلة','✅ Active')+(SUB&&SUB.billing_cycle?(' · '+(SUB.billing_cycle==='yearly'?L('سنوي','yearly'):L('شهري','monthly'))):'');
+    if(SUB&&SUB.current_period_end) meta = L('تتجدد في ','Renews ')+fmtDate(SUB.current_period_end);
   } else if(CURRENT==='free'){
-    status='باقة مجانية';
-    meta = 'طوّر باقتك عشان تفتح كل الأدوات 👇';
+    status=L('باقة مجانية','Free plan');
+    meta = L('طوّر باقتك عشان تفتح كل الأدوات 👇','Upgrade to unlock every tool 👇');
   } else {
     status = st ? st : '';
   }
@@ -152,8 +156,8 @@ function renderCurrentBanner(){
   // paid (trial/active) subscribers get change-plan + cancel actions
   const paid = (st==='trialing' || st==='active');
   const actions = paid
-    ? `<div class="cp-btns"><button class="cp-change" onclick="scrollToPlans()">تغيير الباقة</button>`
-      + `<button class="cp-cancel" id="cancelBtn" onclick="cancelSub()">إلغاء الاشتراك</button></div>`
+    ? `<div class="cp-btns"><button class="cp-change" onclick="scrollToPlans()">${L('تغيير الباقة','Change plan')}</button>`
+      + `<button class="cp-cancel" id="cancelBtn" onclick="cancelSub()">${L('إلغاء الاشتراك','Cancel subscription')}</button></div>`
     : '';
   document.getElementById('cpMeta').innerHTML = (meta||'') + actions;
   box.hidden=false;
@@ -161,14 +165,15 @@ function renderCurrentBanner(){
 window.scrollToPlans=()=>{ document.getElementById('plans').scrollIntoView({behavior:'smooth',block:'start'}); };
 window.cancelSub=async()=>{
   const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
-  if(!confirm('متأكد إنك عايز تلغي اشتراكك؟ هترجع للباقة المجانية.')) return;
-  const btn=document.getElementById('cancelBtn'); if(btn){ btn.disabled=true; btn.textContent='...جاري الإلغاء'; }
+  if(!confirm(L('متأكد إنك عايز تلغي اشتراكك؟ هترجع للباقة المجانية.','Cancel your subscription? You will return to the free plan.'))) return;
+  const btn=document.getElementById('cancelBtn'); if(btn){ btn.disabled=true; btn.textContent=L('...جاري الإلغاء','Cancelling…'); }
   let r; try{ r=await HZ.sbAuth('/rpc/cancel_subscription', s.token,'POST',{}); }catch(e){ r={ok:false}; }
-  if(r&&r.ok){ alert('تم إلغاء اشتراكك ورجعت للباقة المجانية.'); location.reload(); }
+  if(r&&r.ok){ alert(L('تم إلغاء اشتراكك ورجعت للباقة المجانية.','Your subscription was cancelled — you are back on the free plan.')); location.reload(); }
   else{
-    const m={no_active_subscription:'مفيش اشتراك فعّال حاليًا.',not_authenticated:'سجّل دخولك الأول.'};
-    alert(m[r&&r.error]||'تعذّر الإلغاء — حاول تاني.');
-    if(btn){ btn.disabled=false; btn.textContent='إلغاء الاشتراك'; }
+    const m=ar()?{no_active_subscription:'مفيش اشتراك فعّال حاليًا.',not_authenticated:'سجّل دخولك الأول.'}
+               :{no_active_subscription:'No active subscription right now.',not_authenticated:'Please sign in first.'};
+    alert(m[r&&r.error]||L('تعذّر الإلغاء — حاول تاني.','Could not cancel — try again.'));
+    if(btn){ btn.disabled=false; btn.textContent=L('إلغاء الاشتراك','Cancel subscription'); }
   }
 };
 async function boot(){

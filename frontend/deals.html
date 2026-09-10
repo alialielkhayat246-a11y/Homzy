@@ -55,29 +55,29 @@
 <body class="broker-workspace" data-mode="broker">
 <div id="hz-header"></div>
 <div class="wrap2">
-  <div class="toolbar"><h1>الصفقات والعمولات</h1><button class="btn btn-teal" onclick="openDeal()">＋ صفقة جديدة</button></div>
+  <div class="toolbar"><h1 data-ar="الصفقات والعمولات" data-en="Deals & commissions">الصفقات والعمولات</h1><button class="btn btn-teal" onclick="openDeal()">＋ صفقة جديدة</button></div>
   <div class="kpis" id="kpis"></div>
   <div class="workspace-toolbar"><label for="dealPeriod">الفترة</label><select id="dealPeriod" onchange="renderKpis();renderBoard();renderLedger()"><option value="0">كل الوقت</option><option value="30">آخر ٣٠ يوم</option><option value="90">آخر ٩٠ يوم</option><option value="365">آخر سنة</option></select></div><p class="budget-hint">الصفقات حسب تاريخ إضافتها، والعمولات حسب تاريخ تسجيلها.</p><div class="board" id="board"><div style="padding:30px;color:var(--muted)">…</div></div>
   <div class="ledger"><h2>سجل العمولات</h2><div class="imm">أي تعديل بيُسجَّل مع الاحتفاظ بالسجل السابق.</div><div id="ledger"></div></div>
 </div>
 
 <div class="ov" id="dealOv"><div class="modal">
-  <div class="mh"><h3 id="dTitle">صفقة جديدة</h3><button class="mx" onclick="closeDeal()">×</button></div>
+  <div class="mh"><h3 id="dTitle" data-ar="صفقة جديدة" data-en="New deal">صفقة جديدة</h3><button class="mx" onclick="closeDeal()">×</button></div>
   <div class="mb">
-    <div><label>العميل</label><select id="dLead"></select></div>
-    <div><label>الوحدة / العقار</label><input id="dProp" placeholder="مثال: شقة 180م — الشيخ زايد" /></div>
-    <div><label>ربط بوحدة في المخزون / Link inventory property</label><select id="dListing"><option value="">—</option></select></div>
+    <div><label data-ar="العميل" data-en="Client">العميل</label><select id="dLead"></select></div>
+    <div><label data-ar="الوحدة / العقار" data-en="Unit / property">الوحدة / العقار</label><input id="dProp" placeholder="مثال: شقة 180م — الشيخ زايد" /></div>
+    <div><label data-ar="ربط بوحدة في المخزون" data-en="Link inventory property">ربط بوحدة في المخزون</label><select id="dListing"><option value="">—</option></select></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <div style="flex:1"><label>النوع</label><select id="dType"><option value="sale">بيع</option><option value="rent">إيجار</option><option value="short_stay">إقامة قصيرة</option></select></div>
-      <div style="flex:1"><label>القيمة (ج.م)</label><input id="dValue" type="number" inputmode="numeric" placeholder="1000000" /></div>
+      <div style="flex:1"><label data-ar="النوع" data-en="Type">النوع</label><select id="dType"><option value="sale" data-ar="بيع" data-en="Sale">بيع</option><option value="rent" data-ar="إيجار" data-en="Rent">إيجار</option><option value="short_stay" data-ar="إقامة قصيرة" data-en="Short stay">إقامة قصيرة</option></select></div>
+      <div style="flex:1"><label data-ar="القيمة (ج.م)" data-en="Value (EGP)">القيمة (ج.م)</label><input id="dValue" type="number" inputmode="numeric" placeholder="1000000" /></div>
     </div>
     <div class="deal-finance">
-      <div style="flex:1"><label>نسبة العمولة % (اختياري)</label><input id="dRate" type="number" step="0.01" placeholder="افتراضي 7%" /></div>
-      <div style="flex:1"><label>احتمال الإتمام % / Probability</label><input id="dProbability" type="number" min="0" max="100" value="0" /></div>
-      <div style="flex:1"><label>الإغلاق المتوقع</label><input id="dClose" type="date" /></div>
+      <div style="flex:1"><label data-ar="نسبة العمولة % (اختياري)" data-en="Commission % (optional)">نسبة العمولة % (اختياري)</label><input id="dRate" type="number" step="0.01" placeholder="افتراضي 7%" /></div>
+      <div style="flex:1"><label data-ar="احتمال الإتمام %" data-en="Probability %">احتمال الإتمام %</label><input id="dProbability" type="number" min="0" max="100" value="0" /></div>
+      <div style="flex:1"><label data-ar="الإغلاق المتوقع" data-en="Expected close">الإغلاق المتوقع</label><input id="dClose" type="date" /></div>
     </div>
-    <div><label>ملاحظات / Notes</label><textarea id="dNotes" maxlength="2000"></textarea></div>
-    <button class="btn btn-teal" id="dSave" onclick="saveDeal()">حفظ الصفقة</button>
+    <div><label data-ar="ملاحظات" data-en="Notes">ملاحظات</label><textarea id="dNotes" maxlength="2000"></textarea></div>
+    <button class="btn btn-teal" id="dSave" onclick="saveDeal()" data-ar="حفظ الصفقة" data-en="Save deal">حفظ الصفقة</button>
   </div>
 </div></div>
 
@@ -86,14 +86,16 @@
 <script src="/assets/broker-session.js?v=1"></script>
 <script>
 const $=id=>document.getElementById(id);
-const money=n=>n==null?'—':Number(n).toLocaleString('ar-EG')+' ج.م';
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const money=n=>n==null?'—':Number(n).toLocaleString(ar()?'ar-EG':'en-US')+' '+L('ج.م','EGP');
 const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S=null, DEALS=[], LEADS=[], LEDGER=[];
-const STAGES=[['open','مفتوحة'],['negotiation','تفاوض'],['reservation','حجز'],['won','مكسوبة'],['lost','خاسرة']];
+const STAGES=[['open',['مفتوحة','Open']],['negotiation',['تفاوض','Negotiation']],['reservation',['حجز','Reservation']],['won',['مكسوبة','Won']],['lost',['خاسرة','Lost']]];
 
 async function boot(){
   S=await HZ.requireSession(); if(!S)return;
-  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ document.querySelector('.wrap2').innerHTML='<div style="padding:60px;text-align:center"><h2>الصفقات</h2><p style="color:var(--muted);margin:12px 0 18px">مساحة عمل البروكر.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>'; return; } }catch(e){}
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; if(!p||p.role!=='broker'){ document.querySelector('.wrap2').innerHTML=`<div style="padding:60px;text-align:center"><h2>${L('الصفقات','Deals')}</h2><p style="color:var(--muted);margin:12px 0 18px">${L('مساحة عمل البروكر.','Broker workspace.')}</p><a class="btn btn-navy" href="/account">${L('ابقى بروكر','Become a broker')}</a></div>`; return; } }catch(e){}
   await load();
 }
 async function load(){
@@ -102,7 +104,7 @@ async function load(){
     HZ.sbAuth('/crm_deals?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token),
     HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name&order=name.asc',S.token),
     HZ.sbAuth('/crm_commission_ledger?owner_id=eq.'+uid+'&select=*&order=created_at.desc',S.token)
-  ]);}catch(e){$('board').innerHTML='<div class="workspace-empty" role="alert"><h2>تعذّر تحميل الصفقات</h2><button class="btn btn-teal" onclick="load()">إعادة المحاولة</button></div>';return;}
+  ]);}catch(e){$('board').innerHTML=`<div class="workspace-empty" role="alert"><h2>${L('تعذّر تحميل الصفقات','Could not load deals')}</h2><button class="btn btn-teal" onclick="load()">${L('إعادة المحاولة','Retry')}</button></div>`;return;}
   DEALS=DEALS||[]; LEADS=LEADS||[]; LEDGER=LEDGER||[];
   renderKpis(); renderBoard(); renderLedger();
 }
@@ -117,89 +119,90 @@ function renderKpis(){
   const paid=periodLedger.filter(l=>l.status==='paid').reduce((sum,l)=>sum+Number(l.commission_amount||0),0);
   const adjustments=periodLedger.filter(l=>l.status==='adjustment').reduce((sum,l)=>sum+Number(l.commission_amount||0),0); // append-only incl. adjustments
   $('kpis').innerHTML=`
-    <div class="kpi"><div class="n">${open.length}</div><div class="l">صفقات مفتوحة</div></div>
-    <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">قيمة الصفقات الجارية</div></div>
-    <div class="kpi"><div class="n">${money(open.reduce((sum,d)=>sum+Number(d.value||0)*Number(d.probability||0)/100,0))}</div><div class="l">القيمة المرجحة / Weighted pipeline</div></div>
-    <div class="kpi win"><div class="n">${won.length}</div><div class="l">صفقات مكسوبة</div></div>
-    <div class="kpi comm"><div class="n">${money(expected)}</div><div class="l">عمولات متوقعة للصفقات المفتوحة</div></div><div class="kpi"><div class="n">${money(accrued)}</div><div class="l">قيود استحقاق مسجّلة</div></div><div class="kpi win"><div class="n">${money(paid)}</div><div class="l">قيود تحصيل مسجّلة</div></div><div class="kpi"><div class="n">${money(adjustments)}</div><div class="l">تسويات مسجّلة</div></div>`;
+    <div class="kpi"><div class="n">${open.length}</div><div class="l">${L('صفقات مفتوحة','Open deals')}</div></div>
+    <div class="kpi"><div class="n">${money(pipeline)}</div><div class="l">${L('قيمة الصفقات الجارية','Active pipeline value')}</div></div>
+    <div class="kpi"><div class="n">${money(open.reduce((sum,d)=>sum+Number(d.value||0)*Number(d.probability||0)/100,0))}</div><div class="l">${L('القيمة المرجحة','Weighted pipeline')}</div></div>
+    <div class="kpi win"><div class="n">${won.length}</div><div class="l">${L('صفقات مكسوبة','Won deals')}</div></div>
+    <div class="kpi comm"><div class="n">${money(expected)}</div><div class="l">${L('عمولات متوقعة للصفقات المفتوحة','Expected commission (open)')}</div></div><div class="kpi"><div class="n">${money(accrued)}</div><div class="l">${L('قيود استحقاق مسجّلة','Accrued entries')}</div></div><div class="kpi win"><div class="n">${money(paid)}</div><div class="l">${L('قيود تحصيل مسجّلة','Paid entries')}</div></div><div class="kpi"><div class="n">${money(adjustments)}</div><div class="l">${L('تسويات مسجّلة','Adjustments')}</div></div>`;
 }
 function dcard(d){
   const won=d.status==='won';
   const acts = won
-    ? `<button onclick="location.href='/clients'">العميل</button>`
+    ? `<button onclick="location.href='/clients'">${L('العميل','Client')}</button>`
     : (d.status==='lost'
-        ? `<button onclick="setStatus(${d.id},'open')">إعادة فتح</button>`
-        : `${d.status==='open'?`<button onclick="setStatus(${d.id},'negotiation')">تفاوض</button>`:''}
-           ${d.status!=='reservation'?`<button onclick="setStatus(${d.id},'reservation')">حجز</button>`:''}
-           <button class="win" onclick="winDeal(${d.id})">✔ اكسب</button>
-           <button class="lose" onclick="loseDeal(${d.id})">خسارة</button>`);
+        ? `<button onclick="setStatus(${d.id},'open')">${L('إعادة فتح','Reopen')}</button>`
+        : `${d.status==='open'?`<button onclick="setStatus(${d.id},'negotiation')">${L('تفاوض','Negotiate')}</button>`:''}
+           ${d.status!=='reservation'?`<button onclick="setStatus(${d.id},'reservation')">${L('حجز','Reserve')}</button>`:''}
+           <button class="win" onclick="winDeal(${d.id})">✔ ${L('اكسب','Win')}</button>
+           <button class="lose" onclick="loseDeal(${d.id})">${L('خسارة','Lost')}</button>`);
   return `<div class="dcard"><div class="cn">${esc(d.customer_name||'—')}</div>
     ${d.property_title?`<div class="ti">${esc(d.property_title)}</div>`:''}
     <div class="vl">${money(d.value)}</div>
-    ${won&&d.commission_amount!=null?`<div class="cm">عمولة: ${money(d.commission_amount)} (${Math.round((d.commission_rate||0)*100)}%)</div>`:''}
-    ${d.lost_reason?`<div class="ti" style="color:#B42318">سبب: ${esc(d.lost_reason)}</div>`:''}
+    ${won&&d.commission_amount!=null?`<div class="cm">${L('عمولة','Commission')}: ${money(d.commission_amount)} (${Math.round((d.commission_rate||0)*100)}%)</div>`:''}
+    ${d.lost_reason?`<div class="ti" style="color:#B42318">${L('سبب','Reason')}: ${esc(d.lost_reason)}</div>`:''}
     ${d.notes?`<div class="ti">${esc(d.notes)}</div>`:''}
-    ${!won&&d.status!=='lost'?`<label>احتمال الإتمام % / Probability<input type="number" min="0" max="100" value="${Number(d.probability)||0}" onchange="updateProbability(${d.id},this.value)"></label>`:''}
+    ${!won&&d.status!=='lost'?`<label>${L('احتمال الإتمام %','Probability %')}<input type="number" min="0" max="100" value="${Number(d.probability)||0}" onchange="updateProbability(${d.id},this.value)"></label>`:''}
     <div class="acts">${acts}</div></div>`;
 }
 function renderBoard(){
-  if(!DEALS.filter(inPeriod).length){$('board').innerHTML='<div class="workspace-empty"><h2>مفيش صفقات في الفترة دي</h2><p>اربط عميلًا بوحدة وسجّل قيمة الصفقة والعمولة المتوقعة.</p><button class="btn btn-teal" onclick="openDeal()">أضف صفقة</button></div>';return;}
+  if(!DEALS.filter(inPeriod).length){$('board').innerHTML=`<div class="workspace-empty"><h2>${L('مفيش صفقات في الفترة دي','No deals in this period')}</h2><p>${L('اربط عميلًا بوحدة وسجّل قيمة الصفقة والعمولة المتوقعة.','Link a client to a unit and log the deal value and expected commission.')}</p><button class="btn btn-teal" onclick="openDeal()">${L('أضف صفقة','Add deal')}</button></div>`;return;}
   $('board').innerHTML=STAGES.map(([k,lab])=>{
     const list=DEALS.filter(inPeriod).filter(d=>(d.status||'open')===k);
     const cards=list.map(dcard).join('')||'<div class="col-empty">—</div>';
-    return `<div class="col"><div class="col-h"><span>${lab}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
+    return `<div class="col"><div class="col-h"><span>${L(lab[0],lab[1])}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
   }).join('');
 }
 function renderLedger(){
-  if(!LEDGER.filter(inPeriod).length){ $('ledger').innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px">لسه مفيش عمولات مسجّلة.</div>'; return; }
+  if(!LEDGER.filter(inPeriod).length){ $('ledger').innerHTML=`<div style="color:var(--muted);font-size:13px;padding:6px">${L('لسه مفيش عمولات مسجّلة.','No commissions recorded yet.')}</div>`; return; }
   const rows=LEDGER.filter(inPeriod).map(l=>`<tr>
     <td>${esc(l.reference||('#'+l.deal_id))}</td>
     <td>${money(l.gross_value)}</td>
     <td>${Math.round((l.commission_rate||0)*100)}%</td>
     <td style="font-weight:800">${money(l.commission_amount)}</td>
-    <td><span class="badge ${l.status}">${({accrued:'مستحقة',paid:'مدفوعة',adjustment:'تسوية'}[l.status]||l.status)}</span></td>
-    <td style="color:var(--muted)">${new Date(l.created_at).toLocaleDateString('ar-EG')}</td></tr>`).join('');
-  $('ledger').innerHTML=`<table><thead><tr><th>المرجع</th><th>قيمة الصفقة</th><th>النسبة</th><th>العمولة</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody>${rows}</tbody></table>`;
+    <td><span class="badge ${l.status}">${(ar()?{accrued:'مستحقة',paid:'مدفوعة',adjustment:'تسوية'}:{accrued:'Accrued',paid:'Paid',adjustment:'Adjustment'})[l.status]||l.status}</span></td>
+    <td style="color:var(--muted)">${new Date(l.created_at).toLocaleDateString(ar()?'ar-EG':'en-US')}</td></tr>`).join('');
+  $('ledger').innerHTML=`<table><thead><tr><th>${L('المرجع','Ref')}</th><th>${L('قيمة الصفقة','Deal value')}</th><th>${L('النسبة','Rate')}</th><th>${L('العمولة','Commission')}</th><th>${L('الحالة','Status')}</th><th>${L('التاريخ','Date')}</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 window.openDeal=async()=>{
   $('dProbability').value='0';
   $('dNotes').value='';$('dListing').innerHTML='<option value="">—</option>';
-  $('dLead').innerHTML='<option value="">— اختر عميل —</option>'+LEADS.map(l=>`<option value="${l.id}">${esc(l.name||'—')}</option>`).join('');
+  $('dLead').innerHTML=`<option value="">${L('— اختر عميل —','— Select a client —')}</option>`+LEADS.map(l=>`<option value="${l.id}">${esc(l.name||'—')}</option>`).join('');
   $('dProp').value=''; $('dValue').value=''; $('dRate').value=''; $('dClose').value=''; $('dType').value='sale';
   $('dealOv').classList.add('open');
-  try{const listings=await HZ.sbAuth('/listings?status=eq.active&select=id,title,price&order=title&limit=100',S.token);$('dListing').innerHTML='<option value="">اختياري / Optional</option>'+listings.map(l=>`<option value="${esc(l.id)}">${esc(l.title)}</option>`).join('');$('dListing').onchange=()=>{const l=listings.find(row=>row.id===$('dListing').value);if(l){$('dProp').value=l.title;if(l.price!=null)$('dValue').value=l.price;}};}catch{$('dListing').innerHTML='<option value="">تعذّر تحميل المخزون / Inventory unavailable</option>';}
+  try{const listings=await HZ.sbAuth('/listings?status=eq.active&select=id,title,price&order=title&limit=100',S.token);$('dListing').innerHTML=`<option value="">${L('اختياري','Optional')}</option>`+listings.map(l=>`<option value="${esc(l.id)}">${esc(l.title)}</option>`).join('');$('dListing').onchange=()=>{const l=listings.find(row=>row.id===$('dListing').value);if(l){$('dProp').value=l.title;if(l.price!=null)$('dValue').value=l.price;}};}catch{$('dListing').innerHTML=`<option value="">${L('تعذّر تحميل المخزون','Inventory unavailable')}</option>`;}
 };
 window.closeDeal=()=>$('dealOv').classList.remove('open');
 window.saveDeal=async()=>{
   const lead=$('dLead').value||null;
   const name=lead?(LEADS.find(l=>l.id===lead)||{}).name:null;
   const value=Number($('dValue').value||0);
-  if(!Number.isFinite(value)||value<=0){ alert('ادخل قيمة صحيحة للصفقة'); return; }
+  if(!Number.isFinite(value)||value<=0){ alert(L('ادخل قيمة صحيحة للصفقة','Enter a valid deal value')); return; }
   const rate=$('dRate').value?Number($('dRate').value)/100:null;
   const probability=Number($('dProbability').value);
-  if(!Number.isFinite(probability)||probability<0||probability>100){alert('Probability must be 0–100');return;}
+  if(!Number.isFinite(probability)||probability<0||probability>100){alert(L('الاحتمال لازم بين 0 و100','Probability must be 0–100'));return;}
   const body={ owner_id:S.uid, lead_id:lead, customer_name:name, property_title:$('dProp').value||null,
     deal_type:$('dType').value, value, probability, listing_id:$('dListing').value||null, notes:$('dNotes').value.trim()||null, commission_rate:rate, expected_close:$('dClose').value||null, status:'open' };
   $('dSave').disabled=true;
   try{ await HZ.sbAuth('/crm_deals',S.token,'POST',body,{Prefer:'return=minimal'}); closeDeal(); await load(); }
-  catch(e){ alert('حصل خطأ في الحفظ'); }
+  catch(e){ alert(L('حصل خطأ في الحفظ','Could not save')); }
   $('dSave').disabled=false;
 };
 window.setStatus=async(id,st)=>{ try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:st},{Prefer:'return=minimal'}); const d=DEALS.find(x=>x.id===id); if(d)d.status=st; renderBoard(); renderKpis(); }catch(e){} };
-window.updateProbability=async(id,value)=>{const probability=Number(value);if(!Number.isFinite(probability)||probability<0||probability>100){alert('Probability must be 0–100');renderBoard();return;}try{await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{probability},{Prefer:'return=minimal'});const deal=DEALS.find(d=>d.id===id);if(deal)deal.probability=probability;renderKpis();}catch{alert('تعذّر الحفظ / Could not save');renderBoard();}};
+window.updateProbability=async(id,value)=>{const probability=Number(value);if(!Number.isFinite(probability)||probability<0||probability>100){alert(L('الاحتمال لازم بين 0 و100','Probability must be 0–100'));renderBoard();return;}try{await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{probability},{Prefer:'return=minimal'});const deal=DEALS.find(d=>d.id===id);if(deal)deal.probability=probability;renderKpis();}catch{alert(L('تعذّر الحفظ','Could not save'));renderBoard();}};
 window.winDeal=async(id)=>{
-  if(!confirm('تأكيد كسب الصفقة؟ هيتسجّل العمولة في السجل.')) return;
+  if(!confirm(L('تأكيد كسب الصفقة؟ هيتسجّل العمولة في السجل.','Confirm winning this deal? The commission will be recorded.'))) return;
   try{ const r=await HZ.sbAuth('/rpc/crm_win_deal',S.token,'POST',{p_deal:id}); await load();
-    if(r&&r.commission_amount!=null&&!r.already) alert('تم ✔ العمولة: '+money(r.commission_amount)); }
-  catch(e){ alert('حصل خطأ'); }
+    if(r&&r.commission_amount!=null&&!r.already) alert(L('تم ✔ العمولة: ','Done ✔ Commission: ')+money(r.commission_amount)); }
+  catch(e){ alert(L('حصل خطأ','Something went wrong')); }
 };
 window.loseDeal=async(id)=>{
-  const reason=prompt('سبب خسارة الصفقة؟'); if(reason===null) return;
-  if(!reason.trim()){alert('سبب الخسارة مطلوب / Lost reason is required');return;}
+  const reason=prompt(L('سبب خسارة الصفقة؟','Reason the deal was lost?')); if(reason===null) return;
+  if(!reason.trim()){alert(L('سبب الخسارة مطلوب','Lost reason is required'));return;}
   try{ await HZ.sbAuth('/crm_deals?id=eq.'+id,S.token,'PATCH',{status:'lost',lost_reason:reason||null,actual_close:new Date().toISOString().slice(0,10)},{Prefer:'return=minimal'});
     const d=DEALS.find(x=>x.id===id); if(d){d.status='lost';d.lost_reason=reason;} renderBoard(); renderKpis(); }catch(e){}
 };
+document.addEventListener('hz:lang', ()=>{ if(S){ renderKpis(); renderBoard(); renderLedger(); } });
 boot();
 </script>
 </body>
