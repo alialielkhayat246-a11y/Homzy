@@ -118,6 +118,7 @@ const T = {
   // CRM workspace sub-navigation
   crmOverview:{ar:'نظرة عامة',en:'Overview'}, crmClients:{ar:'العملاء',en:'Clients'},
   crmDeals:{ar:'الصفقات',en:'Deals'}, crmPerf:{ar:'الأداء',en:'Performance'},
+  crmTeam:{ar:'الفريق',en:'Team'},
   // product switcher
   prodHomzy:{ar:'Homzy',en:'Homzy'}, prodHomzyDesc:{ar:'العقارات',en:'Real estate'},
   prodStays:{ar:'Homzy Stays',en:'Homzy Stays'}, prodStaysDesc:{ar:'الإقامات والحجوزات',en:'Stays & bookings'},
@@ -188,7 +189,7 @@ function navItems(){
   return [['/','home'],['/app','browse'],['/areas','areas'],['/crm','crm']];
 }
 T.myDay={ar:'يومي',en:'My day'};
-const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights'];
+const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights','/team'];
 function isCrmPath(p){ return CRM_PATHS.some(x=>p===x||p.startsWith(x+'/')); }
 function isStaysPath(p){ return /^\/(stays|my-stays|host)(\/|$)/.test(p); }
 function navActive(href){
@@ -283,7 +284,7 @@ function buildCrmSubnav(){
   const bar=document.getElementById('hzCrmSub'); if(!bar) return;
   if(!(HZ.isBroker && isCrmPath(location.pathname))){ bar.hidden=true; bar.innerHTML=''; return; }
   const path=location.pathname;
-  const tabs=[['/crm','myDay'],['/clients','crmClients'],['/my-listings','mylistings'],['/deals','crmDeals'],['/insights','crmPerf'],['/app','browse'],['/community','communityNav']];
+  const tabs=[['/crm','myDay'],['/clients','crmClients'],['/my-listings','mylistings'],['/deals','crmDeals'],['/insights','crmPerf'],['/team','crmTeam'],['/app','browse'],['/community','communityNav']];
   const act=h=> h==='/crm' ? (path==='/crm'||path==='/my-day') : (path===h||path.startsWith(h+'/'));
   bar.hidden=false;
   bar.innerHTML=`<div class="wrap hz-crmsub-in" role="tablist" aria-label="CRM">`

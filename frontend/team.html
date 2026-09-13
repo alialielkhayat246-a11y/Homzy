@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — إدارة الفريق</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=5">
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .wrap{max-width:1160px; margin:0 auto; padding:20px 16px 80px;}
+  /* gate */
+  .gate{max-width:430px; margin:7vh auto; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:22px; padding:32px 28px; box-shadow:var(--shadow);}
+  .gate .lg{display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:14px;}
+  .gate .lg svg{width:44px; height:44px;} .gate .lg b{font-family:"Poppins";font-weight:800;font-size:20px;color:var(--navy);}
+  .gate h1{text-align:center; font-size:21px; color:var(--navy); margin:0 0 6px;}
+  .gate .sub{text-align:center; color:var(--muted); font-size:14px; margin:0 0 20px;}
+  .fld{display:flex; flex-direction:column; margin-bottom:12px;} .fld label{font-size:12.5px;font-weight:700;color:var(--navy);margin-bottom:5px;}
+  .in{border:1.5px solid var(--line-2,#E6DDCF); border-radius:11px; padding:11px 13px; font-family:var(--ff,'Cairo'); font-size:14px; outline:none; background:#fff; width:100%;}
+  .in:focus{border-color:var(--teal);}
+  .msg{font-size:13px;font-weight:700;margin-top:8px;min-height:18px;} .msg.err{color:#B42318;} .msg.ok{color:#137a3e;}
+  textarea.in{resize:vertical;min-height:70px;}
+
+  /* agency header */
+  .aghead{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:16px;flex-wrap:wrap;}
+  .aghead .logo{width:60px;height:60px;border-radius:15px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Poppins';font-weight:800;font-size:24px;flex:none;overflow:hidden;}
+  .aghead .logo img{width:100%;height:100%;object-fit:cover;}
+  .aghead h1{margin:0;font-size:22px;color:var(--navy);}
+  .aghead .meta{color:var(--muted);font-size:13px;margin-top:3px;}
+  .aghead .rolebadge{background:var(--teal-l,#E4F1F2);color:var(--teal-d,#0B5563);font-weight:800;font-size:12px;padding:5px 11px;border-radius:100px;}
+  .aghead .sp{flex:1;}
+  .kpis{display:flex;gap:10px;flex-wrap:wrap;}
+  .kpi{background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:8px 14px;text-align:center;min-width:78px;}
+  .kpi b{display:block;font-family:'Poppins';font-size:20px;color:var(--navy);line-height:1;}
+  .kpi span{font-size:11px;color:var(--muted);}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .tabs button{font-family:var(--ff);font-weight:800;font-size:14px;padding:9px 18px;border-radius:100px;border:1.5px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;}
+  .tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .panel{display:none;} .panel.on{display:block;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;}
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .toolbar h2{margin:0;font-size:18px;color:var(--navy);} .toolbar .sp{flex:1;}
+
+  /* member rows */
+  .mrow{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .mrow:last-child{border-bottom:none;}
+  .av{width:42px;height:42px;border-radius:50%;background:var(--teal-l);color:var(--teal-d);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none;font-size:16px;}
+  .mrow .who{min-width:150px;flex:1;} .mrow .who b{color:var(--navy);font-size:15px;} .mrow .who .c{color:var(--muted);font-size:12.5px;margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+  .mrow .who .c a{color:var(--teal-d);text-decoration:none;font-weight:700;}
+  .mrow select.in{padding:7px 9px;font-size:12.5px;width:auto;min-width:120px;}
+  .stat-badge{font-size:11px;font-weight:800;padding:4px 10px;border-radius:100px;}
+  .st-active{background:#E7F6EC;color:#137a3e;} .st-suspended{background:#FDECEC;color:#B42318;}
+  .st-inactive{background:#EEE;color:#666;} .st-pending{background:#FFF4E5;color:#B45309;}
+  .mini{font-size:11.5px;color:var(--muted);text-align:center;} .mini b{display:block;color:var(--navy);font-family:'Poppins';font-size:15px;}
+  .iconbtn{border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:6px 9px;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--navy);}
+  .iconbtn.danger{color:#B42318;border-color:#F3C9C4;} .iconbtn.warn{color:#B45309;}
+
+  /* roles / teams grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+  .rcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);}
+  .rcard h3{margin:0 0 3px;font-size:16px;color:var(--navy);}
+  .rcard .k{font-size:11.5px;color:var(--muted);}
+  .rcard .badge{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:100px;background:var(--cream);border:1px solid var(--line);color:var(--muted);}
+  .rcard .badge.sys{background:var(--teal-l);color:var(--teal-d);border-color:transparent;}
+
+  /* modal */
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.55);backdrop-filter:blur(3px);display:none;z-index:120;padding:18px;overflow:auto;}
+  .ov.open{display:flex;align-items:flex-start;justify-content:center;}
+  .modal{background:#fff;width:min(560px,100%);border-radius:20px;margin:auto;box-shadow:var(--shadow);overflow:hidden;}
+  .modal .mh{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;background:var(--cream);border-bottom:1px solid var(--line);}
+  .modal .mh h3{font-size:18px;color:var(--navy);margin:0;} .modal .mx{width:34px;height:34px;border:none;background:#fff;border-radius:9px;font-size:19px;cursor:pointer;}
+  .modal .mb{padding:18px;display:flex;flex-direction:column;gap:12px;max-height:76vh;overflow:auto;}
+  .modal .mf{padding:14px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;}
+  .permgroup{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .permgroup summary{padding:10px 13px;font-weight:800;color:var(--navy);cursor:pointer;background:var(--cream);font-size:13.5px;}
+  .permgroup .items{padding:8px 13px;display:flex;flex-direction:column;gap:7px;}
+  .permitem{display:flex;align-items:center;gap:9px;font-size:13px;color:#33414f;}
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);}
+  .empty h2{color:var(--navy);font-size:18px;margin:0 0 6px;}
+  @media(max-width:640px){ .mrow .stats-wrap{display:none;} }
+</style>
+</head>
+<body class="broker-workspace" data-mode="broker">
+
+<!-- gate -->
+<div id="gate" class="gate" style="display:none">
+  <div class="lg"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg><b>Hom<span style="color:#0B5563">zy</span></b></div>
+  <h1 data-ar="إدارة الفريق" data-en="Team management">إدارة الفريق</h1>
+  <p class="sub" data-ar="سجّل دخولك برقم موبايلك وكلمة المرور." data-en="Sign in with your mobile number and password.">سجّل دخولك برقم موبايلك وكلمة المرور.</p>
+  <form id="authForm">
+    <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="phone" type="tel" inputmode="tel" placeholder="01xxxxxxxxx" required /></div>
+    <div class="fld"><label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label><input class="in" id="password" type="password" required /></div>
+    <button class="btn btn-teal" id="authBtn" type="submit" style="width:100%" data-ar="دخول" data-en="Sign in">دخول</button>
+    <div class="msg" id="gMsg"></div>
+  </form>
+</div>
+
+<div id="hz-header"></div>
+
+<!-- app -->
+<div id="app" style="display:none">
+  <div class="wrap">
+
+    <!-- No agency yet -->
+    <div id="noAgency" style="display:none">
+      <div class="card" style="max-width:640px;margin:4vh auto;padding:30px 26px;text-align:center">
+        <div class="aghead" style="justify-content:center;border:none;box-shadow:none;padding:0;margin-bottom:6px">
+          <div class="logo">🏢</div>
+        </div>
+        <h1 style="color:var(--navy);font-size:23px;margin:6px 0 6px" data-ar="أنشئ وكالتك العقارية" data-en="Create your real-estate agency">أنشئ وكالتك العقارية</h1>
+        <p style="color:var(--muted);margin:0 0 20px" data-ar="اعمل مساحة عمل خاصة بفريقك — كل بياناتك معزولة تمامًا. تقدر كمان تكمّل تشتغل لوحدك من غير فريق." data-en="Create a private workspace for your team — fully isolated data. You can also keep working solo without a team.">اعمل مساحة عمل خاصة بفريقك — كل بياناتك معزولة تمامًا. تقدر كمان تكمّل تشتغل لوحدك من غير فريق.</p>
+        <div style="text-align:start;max-width:460px;margin:0 auto">
+          <div class="fld"><label data-ar="اسم الوكالة *" data-en="Agency name *">اسم الوكالة *</label><input class="in" id="agName" placeholder="مثلاً: عقارات النخبة" data-ph-ar="مثلاً: عقارات النخبة" data-ph-en="e.g. Elite Realty" /></div>
+          <div class="fld"><label data-ar="رابط اللوجو (اختياري)" data-en="Logo URL (optional)">رابط اللوجو (اختياري)</label><input class="in" id="agLogo" placeholder="https://…" /></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="fld"><label data-ar="التليفون" data-en="Phone">التليفون</label><input class="in" id="agPhone" type="tel" placeholder="01xxxxxxxxx" /></div>
+            <div class="fld"><label data-ar="الإيميل" data-en="Email">الإيميل</label><input class="in" id="agEmail" type="email" placeholder="office@…" /></div>
+          </div>
+          <div class="fld"><label data-ar="العنوان (اختياري)" data-en="Address (optional)">العنوان (اختياري)</label><input class="in" id="agAddress" /></div>
+          <div class="fld"><label data-ar="وصف مختصر (اختياري)" data-en="Short description (optional)">وصف مختصر (اختياري)</label><textarea class="in" id="agDesc"></textarea></div>
+          <button class="btn btn-teal" id="createAgBtn" onclick="createAgency()" style="width:100%;margin-top:4px" data-ar="أنشئ الوكالة" data-en="Create agency">أنشئ الوكالة</button>
+          <div class="msg" id="agMsg" style="text-align:center"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Has agency -->
+    <div id="hasAgency" style="display:none">
+      <div class="aghead">
+        <div class="logo" id="agLogoBox">🏢</div>
+        <div>
+          <h1 id="agTitle">—</h1>
+          <div class="meta" id="agSub"></div>
+        </div>
+        <span class="sp"></span>
+        <span class="rolebadge" id="myRole"></span>
+        <div class="kpis" id="kpis"></div>
+      </div>
+
+      <div class="tabs">
+        <button class="on" data-tab="members" onclick="setTab('members')" data-ar="الأعضاء" data-en="Members">الأعضاء</button>
+        <button data-tab="teams" onclick="setTab('teams')" data-ar="الفرق" data-en="Teams">الفرق</button>
+        <button data-tab="roles" onclick="setTab('roles')" data-ar="الأدوار والصلاحيات" data-en="Roles & permissions">الأدوار والصلاحيات</button>
+      </div>
+
+      <!-- Members -->
+      <div class="panel on" id="panel-members">
+        <div class="toolbar">
+          <h2 data-ar="أعضاء الفريق" data-en="Team members">أعضاء الفريق</h2>
+          <span class="sp"></span>
+          <button class="btn btn-teal manage-only" onclick="openAddMember()" data-ar="＋ إضافة عضو" data-en="＋ Add member">＋ إضافة عضو</button>
+        </div>
+        <div class="card" id="membersList"></div>
+      </div>
+
+      <!-- Teams -->
+      <div class="panel" id="panel-teams">
+        <div class="toolbar">
+          <h2 data-ar="الفرق" data-en="Teams">الفرق</h2>
+          <span class="sp"></span>
+          <button class="btn btn-teal manage-only" onclick="openCreateTeam()" data-ar="＋ فريق جديد" data-en="＋ New team">＋ فريق جديد</button>
+        </div>
+        <div class="grid" id="teamsGrid"></div>
+      </div>
+
+      <!-- Roles -->
+      <div class="panel" id="panel-roles">
+        <div class="toolbar">
+          <h2 data-ar="الأدوار والصلاحيات" data-en="Roles & permissions">الأدوار والصلاحيات</h2>
+          <span class="sp"></span>
+          <button class="btn btn-teal manage-only" onclick="openCreateRole()" data-ar="＋ دور مخصّص" data-en="＋ Custom role">＋ دور مخصّص</button>
+        </div>
+        <div class="grid" id="rolesGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add member modal -->
+<div class="ov" id="ovMember"><div class="modal">
+  <div class="mh"><h3 data-ar="إضافة عضو" data-en="Add member">إضافة عضو</h3><button class="mx" onclick="closeOv('ovMember')">×</button></div>
+  <div class="mb">
+    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك." data-en="Enter the phone or email of a Homzy user to add them to your team.">اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك.</p>
+    <div class="fld"><label data-ar="رقم الموبايل أو الإيميل" data-en="Phone or email">رقم الموبايل أو الإيميل</label>
+      <div style="display:flex;gap:8px"><input class="in" id="lookupQ" placeholder="01xxxxxxxxx" style="flex:1"/><button class="btn btn-ghost" onclick="lookupUser()" data-ar="بحث" data-en="Find">بحث</button></div>
+    </div>
+    <div id="lookupResult"></div>
+    <div class="fld"><label data-ar="الدور" data-en="Role">الدور</label><select class="in" id="newRole"></select></div>
+    <div class="fld"><label data-ar="الفريق (اختياري)" data-en="Team (optional)">الفريق (اختياري)</label><select class="in" id="newTeam"><option value="">—</option></select></div>
+    <div class="msg" id="memMsg"></div>
+  </div>
+  <div class="mf"><button class="btn btn-ghost" onclick="closeOv('ovMember')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    <button class="btn btn-teal" id="addMemBtn" onclick="addMember()" disabled data-ar="إضافة" data-en="Add">إضافة</button></div>
+</div></div>
+
+<!-- Create team modal -->
+<div class="ov" id="ovTeam"><div class="modal" style="width:min(440px,100%)">
+  <div class="mh"><h3 data-ar="فريق جديد" data-en="New team">فريق جديد</h3><button class="mx" onclick="closeOv('ovTeam')">×</button></div>
+  <div class="mb">
+    <div class="fld"><label data-ar="اسم الفريق" data-en="Team name">اسم الفريق</label><input class="in" id="teamName" placeholder="مثلاً: فريق المبيعات A" data-ph-ar="مثلاً: فريق المبيعات A" data-ph-en="e.g. Sales Team A" /></div>
+    <div class="fld"><label data-ar="قائد الفريق (اختياري)" data-en="Team leader (optional)">قائد الفريق (اختياري)</label><select class="in" id="teamLeader"><option value="">—</option></select></div>
+    <div class="msg" id="teamMsg"></div>
+  </div>
+  <div class="mf"><button class="btn btn-ghost" onclick="closeOv('ovTeam')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    <button class="btn btn-teal" onclick="createTeam()" data-ar="إنشاء" data-en="Create">إنشاء</button></div>
+</div></div>
+
+<!-- Role editor modal -->
+<div class="ov" id="ovRole"><div class="modal">
+  <div class="mh"><h3 id="roleModalTitle" data-ar="دور مخصّص" data-en="Custom role">دور مخصّص</h3><button class="mx" onclick="closeOv('ovRole')">×</button></div>
+  <div class="mb">
+    <div id="roleNameFields" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fld"><label data-ar="الاسم بالعربي" data-en="Arabic name">الاسم بالعربي</label><input class="in" id="roleNameAr" placeholder="مثلاً: توريد ريسيل" data-ph-ar="مثلاً: توريد ريسيل" data-ph-en="e.g. Resale Acquisition"/></div>
+      <div class="fld"><label data-ar="الاسم بالإنجليزي" data-en="English name">الاسم بالإنجليزي</label><input class="in" id="roleNameEn" placeholder="e.g. Resale Acquisition"/></div>
+    </div>
+    <div style="font-weight:800;color:var(--navy);font-size:14px;margin-top:4px" data-ar="الصلاحيات" data-en="Permissions">الصلاحيات</div>
+    <div id="permPicker" style="display:flex;flex-direction:column;gap:9px"></div>
+    <div class="msg" id="roleMsg"></div>
+  </div>
+  <div class="mf"><button class="btn btn-ghost" onclick="closeOv('ovRole')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+    <button class="btn btn-teal" id="saveRoleBtn" onclick="saveRole()" data-ar="حفظ" data-en="Save">حفظ</button></div>
+</div></div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=5"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
+const $=id=>document.getElementById(id);
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let TOKEN=null, UID=null;
+let AG=null, MYPERMS=[], ROSTER=[], ROLES=[], TEAMS=[], PERMS=[], EDIT_ROLE=null, PICK_USER=null;
+sb.auth.onAuthStateChange((_e,s)=>{ TOKEN=s?.access_token||null; UID=s?.user?.id||null; });
+
+function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
+const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
+const rpc=(fn,args)=>HZ.sbAuth('/rpc/'+fn, TOKEN, 'POST', args||{});
+const rest=(path)=>HZ.sbAuth(path, TOKEN);
+const can=p=>MYPERMS.includes(p);
+
+$('authForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const phone=normPhone($('phone').value), password=$('password').value;
+  if(phone.length<11){ $('gMsg').textContent=L('رقم موبايل غير صحيح.','Invalid mobile number.'); $('gMsg').className='msg err'; return; }
+  try{ const {error}=await sb.auth.signInWithPassword({ email:phoneEmail($('phone').value), password }); if(error) throw error; location.reload(); }
+  catch(err){ $('gMsg').textContent=/Invalid login|credentials/i.test(err.message)?L('الرقم أو كلمة المرور غلط.','Wrong number or password.'):err.message; $('gMsg').className='msg err'; }
+});
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ $('app').style.display='none'; $('gate').style.display='block'; return; }
+  TOKEN=session.access_token; UID=session.user.id;
+  $('gate').style.display='none'; $('app').style.display='block';
+  const ags = await rest('/agencies?select=*&order=created_at.asc') || [];
+  if(!ags.length){ $('noAgency').style.display='block'; $('hasAgency').style.display='none'; return; }
+  AG = ags[0];
+  await loadAgency();
+}
+
+async function loadAgency(){
+  $('noAgency').style.display='none'; $('hasAgency').style.display='block';
+  [MYPERMS, ROSTER, ROLES, TEAMS, PERMS] = await Promise.all([
+    rpc('my_perms',{p_agency:AG.id}).catch(()=>[]),
+    rpc('agency_team_roster',{p_agency:AG.id}).catch(()=>[]),
+    rest('/roles?agency_id=eq.'+AG.id+'&select=*&order=rank').catch(()=>[]),
+    rest('/teams?agency_id=eq.'+AG.id+'&select=*&order=created_at').catch(()=>[]),
+    rest('/permissions?select=*&order=sort').catch(()=>[])
+  ]);
+  MYPERMS=MYPERMS||[]; ROSTER=ROSTER||[]; ROLES=ROLES||[]; TEAMS=TEAMS||[]; PERMS=PERMS||[];
+  document.querySelectorAll('.manage-only').forEach(el=>el.style.display=can('team.manage')?'':'none');
+  renderHeader(); renderMembers(); renderTeams(); renderRoles();
+}
+
+function renderHeader(){
+  $('agTitle').textContent = AG.name;
+  const parts=[]; if(AG.phone)parts.push(AG.phone); if(AG.email)parts.push(AG.email); if(AG.address)parts.push(AG.address);
+  $('agSub').textContent = parts.join(' · ');
+  const box=$('agLogoBox');
+  if(AG.logo_url){ box.innerHTML='<img src="'+esc(AG.logo_url)+'" alt="">'; } else { box.textContent=(AG.name||'?').trim().charAt(0).toUpperCase(); }
+  const me=ROSTER.find(m=>m.user_id===UID);
+  $('myRole').textContent = me ? L(me.role_ar||me.role_key, me.role_en||me.role_key) : '';
+  const active=ROSTER.filter(m=>m.status==='active').length;
+  $('kpis').innerHTML =
+    kpi(ROSTER.length, L('عضو','Members')) + kpi(active, L('نشِط','Active')) +
+    kpi(TEAMS.length, L('فريق','Teams')) + kpi(ROLES.length, L('دور','Roles'));
+}
+const kpi=(n,l)=>`<div class="kpi"><b>${n}</b><span>${l}</span></div>`;
+
+function statusBadge(s){
+  const m={active:['st-active',L('نشِط','Active')],suspended:['st-suspended',L('موقوف','Suspended')],inactive:['st-inactive',L('غير نشط','Inactive')],pending:['st-pending',L('بانتظار','Pending')]};
+  const x=m[s]||m.active; return `<span class="stat-badge ${x[0]}">${x[1]}</span>`;
+}
+function roleOptions(sel){ return ROLES.map(r=>`<option value="${r.key}" ${r.key===sel?'selected':''}>${esc(L(r.name_ar,r.name_en))}</option>`).join(''); }
+
+function renderMembers(){
+  const mgr=can('team.manage');
+  $('membersList').innerHTML = ROSTER.map(m=>{
+    const initial=(m.name||m.phone||'?').trim().charAt(0).toUpperCase();
+    const contact=[];
+    if(m.phone) contact.push(`<a href="tel:${esc(m.phone)}">📞 ${esc(m.phone)}</a>`);
+    if(m.phone) contact.push(`<a href="https://wa.me/${esc(String(m.phone).replace(/[^0-9]/g,''))}" target="_blank" rel="noopener">واتساب</a>`);
+    if(m.email) contact.push(esc(m.email));
+    const roleCell = (mgr && !m.is_owner)
+      ? `<select class="in" onchange="changeRole('${m.user_id}',this.value)">${roleOptions(m.role_key)}</select>`
+      : `<span class="rolebadge">${esc(L(m.role_ar||m.role_key,m.role_en||m.role_key))}</span>`;
+    const teamCell = mgr
+      ? `<select class="in" onchange="changeTeam('${m.user_id}',this.value)"><option value="">—</option>${TEAMS.map(t=>`<option value="${t.id}" ${t.id===m.team_id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`
+      : (m.team_name?`<span class="mini">${esc(m.team_name)}</span>`:'');
+    let actions='';
+    if(mgr && !m.is_owner){
+      if(m.status==='active') actions+=`<button class="iconbtn warn" onclick="setStatus('${m.user_id}','suspended')">${L('إيقاف','Suspend')}</button>`;
+      else actions+=`<button class="iconbtn" onclick="setStatus('${m.user_id}','active')">${L('تفعيل','Activate')}</button>`;
+      actions+=`<button class="iconbtn danger" onclick="removeMember('${m.user_id}','${esc(m.name||'')}')">${L('إزالة','Remove')}</button>`;
+    }
+    return `<div class="mrow">
+      <div class="av">${esc(initial)}</div>
+      <div class="who"><b>${esc(m.name||L('بدون اسم','No name'))}</b>${m.is_owner?' <span class="rolebadge">'+L('المالك','Owner')+'</span>':''}
+        <div class="c">${contact.join(' · ')||'<span style="color:#aaa">—</span>'}</div></div>
+      <div style="min-width:130px">${roleCell}</div>
+      <div style="min-width:120px">${teamCell}</div>
+      <div class="stats-wrap" style="display:flex;gap:14px"><div class="mini"><b>${m.leads||0}</b>${L('عميل','Leads')}</div><div class="mini"><b>${m.deals||0}</b>${L('صفقة','Deals')}</div></div>
+      <div>${statusBadge(m.status)}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${actions}</div>
+    </div>`;
+  }).join('') || `<div class="empty"><h2>${L('لا يوجد أعضاء بعد','No members yet')}</h2></div>`;
+}
+
+function renderTeams(){
+  const mgr=can('team.manage');
+  $('teamsGrid').innerHTML = TEAMS.map(t=>{
+    const count=ROSTER.filter(m=>m.team_id===t.id).length;
+    const leader=ROSTER.find(m=>m.user_id===t.leader_id);
+    return `<div class="rcard"><h3>${esc(t.name)}</h3>
+      <div class="k">${count} ${L('عضو','members')}${leader?(' · '+L('قائد: ','Lead: ')+esc(leader.name||'')):''}</div></div>`;
+  }).join('') || `<div class="empty" style="grid-column:1/-1"><h2>${L('لا توجد فرق','No teams')}</h2><p>${mgr?L('أنشئ فريق لتنظيم أعضائك.','Create a team to organise members.'):''}</p></div>`;
+}
+
+function renderRoles(){
+  const mgr=can('team.manage');
+  $('rolesGrid').innerHTML = ROLES.map(r=>{
+    const n=ROSTER.filter(m=>m.role_key===r.key).length;
+    return `<div class="rcard" ${mgr?'style="cursor:pointer" onclick="openEditRole(\''+r.id+'\')"':''}>
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
+        <h3>${esc(L(r.name_ar,r.name_en))}</h3>
+        <span class="badge ${r.is_system?'sys':''}">${r.is_system?L('افتراضي','Default'):L('مخصّص','Custom')}</span></div>
+      <div class="k">${esc(r.key)} · ${n} ${L('عضو','members')}</div>
+      ${mgr&&r.key!=='owner'?`<div class="k" style="margin-top:8px;color:var(--teal-d);font-weight:700">${L('تعديل الصلاحيات ←','Edit permissions ←')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ---------- tabs ----------
+window.setTab=(t)=>{
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='panel-'+t));
+};
+
+// ---------- create agency ----------
+window.createAgency=async()=>{
+  const name=$('agName').value.trim();
+  if(name.length<2){ $('agMsg').textContent=L('اكتب اسم الوكالة.','Enter an agency name.'); $('agMsg').className='msg err'; return; }
+  $('createAgBtn').disabled=true;
+  try{
+    const id=await rpc('create_agency',{p_name:name,p_logo:$('agLogo').value.trim()||null,p_phone:$('agPhone').value.trim()||null,p_email:$('agEmail').value.trim()||null,p_address:$('agAddress').value.trim()||null,p_description:$('agDesc').value.trim()||null});
+    const ags=await rest('/agencies?id=eq.'+id+'&select=*'); AG=ags[0]; await loadAgency();
+  }catch(e){ $('agMsg').textContent=L('تعذّر الإنشاء: ','Could not create: ')+(e.message||e); $('agMsg').className='msg err'; $('createAgBtn').disabled=false; }
+};
+
+// ---------- members ----------
+window.openAddMember=()=>{ PICK_USER=null; $('lookupQ').value=''; $('lookupResult').innerHTML=''; $('memMsg').textContent=''; $('addMemBtn').disabled=true;
+  $('newRole').innerHTML=roleOptions('agent'); $('newTeam').innerHTML='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  $('ovMember').classList.add('open'); };
+window.lookupUser=async()=>{
+  const q=$('lookupQ').value.trim(); if(!q) return;
+  $('lookupResult').innerHTML='<div class="mini">…</div>';
+  try{ const u=await rpc('agency_lookup_user',{p_agency:AG.id,p_query:q});
+    if(!u){ $('lookupResult').innerHTML=`<div class="msg err">${L('مفيش مستخدم بالرقم/الإيميل ده. لازم يكون عنده حساب Homzy.','No Homzy user with that phone/email.')}</div>`; PICK_USER=null; $('addMemBtn').disabled=true; return; }
+    PICK_USER=u; $('addMemBtn').disabled=false;
+    $('lookupResult').innerHTML=`<div class="mrow" style="border:1px solid var(--line);border-radius:12px"><div class="av">${esc((u.name||'?').charAt(0).toUpperCase())}</div><div class="who"><b>${esc(u.name||L('بدون اسم','No name'))}</b><div class="c">${esc(u.phone||'')} ${esc(u.email||'')}</div></div></div>`;
+  }catch(e){ $('lookupResult').innerHTML=`<div class="msg err">${esc(e.message||e)}</div>`; }
+};
+window.addMember=async()=>{
+  if(!PICK_USER) return; $('addMemBtn').disabled=true;
+  try{ await rpc('agency_add_member',{p_agency:AG.id,p_user:PICK_USER.id,p_role_key:$('newRole').value,p_team:$('newTeam').value||null});
+    closeOv('ovMember'); await loadAgency();
+  }catch(e){ $('memMsg').textContent=esc(e.message||e); $('memMsg').className='msg err'; $('addMemBtn').disabled=false; }
+};
+window.changeRole=async(u,role)=>{ try{ await rpc('agency_set_member_role',{p_agency:AG.id,p_user:u,p_role_key:role}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+window.changeTeam=async(u,team)=>{ try{ await rpc('agency_set_member_team',{p_agency:AG.id,p_user:u,p_team:team||null}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+window.setStatus=async(u,st)=>{ try{ await rpc('agency_set_member_status',{p_agency:AG.id,p_user:u,p_status:st}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+window.removeMember=async(u,name)=>{ if(!confirm(L('إزالة ','Remove ')+(name||'')+'؟')) return; try{ await rpc('agency_remove_member',{p_agency:AG.id,p_user:u}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+
+// ---------- teams ----------
+window.openCreateTeam=()=>{ $('teamName').value=''; $('teamMsg').textContent='';
+  $('teamLeader').innerHTML='<option value="">—</option>'+ROSTER.map(m=>`<option value="${m.user_id}">${esc(m.name||m.phone||'')}</option>`).join('');
+  $('ovTeam').classList.add('open'); };
+window.createTeam=async()=>{
+  const name=$('teamName').value.trim(); if(name.length<2){ $('teamMsg').textContent=L('اكتب اسم الفريق.','Enter a team name.'); $('teamMsg').className='msg err'; return; }
+  try{ await rpc('agency_create_team',{p_agency:AG.id,p_name:name,p_leader:$('teamLeader').value||null}); closeOv('ovTeam'); await loadAgency(); }
+  catch(e){ $('teamMsg').textContent=esc(e.message||e); $('teamMsg').className='msg err'; }
+};
+
+// ---------- roles ----------
+function permPickerHTML(selected){
+  const cats={}; PERMS.forEach(p=>{ (cats[p.category]=cats[p.category]||[]).push(p); });
+  const catName={leads:L('العملاء','Leads'),owners:L('الملّاك','Owners'),properties:L('الوحدات','Properties'),deals:L('الصفقات','Deals'),tasks:L('المهام','Tasks'),team:L('الفريق','Team'),reports:L('التقارير','Reports'),commissions:L('العمولات','Commissions'),settings:L('الإعدادات','Settings')};
+  return Object.keys(cats).map(c=>`<details class="permgroup" open><summary>${catName[c]||c}</summary><div class="items">${cats[c].map(p=>`<label class="permitem"><input type="checkbox" value="${p.key}" ${selected.includes(p.key)?'checked':''}> ${esc(L(p.name_ar,p.name_en))}</label>`).join('')}</div></details>`).join('');
+}
+window.openCreateRole=()=>{ EDIT_ROLE=null; $('roleModalTitle').textContent=L('دور مخصّص','Custom role'); $('roleNameFields').style.display='grid';
+  $('roleNameAr').value=''; $('roleNameEn').value=''; $('roleMsg').textContent=''; $('permPicker').innerHTML=permPickerHTML([]); $('ovRole').classList.add('open'); };
+window.openEditRole=async(rid)=>{
+  const r=ROLES.find(x=>x.id===rid); if(!r) return; EDIT_ROLE=r;
+  $('roleModalTitle').textContent=L('صلاحيات: ','Permissions: ')+L(r.name_ar,r.name_en); $('roleNameFields').style.display='none'; $('roleMsg').textContent='';
+  const cur=await rest('/role_permissions?role_id=eq.'+rid+'&select=permission_key').catch(()=>[]);
+  $('permPicker').innerHTML=permPickerHTML((cur||[]).map(x=>x.permission_key));
+  $('ovRole').classList.add('open');
+};
+window.saveRole=async()=>{
+  const perms=[...document.querySelectorAll('#permPicker input:checked')].map(i=>i.value);
+  $('saveRoleBtn').disabled=true;
+  try{
+    if(EDIT_ROLE){ await rpc('agency_set_role_perms',{p_role:EDIT_ROLE.id,p_perms:perms}); }
+    else{ const ar_=$('roleNameAr').value.trim(), en_=$('roleNameEn').value.trim();
+      if(ar_.length<2||en_.length<2){ $('roleMsg').textContent=L('اكتب اسم الدور بالعربي والإنجليزي.','Enter role name in both languages.'); $('roleMsg').className='msg err'; $('saveRoleBtn').disabled=false; return; }
+      await rpc('agency_create_role',{p_agency:AG.id,p_key:en_,p_name_ar:ar_,p_name_en:en_,p_perms:perms}); }
+    closeOv('ovRole'); await loadAgency();
+  }catch(e){ $('roleMsg').textContent=esc(e.message||e); $('roleMsg').className='msg err'; }
+  finally{ $('saveRoleBtn').disabled=false; }
+};
+
+window.closeOv=(id)=>$(id).classList.remove('open');
+document.addEventListener('hz:lang',()=>{ if(AG){ renderHeader(); renderMembers(); renderTeams(); renderRoles(); } });
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+boot();
+</script>
+</body>
+</html>

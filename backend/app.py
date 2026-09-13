@@ -142,6 +142,13 @@ def my_listings_page():
     return FileResponse(config.FRONTEND_DIR / "my-listings.html")
 
 
+@app.get("/team")
+def team_page():
+    """Agency & Team Management (CRM): create an agency workspace, invite/manage
+    members, teams and RBAC roles. All isolated per-agency via Supabase RLS."""
+    return FileResponse(config.FRONTEND_DIR / "team.html")
+
+
 @app.get("/sell")
 def sell_page():
     """Public broker-acquisition landing ('list your unit on Homzy'). Shareable
