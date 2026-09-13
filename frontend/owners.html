@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Homzy CRM — Property Owners</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/assets/homzy.css?v=5"/>
+  <style>
+    :root{--navy:#0b1d36;--teal:#0b5563;--cream:#f7f3ec;--line:#e5ded4;--muted:#66717f;--red:#b42318}
+    *{box-sizing:border-box}body{margin:0;background:#f6f8fa;color:var(--navy);font-family:Cairo,Poppins,Arial,sans-serif}
+    [dir=ltr] body{font-family:Poppins,Cairo,Arial,sans-serif}.page{max-width:1500px;margin:0 auto;padding:32px 22px 70px}
+    .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:20px}.hero h1{margin:0;font-size:clamp(25px,3vw,38px);font-weight:900}.hero p{margin:5px 0 0;color:var(--muted)}
+    .btn{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:800;cursor:pointer}.btn:disabled{opacity:.55;cursor:not-allowed}.btn-teal{background:var(--teal);color:#fff}.btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+    .toolbar,.kpis{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar input,.toolbar select,.in{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit;color:var(--navy)}
+    .toolbar input{min-width:240px;flex:1}.kpi{min-width:145px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}.kpi b{font:800 24px Poppins,Cairo}.kpi span{display:block;color:var(--muted);font-size:12px}
+    .board{display:grid;grid-template-columns:repeat(9,minmax(265px,1fr));gap:12px;overflow-x:auto;padding:2px 2px 18px;scroll-snap-type:x proximity}
+    .col{background:#edf1f4;border:1px solid #dfe5e9;border-radius:15px;padding:10px;min-height:280px;scroll-snap-align:start}.colhead{display:flex;justify-content:space-between;align-items:center;padding:3px 4px 10px;font-weight:900}.count{background:#fff;border-radius:999px;padding:2px 8px;font:700 12px Poppins}
+    .owner-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:9px;box-shadow:0 3px 12px #0b1d360b}.owner-card h3{margin:0 0 4px;font-size:15px}.meta{color:var(--muted);font-size:12px;line-height:1.7}.price{font:800 14px Poppins,Cairo;color:var(--teal);margin-top:6px}.contact{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.contact a{font-size:12px;color:var(--teal);font-weight:800;text-decoration:none}
+    .badge{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:800;background:#e6f3f2;color:var(--teal)}.badge.company{background:#fff1dc;color:#9a5a00}
+    .quick{display:grid;gap:7px;margin-top:9px}.quick select{width:100%;font-size:11px;padding:7px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    .empty{padding:30px 16px;text-align:center;color:var(--muted)}.msg{font-size:13px;margin:8px 0}.msg.err{color:var(--red)}.gate{max-width:430px;margin:85px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:25px}.gate h2{margin-top:0}
+    .fld{display:flex;flex-direction:column;gap:5px;margin:10px 0}.fld label{font-size:12px;font-weight:800}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.wide{grid-column:1/-1}
+    .ov{position:fixed;inset:0;background:#0b1d3688;display:none;align-items:center;justify-content:center;padding:18px;z-index:1000}.ov.open{display:flex}.modal{background:#fff;border-radius:18px;width:min(760px,100%);max-height:90vh;overflow:auto}.mh,.mf{padding:15px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.mf{border:0;border-top:1px solid var(--line);justify-content:flex-end;gap:8px}.mh h3{margin:0}.mx{border:0;background:none;font-size:28px;cursor:pointer}.mb{padding:15px 18px}
+    @media(max-width:700px){.page{padding:22px 12px 55px}.hero{align-items:flex-start;flex-direction:column}.hero .btn{width:100%}.formgrid{grid-template-columns:1fr}.wide{grid-column:auto}.toolbar>*{width:100%;min-width:0}.board{grid-template-columns:repeat(9,84vw)}}
+  </style>
+</head>
+<body>
+<div id="hz-header"></div>
+<section class="gate" id="gate" style="display:none">
+  <h2 data-ar="سجّل دخولك لإدارة المُلّاك" data-en="Sign in to manage owners">سجّل دخولك لإدارة المُلّاك</h2>
+  <form id="authForm">
+    <div class="fld"><label data-ar="رقم الموبايل" data-en="Mobile number">رقم الموبايل</label><input class="in" id="phone" inputmode="tel" required/></div>
+    <div class="fld"><label data-ar="كلمة المرور" data-en="Password">كلمة المرور</label><input class="in" id="password" type="password" required/></div>
+    <button class="btn btn-teal" style="width:100%" data-ar="دخول" data-en="Sign in">دخول</button><div class="msg" id="gMsg"></div>
+  </form>
+</section>
+<main class="page" id="app" style="display:none">
+  <div id="noAgency" style="display:none" class="gate">
+    <h2 data-ar="أنشئ وكالة أولًا" data-en="Create an agency first">أنشئ وكالة أولًا</h2>
+    <p data-ar="قاعدة بيانات المُلّاك جزء من مساحة عمل الوكالة." data-en="The owners database belongs to an agency workspace.">قاعدة بيانات المُلّاك جزء من مساحة عمل الوكالة.</p>
+    <a class="btn btn-teal" href="/team" data-ar="إدارة الوكالة" data-en="Agency management">إدارة الوكالة</a>
+  </div>
+  <div id="workspace" style="display:none">
+    <div class="hero"><div><h1 data-ar="توريد الوحدات والمُلّاك" data-en="Owners & acquisition">توريد الوحدات والمُلّاك</h1><p id="agencyName"></p></div><button class="btn btn-teal create-only" onclick="openOwner()" data-ar="＋ إضافة مالك" data-en="＋ Add owner">＋ إضافة مالك</button></div>
+    <div class="msg err" id="loadMsg" style="display:none"></div><div class="kpis" id="kpis"></div>
+    <div class="toolbar">
+      <input id="search" oninput="render()" data-ph-ar="ابحث بالاسم أو المنطقة أو الوحدة…" data-ph-en="Search name, area or property…" placeholder="ابحث بالاسم أو المنطقة أو الوحدة…"/>
+      <select id="kindFilter" onchange="render()"><option value="" data-ar="كل المصادر" data-en="All sources">كل المصادر</option><option value="company" data-ar="مصدر الشركة" data-en="Company source">مصدر الشركة</option><option value="agent" data-ar="مصدر الموظف" data-en="Agent sourced">مصدر الموظف</option></select>
+    </div>
+    <div class="board" id="board"></div>
+  </div>
+</main>
+<div class="ov" id="ownerOv"><div class="modal">
+  <div class="mh"><h3 data-ar="إضافة مالك / وحدة" data-en="Add owner / property">إضافة مالك / وحدة</h3><button class="mx" onclick="closeOwner()">×</button></div>
+  <div class="mb formgrid">
+    <div class="fld"><label data-ar="اسم المالك" data-en="Owner name">اسم المالك</label><input class="in" id="oName"/></div>
+    <div class="fld"><label data-ar="الهاتف" data-en="Phone">الهاتف</label><input class="in" id="oPhone" inputmode="tel"/></div>
+    <div class="fld"><label>WhatsApp</label><input class="in" id="oWa" inputmode="tel"/></div>
+    <div class="fld"><label data-ar="المنطقة" data-en="Area">المنطقة</label><input class="in" id="oArea"/></div>
+    <div class="fld"><label data-ar="الوحدة / المرجع" data-en="Property / reference">الوحدة / المرجع</label><input class="in" id="oProperty"/></div>
+    <div class="fld"><label data-ar="نوع الوحدة" data-en="Property type">نوع الوحدة</label><input class="in" id="oType"/></div>
+    <div class="fld"><label data-ar="الغرض" data-en="Purpose">الغرض</label><select class="in" id="oPurpose"><option value="">—</option><option value="sale" data-ar="بيع" data-en="Sale">بيع</option><option value="rent" data-ar="إيجار" data-en="Rent">إيجار</option></select></div>
+    <div class="fld"><label data-ar="السعر المطلوب" data-en="Asking price">السعر المطلوب</label><input class="in" id="oPrice" type="number" min="0" step="1"/></div>
+    <div class="fld"><label data-ar="المصدر" data-en="Source">المصدر</label><select class="in" id="oSource"><option>Homzy</option><option>Property Finder</option><option>Dubizzle</option><option>Facebook</option><option>Instagram</option><option>WhatsApp</option><option>Website</option><option>Referral</option><option>Manual</option><option>Other</option></select></div>
+    <div class="fld"><label data-ar="نوع المصدر" data-en="Source ownership">نوع المصدر</label><select class="in" id="oKind"><option value="agent" data-ar="من توريد الموظف" data-en="Agent sourced">من توريد الموظف</option><option value="company" data-ar="مقدم من الشركة" data-en="Company provided">مقدم من الشركة</option></select></div>
+    <div class="fld"><label data-ar="مسؤول التوريد" data-en="Acquisition assignee">مسؤول التوريد</label><select class="in" id="oAssignee"><option value="">—</option></select></div>
+    <div class="fld"><label data-ar="المتابعة القادمة" data-en="Next follow-up">المتابعة القادمة</label><input class="in" id="oFollowup" type="date"/></div>
+    <div class="fld wide"><label data-ar="ملاحظات" data-en="Notes">ملاحظات</label><textarea class="in" id="oNotes" rows="3"></textarea></div>
+    <div class="msg err wide" id="oMsg"></div>
+  </div>
+  <div class="mf"><button class="btn btn-ghost" onclick="closeOwner()" data-ar="إلغاء" data-en="Cancel">إلغاء</button><button class="btn btn-teal" id="saveOwner" onclick="createOwner()" data-ar="حفظ" data-en="Save">حفظ</button></div>
+</div></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=6"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const sb=createClient('https://ceoqtkbpdxnkuptnnwjg.supabase.co','sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',{auth:{persistSession:true,autoRefreshToken:true}});
+const $=id=>document.getElementById(id), ar=()=>!(window.HZ&&HZ.lang==='en'), L=(a,e)=>ar()?a:e;
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STAGES=[
+  ['new','جديد','New'],['not_contacted','لم يتم التواصل','Not contacted'],['contacted','تم التواصل','Contacted'],
+  ['interested','مهتم','Interested'],['info_collected','تم جمع البيانات','Info collected'],['verification','مراجعة','Verification'],
+  ['owner_approval','موافقة المالك','Owner approval'],['ready_marketing','جاهز للتسويق','Ready for marketing'],['active_listing','إعلان نشط','Active listing']
+];
+let TOKEN=null,UID=null,AG=null,PERMS=[],OWNERS=[],ROSTER=[];
+const rpc=(fn,args)=>HZ.sbAuth('/rpc/'+fn,TOKEN,'POST',args||{}), rest=path=>HZ.sbAuth(path,TOKEN), can=p=>PERMS.includes(p);
+function normPhone(v){let d=(v||'').replace(/[^0-9]/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.startsWith('0'))d='20'+d.slice(1);else if(!d.startsWith('20'))d='20'+d;return d}
+const phoneEmail=v=>'p'+normPhone(v)+'@homzy.app';
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();try{const {error}=await sb.auth.signInWithPassword({email:phoneEmail($('phone').value),password:$('password').value});if(error)throw error;location.reload()}catch(x){$('gMsg').textContent=L('بيانات الدخول غير صحيحة.','Invalid sign-in details.');$('gMsg').className='msg err'}});
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();if(!session){$('gate').style.display='block';return}
+  TOKEN=session.access_token;UID=session.user.id;$('app').style.display='block';
+  try{const rows=await withTimeout(rest('/agencies?select=id,name&order=created_at.asc'),8000);if(!rows?.length){$('noAgency').style.display='block';return}AG=rows[0];$('workspace').style.display='block';await load()}
+  catch(e){$('workspace').style.display='block';showErr(e)}
+}
+function withTimeout(p,ms){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),ms))])}
+async function load(){
+  const rs=await Promise.allSettled([
+    withTimeout(rpc('my_perms',{p_agency:AG.id}),8000),
+    withTimeout(rpc('agency_team_roster',{p_agency:AG.id}),8000),
+    withTimeout(rpc('agency_list_owners',{p_agency:AG.id}),8000)
+  ]);
+  [PERMS,ROSTER,OWNERS]=rs.map(r=>r.status==='fulfilled'?(r.value||[]):[]);
+  $('agencyName').textContent=AG.name;
+  const failed=rs.some(r=>r.status==='rejected');$('loadMsg').style.display=failed?'block':'none';
+  $('loadMsg').textContent=failed?L('تعذّر تحميل بعض البيانات. جرّب تحديث الصفحة.','Some data could not be loaded. Please refresh the page.'):'';
+  document.querySelectorAll('.create-only').forEach(x=>x.style.display=can('owner.create')?'':'none');render()
+}
+function showErr(e){$('loadMsg').style.display='block';$('loadMsg').textContent=e?.message||String(e)}
+function memberName(id){const m=ROSTER.find(x=>x.user_id===id);return m?.name||m?.phone||L('غير معيّن','Unassigned')}
+function money(v){return v==null?'':new Intl.NumberFormat(ar()?'ar-EG':'en-EG',{maximumFractionDigits:0}).format(Number(v))+' EGP'}
+function stageOptions(sel){return STAGES.map(s=>`<option value="${s[0]}" ${s[0]===sel?'selected':''}>${esc(L(s[1],s[2]))}</option>`).join('')}
+function assigneeOptions(sel){const rows=ROSTER.filter(m=>m.status==='active'&&(can('team.manage')||m.user_id===UID));return '<option value="">—</option>'+rows.map(m=>`<option value="${m.user_id}" ${m.user_id===sel?'selected':''}>${esc(m.name||m.phone||'')}</option>`).join('')}
+window.render=()=>{
+  const q=$('search').value.trim().toLowerCase(),kind=$('kindFilter').value;
+  const rows=OWNERS.filter(o=>(!kind||o.source_kind===kind)&&(!q||[o.name,o.area,o.property_ref,o.property_type].some(v=>String(v||'').toLowerCase().includes(q))));
+  $('kpis').innerHTML=`<div class="kpi"><b>${OWNERS.length}</b><span>${L('إجمالي المُلّاك','Total owners')}</span></div><div class="kpi"><b>${OWNERS.filter(o=>o.source_kind==='agent').length}</b><span>${L('توريد الموظفين','Agent sourced')}</span></div><div class="kpi"><b>${OWNERS.filter(o=>o.stage==='active_listing').length}</b><span>${L('إعلانات نشطة','Active listings')}</span></div><div class="kpi"><b>${OWNERS.filter(o=>o.next_followup&&o.next_followup<=new Date().toISOString().slice(0,10)).length}</b><span>${L('متابعات مستحقة','Follow-ups due')}</span></div>`;
+  $('board').innerHTML=STAGES.map(s=>{const list=rows.filter(o=>o.stage===s[0]);return `<section class="col"><div class="colhead"><span>${esc(L(s[1],s[2]))}</span><span class="count">${list.length}</span></div>${list.map(card).join('')||'<div class="empty">—</div>'}</section>`}).join('')
+}
+function card(o){
+  const phone=o.phone?esc(o.phone):'',wa=o.whatsapp?esc(String(o.whatsapp).replace(/[^0-9]/g,'')):'';
+  return `<article class="owner-card"><div style="display:flex;justify-content:space-between;gap:8px"><h3>${esc(o.name)}</h3><span class="badge ${o.source_kind==='company'?'company':''}">${o.source_kind==='company'?L('شركة','Company'):L('موظف','Agent')}</span></div>
+  <div class="meta">${esc([o.property_ref,o.property_type,o.area].filter(Boolean).join(' · '))}</div><div class="price">${money(o.asking_price)}</div>
+  <div class="contact">${phone?`<a href="tel:${phone}">📞 ${phone}</a>`:''}${wa?`<a href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}</div>
+  <div class="meta">${L('المسؤول: ','Assigned: ')}${esc(memberName(o.assigned_to))}${o.next_followup?' · '+L('متابعة: ','Follow-up: ')+esc(o.next_followup):''}</div>
+  <div class="quick">${can('owner.edit')?`<select onchange="setStage('${o.id}',this.value)">${stageOptions(o.stage)}</select>`:''}${can('team.manage')?`<select onchange="assignOwner('${o.id}',this.value)">${assigneeOptions(o.assigned_to)}</select>`:''}</div></article>`
+}
+window.openOwner=()=>{$('ownerOv').classList.add('open');$('oMsg').textContent='';$('oAssignee').innerHTML=assigneeOptions(UID);$('oKind').querySelector('[value="company"]').disabled=!can('team.manage');$('oKind').value='agent'};
+window.closeOwner=()=>{$('ownerOv').classList.remove('open')};
+window.createOwner=async()=>{
+  const name=$('oName').value.trim();if(name.length<2){$('oMsg').textContent=L('اكتب اسم المالك.','Enter the owner name.');return}
+  $('saveOwner').disabled=true;
+  try{
+    await rpc('agency_create_owner',{p_agency:AG.id,p_name:name,p_phone:$('oPhone').value||null,p_whatsapp:$('oWa').value||null,p_area:$('oArea').value||null,p_property_type:$('oType').value||null,p_purpose:$('oPurpose').value||null,p_asking_price:$('oPrice').value?Number($('oPrice').value):null,p_property_ref:$('oProperty').value||null,p_source:$('oSource').value||null,p_source_kind:$('oKind').value,p_assigned_to:$('oAssignee').value||null,p_next_followup:$('oFollowup').value||null,p_notes:$('oNotes').value||null});
+    closeOwner();document.querySelectorAll('#ownerOv input,#ownerOv textarea').forEach(x=>x.value='');await load()
+  }catch(e){$('oMsg').textContent=e?.message||String(e)}
+  finally{$('saveOwner').disabled=false}
+};
+window.setStage=async(id,stage)=>{try{await rpc('agency_set_owner_stage',{p_owner:id,p_stage:stage,p_status:null,p_notes:null});await load()}catch(e){alert(e?.message||e);await load()}};
+window.assignOwner=async(id,user)=>{try{await rpc('agency_assign_owner',{p_owner:id,p_assignee:user||null,p_reason:null});await load()}catch(e){alert(e?.message||e);await load()}};
+$('ownerOv').addEventListener('click',e=>{if(e.target===$('ownerOv'))closeOwner()});
+document.addEventListener('hz:lang',()=>{if(AG)render()});
+boot();
+</script>
+</body>
+</html>

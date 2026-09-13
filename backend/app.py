@@ -149,6 +149,13 @@ def team_page():
     return FileResponse(config.FRONTEND_DIR / "team.html")
 
 
+@app.get("/owners")
+def owners_page():
+    """Agency property-owner database and acquisition pipeline. Phone visibility,
+    tenant scope and mutations are enforced by Supabase RPCs and RLS."""
+    return FileResponse(config.FRONTEND_DIR / "owners.html")
+
+
 @app.get("/sell")
 def sell_page():
     """Public broker-acquisition landing ('list your unit on Homzy'). Shareable

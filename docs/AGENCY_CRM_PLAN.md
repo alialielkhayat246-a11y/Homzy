@@ -40,10 +40,29 @@ D (assigned agent sees lead / unassigned same-agency agent does not; via
 assignment, not blanket perm), M (suspended member → 0, history preserved).
 Security advisor: no new RLS gaps (only pre-existing `crm_offer_shares`).
 
+## Phase 2 — Team Management + Agency setup (DONE, verified 2026-09-13)
+`/team` creates the agency workspace and supports add/suspend/reactivate/remove,
+role changes, teams and a permission-based role editor. Owner-role changes are
+blocked in both the UI and database. The canonical owner cannot be demoted,
+suspended, moved to another agency or deleted, and team/role references must
+belong to the same agency.
+
+## Phase 3 — Owners DB + Acquisition pipeline (DONE, verified 2026-09-13)
+`/owners` provides an Arabic/English, responsive nine-stage acquisition Kanban,
+search and source filters, follow-up KPIs, role-scoped assignment and owner
+creation. Agency owner rows are exposed through RPCs so phone and WhatsApp values
+are masked without `owner.view_phone`; direct agency-row CRUD is blocked.
+Company-provided sources and cross-member assignment require `team.manage`.
+
+Applied migrations: `agency_owner_integrity`, `agency_owner_pipeline`.
+Production rollback tests passed for cross-agency isolation, suspension
+revocation, canonical-owner guards, masked phone access, owner stage/assignment
+permissions, company-source restrictions and self-assignment.
+
+Browser fixture checks passed for Arabic/English, 390/1280px layouts, phone
+masking and role-scoped source/assignee controls.
+
 ## Remaining phases (frontend + wiring)
-- **P2 Team Management + Agency setup** — `/team`: create agency (`create_agency`),
-  invite/add/suspend/reactivate/change-role, teams, role editor over `permissions`.
-- **P3 Owners DB + Acquisition pipeline** — `/owners` Kanban over `owners.stage`.
 - **P4 Lead Inbox + assignment + Sales pipeline Kanban** — extend `/clients`;
   unassigned-inbox view; `agency_assign_lead`; drag-drop stages → `crm_sales_move_stage`.
 - **P5 Commission engine UI** — `commission_rules` editor + `deal_contributors` on `/deals`.

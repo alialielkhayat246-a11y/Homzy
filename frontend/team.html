@@ -135,6 +135,7 @@
 
     <!-- Has agency -->
     <div id="hasAgency" style="display:none">
+      <div class="msg err" id="loadMsg" style="display:none;margin-bottom:14px"></div>
       <div class="aghead">
         <div class="logo" id="agLogoBox">🏢</div>
         <div>
@@ -231,7 +232,7 @@
 </div></div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=5"></script>
+<script src="/assets/homzy.js?v=6"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -273,13 +274,19 @@ async function boot(){
 
 async function loadAgency(){
   $('noAgency').style.display='none'; $('hasAgency').style.display='block';
-  [MYPERMS, ROSTER, ROLES, TEAMS, PERMS] = await Promise.all([
-    rpc('my_perms',{p_agency:AG.id}).catch(()=>[]),
-    rpc('agency_team_roster',{p_agency:AG.id}).catch(()=>[]),
-    rest('/roles?agency_id=eq.'+AG.id+'&select=*&order=rank').catch(()=>[]),
-    rest('/teams?agency_id=eq.'+AG.id+'&select=*&order=created_at').catch(()=>[]),
-    rest('/permissions?select=*&order=sort').catch(()=>[])
+  const results = await Promise.allSettled([
+    rpc('my_perms',{p_agency:AG.id}),
+    rpc('agency_team_roster',{p_agency:AG.id}),
+    rest('/roles?agency_id=eq.'+AG.id+'&select=*&order=rank'),
+    rest('/teams?agency_id=eq.'+AG.id+'&select=*&order=created_at'),
+    rest('/permissions?select=*&order=sort')
   ]);
+  [MYPERMS, ROSTER, ROLES, TEAMS, PERMS] = results.map(r=>r.status==='fulfilled'?(r.value||[]):[]);
+  const failed=results.filter(r=>r.status==='rejected');
+  $('loadMsg').style.display=failed.length?'block':'none';
+  $('loadMsg').textContent=failed.length
+    ? L('تعذّر تحميل بعض بيانات الفريق. جرّب تحديث الصفحة.','Some team data could not be loaded. Please refresh the page.')
+    : '';
   MYPERMS=MYPERMS||[]; ROSTER=ROSTER||[]; ROLES=ROLES||[]; TEAMS=TEAMS||[]; PERMS=PERMS||[];
   document.querySelectorAll('.manage-only').forEach(el=>el.style.display=can('team.manage')?'':'none');
   renderHeader(); renderMembers(); renderTeams(); renderRoles();
@@ -304,7 +311,7 @@ function statusBadge(s){
   const m={active:['st-active',L('نشِط','Active')],suspended:['st-suspended',L('موقوف','Suspended')],inactive:['st-inactive',L('غير نشط','Inactive')],pending:['st-pending',L('بانتظار','Pending')]};
   const x=m[s]||m.active; return `<span class="stat-badge ${x[0]}">${x[1]}</span>`;
 }
-function roleOptions(sel){ return ROLES.map(r=>`<option value="${r.key}" ${r.key===sel?'selected':''}>${esc(L(r.name_ar,r.name_en))}</option>`).join(''); }
+function roleOptions(sel){ return ROLES.filter(r=>r.key!=='owner').map(r=>`<option value="${r.key}" ${r.key===sel?'selected':''}>${esc(L(r.name_ar,r.name_en))}</option>`).join(''); }
 
 function renderMembers(){
   const mgr=can('team.manage');
@@ -317,14 +324,14 @@ function renderMembers(){
     const roleCell = (mgr && !m.is_owner)
       ? `<select class="in" onchange="changeRole('${m.user_id}',this.value)">${roleOptions(m.role_key)}</select>`
       : `<span class="rolebadge">${esc(L(m.role_ar||m.role_key,m.role_en||m.role_key))}</span>`;
-    const teamCell = mgr
+    const teamCell = (mgr && !m.is_owner)
       ? `<select class="in" onchange="changeTeam('${m.user_id}',this.value)"><option value="">—</option>${TEAMS.map(t=>`<option value="${t.id}" ${t.id===m.team_id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`
       : (m.team_name?`<span class="mini">${esc(m.team_name)}</span>`:'');
     let actions='';
     if(mgr && !m.is_owner){
       if(m.status==='active') actions+=`<button class="iconbtn warn" onclick="setStatus('${m.user_id}','suspended')">${L('إيقاف','Suspend')}</button>`;
       else actions+=`<button class="iconbtn" onclick="setStatus('${m.user_id}','active')">${L('تفعيل','Activate')}</button>`;
-      actions+=`<button class="iconbtn danger" onclick="removeMember('${m.user_id}','${esc(m.name||'')}')">${L('إزالة','Remove')}</button>`;
+      actions+=`<button class="iconbtn danger" onclick="removeMember('${m.user_id}')">${L('إزالة','Remove')}</button>`;
     }
     return `<div class="mrow">
       <div class="av">${esc(initial)}</div>
@@ -353,7 +360,7 @@ function renderRoles(){
   const mgr=can('team.manage');
   $('rolesGrid').innerHTML = ROLES.map(r=>{
     const n=ROSTER.filter(m=>m.role_key===r.key).length;
-    return `<div class="rcard" ${mgr?'style="cursor:pointer" onclick="openEditRole(\''+r.id+'\')"':''}>
+    return `<div class="rcard" ${mgr&&r.key!=='owner'?'style="cursor:pointer" onclick="openEditRole(\''+r.id+'\')"':''}>
       <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
         <h3>${esc(L(r.name_ar,r.name_en))}</h3>
         <span class="badge ${r.is_system?'sys':''}">${r.is_system?L('افتراضي','Default'):L('مخصّص','Custom')}</span></div>
@@ -402,11 +409,11 @@ window.addMember=async()=>{
 window.changeRole=async(u,role)=>{ try{ await rpc('agency_set_member_role',{p_agency:AG.id,p_user:u,p_role_key:role}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 window.changeTeam=async(u,team)=>{ try{ await rpc('agency_set_member_team',{p_agency:AG.id,p_user:u,p_team:team||null}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 window.setStatus=async(u,st)=>{ try{ await rpc('agency_set_member_status',{p_agency:AG.id,p_user:u,p_status:st}); await loadAgency(); }catch(e){ alert(e.message||e); } };
-window.removeMember=async(u,name)=>{ if(!confirm(L('إزالة ','Remove ')+(name||'')+'؟')) return; try{ await rpc('agency_remove_member',{p_agency:AG.id,p_user:u}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+window.removeMember=async(u)=>{ const m=ROSTER.find(x=>x.user_id===u), name=m?.name||''; if(!confirm(L('إزالة ','Remove ')+name+'؟')) return; try{ await rpc('agency_remove_member',{p_agency:AG.id,p_user:u}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 
 // ---------- teams ----------
 window.openCreateTeam=()=>{ $('teamName').value=''; $('teamMsg').textContent='';
-  $('teamLeader').innerHTML='<option value="">—</option>'+ROSTER.map(m=>`<option value="${m.user_id}">${esc(m.name||m.phone||'')}</option>`).join('');
+  $('teamLeader').innerHTML='<option value="">—</option>'+ROSTER.filter(m=>m.status==='active').map(m=>`<option value="${m.user_id}">${esc(m.name||m.phone||'')}</option>`).join('');
   $('ovTeam').classList.add('open'); };
 window.createTeam=async()=>{
   const name=$('teamName').value.trim(); if(name.length<2){ $('teamMsg').textContent=L('اكتب اسم الفريق.','Enter a team name.'); $('teamMsg').className='msg err'; return; }
