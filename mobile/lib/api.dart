@@ -17,7 +17,7 @@ class HomzyApi {
   // Override at build time with --dart-define=HOMZY_API=... or in-app (⚙).
   static const _defaultBase = String.fromEnvironment(
     'HOMZY_API',
-    defaultValue: 'https://homzy-jet.vercel.app',
+    defaultValue: 'https://homzy-ai.com',
   );
   static const _prefsKey = 'homzy_api_base';
 

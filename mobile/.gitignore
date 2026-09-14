@@ -30,6 +30,7 @@ pubspec.lock
 /android/app/debug/
 /android/app/profile/
 /android/app/release/
+/android/build/
 /android/local.properties
 /android/key.properties
 /android/.kotlin/

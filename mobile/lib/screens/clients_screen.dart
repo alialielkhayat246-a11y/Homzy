@@ -3,17 +3,22 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n.dart';
 import '../services/client_service.dart';
-import '../services/listing_service.dart';
 import '../theme.dart';
 import '../widgets/listing_card.dart';
-import 'listing_detail_screen.dart';
 
 Color _stageColor(String s) {
   switch (s) {
-    case 'contacted':
+    case 'contact':
       return Brand.amber;
+    case 'qualified':
+    case 'matching':
+      return Colors.blue;
     case 'viewing':
       return Brand.coral;
+    case 'offer_sent':
+    case 'negotiate':
+    case 'reservation':
+      return Colors.deepPurple;
     case 'closed':
       return Brand.green;
     case 'lost':
@@ -22,6 +27,8 @@ Color _stageColor(String s) {
       return Brand.navy;
   }
 }
+
+String _tx(String en, String ar) => Lang.instance.isAr ? ar : en;
 
 String _clientBrief(Client c) => [
       if (c.purpose != null) tr(c.purpose == 'rent' ? 'for_rent' : 'for_sale'),
@@ -50,8 +57,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void _refresh() => setState(() => _future = ClientService.instance.list());
 
   Future<void> _add() async {
-    final done = await Navigator.of(context)
-        .push<bool>(MaterialPageRoute(builder: (_) => const ClientFormScreen()));
+    final done = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const ClientFormScreen()));
     if (done == true) _refresh();
   }
 
@@ -64,8 +71,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
         foregroundColor: Colors.white,
         onPressed: _add,
         icon: const Icon(Icons.person_add_alt, color: Colors.white),
-        label: Text(tr('add_client'),
-            style: const TextStyle(color: Colors.white)),
+        label:
+            Text(tr('add_client'), style: const TextStyle(color: Colors.white)),
       ),
       body: Column(children: [
         SizedBox(
@@ -87,8 +94,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 return const Center(child: CircularProgressIndicator());
               }
               final all = snap.data!;
-              final items =
-                  _stage == 'all' ? all : all.where((c) => c.stage == _stage).toList();
+              final items = _stage == 'all'
+                  ? all
+                  : all.where((c) => c.stage == _stage).toList();
               if (items.isEmpty) {
                 return Center(
                     child: Text(tr('no_clients'),
@@ -185,12 +193,17 @@ class ClientDetailScreen extends StatefulWidget {
 
 class _ClientDetailScreenState extends State<ClientDetailScreen> {
   late String _stage = widget.client.stage;
-  late Future<List<Listing>> _matches;
+  late Future<Map<String, dynamic>> _intelligence;
 
   @override
   void initState() {
     super.initState();
-    _matches = ClientService.instance.matches(widget.client);
+    _reloadIntelligence();
+  }
+
+  void _reloadIntelligence() {
+    _intelligence = ClientService.instance
+        .copilot(widget.client.id, language: Lang.instance.isAr ? 'ar' : 'en');
   }
 
   Future<void> _wa(String phone) async {
@@ -199,8 +212,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
         mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _call(String phone) async =>
-      launchUrl(Uri.parse('tel:$phone'));
+  Future<void> _call(String phone) async => launchUrl(Uri.parse('tel:$phone'));
 
   Future<void> _delete() async {
     await ClientService.instance.remove(widget.client.id);
@@ -295,41 +307,158 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          Text(tr('client_matches'),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          Row(children: [
+            const Icon(Icons.auto_awesome, color: Brand.amber),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(
+                    _tx('AI Sales Copilot & matching units',
+                        'مساعد المبيعات الذكي والوحدات المطابقة'),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, fontSize: 15))),
+            IconButton(
+                onPressed: () => setState(_reloadIntelligence),
+                icon: const Icon(Icons.refresh)),
+          ]),
           const SizedBox(height: 8),
-          FutureBuilder<List<Listing>>(
-            future: _matches,
+          FutureBuilder<Map<String, dynamic>>(
+            future: _intelligence,
             builder: (context, snap) {
-              if (!snap.hasData) {
+              if (snap.connectionState == ConnectionState.waiting) {
                 return const Padding(
                     padding: EdgeInsets.all(20),
                     child: Center(child: CircularProgressIndicator()));
               }
-              final m = snap.data!;
-              if (m.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Text(tr('no_matches_yet'),
-                      style: const TextStyle(color: Brand.muted)),
-                );
+              if (snap.hasError) {
+                return Card(
+                    child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(children: [
+                    Text('${snap.error}',
+                        style: const TextStyle(color: Brand.red)),
+                    TextButton(
+                        onPressed: () => setState(_reloadIntelligence),
+                        child: Text(_tx('Retry', 'إعادة المحاولة'))),
+                  ]),
+                ));
               }
-              return Column(
-                children: m
-                    .map((l) => ListingCard(
-                          listing: l,
-                          onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      ListingDetailScreen(listingId: l.id))),
-                        ))
-                    .toList(),
-              );
+              return _copilotPanel(snap.data ?? const {});
             },
           ),
         ],
       ),
     );
+  }
+
+  Widget _copilotPanel(Map<String, dynamic> data) {
+    final projects = (data['project_matches'] as List? ?? const []);
+    final listings = (data['matches'] as List? ?? const []);
+    final action = data['next_best_action'];
+    final actionMap = action is Map
+        ? Map<String, dynamic>.from(action)
+        : const <String, dynamic>{};
+    final summary = data['advice'] ?? data['summary'];
+    final nextAction = action is String
+        ? action
+        : actionMap['reason'] ?? actionMap['title'];
+    final score = data['lead_score'];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Card(
+        color: Brand.navy,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(
+                  child: Text(
+                      _tx('AI recommendation', 'توصية الذكاء الاصطناعي'),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w800))),
+              if (score != null) Chip(label: Text('$score/100')),
+            ]),
+            const SizedBox(height: 8),
+            Text(
+                '${summary ?? _tx('Complete the saved client requirements to improve recommendations.', 'أكمل احتياجات العميل المحفوظة لتحسين الترشيحات.')}',
+                style: const TextStyle(color: Colors.white, height: 1.45)),
+            if (nextAction != null) ...[
+              const Divider(color: Colors.white24, height: 22),
+              Text(_tx('Next action', 'الخطوة التالية'),
+                  style: const TextStyle(
+                      color: Colors.white70, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text('$nextAction',
+                  style: const TextStyle(color: Colors.white, height: 1.45)),
+            ],
+          ]),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Text(
+          _tx('Developer projects matched to saved requirements',
+              'مشروعات المطورين المطابقة للاحتياجات المحفوظة'),
+          style: const TextStyle(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 6),
+      if (projects.isEmpty)
+        _emptyMatch()
+      else
+        ...projects.take(10).map(_projectMatch),
+      const SizedBox(height: 12),
+      Text(_tx('Recorded marketplace units', 'وحدات السوق المسجلة'),
+          style: const TextStyle(fontWeight: FontWeight.w800)),
+      const SizedBox(height: 6),
+      if (listings.isEmpty)
+        _emptyMatch()
+      else
+        ...listings.take(10).map(_listingMatch),
+    ]);
+  }
+
+  Widget _emptyMatch() => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Text(tr('no_matches_yet'),
+            style: const TextStyle(color: Brand.muted)),
+      );
+
+  Widget _projectMatch(dynamic raw) {
+    final item = Map<String, dynamic>.from(raw as Map);
+    final project = item['project'] is Map
+        ? Map<String, dynamic>.from(item['project'] as Map)
+        : const <String, dynamic>{};
+    final unit = item['unit'] is Map
+        ? Map<String, dynamic>.from(item['unit'] as Map)
+        : const <String, dynamic>{};
+    final name = item['display_name'] ??
+        item['name'] ??
+        (Lang.instance.isAr ? project['name_ar'] : project['name']) ??
+        project['name'] ??
+        'Homzy';
+    return Card(
+        child: ListTile(
+      leading: CircleAvatar(child: Text('${item['score'] ?? 0}%')),
+      title: Text('$name', style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: Text([
+        project['area'],
+        unit['type'],
+        if (item['fit_summary'] != null) item['fit_summary'],
+      ].where((v) => v != null && '$v'.isNotEmpty).join(' · ')),
+    ));
+  }
+
+  Widget _listingMatch(dynamic raw) {
+    final item = Map<String, dynamic>.from(raw as Map);
+    final property = item['property'] is Map
+        ? Map<String, dynamic>.from(item['property'] as Map)
+        : const <String, dynamic>{};
+    return Card(
+        child: ListTile(
+      leading: CircleAvatar(child: Text('${item['score'] ?? 0}%')),
+      title: Text('${property['title'] ?? property['compound'] ?? 'Homzy'}',
+          style: const TextStyle(fontWeight: FontWeight.w700)),
+      subtitle: Text([property['area'], property['type'], property['price']]
+          .where((v) => v != null && '$v'.isNotEmpty)
+          .join(' · ')),
+    ));
   }
 }
 
@@ -351,8 +480,14 @@ class _ClientFormScreenState extends State<ClientFormScreen> {
   bool _saving = false;
 
   static const _types = [
-    'apartment', 'studio', 'duplex', 'penthouse',
-    'villa', 'townhouse', 'twinhouse', 'chalet',
+    'apartment',
+    'studio',
+    'duplex',
+    'penthouse',
+    'villa',
+    'townhouse',
+    'twinhouse',
+    'chalet',
   ];
 
   @override

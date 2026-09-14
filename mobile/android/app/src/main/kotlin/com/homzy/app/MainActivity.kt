@@ -1,4 +1,4 @@
-package com.example.homzy
+package com.homzy.app
 
 import io.flutter.embedding.android.FlutterActivity
 

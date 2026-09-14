@@ -8,10 +8,13 @@ import '../widgets/house_logo.dart';
 import '../widgets/lang_toggle.dart';
 import 'clients_screen.dart';
 import 'cobroking_screen.dart';
+import 'agency_owners_screen.dart';
+import 'agency_team_screen.dart';
 import 'launches_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'projects_screen.dart';
+import 'stays_screen.dart';
 import 'storefront_screen.dart';
 import 'valuation_screen.dart';
 
@@ -36,10 +39,9 @@ class _MoreScreenState extends State<MoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = (_profile?['full_name'] ??
-            AuthService.instance.displayName ??
-            '')
-        .toString();
+    final name =
+        (_profile?['full_name'] ?? AuthService.instance.displayName ?? '')
+            .toString();
     final phone = (_profile?['phone'] ?? '').toString();
     final avatar = _profile?['avatar_url'] as String?;
     return Scaffold(
@@ -57,8 +59,8 @@ class _MoreScreenState extends State<MoreScreen> {
                 Container(
                   width: 60,
                   height: 60,
-                  decoration:
-                      const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                  decoration: const BoxDecoration(
+                      shape: BoxShape.circle, color: Colors.white),
                   clipBehavior: Clip.antiAlias,
                   alignment: Alignment.center,
                   child: avatar != null
@@ -66,7 +68,8 @@ class _MoreScreenState extends State<MoreScreen> {
                           fit: BoxFit.cover,
                           width: 60,
                           height: 60,
-                          errorBuilder: (_, __, ___) => const HouseLogo(size: 34))
+                          errorBuilder: (_, __, ___) =>
+                              const HouseLogo(size: 34))
                       : const HouseLogo(size: 34),
                 ),
                 const SizedBox(width: 14),
@@ -92,7 +95,6 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _modeTile(),
           _tile(Icons.person_outline, tr('menu_profile'),
               () => _push(const ProfileScreen())),
           _tile(Icons.chat_bubble_outline, tr('menu_messages'),
@@ -101,11 +103,23 @@ class _MoreScreenState extends State<MoreScreen> {
               () => _push(const ProjectsScreen())),
           _tile(Icons.calculate_outlined, tr('menu_valuation'),
               () => _push(const ValuationScreen())),
+          _tile(Icons.holiday_village_outlined, 'Homzy Stays',
+              () => _push(const StaysScreen())),
           if (ProfileService.instance.isBroker) ...[
             _tile(Icons.storefront_outlined, tr('storefront_title'),
                 () => _push(const StorefrontScreen())),
             _tile(Icons.groups_outlined, tr('clients_title'),
                 () => _push(const ClientsScreen())),
+            _tile(
+                Icons.account_balance_outlined,
+                Lang.instance.isAr
+                    ? 'المُلّاك والتوريد'
+                    : 'Owners & acquisition',
+                () => _push(const AgencyOwnersScreen())),
+            _tile(
+                Icons.manage_accounts_outlined,
+                Lang.instance.isAr ? 'فريق الوكالة' : 'Agency team',
+                () => _push(const AgencyTeamScreen())),
             _tile(Icons.handshake_outlined, tr('cobroking_title'),
                 () => _push(const CobrokingScreen())),
           ],
@@ -123,44 +137,8 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  void _push(Widget screen) => Navigator.of(context)
-      .push(MaterialPageRoute(builder: (_) => screen));
-
-  Widget _modeTile() {
-    final isBroker = ProfileService.instance.isBroker;
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      decoration: BoxDecoration(
-          color: Brand.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Brand.line)),
-      child: SwitchListTile(
-        secondary: const Icon(Icons.badge_outlined, color: Brand.navy),
-        title: Text(tr('broker_mode'),
-            style: const TextStyle(color: Brand.navy)),
-        subtitle: Text(tr('broker_mode_sub'),
-            style: const TextStyle(color: Brand.muted, fontSize: 12)),
-        activeThumbColor: Brand.coral,
-        value: isBroker,
-        onChanged: (on) async {
-          try {
-            await ProfileService.instance.setMode(on ? 'broker' : 'user');
-            if (!mounted) return;
-            setState(() {});
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(tr(on
-                    ? 'mode_switched_broker'
-                    : 'mode_switched_user'))));
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text('$e')));
-            }
-          }
-        },
-      ),
-    );
-  }
+  void _push(Widget screen) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
 
   Widget _languageTile() => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -170,8 +148,8 @@ class _MoreScreenState extends State<MoreScreen> {
             border: Border.all(color: Brand.line)),
         child: ListTile(
           leading: const Icon(Icons.language, color: Brand.navy),
-          title: Text(tr('language'),
-              style: const TextStyle(color: Brand.navy)),
+          title:
+              Text(tr('language'), style: const TextStyle(color: Brand.navy)),
           trailing: const LangToggle(),
           onTap: () => Lang.instance.toggle(),
         ),
