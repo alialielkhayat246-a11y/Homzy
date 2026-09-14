@@ -270,6 +270,12 @@ def privacy_page():
     return FileResponse(config.FRONTEND_DIR / "privacy.html")
 
 
+@app.get("/delete-account")
+def delete_account_page():
+    """Public account-deletion instructions for mobile store disclosures."""
+    return FileResponse(config.FRONTEND_DIR / "delete-account.html")
+
+
 @app.get("/contact")
 def contact_page():
     """Contact us (email / phone / WhatsApp)."""

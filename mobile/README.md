@@ -1,6 +1,6 @@
 # Homzy mobile (Flutter Native)
 
-The Android app uses native Flutter screens and connects directly to the same
+The Android and iOS app uses native Flutter screens and connects directly to the same
 Supabase project and FastAPI services as `homzy-ai.com`.
 
 Native areas include authentication, Arabic/English direction, Homzy AI chat,
@@ -22,9 +22,16 @@ flutter run
 flutter analyze
 flutter test
 flutter build apk --release
+flutter build appbundle --release
+# On macOS with Xcode and an Apple Developer team selected:
+flutter build ipa --release
 ```
 
-The APK is generated under `build/app/outputs/flutter-apk/`. The current
-Android project still uses its existing debug signing configuration for local
-release builds. Store publishing requires a production application id, upload
-keystore and Play signing setup.
+Android release builds require the ignored `android/key.properties` and upload
+keystore. The Play Store bundle is generated under
+`build/app/outputs/bundle/release/`. Keep the upload keystore and its password
+backed up securely because every future Android update depends on them.
+
+The iOS project uses bundle ID `com.homzy.app`. Open `ios/Runner.xcworkspace`
+on macOS, select the Apple Developer team, then archive and upload through
+Xcode or build an IPA with Flutter.

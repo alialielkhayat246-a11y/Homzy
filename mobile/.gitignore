@@ -24,6 +24,9 @@ migrate_working_dir/
 .pub/
 /build/
 pubspec.lock
+/Homzy-*.zip
+/release-package/
+/store-release/
 
 # Android (commit source, ignore build output + local config)
 /android/.gradle/
@@ -33,11 +36,12 @@ pubspec.lock
 /android/build/
 /android/local.properties
 /android/key.properties
+*.jks
+/.release-secrets/
 /android/.kotlin/
 **/android/**/GeneratedPluginRegistrant.java
 
-# iOS / others left generated (recreate with `flutter create .`)
-ios/
+# Desktop/web platform folders are regenerated when needed.
 linux/
 macos/
 windows/
