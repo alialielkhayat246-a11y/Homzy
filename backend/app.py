@@ -559,6 +559,22 @@ async def parse_client(req: Request):
     return {"fields": fields}
 
 
+@app.post("/api/crm/assistant")
+async def crm_assistant(req: Request):
+    """Voice → structured CRM COMMAND. The broker speaks any CRM task ('add a
+    client', 'move Ahmed to negotiation', 'schedule a viewing tomorrow', 'add an
+    owner'…); this returns {intent, params, say} and the browser executes it with
+    the broker's own Supabase JWT (so RLS applies). No data is written here."""
+    body = await req.json()
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"intent": "unknown", "params": {}, "say": ""}
+    try:
+        return broker.parse_command(text)
+    except Exception:
+        return {"intent": "unknown", "params": {}, "say": ""}
+
+
 @app.get("/sw.js")
 def service_worker():
     """The push service worker. Must be served from root so its scope is the

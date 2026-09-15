@@ -455,6 +455,79 @@ def parse_client(text: str) -> dict[str, Any]:
         return {}
 
 
+def parse_command(text: str) -> dict[str, Any]:
+    """Turn a broker's spoken sentence into a structured CRM COMMAND the frontend
+    can execute. Returns {intent, params, say}. `say` is a short Arabic/English
+    confirmation to read back. Unknown/unclear -> intent 'unknown'."""
+    import datetime as _dt
+    client = _client_or_none()
+    text = (text or "").strip()
+    if not text:
+        return {"intent": "unknown", "params": {}, "say": ""}
+    if client is None:
+        return {"intent": "unavailable", "params": {},
+                "say": "المساعد الصوتي مش متاح دلوقتي."}
+    today = _dt.date.today().isoformat()
+    system = (
+        "You are Homzy CRM's voice assistant for an Egyptian real-estate broker. "
+        "Convert ONE spoken sentence (Arabic Egyptian or English) into a single CRM "
+        "command as strict JSON: {\"intent\":..., \"params\":{...}, \"say\":\"...\"}. "
+        "Output ONLY the JSON, no prose. `say` = a SHORT confirmation in the SAME "
+        "language the user spoke (max ~12 words).\n"
+        "Intents and their params:\n"
+        "- add_lead: {name, phone(digits only), purpose('sale'|'rent'), type(apartment|villa|"
+        "duplex|penthouse|studio|townhouse|office|shop), area, budget(number EGP; '6 مليون'->6000000), "
+        "bedrooms(int), next_followup(YYYY-MM-DD), notes}\n"
+        "- move_stage: {lead_name, stage(new|contact|qualified|matching|viewing|offer_sent|negotiate|"
+        "reservation|closed|lost), reason(required only if lost)}\n"
+        "- add_task: {title, due(YYYY-MM-DD), priority(low|normal|high), lead_name(optional), "
+        "kind(call|follow_up|viewing|document|other)}\n"
+        "- schedule_viewing: {lead_name, property, when(ISO date or datetime), location}\n"
+        "- add_owner: {name, phone(digits), whatsapp, area, property_type, purpose('sale'|'rent'), "
+        "asking_price(number), source(facebook|dubizzle|referral|manual|company|other)}\n"
+        "- set_followup: {lead_name, date(YYYY-MM-DD)}\n"
+        "- add_note: {lead_name, note}\n"
+        "- assign_lead: {lead_name, member_name}\n"
+        "- search: {query}\n"
+        "- navigate: {page(clients|deals|owners|team|insights|my-day|leads)}\n"
+        "- unknown: {} when the request is unclear or not a CRM task.\n"
+        f"Resolve relative dates using TODAY={today} (بكرة, الخميس الجاي, بعد أسبوع, يوم 20). "
+        "Convert spoken Arabic digits to numerals. Keep names exactly as said."
+    )
+    try:
+        raw = client.chat(
+            [{"role": "system", "content": system},
+             {"role": "user", "content": text}],
+            temperature=0.1, max_tokens=320)
+        data = _parse_json(raw or "")
+    except Exception:
+        return {"intent": "unknown", "params": {}, "say": ""}
+
+    valid = {"add_lead", "move_stage", "add_task", "schedule_viewing", "add_owner",
+             "set_followup", "add_note", "assign_lead", "search", "navigate", "unknown"}
+    intent = str(data.get("intent") or "unknown").strip()
+    if intent not in valid:
+        intent = "unknown"
+    params = data.get("params") if isinstance(data.get("params"), dict) else {}
+    # Light normalisation of numeric/phone params
+    for k in ("phone", "whatsapp"):
+        if params.get(k):
+            params[k] = re.sub(r"\D", "", str(params[k]))
+    for k in ("budget", "asking_price"):
+        if params.get(k) not in (None, ""):
+            try:
+                params[k] = int(float(params[k]))
+            except (TypeError, ValueError):
+                params.pop(k, None)
+    if params.get("bedrooms") not in (None, ""):
+        try:
+            params["bedrooms"] = int(params["bedrooms"])
+        except (TypeError, ValueError):
+            params.pop("bedrooms", None)
+    return {"intent": intent, "params": params,
+            "say": str(data.get("say") or "").strip(), "transcript": text}
+
+
 def _recommendation(req, matches):
     if not persona._missing(req) and matches:
         return listings_mod.public(matches[0])

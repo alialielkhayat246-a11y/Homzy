@@ -259,6 +259,31 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
   .hz-splash .hz-s-logo svg path{stroke-dashoffset:0;}
 }
 
+/* ---------- CRM Voice Assistant ---------- */
+.hz-asst-fab{position:fixed; inset-inline-start:22px; bottom:22px; z-index:80; width:58px; height:58px; border-radius:50%;
+  background:linear-gradient(135deg,#0B5563,#0B1D36); color:#fff; border:none; cursor:pointer;
+  box-shadow:0 12px 30px rgba(11,29,54,.4); display:flex; align-items:center; justify-content:center; transition:transform .16s;}
+.hz-asst-fab:hover{transform:scale(1.07);} .hz-asst-fab svg{width:26px; height:26px;}
+.hz-asst{position:fixed; inset-inline-start:22px; bottom:92px; z-index:81; width:340px; max-width:calc(100vw - 32px);
+  background:#fff; border-radius:20px; box-shadow:0 24px 70px rgba(11,29,54,.34); border:1px solid var(--line); overflow:hidden; display:none;}
+.hz-asst.open{display:block; animation:pop .2s ease;}
+.hz-asst .ah{background:var(--navy); color:#fff; padding:13px 16px; display:flex; align-items:center; gap:10px;}
+.hz-asst .ah b{font-weight:800; font-size:15px;} .hz-asst .ah .sub{font-size:11px; opacity:.7;}
+.hz-asst .ah .x{margin-inline-start:auto; background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:16px;}
+.hz-asst .ab{padding:18px 16px; text-align:center;}
+.hz-asst .bigmic{width:82px; height:82px; border-radius:50%; border:none; cursor:pointer; margin:4px auto 10px; display:flex; align-items:center; justify-content:center;
+  background:var(--teal-l,#E4F1F2); color:var(--teal-d,#0B5563); transition:transform .15s;}
+.hz-asst .bigmic svg{width:34px; height:34px;}
+.hz-asst .bigmic.rec{background:#B42318; color:#fff; animation:micpulse 1s infinite;}
+.hz-asst .status{font-weight:700; color:var(--navy); font-size:13.5px; min-height:18px;}
+.hz-asst .tr{color:var(--muted); font-size:13px; margin-top:8px; line-height:1.5; min-height:16px;}
+.hz-asst .res{margin-top:12px; padding:11px 13px; border-radius:12px; font-size:13.5px; font-weight:700; text-align:start; display:none;}
+.hz-asst .res.ok{display:block; background:#E7F6EC; color:#137a3e;} .hz-asst .res.err{display:block; background:#FDECEC; color:#B42318;}
+.hz-asst .res.info{display:block; background:var(--cream); color:var(--navy);}
+.hz-asst .hint{margin-top:12px; font-size:11.5px; color:var(--muted); line-height:1.6; text-align:start; background:var(--cream); border-radius:10px; padding:9px 11px;}
+.hz-asst .res .go{display:inline-block; margin-top:7px; color:var(--teal-d); font-weight:800; text-decoration:none;}
+@media(max-width:900px){ .hz-asst{inset-inline:12px; width:auto; bottom:12px;} .hz-asst-fab{inset-inline-start:16px; bottom:16px;} }
+
 /* ---------- Chat widget ---------- */
 .chat-fab{position:fixed; inset-inline-end:22px; bottom:22px; z-index:80; width:60px; height:60px; border-radius:50%; background:var(--teal); color:#fff; border:none; cursor:pointer; box-shadow:0 12px 30px rgba(11,85,99,.42); display:flex; align-items:center; justify-content:center; transition:transform .16s;}
 .chat-fab:hover{transform:scale(1.06);} .chat-fab svg{width:28px; height:28px;}

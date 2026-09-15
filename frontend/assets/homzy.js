@@ -967,6 +967,159 @@ function buildSplash(){
   el.addEventListener('click', ()=>{ clearTimeout(t); kill(); });
 }
 
+/* ============================================================
+   CRM Voice Assistant (AI) — say any CRM task, it executes it.
+   Speech (Web Speech API) → /api/crm/assistant (Gemini) → {intent,params}
+   → executed with the broker's own Supabase JWT (RLS applies).
+   ============================================================ */
+const MIC_SVG='<svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Z" fill="currentColor"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+let AREC=null, A_ON=false, A_TXT='', A_DONE=false, A_TIMER=null;
+const esc=HZ.esc;
+const asstSupported=()=>!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+const aLbl=(a,e)=>HZ.lang==='en'?e:a;
+
+function buildAssistant(){
+  if(document.getElementById('hzAsstFab')) return;
+  if(!isCrmPath(location.pathname)) return;      // CRM pages only
+  if(!HZ.session()) return;                        // signed-in brokers only
+  const fab=document.createElement('button'); fab.id='hzAsstFab'; fab.className='hz-asst-fab';
+  fab.setAttribute('aria-label',aLbl('مساعد صوتي','Voice assistant')); fab.innerHTML=MIC_SVG;
+  fab.onclick=()=>HZ.asstOpen();
+  const p=document.createElement('div'); p.id='hzAsstPanel'; p.className='hz-asst'; p.dir=HZ.lang==='en'?'ltr':'rtl';
+  p.innerHTML=`<div class="ah"><b>${aLbl('مساعد Homzy','Homzy Assistant')}</b><span class="sub">${aLbl('قوله أي مهمة','Say any task')}</span><button class="x" onclick="HZ.asstClose()">×</button></div>
+    <div class="ab">
+      <button class="bigmic" id="hzAsstMic" aria-label="mic">${MIC_SVG}</button>
+      <div class="status" id="hzAsstStatus">${aLbl('اضغط وابدأ الكلام','Tap and start talking')}</div>
+      <div class="tr" id="hzAsstTr"></div>
+      <div class="res" id="hzAsstRes"></div>
+      <div class="hint">${aLbl('جرّب: «أضف عميل أحمد رقمه ٠١٠… عايز شقة في التجمع بـ٦ مليون» · «حوّل أحمد لمرحلة تفاوض» · «اعمل مهمة اتصال بكرة» · «حدّد معاينة لأحمد بكرة الساعة ٥» · «أضف مالك» · «افتح الصفقات»','Try: “Add client Ahmed 010…, wants an apartment in Tagamoa for 6M” · “Move Ahmed to negotiation” · “Add a call task tomorrow” · “Schedule a viewing for Ahmed tomorrow 5pm” · “Add an owner” · “Open deals”')}</div>
+    </div>`;
+  document.body.appendChild(fab); document.body.appendChild(p);
+  document.getElementById('hzAsstMic').onclick=asstToggle;
+}
+HZ.asstOpen=function(){ buildAssistant(); const p=document.getElementById('hzAsstPanel'), f=document.getElementById('hzAsstFab');
+  if(!p) return; p.classList.add('open'); if(f) f.style.display='none';
+  setTimeout(()=>{ try{ p.getAnimations&&p.getAnimations().forEach(a=>a.finish()); }catch(e){} },240);
+  if(asstSupported()) asstToggle(); else asstStatus(aLbl('المتصفح مش بيدعم الصوت — جرّب Chrome.','Speech not supported — try Chrome.'),true);
+};
+HZ.asstClose=function(){ asstStop(); const p=document.getElementById('hzAsstPanel'), f=document.getElementById('hzAsstFab'); if(p)p.classList.remove('open'); if(f)f.style.display='flex'; };
+function asstStatus(t,err){ const s=document.getElementById('hzAsstStatus'); if(s){ s.textContent=t; s.style.color=err?'#B42318':''; } }
+function asstMicUI(on){ const b=document.getElementById('hzAsstMic'); if(b) b.classList.toggle('rec',on); }
+function asstRes(t,kind){ const r=document.getElementById('hzAsstRes'); if(!r) return; r.className='res '+(kind||'info'); r.innerHTML=t; }
+function asstSpeak(t){ try{ if(!t)return; const u=new SpeechSynthesisUtterance(t); u.lang=HZ.lang==='en'?'en-US':'ar-EG'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+
+function asstToggle(){
+  if(A_ON){ asstFinish(); return; }
+  if(!asstSupported()){ asstStatus(aLbl('المتصفح مش بيدعم الصوت.','Speech not supported.'),true); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  try{ AREC=new SR(); }catch(e){ asstStatus(aLbl('تعذّر التسجيل.','Could not start.'),true); return; }
+  AREC.lang=HZ.lang==='en'?'en-US':'ar-EG'; AREC.interimResults=true; AREC.continuous=true; A_TXT=''; A_DONE=false;
+  const tr=document.getElementById('hzAsstTr');
+  AREC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript+' '; A_TXT=t.trim(); if(tr) tr.textContent='«'+A_TXT+'»'; };
+  AREC.onerror=(e)=>{ const err=e.error||''; if(err==='no-speech'||err==='aborted') return; A_ON=false; asstMicUI(false); clearTimeout(A_TIMER); asstStatus(aLbl('تعذّر التسجيل — اسمح للميكروفون.','Mic error — allow the microphone.'),true); };
+  AREC.onend=()=>{ clearTimeout(A_TIMER); if(!A_ON){ asstProcess(); return; } if(A_TXT){ A_ON=false; asstMicUI(false); asstProcess(); } else { try{ AREC.start(); }catch(e){ A_ON=false; asstMicUI(false); } } };
+  try{ AREC.start(); A_ON=true; asstMicUI(true); asstStatus(aLbl('بسمعك… اتكلم ودوس لما تخلص','Listening… tap when done')); if(tr)tr.textContent=''; asstRes('',''); document.getElementById('hzAsstRes').className='res'; }
+  catch(e){ A_ON=false; asstMicUI(false); asstStatus(aLbl('تعذّر التسجيل.','Could not start.'),true); }
+}
+function asstFinish(){ A_ON=false; asstMicUI(false); asstStatus(aLbl('بحلّل…','Thinking…')); try{ AREC&&AREC.stop(); }catch(e){} clearTimeout(A_TIMER); A_TIMER=setTimeout(asstProcess,1400); }
+function asstStop(){ if(A_ON||AREC){ A_ON=false; A_DONE=true; clearTimeout(A_TIMER); try{ AREC&&AREC.stop(); }catch(e){} asstMicUI(false); } }
+
+async function asstProcess(){
+  if(A_DONE) return; A_DONE=true; clearTimeout(A_TIMER);
+  const text=(A_TXT||'').trim();
+  if(!text){ asstStatus(aLbl('مسمعتش حاجة — جرّب تاني.','Heard nothing — try again.'),true); return; }
+  asstStatus(aLbl('بنفّذ…','Working…'));
+  let cmd; try{ const r=await fetch('/api/crm/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); cmd=await r.json(); }
+  catch(e){ asstStatus(aLbl('تعذّر الاتصال.','Connection failed.'),true); return; }
+  try{ await asstExec(cmd); }catch(e){ asstRes(aLbl('حصل خطأ: ','Error: ')+esc(e.message||e),'err'); }
+  asstStatus(aLbl('جاهز','Ready'));
+}
+
+const asstEnc=encodeURIComponent;
+async function asstApi(path,opts){ const s=HZ.session(); if(!s) throw new Error('login'); return HZ.sbAuth(path,s.token,(opts&&opts.method)||'GET',opts&&opts.body,opts&&opts.extra); }
+async function asstResolveLead(name){
+  if(!name) return null;
+  const rows=await asstApi('/clients?select=id,name,stage&name=ilike.*'+asstEnc(name)+'*&limit=6').catch(()=>[]);
+  if(!rows||!rows.length) return null;
+  const exact=rows.find(r=>(r.name||'').trim()===name.trim()); return exact||rows[0];
+}
+function asstRefresh(){ const p=location.pathname;
+  try{ if(p==='/clients'&&window.loadClients) return window.loadClients();
+    if((p==='/crm'||p==='/my-day')&&window.load) return window.load();
+    if(p==='/owners'&&window.loadOwners) return window.loadOwners();
+    if(p==='/deals'&&window.load) return window.load(); }catch(e){}
+}
+const asstGo=(path,label)=>`<a class="go" href="${path}">${label} ←</a>`;
+
+async function asstExec(cmd){
+  const s=HZ.session(); if(!s){ asstRes(aLbl('لازم تسجّل دخول.','Please sign in.'),'err'); return; }
+  const uid=s.uid, P=(cmd&&cmd.params)||{}, intent=cmd&&cmd.intent, say=cmd&&cmd.say;
+  const done=(html)=>{ asstRes(html,'ok'); asstSpeak(say||(HZ.lang==='en'?'Done':'تمام')); asstRefresh(); };
+  const need=(t)=>{ asstRes(t,'info'); asstSpeak(t); };
+
+  if(intent==='navigate'){ const map={clients:'/clients',deals:'/deals',owners:'/owners',team:'/team',insights:'/insights','my-day':'/crm',leads:'/leads'}; const path=map[P.page]; if(path){ asstRes(aLbl('بفتح ','Opening ')+P.page,'ok'); setTimeout(()=>location.href=path,500); } else need(aLbl('مش فاهم الصفحة.','Unknown page.')); return; }
+
+  if(intent==='add_lead'){
+    if(!P.name){ need(aLbl('قوللي اسم العميل.','Tell me the client name.')); return; }
+    const rec={owner_id:uid,name:P.name,phone:P.phone||null,purpose:P.purpose||'sale',type:P.type||null,area:P.area||null,
+      budget:P.budget||null,bedrooms:(P.bedrooms!=null?P.bedrooms:null),next_followup:P.next_followup||null,notes:P.notes||null,stage:'new',source:'voice'};
+    await asstApi('/clients',{method:'POST',body:rec,extra:{Prefer:'return=minimal'}});
+    done(aLbl('اتضاف العميل ','Added ')+esc(P.name)+' '+asstGo('/clients',aLbl('العملاء','Clients'))); return;
+  }
+  if(intent==='move_stage'){
+    const lead=await asstResolveLead(P.lead_name); if(!lead){ need(aLbl('مالقيتش العميل ده.','Client not found.')); return; }
+    await asstApi('/rpc/crm_sales_move_stage',{method:'POST',body:{p_lead:lead.id,p_stage:P.stage,p_reason:P.reason||null}});
+    done(esc(lead.name)+' → '+esc(P.stage)); return;
+  }
+  if(intent==='add_task'){
+    if(!P.title){ need(aLbl('قوللي عنوان المهمة.','Tell me the task title.')); return; }
+    let lead=null; if(P.lead_name){ lead=await asstResolveLead(P.lead_name); }
+    const rec={owner_id:uid,lead_id:lead?lead.id:null,kind:P.kind||'follow_up',title:P.title,
+      due_at:P.due?new Date(P.due).toISOString():null,priority:P.priority||'normal',status:'open'};
+    await asstApi('/crm_tasks',{method:'POST',body:rec,extra:{Prefer:'return=minimal'}});
+    done(aLbl('اتعملت المهمة ','Task added ')+asstGo('/crm',aLbl('يومي','My Day'))); return;
+  }
+  if(intent==='schedule_viewing'){
+    const lead=await asstResolveLead(P.lead_name); if(!lead){ need(aLbl('مالقيتش العميل.','Client not found.')); return; }
+    const when=P.when?new Date(P.when).toISOString():null; if(!when){ need(aLbl('قوللي معاد المعاينة.','Tell me the viewing time.')); return; }
+    await asstApi('/rpc/crm_schedule_viewing',{method:'POST',body:{p_lead:lead.id,p_title:P.property||null,p_when:when,p_location:P.location||null,p_ref:null}});
+    done(aLbl('اتحددت معاينة لـ','Viewing set for ')+esc(lead.name)); return;
+  }
+  if(intent==='set_followup'){
+    const lead=await asstResolveLead(P.lead_name); if(!lead){ need(aLbl('مالقيتش العميل.','Client not found.')); return; }
+    if(!P.date){ need(aLbl('قوللي التاريخ.','Tell me the date.')); return; }
+    await asstApi('/clients?id=eq.'+lead.id,{method:'PATCH',body:{next_followup:P.date},extra:{Prefer:'return=minimal'}});
+    done(aLbl('اتحددت متابعة ','Follow-up ')+esc(lead.name)+' — '+esc(P.date)); return;
+  }
+  if(intent==='add_note'){
+    const lead=await asstResolveLead(P.lead_name); if(!lead){ need(aLbl('مالقيتش العميل.','Client not found.')); return; }
+    await asstApi('/rpc/crm_log_activity',{method:'POST',body:{p_lead:lead.id,p_kind:'note',p_body:P.note||'',p_meta:null}});
+    done(aLbl('اتسجّلت الملاحظة.','Note saved.')); return;
+  }
+  if(intent==='add_owner'){
+    if(!P.name){ need(aLbl('قوللي اسم المالك.','Tell me the owner name.')); return; }
+    const rec={owner_id:uid,name:P.name,phone:P.phone||null,whatsapp:P.whatsapp||null,area:P.area||null,
+      property_type:P.property_type||null,purpose:P.purpose||null,asking_price:P.asking_price||null,source:P.source||'manual',stage:'new'};
+    await asstApi('/owners',{method:'POST',body:rec,extra:{Prefer:'return=minimal'}});
+    done(aLbl('اتضاف المالك ','Owner added ')+esc(P.name)+' '+asstGo('/owners',aLbl('الملّاك','Owners'))); return;
+  }
+  if(intent==='assign_lead'){
+    const lead=await asstResolveLead(P.lead_name); if(!lead){ need(aLbl('مالقيتش العميل.','Client not found.')); return; }
+    const ags=await asstApi('/agencies?select=id&limit=1').catch(()=>[]); if(!ags||!ags.length){ need(aLbl('التوزيع متاح جوه وكالة.','Assigning needs an agency.')); return; }
+    const roster=await asstApi('/rpc/agency_team_roster',{method:'POST',body:{p_agency:ags[0].id}}).catch(()=>[]);
+    const m=(roster||[]).find(x=>(x.name||'').includes(P.member_name||'§')); if(!m){ need(aLbl('مالقيتش العضو ده في فريقك.','Team member not found.')); return; }
+    await asstApi('/rpc/agency_assign_lead',{method:'POST',body:{p_lead:lead.id,p_assignee:m.user_id,p_reason:'voice'}});
+    done(esc(lead.name)+' → '+esc(m.name||'')); return;
+  }
+  if(intent==='search'){
+    const q=P.query||''; if(location.pathname==='/clients'&&window.renderBoard){ const el=document.getElementById('search'); if(el){ el.value=q; window.renderBoard(); asstRes(aLbl('بحثت عن ','Searched ')+esc(q),'ok'); return; } }
+    location.href='/clients'; return;
+  }
+  if(intent==='unavailable'){ asstRes(say||aLbl('المساعد مش متاح دلوقتي.','Assistant unavailable.'),'err'); return; }
+  // unknown
+  asstRes(say||aLbl('مفهمتش الطلب — جرّب تاني بصيغة أوضح.','I didn\'t catch that — try again.'),'info'); asstSpeak(say||'');
+}
+
 /* ---------- boot ---------- */
 function boot(){
   if(!chat) chat=newChatState();
@@ -976,6 +1129,7 @@ function boot(){
   HZ.applyLang();
   checkBrokerAccount();   // sets role → nav set, product mode, profile chrome
   HZ.initReveal();
+  buildAssistant();       // CRM voice assistant (self-gates to CRM pages + session)
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
