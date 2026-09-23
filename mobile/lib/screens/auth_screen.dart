@@ -16,7 +16,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _email = TextEditingController();
+  final _phone = TextEditingController();
   final _password = TextEditingController();
   final _name = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -28,7 +28,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
-    _email.dispose();
+    _phone.dispose();
     _password.dispose();
     _name.dispose();
     super.dispose();
@@ -44,19 +44,18 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       if (_isSignUp) {
         final res = await AuthService.instance.signUp(
-          email: _email.text.trim(),
+          phone: _phone.text.trim(),
           password: _password.text,
           fullName: _name.text.trim(),
         );
         // If email confirmation is on, there's no session yet.
         if (res.session == null && mounted) {
-          setState(() => _info =
-              'Account created! Check your email to confirm, then log in.');
+          setState(() => _info = tr('account_created_sign_in'));
           setState(() => _isSignUp = false);
         }
       } else {
         await AuthService.instance.signIn(
-          email: _email.text.trim(),
+          phone: _phone.text.trim(),
           password: _password.text,
         );
       }
@@ -84,7 +83,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) setState(() => _error = e.message);
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Google sign-in unavailable. Try email for now.');
+        setState(() => _error = tr('google_unavailable_phone'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -133,13 +132,13 @@ class _AuthScreenState extends State<AuthScreen> {
                                 icon: Icons.person_outline),
                             const SizedBox(height: 12),
                           ],
-                          _field(_email, tr('email'),
-                              icon: Icons.mail_outline,
-                              keyboard: TextInputType.emailAddress,
-                              validator: (v) =>
-                                  (v == null || !v.contains('@'))
-                                      ? tr('enter_valid_email')
-                                      : null),
+                          _field(_phone, tr('phone_number'),
+                              icon: Icons.phone_outlined,
+                              keyboard: TextInputType.phone,
+                              validator: (v) => v == null ||
+                                      !AuthService.isValidEgyptianPhone(v)
+                                  ? tr('enter_valid_phone')
+                                  : null),
                           const SizedBox(height: 12),
                           _field(_password, tr('password'),
                               icon: Icons.lock_outline,
@@ -169,8 +168,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white))
+                                          strokeWidth: 2, color: Colors.white))
                                   : Text(_isSignUp
                                       ? tr('sign_up')
                                       : tr('sign_in')),

@@ -53,7 +53,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     if (!mounted) return;
     Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => MessageThreadScreen(
-            conversationId: convId, title: l.ownerName ?? l.title)));
+            conversationId: convId,
+            title: l.ownerName ?? l.title,
+            otherUserId: l.ownerId)));
   }
 
   @override
@@ -144,8 +146,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                             _spec(Icons.king_bed_outlined, '${l.bedrooms}',
                                 tr('beds_short')),
                           if (l.sizeSqm != null)
-                            _spec(Icons.straighten,
-                                '${l.sizeSqm!.round()}', 'م²'),
+                            _spec(Icons.straighten, '${l.sizeSqm!.round()}',
+                                'م²'),
                         ],
                       ),
                       if (l.description != null &&

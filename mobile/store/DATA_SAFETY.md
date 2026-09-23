@@ -13,6 +13,7 @@ Use this file as the working source for Google Play Data safety and Apple App Pr
 | Photos or videos | Avatar, property photos, verification image | App features, host verification | Yes |
 | Messages | AI chat, property and broker messages | App features and recommendations | Yes |
 | Other user content | Listings, client requirements and notes | App features and AI matching | Yes |
+| Other user content | Safety reports, report reasons and reported content snapshots | Fraud prevention, security and compliance | Yes |
 | Purchases | Booking amount/status; card details remain with the payment provider | Payments and transaction support | Yes |
 | App interactions | Searches, favorites, views and inquiries | App features, recommendations and analytics | Yes |
 | Approximate/precise location entered for a property | Property map coordinates | Listing and map features | Yes |
@@ -21,6 +22,8 @@ Use this file as the working source for Google Play Data safety and Apple App Pr
 
 - Traffic uses HTTPS for the production API and Supabase.
 - Authentication and row-level access controls are provided by Supabase.
+- Users can report messages, users and AI responses inside the app. Reports are visible only to the reporter and authorized Homzy administrators.
+- Users can block and unblock other users. Database policies prevent either participant from sending new messages while a block is active.
 - Host identity documents use the private `stay-docs` storage bucket.
 - Users can delete their account inside the app under More → Profile → Delete account.
 - Public deletion instructions: `https://homzy-ai.com/delete-account`.

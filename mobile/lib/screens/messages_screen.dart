@@ -59,8 +59,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         ? NetworkImage(c.otherAvatar!)
                         : null,
                     child: c.otherAvatar == null
-                        ? Text(
-                            name.isNotEmpty ? name.substring(0, 1) : '?',
+                        ? Text(name.isNotEmpty ? name.substring(0, 1) : '?',
                             style: const TextStyle(color: Colors.white))
                         : null,
                   ),
@@ -70,13 +69,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                   trailing: c.lastAt != null
                       ? Text(_time(c.lastAt!),
-                          style: const TextStyle(
-                              color: Brand.muted, fontSize: 11))
+                          style:
+                              const TextStyle(color: Brand.muted, fontSize: 11))
                       : null,
                   onTap: () async {
                     await Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => MessageThreadScreen(
-                            conversationId: c.id, title: name)));
+                            conversationId: c.id,
+                            title: name,
+                            otherUserId: c.otherId)));
                     _refresh();
                   },
                 );

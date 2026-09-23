@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n.dart';
 import '../services/auth_service.dart';
@@ -126,8 +127,10 @@ class _MoreScreenState extends State<MoreScreen> {
           _tile(Icons.campaign_outlined, tr('launches_title'),
               () => _push(const LaunchesScreen())),
           _languageTile(),
-          _tile(Icons.description_outlined, tr('menu_terms'), () {}),
-          _tile(Icons.privacy_tip_outlined, tr('menu_privacy'), () {}),
+          _tile(Icons.description_outlined, tr('menu_terms'),
+              () => _openPolicy('https://homzy-ai.com/terms')),
+          _tile(Icons.privacy_tip_outlined, tr('menu_privacy'),
+              () => _openPolicy('https://homzy-ai.com/privacy')),
           _tile(Icons.logout, tr('sign_out'),
               () => AuthService.instance.signOut(),
               danger: true),
@@ -139,6 +142,9 @@ class _MoreScreenState extends State<MoreScreen> {
 
   void _push(Widget screen) =>
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+
+  Future<void> _openPolicy(String url) =>
+      launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
 
   Widget _languageTile() => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),

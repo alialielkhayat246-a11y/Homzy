@@ -37,6 +37,20 @@ class ChatMessage {
   final bool mine;
 }
 
+class MessageSafety {
+  const MessageSafety({
+    required this.otherUserId,
+    required this.blockedByMe,
+    required this.blockedMe,
+  });
+
+  final String otherUserId;
+  final bool blockedByMe;
+  final bool blockedMe;
+
+  bool get canSend => !blockedByMe && !blockedMe;
+}
+
 /// User-to-user messaging about a listing.
 class MessageService {
   MessageService._();
@@ -58,11 +72,15 @@ class MessageService {
         .eq('buyer_id', uid)
         .maybeSingle();
     if (existing != null) return '${existing['id']}';
-    final row = await _db.from('listing_conversations').insert({
-      'listing_id': listingId,
-      'buyer_id': uid,
-      'seller_id': sellerId,
-    }).select('id').single();
+    final row = await _db
+        .from('listing_conversations')
+        .insert({
+          'listing_id': listingId,
+          'buyer_id': uid,
+          'seller_id': sellerId,
+        })
+        .select('id')
+        .single();
     return '${row['id']}';
   }
 
@@ -80,9 +98,8 @@ class MessageService {
     final otherIds = <String>{};
     for (final r in rows as List) {
       final m = r as Map<String, dynamic>;
-      final other = m['buyer_id'] == uid
-          ? '${m['seller_id']}'
-          : '${m['buyer_id']}';
+      final other =
+          m['buyer_id'] == uid ? '${m['seller_id']}' : '${m['buyer_id']}';
       otherIds.add(other);
       convos.add(Conversation(
         id: '${m['id']}',
@@ -90,9 +107,8 @@ class MessageService {
         otherId: other,
         listingTitle: (m['listing'] as Map?)?['title']?.toString(),
         lastMessage: m['last_message']?.toString(),
-        lastAt: m['last_at'] != null
-            ? DateTime.tryParse('${m['last_at']}')
-            : null,
+        lastAt:
+            m['last_at'] != null ? DateTime.tryParse('${m['last_at']}') : null,
       ));
     }
     if (otherIds.isNotEmpty) {
@@ -100,9 +116,7 @@ class MessageService {
           .from('profiles')
           .select('id, full_name, avatar_url')
           .inFilter('id', otherIds.toList());
-      final byId = {
-        for (final p in profs) '${(p as Map)['id']}': p
-      };
+      final byId = {for (final p in profs) '${(p as Map)['id']}': p};
       for (final c in convos) {
         final p = byId[c.otherId] as Map?;
         c.otherName = p?['full_name']?.toString();
@@ -142,5 +156,79 @@ class MessageService {
       'last_message': body,
       'last_at': DateTime.now().toIso8601String(),
     }).eq('id', conversationId);
+  }
+
+  Future<MessageSafety> safety(String conversationId) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Not signed in');
+    final conversation = await _db
+        .from('listing_conversations')
+        .select('buyer_id, seller_id')
+        .eq('id', conversationId)
+        .single();
+    final otherId = '${conversation['buyer_id']}' == uid
+        ? '${conversation['seller_id']}'
+        : '${conversation['buyer_id']}';
+    final rows = await _db
+        .from('user_blocks')
+        .select('blocker_id, blocked_id')
+        .or('blocker_id.eq.$uid,blocked_id.eq.$uid');
+    var blockedByMe = false;
+    var blockedMe = false;
+    for (final raw in rows as List) {
+      final row = raw as Map<String, dynamic>;
+      blockedByMe = blockedByMe ||
+          ('${row['blocker_id']}' == uid && '${row['blocked_id']}' == otherId);
+      blockedMe = blockedMe ||
+          ('${row['blocker_id']}' == otherId && '${row['blocked_id']}' == uid);
+    }
+    return MessageSafety(
+      otherUserId: otherId,
+      blockedByMe: blockedByMe,
+      blockedMe: blockedMe,
+    );
+  }
+
+  Future<void> blockUser(String userId) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Not signed in');
+    await _db.from('user_blocks').upsert(
+      {'blocker_id': uid, 'blocked_id': userId},
+      onConflict: 'blocker_id,blocked_id',
+    );
+  }
+
+  Future<void> unblockUser(String userId) async {
+    final uid = _uid;
+    if (uid == null) throw StateError('Not signed in');
+    await _db
+        .from('user_blocks')
+        .delete()
+        .eq('blocker_id', uid)
+        .eq('blocked_id', userId);
+  }
+
+  Future<void> reportUser({
+    required String conversationId,
+    required String reason,
+    String? details,
+  }) async {
+    await _db.rpc('report_conversation_user', params: {
+      'p_conversation': conversationId,
+      'p_reason': reason,
+      'p_details': details,
+    });
+  }
+
+  Future<void> reportMessage({
+    required String messageId,
+    required String reason,
+    String? details,
+  }) async {
+    await _db.rpc('report_listing_message', params: {
+      'p_message': messageId,
+      'p_reason': reason,
+      'p_details': details,
+    });
   }
 }

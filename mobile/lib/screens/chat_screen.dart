@@ -8,10 +8,12 @@ import '../api.dart';
 import '../i18n.dart';
 import '../services/auth_service.dart';
 import '../services/chat_store.dart';
+import '../services/moderation_service.dart';
 import '../services/profile_service.dart';
 import '../services/share_helper.dart';
 import '../theme.dart';
 import '../widgets/house_logo.dart';
+import '../widgets/report_dialog.dart';
 
 /// Detects Arabic so we can render RTL + Cairo, matching the web UI.
 bool _isArabic(String t) => RegExp(r'[؀-ۿ]').hasMatch(t);
@@ -97,8 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(_scroll.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOut);
+            duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       }
     });
   }
@@ -110,7 +111,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // conversation so far (so the AI remembers) — before adding this message
     final history = _messages
         .where((m) => !m.typing)
-        .map((m) => {'role': m.fromUser ? 'user' : 'assistant', 'content': m.text})
+        .map((m) =>
+            {'role': m.fromUser ? 'user' : 'assistant', 'content': m.text})
         .toList();
     setState(() {
       _sending = true;
@@ -138,6 +140,26 @@ class _ChatScreenState extends State<ChatScreen> {
     } finally {
       if (mounted) setState(() => _sending = false);
       _scrollToEnd();
+    }
+  }
+
+  Future<void> _reportAi(_Msg message) async {
+    final draft = await showReportDialog(context);
+    if (draft == null || !mounted) return;
+    try {
+      await ModerationService.instance.reportAiResponse(
+        content: message.text,
+        reason: draft.reason,
+        conversationId: _conversationId ?? _sessionId,
+        details: draft.details,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('report_sent'))));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('action_failed'))));
     }
   }
 
@@ -185,8 +207,8 @@ class _ChatScreenState extends State<ChatScreen> {
       updatedAt: header.updatedAt,
       messages: msgs,
     );
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => ChatScreen(restored: full)));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => ChatScreen(restored: full)));
   }
 
   void _newChat() {
@@ -221,9 +243,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       : (_health!.isAi ? 'AI' : 'Preview mode'),
                   style: TextStyle(
                       fontSize: 11,
-                      color: _health?.isAi == true
-                          ? Brand.green
-                          : Brand.muted),
+                      color: _health?.isAi == true ? Brand.green : Brand.muted),
                 ),
               ],
             ),
@@ -240,10 +260,9 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, i) {
                 if (showChips && i == _messages.length) {
                   return _ChipsRow(
-                      chips: _chips,
-                      onTap: _sending ? null : (p) => _send(p));
+                      chips: _chips, onTap: _sending ? null : (p) => _send(p));
                 }
-                return _Bubble(msg: _messages[i]);
+                return _Bubble(msg: _messages[i], onReport: _reportAi);
               },
             ),
           ),
@@ -259,8 +278,9 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.msg});
+  const _Bubble({required this.msg, required this.onReport});
   final _Msg msg;
+  final ValueChanged<_Msg> onReport;
 
   void _copy(BuildContext context) {
     Clipboard.setData(ClipboardData(text: msg.text));
@@ -279,8 +299,8 @@ class _Bubble extends StatelessWidget {
     final textColor = msg.fromUser ? Colors.white : Brand.navy;
 
     final bubble = Container(
-      constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: BoxDecoration(
@@ -296,8 +316,8 @@ class _Bubble extends StatelessWidget {
       child: Text(
         msg.text,
         textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-        style: (rtl ? Brand.arabic() : const TextStyle()).copyWith(
-            color: textColor, fontSize: 15, height: 1.5),
+        style: (rtl ? Brand.arabic() : const TextStyle())
+            .copyWith(color: textColor, fontSize: 15, height: 1.5),
       ),
     );
 
@@ -319,15 +339,27 @@ class _Bubble extends StatelessWidget {
         Flexible(child: tappable),
       ],
     );
-    if (msg.rec == null) return row;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         row,
         Padding(
-          padding: const EdgeInsets.only(left: 38, top: 2, bottom: 4),
-          child: _RecCard(rec: msg.rec!),
+          padding: const EdgeInsetsDirectional.only(start: 38),
+          child: TextButton.icon(
+            onPressed: () => onReport(msg),
+            icon: const Icon(Icons.flag_outlined, size: 15),
+            label: Text(tr('report_ai_response')),
+            style: TextButton.styleFrom(
+                foregroundColor: Brand.muted,
+                visualDensity: VisualDensity.compact),
+          ),
         ),
+        if (msg.rec != null)
+          Padding(
+            padding:
+                const EdgeInsetsDirectional.only(start: 38, top: 2, bottom: 4),
+            child: _RecCard(rec: msg.rec!),
+          ),
       ],
     );
   }
@@ -367,7 +399,8 @@ class _RecCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ar = Lang.instance.isAr;
-    final name = ar && rec.compoundAr.isNotEmpty ? rec.compoundAr : rec.compound;
+    final name =
+        ar && rec.compoundAr.isNotEmpty ? rec.compoundAr : rec.compound;
     final area = ar && rec.areaAr.isNotEmpty ? rec.areaAr : rec.area;
     final price = ar ? rec.priceAr : rec.priceEn;
     final imgs = rec.images.isNotEmpty
@@ -375,8 +408,8 @@ class _RecCard extends StatelessWidget {
         : (rec.cover != null ? [rec.cover!] : const <String>[]);
 
     return Container(
-      constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.82),
+      constraints:
+          BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -462,7 +495,8 @@ class _RecCard extends StatelessWidget {
                       title: name,
                       area: area,
                       price: price,
-                      extra: rec.developer != null ? '🏗 ${rec.developer}' : null,
+                      extra:
+                          rec.developer != null ? '🏗 ${rec.developer}' : null,
                       brochureUrl: rec.brochureUrl,
                     ),
                     icon: const Icon(Icons.share, size: 18),
@@ -489,7 +523,9 @@ class _RecCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(label,
               style: const TextStyle(
-                  color: Brand.navy, fontSize: 11, fontWeight: FontWeight.w600)),
+                  color: Brand.navy,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600)),
         ]),
       );
 }
@@ -535,7 +571,8 @@ class _TypingBubbleState extends State<_TypingBubble>
               mainAxisSize: MainAxisSize.min,
               children: List.generate(3, (i) {
                 final t = ((_c.value + i * 0.2) % 1.0);
-                final opacity = 0.3 + 0.7 * (1 - (t - 0.5).abs() * 2).clamp(0, 1);
+                final opacity =
+                    0.3 + 0.7 * (1 - (t - 0.5).abs() * 2).clamp(0, 1);
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: Opacity(
@@ -629,10 +666,10 @@ class _Composer extends StatelessWidget {
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: tr('chat_hint'),
-                filled: true,
-                fillColor: Brand.gray,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  filled: true,
+                  fillColor: Brand.gray,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -683,8 +720,8 @@ class _RecentChatsDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ListTile(
-                leading: const Icon(Icons.add_comment_outlined,
-                    color: Brand.coral),
+                leading:
+                    const Icon(Icons.add_comment_outlined, color: Brand.coral),
                 title: Text(tr('new_chat')),
                 onTap: onNew,
               ),

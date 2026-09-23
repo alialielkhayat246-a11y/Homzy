@@ -51,7 +51,7 @@
 const ar=()=>HZ.lang==='ar';
 const money=n=>n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
 let S=null, TAB='properties', ISADMIN=false, PFILTER='pending';
-const TABS=[['properties','الوحدات','Properties'],['hosts','المضيفون','Hosts'],['verifications','التوثيق','Verifications'],['bookings','الحجوزات','Bookings'],['reviews','المراجعات','Reviews'],['disputes','النزاعات','Disputes'],['plans','الباقات','Plans'],['settings','الإعدادات','Settings']];
+const TABS=[['reports','بلاغات الأمان','Safety reports'],['properties','الوحدات','Properties'],['hosts','المضيفون','Hosts'],['verifications','التوثيق','Verifications'],['bookings','الحجوزات','Bookings'],['reviews','المراجعات','Reviews'],['disputes','النزاعات','Disputes'],['plans','الباقات','Plans'],['settings','الإعدادات','Settings']];
 
 function parsePath(){ const p=location.pathname.split('/').filter(Boolean); return p[2]||'properties'; } // admin, stays, X
 function go(tab){ history.pushState({},'', '/admin/stays/'+tab); TAB=tab; renderNav(); renderTab(); }
@@ -65,7 +65,8 @@ async function renderTab(){
   const c=document.getElementById('content'); c.innerHTML='<div class="empty">…</div>';
   if(!ISADMIN){ c.innerHTML=`<div class="notadmin"><h2>${ar()?'غير مصرّح':'Not authorized'}</h2><p style="color:var(--muted);margin-top:10px">${ar()?'الصفحة دي للأدمن فقط.':'This page is for admins only.'}</p></div>`; return; }
   try{
-    if(TAB==='properties') c.innerHTML=await viewProps();
+    if(TAB==='reports') c.innerHTML=await viewSafetyReports();
+    else if(TAB==='properties') c.innerHTML=await viewProps();
     else if(TAB==='hosts') c.innerHTML=await viewHosts();
     else if(TAB==='verifications') c.innerHTML=await viewVerifs();
     else if(TAB==='bookings') c.innerHTML=await viewBookings();
@@ -76,6 +77,26 @@ async function renderTab(){
     HZ.applyLang();
   }catch(e){ c.innerHTML='<div class="empty" style="color:#B42318">'+HZ.esc(e.message||'error')+'</div>'; }
 }
+
+/* User and AI safety reports */
+async function viewSafetyReports(){
+  const rows=await api('/moderation_reports?select=id,target_type,target_id,reason,details,content_snapshot,status,created_at,reported_user_id&order=created_at.desc&limit=200');
+  if(!rows.length) return `<div class="empty">${ar()?'لا توجد بلاغات.':'No safety reports.'}</div>`;
+  return rows.map(r=>`<div class="row"><div class="info">
+    <div class="t">${HZ.esc(r.target_type)} · ${HZ.esc(r.reason)} <span class="badge ${r.status==='resolved'?'approved':r.status==='dismissed'?'draft':'pending'}">${HZ.esc(r.status)}</span></div>
+    <div class="m">${HZ.esc(r.content_snapshot||r.details||'—')}</div>
+    <div class="m">${new Date(r.created_at).toLocaleString(ar()?'ar-EG':'en-US')}${r.reported_user_id?' · User '+HZ.esc(r.reported_user_id.slice(0,8)):''}</div>
+    </div><div class="acts">
+      ${r.status==='open'||r.status==='reviewing'?`<button class="ok" onclick="resolveSafety('${r.id}','resolved',false)">${ar()?'تم التعامل':'Resolve'}</button>`:''}
+      ${r.target_type==='message'&&(r.status==='open'||r.status==='reviewing')?`<button class="no" onclick="resolveSafety('${r.id}','resolved',true)">${ar()?'حذف الرسالة':'Remove message'}</button>`:''}
+      ${r.status==='open'||r.status==='reviewing'?`<button onclick="resolveSafety('${r.id}','dismissed',false)">${ar()?'رفض البلاغ':'Dismiss'}</button>`:''}
+    </div></div>`).join('');
+}
+window.resolveSafety=async(id,status,remove)=>{
+  const note=prompt(ar()?'ملاحظة المراجعة (اختياري):':'Review note (optional):')||'';
+  const result=await rpc('admin_resolve_moderation_report',{p_report:id,p_status:status,p_note:note,p_remove_content:remove});
+  if(result&&result.ok) renderTab(); else alert(ar()?'تعذر تنفيذ الإجراء':'Could not complete action');
+};
 
 /* Properties moderation */
 async function viewProps(){

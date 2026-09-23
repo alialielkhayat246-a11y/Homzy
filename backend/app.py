@@ -749,6 +749,7 @@ def admin_page():
 @app.get("/admin/stays/reviews")
 @app.get("/admin/stays/verifications")
 @app.get("/admin/stays/disputes")
+@app.get("/admin/stays/reports")
 @app.get("/admin/stays/settings")
 def admin_stays_page():
     return FileResponse(config.FRONTEND_DIR / "admin-stays.html")

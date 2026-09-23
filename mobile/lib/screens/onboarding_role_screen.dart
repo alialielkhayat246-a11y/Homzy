@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../i18n.dart';
 import '../services/profile_service.dart';
@@ -20,7 +21,24 @@ class _OnboardingRoleScreenState extends State<OnboardingRoleScreen> {
   final _phone = TextEditingController();
   final _company = TextEditingController();
   bool _busy = false;
+  bool _acceptedSafetyTerms = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    final profile = await ProfileService.instance.get();
+    if (!mounted || profile == null) return;
+    setState(() {
+      _role = profile['role']?.toString();
+      _phone.text = profile['phone']?.toString() ?? '';
+      _company.text = profile['company']?.toString() ?? '';
+    });
+  }
 
   @override
   void dispose() {
@@ -43,12 +61,17 @@ class _OnboardingRoleScreenState extends State<OnboardingRoleScreen> {
       setState(() => _error = tr('onb_company_required'));
       return;
     }
+    if (!_acceptedSafetyTerms) {
+      setState(() => _error = tr('accept_terms_required'));
+      return;
+    }
     setState(() => _busy = true);
     try {
       await ProfileService.instance.saveRole(
         role: _role!,
         phone: _phone.text.trim(),
         company: _role == 'broker' ? _company.text.trim() : null,
+        acceptSafetyTerms: true,
       );
       widget.onDone();
     } catch (e) {
@@ -107,10 +130,38 @@ class _OnboardingRoleScreenState extends State<OnboardingRoleScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _company,
-                  decoration:
-                      _dec(tr('onb_company'), Icons.business_outlined),
+                  decoration: _dec(tr('onb_company'), Icons.business_outlined),
                 ),
               ],
+              const SizedBox(height: 14),
+              CheckboxListTile(
+                value: _acceptedSafetyTerms,
+                onChanged: _busy
+                    ? null
+                    : (value) =>
+                        setState(() => _acceptedSafetyTerms = value == true),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                title: Text(tr('accept_safety_terms'),
+                    style: const TextStyle(fontSize: 13)),
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => launchUrl(
+                        Uri.parse('https://homzy-ai.com/terms'),
+                        mode: LaunchMode.inAppBrowserView),
+                    child: Text(tr('menu_terms')),
+                  ),
+                  TextButton(
+                    onPressed: () => launchUrl(
+                        Uri.parse('https://homzy-ai.com/privacy'),
+                        mode: LaunchMode.inAppBrowserView),
+                    child: Text(tr('menu_privacy')),
+                  ),
+                ],
+              ),
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!,
@@ -178,8 +229,7 @@ class _OnboardingRoleScreenState extends State<OnboardingRoleScreen> {
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 15)),
                   Text(desc,
-                      style:
-                          const TextStyle(color: Brand.muted, fontSize: 12)),
+                      style: const TextStyle(color: Brand.muted, fontSize: 12)),
                 ],
               ),
             ),

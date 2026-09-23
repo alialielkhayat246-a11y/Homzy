@@ -44,7 +44,8 @@ const Map<String, Map<String, String>> _strings = {
   'home_sub': {'en': 'Your Home Guide', 'ar': 'دليلك لبيتك'},
   'continue_title': {'en': 'Continue your journey', 'ar': 'كمّل رحلتك'},
   'continue_sub': {
-    'en': 'Chat with Homzy to find a home that fits your budget, area and needs.',
+    'en':
+        'Chat with Homzy to find a home that fits your budget, area and needs.',
     'ar': 'اتكلم مع Homzy عشان تلاقي بيت يناسب ميزانيتك ومنطقتك واحتياجك.'
   },
   'start_chatting': {'en': 'Start chatting', 'ar': 'ابدأ المحادثة'},
@@ -58,30 +59,67 @@ const Map<String, Map<String, String>> _strings = {
   'chat_hint': {'en': 'Type your message…', 'ar': 'اكتب رسالتك…'},
   'save_chat': {'en': 'Save chat', 'ar': 'احفظ المحادثة'},
   'server_settings': {'en': 'Server settings', 'ar': 'إعدادات السيرفر'},
-  'sign_in_to_save': {'en': 'Sign in to save chats.', 'ar': 'سجّل الدخول عشان تحفظ المحادثات.'},
-  'nothing_to_save': {'en': 'Nothing to save yet — start chatting first.', 'ar': 'مفيش حاجة تتحفظ — ابدأ المحادثة الأول.'},
+  'sign_in_to_save': {
+    'en': 'Sign in to save chats.',
+    'ar': 'سجّل الدخول عشان تحفظ المحادثات.'
+  },
+  'nothing_to_save': {
+    'en': 'Nothing to save yet — start chatting first.',
+    'ar': 'مفيش حاجة تتحفظ — ابدأ المحادثة الأول.'
+  },
   'saved_ok': {'en': 'Saved to your account ✓', 'ar': 'اتحفظت في حسابك ✓'},
 
   // Auth
-  'welcome_back': {'en': 'Welcome back — sign in', 'ar': 'أهلاً بعودتك — سجّل دخول'},
+  'welcome_back': {
+    'en': 'Welcome back — sign in',
+    'ar': 'أهلاً بعودتك — سجّل دخول'
+  },
   'create_account': {'en': 'Create your account', 'ar': 'اعمل حسابك'},
   'full_name': {'en': 'Full name', 'ar': 'الاسم بالكامل'},
   'email': {'en': 'Email', 'ar': 'البريد الإلكتروني'},
+  'phone_number': {'en': 'Mobile number', 'ar': 'رقم الموبايل'},
   'password': {'en': 'Password', 'ar': 'كلمة السر'},
   'sign_up': {'en': 'Sign up', 'ar': 'إنشاء حساب'},
   'sign_in': {'en': 'Sign in', 'ar': 'تسجيل الدخول'},
-  'continue_google': {'en': 'Continue with Google', 'ar': 'المتابعة بحساب Google'},
-  'have_account': {'en': 'Already have an account? Sign in', 'ar': 'عندك حساب؟ سجّل دخول'},
-  'new_here': {'en': 'New here? Create an account', 'ar': 'جديد هنا؟ اعمل حساب'},
+  'continue_google': {
+    'en': 'Continue with Google',
+    'ar': 'المتابعة بحساب Google'
+  },
+  'have_account': {
+    'en': 'Already have an account? Sign in',
+    'ar': 'عندك حساب؟ سجّل دخول'
+  },
+  'new_here': {
+    'en': 'New here? Create an account',
+    'ar': 'جديد هنا؟ اعمل حساب'
+  },
   'enter_valid_email': {'en': 'Enter a valid email', 'ar': 'اكتب بريد صحيح'},
+  'enter_valid_phone': {
+    'en': 'Enter a valid Egyptian mobile number',
+    'ar': 'اكتب رقم موبايل مصري صحيح'
+  },
+  'account_created_sign_in': {
+    'en': 'Account created! Sign in with your mobile number.',
+    'ar': 'تم إنشاء الحساب — سجّل دخول برقم الموبايل.'
+  },
+  'google_unavailable_phone': {
+    'en': 'Google sign-in is unavailable. Try your mobile number.',
+    'ar': 'الدخول بحساب Google غير متاح. جرّب رقم الموبايل.'
+  },
   'password_min': {'en': 'At least 6 characters', 'ar': '٦ حروف على الأقل'},
 
   // Profile
   'profile': {'en': 'Profile', 'ar': 'حسابي'},
   'saved_chats': {'en': 'Saved chats', 'ar': 'المحادثات المحفوظة'},
-  'saved_chats_sub': {'en': 'Your conversations are synced to your account.', 'ar': 'محادثاتك متزامنة مع حسابك.'},
+  'saved_chats_sub': {
+    'en': 'Your conversations are synced to your account.',
+    'ar': 'محادثاتك متزامنة مع حسابك.'
+  },
   'cloud_sync': {'en': 'Cloud sync', 'ar': 'مزامنة سحابية'},
-  'cloud_sync_sub': {'en': 'Log in on any device to restore your data.', 'ar': 'سجّل دخول من أي جهاز وترجع بياناتك.'},
+  'cloud_sync_sub': {
+    'en': 'Log in on any device to restore your data.',
+    'ar': 'سجّل دخول من أي جهاز وترجع بياناتك.'
+  },
   'sign_out': {'en': 'Sign out', 'ar': 'تسجيل الخروج'},
   'role_user': {'en': 'Customer', 'ar': 'مستخدم'},
   'role_broker': {'en': 'Broker', 'ar': 'سمسار / بروكر'},
@@ -91,12 +129,19 @@ const Map<String, Map<String, String>> _strings = {
   'saved_done': {'en': 'Saved ✓', 'ar': 'اتحفظ ✓'},
   'change_photo': {'en': 'Change photo', 'ar': 'تغيير الصورة'},
   'delete_account': {'en': 'Delete account', 'ar': 'حذف الحساب'},
-  'delete_confirm': {'en': 'Permanently delete your account and all your data? This cannot be undone.', 'ar': 'تحذف حسابك وكل بياناتك نهائيًا؟ الإجراء ده مش هيتراجع.'},
+  'delete_confirm': {
+    'en':
+        'Permanently delete your account and all your data? This cannot be undone.',
+    'ar': 'تحذف حسابك وكل بياناتك نهائيًا؟ الإجراء ده مش هيتراجع.'
+  },
   'cancel': {'en': 'Cancel', 'ar': 'إلغاء'},
   'open_saved_chats': {'en': 'My saved chats', 'ar': 'محادثاتي المحفوظة'},
 
   // Saved
-  'no_saved': {'en': 'No saved chats yet.\nTap the 🔖 in a chat to save it.', 'ar': 'مفيش محادثات محفوظة.\nدوس على 🔖 في المحادثة عشان تحفظها.'},
+  'no_saved': {
+    'en': 'No saved chats yet.\nTap the 🔖 in a chat to save it.',
+    'ar': 'مفيش محادثات محفوظة.\nدوس على 🔖 في المحادثة عشان تحفظها.'
+  },
 
   // Projects / catalog
   'projects_title': {'en': 'Projects', 'ar': 'المشاريع'},
@@ -112,7 +157,10 @@ const Map<String, Map<String, String>> _strings = {
   'down_payment': {'en': 'Down payment', 'ar': 'المقدم'},
   'from_price': {'en': 'From', 'ar': 'يبدأ من'},
   'ask_homzy': {'en': 'Ask Homzy about this', 'ar': 'اسأل Homzy عن ده'},
-  'search_projects': {'en': 'Search by project or location…', 'ar': 'ابحث باسم المشروع أو المنطقة…'},
+  'search_projects': {
+    'en': 'Search by project or location…',
+    'ar': 'ابحث باسم المشروع أو المنطقة…'
+  },
   'filter_area': {'en': 'Location', 'ar': 'المنطقة'},
   'filter_type': {'en': 'Unit type', 'ar': 'نوع الوحدة'},
   'filter_delivery': {'en': 'Delivery', 'ar': 'التسليم'},
@@ -131,30 +179,60 @@ const Map<String, Map<String, String>> _strings = {
 
   // Onboarding (role)
   'onb_title': {'en': 'Tell us about you', 'ar': 'عرّفنا عن نفسك'},
-  'onb_sub': {'en': 'This helps Homzy serve you better.', 'ar': 'ده بيساعد Homzy يخدمك أحسن.'},
+  'onb_sub': {
+    'en': 'This helps Homzy serve you better.',
+    'ar': 'ده بيساعد Homzy يخدمك أحسن.'
+  },
   'onb_i_am': {'en': 'I am a…', 'ar': 'أنا…'},
   'onb_user_title': {'en': 'Customer', 'ar': 'مستخدم'},
-  'onb_user_desc': {'en': 'Looking to rent or buy a home.', 'ar': 'بدور على إيجار أو تمليك.'},
+  'onb_user_desc': {
+    'en': 'Looking to rent or buy a home.',
+    'ar': 'بدور على إيجار أو تمليك.'
+  },
   'onb_broker_title': {'en': 'Broker', 'ar': 'سمسار / بروكر'},
-  'onb_broker_desc': {'en': 'I work in real estate.', 'ar': 'بشتغل في العقارات.'},
+  'onb_broker_desc': {
+    'en': 'I work in real estate.',
+    'ar': 'بشتغل في العقارات.'
+  },
   'onb_phone': {'en': 'Mobile number', 'ar': 'رقم الموبايل'},
   'onb_company': {'en': 'Company name', 'ar': 'اسم الشركة'},
   'onb_continue': {'en': 'Continue', 'ar': 'متابعة'},
-  'onb_phone_required': {'en': 'Please enter your mobile number', 'ar': 'من فضلك اكتب رقم موبايلك'},
-  'onb_company_required': {'en': 'Please enter your company name', 'ar': 'من فضلك اكتب اسم الشركة'},
-  'onb_choose_role': {'en': 'Please choose Customer or Broker', 'ar': 'اختار مستخدم ولا بروكر'},
+  'onb_phone_required': {
+    'en': 'Please enter your mobile number',
+    'ar': 'من فضلك اكتب رقم موبايلك'
+  },
+  'onb_company_required': {
+    'en': 'Please enter your company name',
+    'ar': 'من فضلك اكتب اسم الشركة'
+  },
+  'onb_choose_role': {
+    'en': 'Please choose Customer or Broker',
+    'ar': 'اختار مستخدم ولا بروكر'
+  },
 
   // Marketplace nav + home
   'nav_listings': {'en': 'My listings', 'ar': 'إعلاناتي'},
   'nav_favorites': {'en': 'Favorites', 'ar': 'المفضلة'},
   'nav_more': {'en': 'More', 'ar': 'المزيد'},
   'greeting_hi': {'en': 'Hi', 'ar': 'مرحباً'},
-  'home_help_today': {'en': 'How can we help today?', 'ar': 'إزاي نقدر نساعدك النهاردة؟'},
-  'search_nl_hint': {'en': 'Type your request in natural language…', 'ar': 'اكتب طلبك باللغة الطبيعية…'},
-  'search_nl_example': {'en': 'e.g. apartment in New Cairo under 4M · 3 beds', 'ar': 'مثال: شقة في التجمع أقل من ٤ مليون · ٣ غرف'},
+  'home_help_today': {
+    'en': 'How can we help today?',
+    'ar': 'إزاي نقدر نساعدك النهاردة؟'
+  },
+  'search_nl_hint': {
+    'en': 'Type your request in natural language…',
+    'ar': 'اكتب طلبك باللغة الطبيعية…'
+  },
+  'search_nl_example': {
+    'en': 'e.g. apartment in New Cairo under 4M · 3 beds',
+    'ar': 'مثال: شقة في التجمع أقل من ٤ مليون · ٣ غرف'
+  },
   'recent_searches': {'en': 'Recent searches', 'ar': 'عمليات بحث سابقة'},
   'search_with_homzy': {'en': 'Search with Homzy', 'ar': 'ابحث مع Homzy'},
-  'discover_home': {'en': 'Discover your ideal home, easily and smartly', 'ar': 'اكتشف بيتك المثالي بسهولة وذكاء'},
+  'discover_home': {
+    'en': 'Discover your ideal home, easily and smartly',
+    'ar': 'اكتشف بيتك المثالي بسهولة وذكاء'
+  },
   'start_now': {'en': 'Start now', 'ar': 'ابدأ الآن'},
 
   // Search results + cards
@@ -163,7 +241,10 @@ const Map<String, Map<String, String>> _strings = {
   'flt_price': {'en': 'Price', 'ar': 'السعر'},
   'flt_size': {'en': 'Size', 'ar': 'المساحة'},
   'flt_more': {'en': 'More', 'ar': 'المزيد'},
-  'no_results': {'en': 'No properties match your search.', 'ar': 'مفيش عقارات مطابقة لبحثك.'},
+  'no_results': {
+    'en': 'No properties match your search.',
+    'ar': 'مفيش عقارات مطابقة لبحثك.'
+  },
 
   // Listing detail
   'featured': {'en': 'Featured', 'ar': 'مميز'},
@@ -179,7 +260,10 @@ const Map<String, Map<String, String>> _strings = {
 
   // Favorites
   'favorites_title': {'en': 'Favorites', 'ar': 'المفضلة'},
-  'no_favorites': {'en': 'No saved properties yet.', 'ar': 'مفيش عقارات محفوظة لسه.'},
+  'no_favorites': {
+    'en': 'No saved properties yet.',
+    'ar': 'مفيش عقارات محفوظة لسه.'
+  },
 
   // My listings + add
   'my_listings_title': {'en': 'My listings', 'ar': 'إعلاناتي'},
@@ -213,6 +297,71 @@ const Map<String, Map<String, String>> _strings = {
   'messages_title': {'en': 'Messages', 'ar': 'الرسائل'},
   'no_messages': {'en': 'No conversations yet.', 'ar': 'مفيش محادثات لسه.'},
   'message_hint': {'en': 'Type a message…', 'ar': 'اكتب رسالة…'},
+  'report_content': {'en': 'Report', 'ar': 'إبلاغ'},
+  'report_user': {'en': 'Report user', 'ar': 'الإبلاغ عن المستخدم'},
+  'report_message': {'en': 'Report message', 'ar': 'الإبلاغ عن الرسالة'},
+  'send_report': {'en': 'Submit report', 'ar': 'إرسال البلاغ'},
+  'report_sent': {
+    'en': 'Report submitted. Our safety team will review it.',
+    'ar': 'تم إرسال البلاغ، وفريق الأمان هيراجعه.'
+  },
+  'accept_safety_terms': {
+    'en':
+        'I accept the Terms of Use and Community Guidelines, including the rules against abusive or objectionable content.',
+    'ar':
+        'أوافق على شروط الاستخدام وقواعد المجتمع، ومنها منع الإساءة والمحتوى المخالف.'
+  },
+  'accept_terms_required': {
+    'en': 'Accept the Terms of Use and Community Guidelines to continue.',
+    'ar': 'وافق على شروط الاستخدام وقواعد المجتمع للمتابعة.'
+  },
+  'report_spam': {'en': 'Spam', 'ar': 'رسائل مزعجة'},
+  'report_harassment': {'en': 'Harassment or threats', 'ar': 'مضايقة أو تهديد'},
+  'report_fraud': {'en': 'Fraud or scam', 'ar': 'احتيال أو نصب'},
+  'report_inappropriate': {
+    'en': 'Inappropriate content',
+    'ar': 'محتوى غير لائق'
+  },
+  'report_other': {'en': 'Other', 'ar': 'سبب آخر'},
+  'report_details': {
+    'en': 'More details (optional)',
+    'ar': 'تفاصيل إضافية (اختياري)'
+  },
+  'report_reason': {'en': 'Reason', 'ar': 'سبب البلاغ'},
+  'block_user': {'en': 'Block user', 'ar': 'حظر المستخدم'},
+  'unblock_user': {'en': 'Unblock user', 'ar': 'إلغاء حظر المستخدم'},
+  'block': {'en': 'Block', 'ar': 'حظر'},
+  'block_user_confirm': {
+    'en':
+        'They will no longer be able to message you. You can unblock them later.',
+    'ar': 'مش هيقدر يبعتلك رسائل تاني، وتقدر تلغي الحظر بعدين.'
+  },
+  'user_blocked': {
+    'en': 'User blocked. New messages are disabled.',
+    'ar': 'تم حظر المستخدم وإيقاف الرسائل الجديدة.'
+  },
+  'user_unblocked': {'en': 'User unblocked.', 'ar': 'تم إلغاء الحظر.'},
+  'blocked_by_you': {
+    'en': 'You blocked this user. Messaging is disabled.',
+    'ar': 'أنت حظرت المستخدم ده. إرسال الرسائل متوقف.'
+  },
+  'messaging_unavailable': {
+    'en': 'Messaging is unavailable in this conversation.',
+    'ar': 'إرسال الرسائل غير متاح في المحادثة دي.'
+  },
+  'message_send_blocked': {
+    'en': 'This message could not be sent. Messaging may be blocked.',
+    'ar': 'الرسالة متبعتتش. ممكن يكون التواصل محظور.'
+  },
+  'safety_load_failed': {
+    'en': 'Safety settings could not be loaded. Messaging is paused.',
+    'ar': 'تعذر تحميل إعدادات الأمان، فتم إيقاف الإرسال مؤقتًا.'
+  },
+  'action_failed': {
+    'en': 'Could not complete the action. Try again.',
+    'ar': 'مقدرناش نكمل الإجراء. جرّب تاني.'
+  },
+  'report_ai_response': {'en': 'Report this response', 'ar': 'الإبلاغ عن الرد'},
 
   // More / profile menu
   'more_title': {'en': 'More', 'ar': 'المزيد'},
@@ -243,7 +392,10 @@ const Map<String, Map<String, String>> _strings = {
   'add_client': {'en': 'Add client', 'ar': 'أضف عميل'},
   'no_clients': {'en': 'No clients yet.', 'ar': 'مفيش عملاء لسه.'},
   'client_name': {'en': 'Client name', 'ar': 'اسم العميل'},
-  'client_name_required': {'en': 'Enter the client name', 'ar': 'اكتب اسم العميل'},
+  'client_name_required': {
+    'en': 'Enter the client name',
+    'ar': 'اكتب اسم العميل'
+  },
   'client_phone': {'en': 'Phone', 'ar': 'التليفون'},
   'client_budget': {'en': 'Budget', 'ar': 'الميزانية'},
   'client_notes': {'en': 'Notes', 'ar': 'ملاحظات'},
@@ -312,7 +464,8 @@ const Map<String, Map<String, String>> _strings = {
   'val_comps': {'en': 'comparables', 'ar': 'وحدة مشابهة'},
   'val_based_on': {'en': 'Based on units like:', 'ar': 'مبني على وحدات زي:'},
   'val_disclaimer': {
-    'en': 'A market estimate from current asking prices — not an official appraisal.',
+    'en':
+        'A market estimate from current asking prices — not an official appraisal.',
     'ar': 'تقدير سوقي من الأسعار المعروضة حاليًا — مش تقييم رسمي.'
   },
   'val_need_size': {'en': 'Enter the size in m²', 'ar': 'اكتب المساحة بالمتر'},

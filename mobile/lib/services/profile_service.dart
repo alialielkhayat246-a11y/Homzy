@@ -33,8 +33,7 @@ class ProfileService {
   Future<Map<String, dynamic>?> get() async {
     final uid = _uid;
     if (uid == null) return null;
-    final row =
-        await _db.from('profiles').select().eq('id', uid).maybeSingle();
+    final row = await _db.from('profiles').select().eq('id', uid).maybeSingle();
     if (row != null && row['role'] != null) _setRole('${row['role']}');
     if (row != null) {
       cachedAdmin = row['is_admin'] == true;
@@ -86,8 +85,7 @@ class ProfileService {
     await _db.storage.from('avatars').uploadBinary(
           path,
           bytes,
-          fileOptions: FileOptions(
-              upsert: true, contentType: 'image/$ext'),
+          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
         );
     final url = _db.storage.from('avatars').getPublicUrl(path);
     await update(avatarUrl: url);
@@ -98,8 +96,8 @@ class ProfileService {
   Future<void> deleteAccount() async {
     final token = _db.auth.currentSession?.accessToken;
     if (token == null) throw StateError('Not signed in');
-    final res = await _db.functions.invoke('delete-account',
-        headers: {'Authorization': 'Bearer $token'});
+    final res = await _db.functions
+        .invoke('delete-account', headers: {'Authorization': 'Bearer $token'});
     if (res.status != 200) {
       throw Exception('Delete failed (${res.status})');
     }
@@ -110,7 +108,10 @@ class ProfileService {
   Future<bool> needsOnboarding() async {
     try {
       final p = await get();
-      return p == null || p['role'] == null;
+      return p == null ||
+          p['role'] == null ||
+          p['terms_accepted_at'] == null ||
+          p['community_guidelines_accepted_at'] == null;
     } catch (_) {
       // If we can't reach the DB, don't block the user.
       return false;
@@ -121,16 +122,23 @@ class ProfileService {
     required String role, // 'user' | 'broker'
     required String phone,
     String? company,
+    bool acceptSafetyTerms = false,
   }) async {
     final uid = _uid;
     if (uid == null) throw StateError('Not signed in');
-    await _db.from('profiles').upsert({
+    final data = <String, dynamic>{
       'id': uid,
       'role': role,
       'phone': phone,
       'company': company,
       'email': _db.auth.currentUser?.email,
-    });
+    };
+    if (acceptSafetyTerms) {
+      final now = DateTime.now().toUtc().toIso8601String();
+      data['terms_accepted_at'] = now;
+      data['community_guidelines_accepted_at'] = now;
+    }
+    await _db.from('profiles').upsert(data);
     _setRole(role);
   }
 }

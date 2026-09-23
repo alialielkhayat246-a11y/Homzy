@@ -17,35 +17,57 @@ class AuthService {
 
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 
+  /// Keep mobile authentication compatible with the website: users type an
+  /// Egyptian phone number, while Supabase receives a stable synthetic email.
+  static String normalizeEgyptianPhone(String value) {
+    var digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('00')) digits = digits.substring(2);
+    if (digits.startsWith('0')) {
+      digits = '20${digits.substring(1)}';
+    } else if (!digits.startsWith('20')) {
+      digits = '20$digits';
+    }
+    return digits;
+  }
+
+  static String phoneEmail(String value) =>
+      'p${normalizeEgyptianPhone(value)}@homzy.app';
+
+  static bool isValidEgyptianPhone(String value) =>
+      RegExp(r'^201[0125][0-9]{8}$').hasMatch(normalizeEgyptianPhone(value));
+
   Future<AuthResponse> signUp({
-    required String email,
+    required String phone,
     required String password,
     String? fullName,
   }) async {
+    final normalizedPhone = normalizeEgyptianPhone(phone);
+    final email = phoneEmail(phone);
     final res = await _client.auth.signUp(
       email: email,
       password: password,
-      data: (fullName != null && fullName.isNotEmpty)
-          ? {'full_name': fullName}
-          : null,
+      data: {
+        'phone': normalizedPhone,
+        if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
+      },
     );
     // New accounts are auto-confirmed by a DB trigger (Supabase's built-in
     // mailer isn't configured), so if sign-up didn't return a session, sign in
     // right away — the user goes straight into the app, no email step.
     if (_client.auth.currentSession == null) {
       try {
-        await _client.auth
-            .signInWithPassword(email: email, password: password);
+        await _client.auth.signInWithPassword(email: email, password: password);
       } catch (_) {/* surfaced on the next sign-in attempt */}
     }
     return res;
   }
 
   Future<AuthResponse> signIn({
-    required String email,
+    required String phone,
     required String password,
   }) {
-    return _client.auth.signInWithPassword(email: email, password: password);
+    return _client.auth
+        .signInWithPassword(email: phoneEmail(phone), password: password);
   }
 
   /// Browser-based Google OAuth. Supabase handles the redirect back into the
@@ -61,8 +83,7 @@ class AuthService {
     final webRedirect = '${base.origin}${base.path}';
     return _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo:
-          kIsWeb ? webRedirect : 'io.supabase.homzy://login-callback/',
+      redirectTo: kIsWeb ? webRedirect : 'io.supabase.homzy://login-callback/',
     );
   }
 
