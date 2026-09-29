@@ -259,6 +259,24 @@ footer.hz-foot{background:var(--navy); color:#fff; padding:52px 0 26px; margin-t
   .hz-splash .hz-s-logo svg path{stroke-dashoffset:0;}
 }
 
+/* ---------- 360° Virtual Tour ---------- */
+.hz-tour{position:fixed; inset:0; z-index:2147483200; background:#05070d; display:none; flex-direction:column;}
+.hz-tour.open{display:flex; animation:pop .2s ease;}
+.hz-tour .tbar{position:absolute; top:0; inset-inline:0; z-index:5; display:flex; align-items:center; gap:10px; padding:14px 16px calc(14px + env(safe-area-inset-top));
+  background:linear-gradient(#000a,transparent); color:#fff;}
+.hz-tour .tbar b{font-weight:800; font-size:15px;} .hz-tour .tbar .sub{font-size:11.5px; opacity:.75;}
+.hz-tour .tbar .x{margin-inline-start:auto; background:rgba(255,255,255,.16); border:none; color:#fff; width:38px; height:38px; border-radius:11px; cursor:pointer; font-size:20px; backdrop-filter:blur(4px);}
+.hz-tour .pano{flex:1; width:100%; height:100%;}
+.hz-tour .rooms{position:absolute; inset-inline:0; bottom:0; z-index:5; display:flex; gap:8px; overflow-x:auto; padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,#000c); -webkit-overflow-scrolling:touch;}
+.hz-tour .rooms::-webkit-scrollbar{display:none;}
+.hz-tour .rm{flex:none; width:82px; height:56px; border-radius:10px; overflow:hidden; border:2px solid transparent; cursor:pointer; position:relative; background:#1a2233;}
+.hz-tour .rm img{width:100%; height:100%; object-fit:cover;}
+.hz-tour .rm.on{border-color:#5FD0DE;} .hz-tour .rm span{position:absolute; inset-inline:0; bottom:0; font-size:10px; color:#fff; background:#000a; padding:2px 4px; text-align:center; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+.hz-tour .loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:14px;}
+.hz-tour-btn{display:inline-flex; align-items:center; gap:7px; cursor:pointer;}
+.hz-360-badge{position:absolute; top:8px; inset-inline-start:8px; z-index:2; background:rgba(11,29,54,.82); color:#fff; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:100px; display:flex; align-items:center; gap:4px; pointer-events:none;}
+
 /* ---------- CRM Voice Assistant ---------- */
 .hz-asst-fab{position:fixed; inset-inline-start:22px; bottom:22px; z-index:80; width:58px; height:58px; border-radius:50%;
   background:linear-gradient(135deg,#0B5563,#0B1D36); color:#fff; border:none; cursor:pointer;

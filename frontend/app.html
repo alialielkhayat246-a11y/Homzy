@@ -22,7 +22,7 @@
 <meta name="theme-color" content="#0B1D36" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css?v=6">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
 <style>
   .tabs{display:flex; gap:8px; padding:18px 0 0;}
   .tab{font-family:var(--ff); font-weight:700; font-size:15px; cursor:pointer; padding:10px 20px; border-radius:100px; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
@@ -245,7 +245,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=6"></script>
+<script src="/assets/homzy.js?v=7"></script>
 <script src="/assets/crm-behavior.js"></script>
 <script src="/assets/catalog-ui.js?v=1"></script>
 <script>
@@ -703,7 +703,7 @@ async function loadMarket(){
   if(marketLoading) return; marketLoading=true; skeletons(8);
   const q=document.getElementById('mq').value.trim();
   const purpose=document.getElementById('mPurpose').value;
-  let path='/listings?select=id,title,description,purpose,type,price,area,address,bedrooms,bathrooms,size_sqm,listing_media(url,sort)&status=eq.active&order=created_at.desc&limit=60';
+  let path='/listings?select=id,title,description,purpose,type,price,area,address,bedrooms,bathrooms,size_sqm,listing_media(url,sort,is_360)&status=eq.active&order=created_at.desc&limit=60';
   if(purpose) path+='&purpose=eq.'+purpose;
   if(q){ const s=q.replace(/,/g,' '); path+='&or=('+encodeURIComponent(`title.ilike.*${s}*,area.ilike.*${s}*,description.ilike.*${s}*`)+')'; }
   try{
@@ -769,6 +769,9 @@ function openListing(l){
   const share=document.createElement('button');share.className='btn';share.textContent=HZ.lang==='ar'?'مشاركة العرض':'Share listing';
   share.onclick=async()=>{const url=location.origin+'/app?listing='+encodeURIComponent(l.id);try{if(navigator.share)await navigator.share({title:l.title,url});else{await navigator.clipboard.writeText(url);share.textContent=HZ.lang==='ar'?'تم نسخ الرابط':'Link copied';}HZ.trackBehavior?.('shared',l.id);}catch{/* A cancelled share is not recorded. */}};
   document.querySelector('#drawer .dactions').append(share);
+  // 360° virtual tour (auto — shown only when the unit has equirectangular photos)
+  const tourBtn=HZ.tourButton && HZ.tourButton(l.listing_media,{title});
+  if(tourBtn){ const da=document.querySelector('#drawer .dactions'); da.insertBefore(tourBtn, da.firstChild); }
 }
 function closeDetail(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
 addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
@@ -834,7 +837,7 @@ for(const [id,ar,en] of [['q','ابحث باسم المشروع أو المطو�
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
-loadAreas().then(async()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); const listing=new URLSearchParams(location.search).get('listing');if(listing&&/^[0-9a-f-]{36}$/i.test(listing)){try{const rows=await sb('/listings?id=eq.'+listing+'&status=eq.active&select=*,listing_media(url,sort)');if(rows?.[0])openListing(rows[0]);}catch{/* Existing marketplace remains available. */}} });
+loadAreas().then(async()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); const listing=new URLSearchParams(location.search).get('listing');if(listing&&/^[0-9a-f-]{36}$/i.test(listing)){try{const rows=await sb('/listings?id=eq.'+listing+'&status=eq.active&select=*,listing_media(url,sort,is_360)');if(rows?.[0])openListing(rows[0]);}catch{/* Existing marketplace remains available. */}} });
 </script>
 </body>
 </html>

@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#0B1D36" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css?v=6">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
 <style>
   body{background:var(--cream,#F7F3EC);}
   .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
@@ -167,6 +167,7 @@
       <div class="fld"><label data-ar="الصور" data-en="Photos">الصور</label>
         <div class="thumbs" id="fThumbs"></div>
         <label class="upl" data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device"><span data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device">📷 اختار صور من جهازك</span><input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
+        <div class="hint" style="margin-top:8px;font-size:12px;color:var(--muted,#66717F);line-height:1.6" data-ar="🧭 صوّر بوضع «360 / Photo Sphere» في الموبايل، وارفع الصورة — Homzy هيحوّلها لجولة افتراضية تلقائيًا. صوّر كل أوضة لجولة كاملة." data-en="🧭 Shoot in your phone's “360 / Photo Sphere” mode and upload it — Homzy turns it into a virtual tour automatically. Capture each room for a full walkthrough.">🧭 صوّر بوضع «360 / Photo Sphere» في الموبايل، وارفع الصورة — Homzy هيحوّلها لجولة افتراضية تلقائيًا. صوّر كل أوضة لجولة كاملة.</div>
       </div>
       <input type="hidden" id="fStatus" value="draft"><div class="listing-preview" id="listingPreview" hidden></div>
       <div class="msg" id="fMsg"></div>
@@ -179,14 +180,14 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=6"></script>
+<script src="/assets/homzy.js?v=7"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
 const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
 const sb = createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true } });
 const $=id=>document.getElementById(id);
-let TOKEN=null, UID=null, LISTINGS=[], EDIT_ID=null, NEW_FILES=[], KEEP_MEDIA=[];
+let TOKEN=null, UID=null, LISTINGS=[], EDIT_ID=null, NEW_FILES=[], NEW_360=[], KEEP_MEDIA=[];
 
 const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -263,7 +264,7 @@ window.saveProfile=async ()=>{
 window.loadMine=async ()=>{
   $('grid').innerHTML=`<div class="empty">${L('…بحمّل','Loading…')}</div>`;
   try{
-    LISTINGS=await api('/listings?select=*,listing_media(url,sort)&owner_id=eq.'+UID+'&order=created_at.desc');
+    LISTINGS=await api('/listings?select=*,listing_media(url,sort,is_360)&owner_id=eq.'+UID+'&order=created_at.desc');
     render();
   }catch(e){ $('grid').innerHTML=`<div class="empty">${L('تعذّر تحميل وحداتك.','Could not load your units.')}</div>`; }
 };
@@ -306,7 +307,7 @@ window.openForm=()=>{
     if(confirm(L('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك المجانية. تحب ترقّي لباقة أعلى ووحدات غير محدودة؟','You reached the limit ('+HZ.PLAN.max_listings+' units) on your free plan. Upgrade for unlimited units?'))) location.href='/pricing';
     return;
   }
-  EDIT_ID=null; NEW_FILES=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');
+  EDIT_ID=null; NEW_FILES=[]; NEW_360=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
   $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft';
   $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open'); };
@@ -316,30 +317,39 @@ window.previewListing=()=>{
   box.hidden=false;
   const facts=[$('fSize').value?esc($('fSize').value)+' '+L('م²','m²'):'',$('fBeds').value?esc($('fBeds').value)+' '+L('غرف','beds'):''].filter(Boolean).join(' · ');
   box.innerHTML=`<h3>${esc($('fTitleTxt').value)}</h3><p>${esc($('fArea').value)} · ${money($('fPrice').value)}</p><p>${facts}</p><p>${esc($('fDesc').value)}</p><p>${L('هتظهر الوحدة في السوق بعد النشر.','The unit will appear in the market after publishing.')}</p><button class="btn btn-teal" onclick="saveListing('active')">${L('تأكيد النشر','Confirm & publish')}</button>`;
-  if(NEW_FILES.length||KEEP_MEDIA.length){const img=document.createElement('img');img.alt=L('صورة الوحدة','Unit photo');img.src=NEW_FILES.length?URL.createObjectURL(NEW_FILES[0]):KEEP_MEDIA[0];if(NEW_FILES.length)img.onload=()=>URL.revokeObjectURL(img.src);box.prepend(img);}
+  if(NEW_FILES.length||KEEP_MEDIA.length){const img=document.createElement('img');img.alt=L('صورة الوحدة','Unit photo');img.src=NEW_FILES.length?URL.createObjectURL(NEW_FILES[0]):(KEEP_MEDIA[0]&&KEEP_MEDIA[0].url);if(NEW_FILES.length)img.onload=()=>URL.revokeObjectURL(img.src);box.prepend(img);}
   box.scrollIntoView({block:'nearest'});
 };
 window.closeForm=()=>{ $('formOv').classList.remove('open'); };
 window.editListing=(id)=>{
   const l=LISTINGS.find(x=>x.id===id); if(!l) return;
-  EDIT_ID=id; NEW_FILES=[]; $('fTitle').textContent=L('تعديل الوحدة','Edit unit');
+  EDIT_ID=id; NEW_FILES=[]; NEW_360=[]; $('fTitle').textContent=L('تعديل الوحدة','Edit unit');
   $('fPurpose').value=l.purpose||'sale'; $('fType').value=l.type||'apartment';
   $('fTitleTxt').value=l.title||''; $('fArea').value=l.area||''; $('fAddress').value=l.address||'';
   $('fPrice').value=l.price||''; $('fSize').value=l.size_sqm||''; $('fBeds').value=l.bedrooms||'';
   $('fBaths').value=l.bathrooms||''; $('fFloor').value=l.floor||''; $('fDesc').value=l.description||'';
   $('fStatus').value=l.status||'active';
-  KEEP_MEDIA=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0)).map(m=>m.url);
+  KEEP_MEDIA=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0)).map(m=>({url:m.url,is_360:!!m.is_360}));
   renderThumbs(); fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open');
 };
 function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':'err'); }
-window.pickImages=(e)=>{ for(const f of e.target.files) NEW_FILES.push(f); e.target.value=''; renderThumbs(); };
+window.pickImages=async (e)=>{
+  const files=[...e.target.files]; e.target.value='';
+  for(const f of files){ NEW_FILES.push(f); NEW_360.push(false); renderThumbs(); }
+  // Detect 360 (equirectangular ~2:1) photos so they auto-build a virtual tour.
+  for(let i=NEW_FILES.length-files.length;i<NEW_FILES.length;i++){
+    try{ NEW_360[i]=await HZ.is360File(NEW_FILES[i]); }catch(_){ NEW_360[i]=false; }
+  }
+  renderThumbs();
+};
+const _badge360=()=>`<span class="hz-360-badge">🧭 360°</span>`;
 function renderThumbs(){
-  const kept=KEEP_MEDIA.map((u,i)=>`<div class="thumb" style="background-image:url('${esc(u)}')"><button onclick="dropKept(${i})">×</button></div>`);
-  const nw=NEW_FILES.map((f,i)=>`<div class="thumb" style="background-image:url('${URL.createObjectURL(f)}')"><button onclick="dropNew(${i})">×</button></div>`);
+  const kept=KEEP_MEDIA.map((m,i)=>`<div class="thumb" style="background-image:url('${esc(m.url)}')">${m.is_360?_badge360():''}<button onclick="dropKept(${i})">×</button></div>`);
+  const nw=NEW_FILES.map((f,i)=>`<div class="thumb" style="background-image:url('${URL.createObjectURL(f)}')">${NEW_360[i]?_badge360():''}<button onclick="dropNew(${i})">×</button></div>`);
   $('fThumbs').innerHTML=kept.concat(nw).join('');
 }
 window.dropKept=(i)=>{ KEEP_MEDIA.splice(i,1); renderThumbs(); };
-window.dropNew=(i)=>{ NEW_FILES.splice(i,1); renderThumbs(); };
+window.dropNew=(i)=>{ NEW_FILES.splice(i,1); NEW_360.splice(i,1); renderThumbs(); };
 
 /* ---- Auto-stamp the broker's company logo onto listing photos ---- */
 let _LOGO_IMG=null; // null=not tried, false=failed, else Image
@@ -393,20 +403,23 @@ window.saveListing=async (status)=>{
     // media: upload new files (auto-stamped with the broker's company logo),
     // then reconcile listing_media to KEEP_MEDIA + uploaded
     const uploaded=[];
-    for(const f of NEW_FILES){
-      const stamp = PROFILE.company_logo_url && (!window.HZ || HZ.hasFeature('logo_watermark'));
+    for(let fi=0;fi<NEW_FILES.length;fi++){
+      const f=NEW_FILES[fi], is360=!!NEW_360[fi];
+      // Never watermark a 360 photo — a logo stamped on an equirectangular
+      // image breaks the sphere. Upload the raw panorama untouched.
+      const stamp = !is360 && PROFILE.company_logo_url && (!window.HZ || HZ.hasFeature('logo_watermark'));
       const toUpload = stamp ? await watermark(f, PROFILE.company_logo_url) : f;
       const ext = (toUpload===f) ? (f.name.split('.').pop()||'jpg') : 'jpg';
       const path=UID+'/'+id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.'+ext;
       const {error}=await sb.storage.from('listings').upload(path, toUpload, {upsert:false, contentType:toUpload.type||'image/jpeg'});
       if(error) throw error;
-      uploaded.push(sb.storage.from('listings').getPublicUrl(path).data.publicUrl);
+      uploaded.push({url:sb.storage.from('listings').getPublicUrl(path).data.publicUrl, is_360:is360});
     }
-    const finalUrls=KEEP_MEDIA.concat(uploaded);
+    const finalMedia=KEEP_MEDIA.concat(uploaded);
     // replace media rows for this listing
     await api('/listing_media?listing_id=eq.'+id, {method:'DELETE'});
-    if(finalUrls.length){
-      await api('/listing_media', {method:'POST', body:JSON.stringify(finalUrls.map((u,i)=>({listing_id:id, url:u, sort:i})))});
+    if(finalMedia.length){
+      await api('/listing_media', {method:'POST', body:JSON.stringify(finalMedia.map((m,i)=>({listing_id:id, url:m.url, sort:i, is_360:!!m.is_360})))});
     }
     if(status==='active')await api('/listings?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status:'active'})});
     closeForm(); loadMine();

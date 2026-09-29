@@ -968,6 +968,66 @@ function buildSplash(){
 }
 
 /* ============================================================
+   360° Virtual Tour — auto-built from equirectangular photos.
+   A photo is treated as a 360 panorama when its pixels are ~2:1
+   (the equirectangular shape a phone's Photo-Sphere / a 360 camera
+   produces). Multiple 360s on one unit become a room-switcher tour.
+   ============================================================ */
+HZ.is360Dims = (w,h)=> !!(w && h && w/h >= 1.9 && w/h <= 2.1 && w >= 2000);
+HZ.is360File = (file)=> new Promise(res=>{
+  try{ const img=new Image(); const u=URL.createObjectURL(file);
+    img.onload=()=>{ const ok=HZ.is360Dims(img.naturalWidth,img.naturalHeight); URL.revokeObjectURL(u); res(ok); };
+    img.onerror=()=>{ URL.revokeObjectURL(u); res(false); }; img.src=u;
+  }catch(e){ res(false); }
+});
+let _pano=null, _panoView=null;
+function loadPannellum(){
+  if(window.pannellum) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const base='https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/';
+    const l=document.createElement('link'); l.rel='stylesheet'; l.href=base+'pannellum.css'; document.head.appendChild(l);
+    const s=document.createElement('script'); s.src=base+'pannellum.js'; s.onload=resolve; s.onerror=reject; document.head.appendChild(s);
+  });
+}
+/* scenes: [{url, title}] */
+HZ.openTour = async function(scenes, opts){
+  scenes=(scenes||[]).filter(s=>s&&s.url); if(!scenes.length) return; opts=opts||{};
+  const ar=HZ.lang!=='en';
+  if(!_pano){
+    _pano=document.createElement('div'); _pano.className='hz-tour'; _pano.id='hzTour';
+    _pano.innerHTML=`<div class="tbar"><div><b>${ar?'جولة افتراضية 360°':'360° Virtual Tour'}</b><div class="sub" id="hzTourSub"></div></div><button class="x" aria-label="close" onclick="HZ.closeTour()">×</button></div>
+      <div class="pano" id="hzPano"></div><div class="loading" id="hzTourLoad">…</div><div class="rooms" id="hzTourRooms"></div>`;
+    document.body.appendChild(_pano);
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape'&&_pano&&_pano.classList.contains('open')) HZ.closeTour(); });
+  }
+  _pano.classList.add('open');
+  document.getElementById('hzTourSub').textContent = opts.title || '';
+  try{ document.getElementById('hzTourLoad').style.display='flex'; await loadPannellum(); }
+  catch(e){ document.getElementById('hzTourLoad').textContent=ar?'تعذّر تحميل الجولة':'Could not load the tour'; return; }
+  const roomName=(i)=> (scenes[i].title||'').trim() || (ar?('غرفة '+(i+1)):('Room '+(i+1)));
+  const cfg={ default:{ firstScene:'s0', autoLoad:true, sceneFadeDuration:500, showControls:true }, scenes:{} };
+  scenes.forEach((s,i)=>{ cfg.scenes['s'+i]={ type:'equirectangular', panorama:s.url, autoRotate:i===0?-2:0, title:roomName(i) }; });
+  try{ if(_panoView){ _panoView.destroy(); _panoView=null; } document.getElementById('hzPano').innerHTML=''; }catch(e){}
+  _panoView = window.pannellum.viewer('hzPano', cfg);
+  document.getElementById('hzTourLoad').style.display='none';
+  const rooms=document.getElementById('hzTourRooms');
+  rooms.innerHTML = scenes.length>1 ? scenes.map((s,i)=>`<button class="rm ${i===0?'on':''}" data-s="s${i}"><img src="${HZ.esc(s.url)}" loading="lazy"><span>${HZ.esc(roomName(i))}</span></button>`).join('') : '';
+  rooms.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{ try{ _panoView.loadScene(b.dataset.s); }catch(e){} rooms.querySelectorAll('.rm').forEach(x=>x.classList.remove('on')); b.classList.add('on'); });
+};
+HZ.closeTour = function(){ if(!_pano) return; _pano.classList.remove('open'); try{ if(_panoView){ _panoView.destroy(); _panoView=null; } }catch(e){} };
+/* Build a "Start tour" button element if any media is 360; else null.
+   media: [{url, is_360, title?}] */
+HZ.tourButton = function(media, opts){
+  const scenes=(media||[]).filter(m=>m&&m.is_360).map(m=>({url:m.url, title:m.title||m.room||''}));
+  if(!scenes.length) return null;
+  const ar=HZ.lang!=='en'; const b=document.createElement('button');
+  b.className='btn btn-teal hz-tour-btn'; b.type='button';
+  b.innerHTML=`<span aria-hidden="true">🧭</span> ${ar?'ابدأ الجولة 360°':'Start 360° tour'}`;
+  b.onclick=()=>HZ.openTour(scenes, opts||{});
+  return b;
+};
+
+/* ============================================================
    CRM Voice Assistant (AI) — say any CRM task, it executes it.
    Speech (Web Speech API) → /api/crm/assistant (Gemini) → {intent,params}
    → executed with the broker's own Supabase JWT (RLS applies).

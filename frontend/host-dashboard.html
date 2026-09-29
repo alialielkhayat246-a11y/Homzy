@@ -11,7 +11,7 @@
 <link rel="manifest" href="/site.webmanifest" />
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/homzy.css?v=6">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
 <style>
   .hd{max-width:1080px;margin:0 auto;padding:22px;}
   .hnav{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 24px;border-bottom:1px solid var(--line);padding-bottom:12px;}
@@ -101,7 +101,7 @@
 <div id="hz-footer"></div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="/assets/homzy.js?v=6"></script>
+<script src="/assets/homzy.js?v=7"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 const money=n=> n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');
@@ -141,7 +141,7 @@ async function ensureHost(){
   return ex[0];
 }
 async function loadProps(){
-  PROPS=await HZ.sbAuth('/stay_properties?host_id=eq.'+S.uid+'&select=*,stay_pricing(base_price,currency),stay_property_images(id,url,is_cover,sort)&order=created_at.desc', S.token)||[];
+  PROPS=await HZ.sbAuth('/stay_properties?host_id=eq.'+S.uid+'&select=*,stay_pricing(base_price,currency),stay_property_images(id,url,is_cover,sort,is_360)&order=created_at.desc', S.token)||[];
 }
 
 async function renderTab(){
@@ -189,7 +189,7 @@ let WPROP=null, WAMEN=new Set(), WRULES={smoking:false,pets:false,parties:false,
 async function renderWizard(c){
   WPROP=null; WAMEN=new Set(); WRULES={smoking:false,pets:false,parties:false,children:true};
   if(EDIT){
-    const rows=await HZ.sbAuth('/stay_properties?id=eq.'+EDIT+'&select=*,stay_pricing(*),stay_house_rules(*),stay_property_amenities(amenity_id),stay_property_images(id,url,is_cover,sort)',S.token);
+    const rows=await HZ.sbAuth('/stay_properties?id=eq.'+EDIT+'&select=*,stay_pricing(*),stay_house_rules(*),stay_property_amenities(amenity_id),stay_property_images(id,url,is_cover,sort,is_360)',S.token);
     WPROP=rows&&rows[0];
     if(WPROP){ (WPROP.stay_property_amenities||[]).forEach(a=>WAMEN.add(a.amenity_id));
       if(WPROP.stay_house_rules&&WPROP.stay_house_rules[0]) WRULES=WPROP.stay_house_rules[0]; }
@@ -296,7 +296,7 @@ function val(id){ return (document.getElementById(id).value||'').trim(); }
 /* photos */
 function photosHTML(){
   const imgs=((WPROP&&WPROP.stay_property_images)||[]).sort((a,b)=>b.is_cover-a.is_cover||a.sort-b.sort);
-  return `<div class="photos">${imgs.map(im=>`<div class="photo"><img src="${HZ.esc(im.url)}"><button class="x" onclick="delPhoto('${im.id}')">×</button>${im.is_cover?`<span class="cov">${ar()?'غلاف':'Cover'}</span>`:`<button class="cov" style="border:none;cursor:pointer" onclick="setCover('${im.id}')">${ar()?'اجعله غلاف':'Set cover'}</button>`}</div>`).join('')}
+  return `<div class="photos">${imgs.map(im=>`<div class="photo"><img src="${HZ.esc(im.url)}">${im.is_360?`<span class="hz-360-badge">🧭 360°</span>`:''}<button class="x" onclick="delPhoto('${im.id}')">×</button>${im.is_cover?`<span class="cov">${ar()?'غلاف':'Cover'}</span>`:`<button class="cov" style="border:none;cursor:pointer" onclick="setCover('${im.id}')">${ar()?'اجعله غلاف':'Set cover'}</button>`}</div>`).join('')}
     <label class="addph">+<input type="file" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this.files)"></label></div>
     <div style="color:var(--muted);font-size:12.5px;margin-top:6px">${ar()?'محتاج 5 صور على الأقل للنشر.':'At least 5 photos required to publish.'}</div>`;
 }
@@ -308,16 +308,17 @@ async function uploadPhotos(files){
   for(let i=0;i<files.length;i++){
     const f=files[i]; const safe=f.name.replace(/[^a-zA-Z0-9.]/g,'_');
     const path=S.uid+'/'+pid+'/'+Date.now()+'-'+i+'-'+safe;
+    const is360=(HZ.is360File?await HZ.is360File(f).catch(()=>false):false); // auto 360 tour
     try{
       const up=await fetch(SB_URL+'/storage/v1/object/stay-media/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token},body:f});
       if(!up.ok) throw new Error('upload '+up.status);
       const url=SB_URL+'/storage/v1/object/public/stay-media/'+path;
-      await HZ.sbAuth('/stay_property_images',S.token,'POST',{property_id:pid,url:url,sort:cnt+i,is_cover:(cnt+i===0)});
+      await HZ.sbAuth('/stay_property_images',S.token,'POST',{property_id:pid,url:url,sort:cnt+i,is_cover:(cnt+i===0),is_360:is360});
     }catch(e){ console.error(e); }
   }
   await refreshWprop(pid); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang();
 }
-async function refreshWprop(pid){ const r=await HZ.sbAuth('/stay_properties?id=eq.'+pid+'&select=id,stay_property_images(id,url,is_cover,sort)',S.token); WPROP=Object.assign(WPROP||{},r&&r[0]); }
+async function refreshWprop(pid){ const r=await HZ.sbAuth('/stay_properties?id=eq.'+pid+'&select=id,stay_property_images(id,url,is_cover,sort,is_360)',S.token); WPROP=Object.assign(WPROP||{},r&&r[0]); }
 window.delPhoto=async(id)=>{ await HZ.sbAuth('/stay_property_images?id=eq.'+id,S.token,'DELETE'); await refreshWprop(EDIT||WPROP.id); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang(); };
 window.setCover=async(id)=>{ const pid=EDIT||WPROP.id; await HZ.sbAuth('/stay_property_images?property_id=eq.'+pid,S.token,'PATCH',{is_cover:false}); await HZ.sbAuth('/stay_property_images?id=eq.'+id,S.token,'PATCH',{is_cover:true}); await refreshWprop(pid); document.getElementById('photosBox').innerHTML=photosHTML(); HZ.applyLang(); };
 window.uploadPhotos=uploadPhotos; window.saveWizard=saveWizard;
