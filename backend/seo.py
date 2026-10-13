@@ -268,8 +268,9 @@ def stay_meta(pid: str) -> str | None:
 # Project (primary / developer)
 # ---------------------------------------------------------------------------
 def render_project(pid: str) -> str | None:
-    sel = ("id,developer_id,name,name_ar,area,description,delivery,status,amenities,"
-           "cover_image_url,developer:developers(name,about,track_record,website)")
+    sel = ("id,developer_id,name,name_ar,area,description,description_ar,delivery,status,"
+           "amenities,amenities_ar,cover_image_url,"
+           "developer:developers(name,about,about_ar,track_record,track_record_ar,website)")
     rows = _get(f"/projects?select={sel}&id=eq.{pid}&limit=1")
     if not rows:
         return None
@@ -285,6 +286,11 @@ def render_project(pid: str) -> str | None:
                       f"&order=updated_at.desc&limit=6")
 
     dev = p.get("developer") or {}
+    # This page is Arabic: prefer the Arabic briefs, fall back to English.
+    p["description"] = p.get("description_ar") or p.get("description")
+    p["amenities"] = p.get("amenities_ar") or p.get("amenities")
+    dev["about"] = dev.get("about_ar") or dev.get("about")
+    dev["track_record"] = dev.get("track_record_ar") or dev.get("track_record")
     name = p.get("name_ar") or p.get("name") or "مشروع"
     name_en = p.get("name") or name
     area = p.get("area") or ""

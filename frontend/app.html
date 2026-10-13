@@ -570,7 +570,11 @@ async function openProject(id){
   dr.innerHTML=detailLoading(); dr.scrollTop=0;
   ov.classList.add('open'); document.body.style.overflow='hidden';
   try{
-    const p=(await sb('/projects?select=id,developer_id,name,name_ar,area,description,delivery,status,amenities,cover_image_url,developer:developers(name,about,track_record,phone,website)&id=eq.'+id))[0];
+    const p=(await sb('/projects?select=id,developer_id,name,name_ar,area,description,description_ar,delivery,status,amenities,amenities_ar,cover_image_url,developer:developers(name,about,about_ar,track_record,track_record_ar,phone,website)&id=eq.'+id))[0];
+    // bilingual briefs: show the page language, fall back to the other one
+    const loc=(a,e)=>HZ.lang==='ar'?(a||e):(e||a);
+    if(p){ p.description=loc(p.description_ar,p.description); p.amenities=loc(p.amenities_ar,p.amenities);
+      if(p.developer){ p.developer.about=loc(p.developer.about_ar,p.developer.about); p.developer.track_record=loc(p.developer.track_record_ar,p.developer.track_record); } }
     const units=await sb('/unit_types?select=type,bedrooms,size_from,size_to,price_from,price_to,down_payment,installment_years,payment_plan,finishing,delivery&project_id=eq.'+id+'&order=price_from.asc&limit=40');
     const media=await sb('/project_media?select=kind,url,caption&project_id=eq.'+id+'&limit=20');
     // Other projects by the same developer (so the buyer can explore the portfolio).
