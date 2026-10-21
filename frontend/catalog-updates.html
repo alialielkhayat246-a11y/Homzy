@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — تحديثات المطورين</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  body{background:var(--cream,#F7F3EC);}
+  .lx-top{background:var(--navy,#0B1D36); color:#fff; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .lx-top .brand{display:flex; align-items:center; gap:10px; font-family:"Poppins",sans-serif; font-weight:800; font-size:18px;}
+  .lx-top .brand svg{width:30px; height:30px;}
+  .lx-top .brand b{color:var(--teal-on-navy,#5FD0DE); font-family:"Cairo",sans-serif;}
+  .lx-top .sp{flex:1;}
+  .lx-top button{font-family:"Cairo",sans-serif; font-weight:700; font-size:13.5px; border-radius:10px; padding:8px 14px; cursor:pointer; border:1.5px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff;}
+  .wrap{max-width:1000px; margin:0 auto; padding:22px 18px 70px;}
+  .gate{max-width:420px; margin:8vh auto; background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:22px; padding:34px 28px; text-align:center;}
+  .gate h1{font-size:22px; color:var(--navy,#0B1D36); margin:0 0 8px;}
+  .gate p{color:var(--muted,#66717F); font-size:14.5px; line-height:1.7; margin:0 0 22px;}
+  .gbtn{display:inline-flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--line-2,#D8CFC0); border-radius:12px; padding:12px 20px; font-family:"Cairo",sans-serif; font-weight:800; font-size:15px; color:var(--navy,#0B1D36); cursor:pointer;}
+  .gate .err{color:#B42318; font-weight:700; font-size:13.5px; margin-top:14px; min-height:16px;}
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;}
+  .stat{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; padding:16px 18px;}
+  .stat .n{font-family:"Poppins",sans-serif; font-weight:800; font-size:26px; color:var(--navy,#0B1D36); line-height:1;}
+  .stat .l{color:var(--muted,#66717F); font-size:13px; margin-top:6px; font-weight:600;}
+  .stat.teal .n{color:var(--teal-d,#0B5563);}
+  .bar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
+  .tabs{display:flex; gap:6px;}
+  .tab{font-family:"Cairo",sans-serif; font-weight:700; font-size:13.5px; cursor:pointer; padding:8px 15px; border-radius:100px; border:1.5px solid var(--line-2,#D8CFC0); background:#fff; color:var(--navy,#0B1D36);}
+  .tab.on{background:var(--navy,#0B1D36); color:#fff; border-color:var(--navy,#0B1D36);}
+  .bar input{flex:1; min-width:180px; font-family:"Cairo",sans-serif; font-size:14px; padding:10px 14px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:11px; background:#fff; outline:none;}
+  .up{background:#fff; border:1px solid var(--line,#E6DDCF); border-radius:16px; padding:15px 17px; margin-bottom:12px;}
+  .up .hd{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .up .pj{font-weight:800; font-size:16px; color:var(--navy,#0B1D36);}
+  .up .pj.new{color:#B45309;}
+  .badge{font-size:11.5px; font-weight:800; padding:4px 11px; border-radius:100px; white-space:nowrap; background:#EEF1F3; color:#40506a;}
+  .k-price,.k-payment_plan{background:#E7F0F0; color:#0B5563;} .k-new_launch,.k-new_phase{background:#FFF0E0; color:#B45309;}
+  .k-delivery{background:#EEEAF7; color:#5B4B9E;} .k-brochure{background:#FDE8E4; color:#B42318;}
+  .up .sum{margin-top:9px; color:#2b3a52; font-size:14.5px; line-height:1.7;}
+  .up .meta{margin-top:7px; display:flex; gap:14px; flex-wrap:wrap; color:var(--muted,#66717F); font-size:12.5px;}
+  table.u{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
+  table.u th,table.u td{border-bottom:1px solid var(--line,#E6DDCF); padding:6px 8px; text-align:right;}
+  table.u th{color:var(--muted,#66717F); font-weight:700; font-size:12px;}
+  .media{margin-top:8px; font-size:12.5px; font-weight:700; color:#B42318;}
+  .raw{display:none; margin-top:10px; background:#F7F3EC; border-radius:10px; padding:10px 12px; white-space:pre-wrap; font-size:13px; line-height:1.7; color:#40506a;}
+  .raw.open{display:block;}
+  .acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:12px;}
+  .acts button{font-family:"Cairo",sans-serif; font-weight:700; font-size:13px; border-radius:10px; padding:8px 14px; cursor:pointer; border:1.5px solid var(--line-2,#D8CFC0); background:#fff; color:var(--navy,#0B1D36);}
+  .acts .ok{background:var(--teal,#0B5563); color:#fff; border-color:var(--teal,#0B5563);}
+  .acts .no{color:#B42318;}
+  .acts label{font-size:12.5px; color:#40506a; display:flex; gap:5px; align-items:center;}
+  .link{display:flex; gap:6px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+  .link input{font-family:"Cairo",sans-serif; font-size:13px; padding:7px 10px; border:1.5px solid var(--line-2,#D8CFC0); border-radius:9px; min-width:200px;}
+  .sugg button{font-family:"Cairo",sans-serif; font-size:12.5px; margin:3px; padding:5px 10px; border-radius:8px; border:1px solid var(--line,#E6DDCF); background:#F7F3EC; cursor:pointer;}
+  .empty{text-align:center; color:var(--muted,#66717F); padding:50px 16px;}
+  .msg{font-size:12.5px; font-weight:700; margin-top:8px;}
+</style>
+</head>
+<body>
+<div id="gate" class="gate" style="display:none">
+  <h1>تحديثات المطورين</h1>
+  <p>الصفحة دي للأدمن بس. سجّل دخول بحساب جوجل بتاع Homzy.</p>
+  <button class="gbtn" onclick="signIn()">الدخول بجوجل</button>
+  <div class="err" id="gErr"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="lx-top">
+    <span class="brand"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="#0B1D36"/><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#0B5563"/></svg> Homzy · <b>تحديثات المطورين</b></span>
+    <span class="sp"></span>
+    <span id="whoami" style="font-size:13px;opacity:.85;"></span>
+    <button onclick="load()">↻ تحديث</button>
+    <button onclick="signOut()">خروج</button>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat teal"><div class="n" id="sPend">0</div><div class="l">مستنية مراجعة</div></div>
+      <div class="stat"><div class="n" id="sApp">0</div><div class="l">اتطبّقت</div></div>
+      <div class="stat"><div class="n" id="sRej">0</div><div class="l">اترفضت</div></div>
+    </div>
+    <div class="bar">
+      <div class="tabs">
+        <button class="tab on" onclick="setTab('pending',this)">مستنية مراجعة</button>
+        <button class="tab" onclick="setTab('applied',this)">اتطبّقت</button>
+        <button class="tab" onclick="setTab('rejected',this)">اترفضت</button>
+      </div>
+      <input id="search" placeholder="ابحث بمشروع / مطوّر / جروب…" oninput="render()" />
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
+const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+const sb=createClient(SB_URL, SB_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+const $=id=>document.getElementById(id);
+let TOKEN=null, ROWS=[], TAB='pending';
+const KIND={price:'💰 أسعار',payment_plan:'🧾 نظام سداد',new_launch:'🚀 طرح جديد',new_phase:'🏗️ مرحلة جديدة',delivery:'🔑 تسليم',brochure:'📄 بروشور',other:'ℹ️ تحديث'};
+const esc=s=>(s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>n==null||n===''?'—':Number(n).toLocaleString('en-US');
+const when=iso=>iso?new Date(iso).toLocaleString('ar-EG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+
+async function api(path,opt={}){
+  const r=await fetch(SB_URL+'/rest/v1'+path,{...opt,headers:{apikey:SB_KEY,Authorization:'Bearer '+TOKEN,'Content-Type':'application/json',...(opt.headers||{})}});
+  if(!r.ok) throw new Error((await r.text())||('sb '+r.status));
+  return r.status===204?null:r.json();
+}
+function showGate(m){ $('app').style.display='none'; $('gate').style.display='block'; if(m)$('gErr').textContent=m; }
+window.signIn=async()=>{ const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/updates'}}); if(error)$('gErr').textContent=error.message; };
+window.signOut=async()=>{ await sb.auth.signOut(); location.reload(); };
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ showGate(); return; }
+  TOKEN=session.access_token;
+  let prof=[]; try{ prof=await api('/profiles?select=full_name,is_admin&id=eq.'+session.user.id); }catch(e){}
+  if(!prof[0]||!prof[0].is_admin){ showGate('الحساب ده مش أدمن.'); await sb.auth.signOut(); return; }
+  $('whoami').textContent=prof[0].full_name||session.user.email||'';
+  $('gate').style.display='none'; $('app').style.display='block';
+  load();
+}
+window.load=async()=>{
+  $('list').innerHTML='<div class="empty">…بحمّل</div>';
+  try{
+    ROWS=await api('/catalog_updates?select=*,project:projects(id,name,area),developer:developers(id,name)&order=message_at.desc.nullslast,created_at.desc&limit=400');
+    $('sPend').textContent=ROWS.filter(r=>r.status==='pending').length;
+    $('sApp').textContent=ROWS.filter(r=>r.status==='applied').length;
+    $('sRej').textContent=ROWS.filter(r=>r.status==='rejected').length;
+    render();
+  }catch(e){ $('list').innerHTML='<div class="empty">تعذّر التحميل: '+esc(e.message)+'</div>'; }
+};
+window.setTab=(t,el)=>{ TAB=t; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on')); el.classList.add('on'); render(); };
+
+window.render=()=>{
+  const q=($('search').value||'').trim().toLowerCase();
+  let rows=ROWS.filter(r=>r.status===TAB);
+  if(q) rows=rows.filter(r=>[r.group_name,r.project_name_raw,r.project?.name,r.developer?.name,r.summary_ar,r.message_text].join(' ').toLowerCase().includes(q));
+  if(!rows.length){ $('list').innerHTML='<div class="empty">مفيش تحديثات هنا.</div>'; return; }
+  $('list').innerHTML=rows.map(r=>{
+    const units=(r.extracted&&r.extracted.units)||[];
+    const pj=r.project?`<span class="pj">${esc(r.project.name)}</span><span class="badge">${esc(r.project.area||'')}</span>`
+                      :`<span class="pj new">مش مربوط بمشروع${r.project_name_raw?': '+esc(r.project_name_raw):''}</span>`;
+    return `<div class="up" data-id="${r.id}">
+      <div class="hd">${pj}<span class="badge k-${r.kind}">${KIND[r.kind]||r.kind}</span>${r.developer?`<span class="badge">${esc(r.developer.name)}</span>`:''}</div>
+      ${r.summary_ar?`<div class="sum">${esc(r.summary_ar)}</div>`:''}
+      ${units.length?`<table class="u"><thead><tr><th>النوع</th><th>الغرف</th><th>المساحة م²</th><th>السعر يبدأ من</th><th>المقدم</th><th>التقسيط</th><th>التسليم</th></tr></thead><tbody>${units.map(u=>`<tr><td>${esc(u.type||'')}</td><td>${esc(u.bedrooms??'')}</td><td>${esc(u.size_from??'')}${u.size_to?' – '+esc(u.size_to):''}</td><td>${money(u.price_from)}</td><td>${esc(u.down_payment||'')}</td><td>${u.installment_years?esc(u.installment_years)+' سنة':''}</td><td>${esc(u.delivery||'')}</td></tr>`).join('')}</tbody></table>`:''}
+      ${r.has_media?`<div class="media">📎 الرسالة فيها ${r.has_media.includes('PDF')?'بروشور PDF':'صور'} — حمّلها من الجروب يدويًا لو عايز تضيفها للمشروع.</div>`:''}
+      <div class="meta"><span>👥 ${esc(r.group_name)}</span><span>🗓️ ${when(r.message_at||r.created_at)}</span>${r.sender?`<span>👤 ${esc(r.sender)}</span>`:''}</div>
+      <div class="raw">${esc(r.message_text)}</div>
+      ${r.status==='pending'?`
+      ${!r.project?`<div class="link"><input placeholder="اربطه بمشروع موجود… اكتب الاسم" oninput="suggest(this,'${r.id}','${r.developer?.id||''}')"><span class="sugg"></span></div>`:''}
+      <div class="acts">
+        ${units.length?`<label><input type="checkbox" class="rep"> استبدل الأسعار القديمة لنفس النوع</label>`:''}
+        ${!r.project&&r.developer?`<label><input type="checkbox" class="mk"> اعمل مشروع جديد</label>`:''}
+        ${units.length?`<button class="ok" onclick="applyU('${r.id}',this)">✅ طبّق على الكتالوج</button>`:''}
+        <button onclick="doneU('${r.id}',this)">✔️ اتعلّم (من غير تغيير)</button>
+        <button class="no" onclick="rejectU('${r.id}',this)">❌ ارفض</button>
+        <button onclick="this.closest('.up').querySelector('.raw').classList.toggle('open')">👁️ الرسالة الأصلية</button>
+      </div>`:`<div class="acts"><button onclick="this.closest('.up').querySelector('.raw').classList.toggle('open')">👁️ الرسالة الأصلية</button>${r.review_note?`<span class="badge">${esc(r.review_note)}</span>`:''}</div>`}
+      <div class="msg"></div>
+    </div>`;
+  }).join('');
+};
+function say(el,t,ok){ const m=el.closest('.up').querySelector('.msg'); m.textContent=t; m.style.color=ok?'#137a3e':'#B42318'; }
+window.applyU=async(id,btn)=>{
+  const card=btn.closest('.up'); btn.disabled=true;
+  try{
+    const res=await api('/rpc/apply_catalog_update',{method:'POST',body:JSON.stringify({p_id:id,p_replace:!!card.querySelector('.rep')?.checked,p_create_project:!!card.querySelector('.mk')?.checked})});
+    say(btn,'اتطبّق ✓ — اتضاف '+res.units_added+' نوع وحدة',true); setTimeout(load,900);
+  }catch(e){ say(btn,'مقدرتش أطبّق: '+e.message); btn.disabled=false; }
+};
+async function setStatus(id,status,note,btn){
+  try{ await api('/catalog_updates?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status,review_note:note||null,reviewed_at:new Date().toISOString()})}); setTimeout(load,400); }
+  catch(e){ say(btn,'حصل خطأ: '+e.message); }
+}
+window.rejectU=(id,btn)=>setStatus(id,'rejected',prompt('سبب الرفض (اختياري):')||'',btn);
+window.doneU=(id,btn)=>setStatus(id,'applied','اتعلّم من غير تغيير في الكتالوج',btn);
+let T=null;
+window.suggest=(inp,id,dev)=>{
+  clearTimeout(T); const box=inp.parentElement.querySelector('.sugg'); const q=inp.value.trim();
+  if(q.length<2){ box.innerHTML=''; return; }
+  T=setTimeout(async()=>{
+    const ps=await api('/projects?select=id,name,area&name=ilike.*'+encodeURIComponent(q)+'*'+(dev?'&developer_id=eq.'+dev:'')+'&limit=8');
+    box.innerHTML=ps.map(p=>`<button onclick="linkU('${id}','${p.id}',this)">${esc(p.name)} · ${esc(p.area||'')}</button>`).join('')||'<span style="font-size:12px;color:#66717F">مفيش نتايج</span>';
+  },250);
+};
+window.linkU=async(id,pid,btn)=>{ try{ await api('/catalog_updates?id=eq.'+id,{method:'PATCH',body:JSON.stringify({project_id:pid})}); load(); }catch(e){ say(btn,e.message); } };
+boot();
+</script>
+</body>
+</html>

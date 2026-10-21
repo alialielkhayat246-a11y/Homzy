@@ -177,6 +177,13 @@ def inbox_page():
     return FileResponse(config.FRONTEND_DIR / "leads-inbox.html")
 
 
+@app.get("/updates")
+def catalog_updates_page():
+    """Admin review queue for developer updates read from the WhatsApp groups;
+    RLS limits catalog_updates to admins, and applying goes through an admin-only RPC."""
+    return FileResponse(config.FRONTEND_DIR / "catalog-updates.html")
+
+
 @app.get("/login")
 def login_page():
     """Client sign-in / sign-up gate. Everything past the public homepage
