@@ -737,6 +737,13 @@ function seedGreeting(){
   renderChips();
 }
 
+// Broker mode sends the login token so the server can verify the broker before sharing
+// broker-only developer updates (the database checks the token, not the flag).
+function chatHeaders(body){
+  const h={'Content-Type':'application/json'};
+  if(body&&body.mode==='broker'){ const ss=HZ.session&&HZ.session(); if(ss&&ss.token) h.Authorization='Bearer '+ss.token; }
+  return h;
+}
 async function sendMsg(text){
   text=(text||'').trim(); if(!text) return;
   const input=document.getElementById('hzCpInput'), send=document.getElementById('hzCpSend');
@@ -758,7 +765,7 @@ async function sendMsg(text){
     saveChat();
   };
   try{
-    const r=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r=await fetch('/api/chat/stream',{method:'POST',headers:chatHeaders(body),body:JSON.stringify(body)});
     if(!r.ok||!r.body) throw new Error('no stream');
     const reader=r.body.getReader(), dec=new TextDecoder();
     let buf='', reply='', bubble=null, done=null;
@@ -784,7 +791,7 @@ async function sendMsg(text){
   }catch(e){
     // Fallback to the non-streaming endpoint (e.g. host buffered the stream).
     try{
-      const r2=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const r2=await fetch('/api/chat',{method:'POST',headers:chatHeaders(body),body:JSON.stringify(body)});
       const data=await r2.json(); if(t.parentNode) t.remove();
       const reply=data.reply||'(no reply)'; addMsg(reply,'bot'); finish(reply, data);
     }catch(e2){

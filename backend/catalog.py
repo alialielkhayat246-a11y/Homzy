@@ -232,3 +232,31 @@ def listings() -> list[dict[str, Any]]:
         return out
     except Exception:
         return _CACHE or []
+
+
+def project_intel(project_ids: list[str], user_token: str | None = None) -> dict[str, list[dict[str, Any]]]:
+    """Latest developer updates (from the WhatsApp groups) per project.
+
+    Calls project_intel_for_ai with the CALLER's token when given: the database
+    returns broker/ai-tier items only if that token belongs to a broker/admin,
+    so a client (or a forged "broker" flag) only ever gets the public tier."""
+    ids = [i for i in dict.fromkeys(project_ids) if i]
+    if not ids or not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return {}
+    try:
+        import requests
+
+        r = requests.post(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/project_intel_for_ai",
+            json={"p_project_ids": ids},
+            headers={"apikey": config.SUPABASE_KEY, "Content-Type": "application/json",
+                     "Authorization": f"Bearer {user_token or config.SUPABASE_KEY}"},
+            timeout=8,
+        )
+        rows = r.json() if r.ok else []
+    except Exception:
+        return {}
+    out: dict[str, list[dict[str, Any]]] = {}
+    for row in rows if isinstance(rows, list) else []:
+        out.setdefault(row.get("project_id"), []).append(row)
+    return out

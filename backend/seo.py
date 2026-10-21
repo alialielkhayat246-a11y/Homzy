@@ -355,6 +355,12 @@ def render_project(pid: str) -> str | None:
     if minp:
         chips.append(f"<span class='c'>💰 يبدأ من {_money(minp)}</span>")
 
+    # public developer updates (WhatsApp groups) — public tier only via RLS
+    intel = _get(f"/project_intel?select=content_ar,observed_at&project_id=eq.{pid}&order=observed_at.desc&limit=5") or []
+    intel_html = ""
+    if intel:
+        intel_html = ("<div class='sp-sec'><h2>آخر تحديثات المطوّر</h2>" + "".join(
+            f"<p>{_esc(i.get('content_ar'))} <small>· {_esc((i.get('observed_at') or '')[:10])}</small></p>" for i in intel) + "</div>")
     others_html = ""
     if others:
         cards = "".join(
@@ -380,6 +386,7 @@ def render_project(pid: str) -> str | None:
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(name)}">' for u in images) + '</div></div>') if images else ''}
     {('<div class="sp-sec"><h2>الوحدات المتاحة</h2><div class="utscroll"><table class="utable"><thead><tr><th>النوع</th><th>الغرف</th><th>المساحة</th><th>السعر</th><th>المقدم</th><th>التقسيط</th><th>التسليم</th></tr></thead><tbody>' + urows + '</tbody></table></div>' + (''.join(plans)) + '</div>') if units else ''}
     {('<div class="sp-sec"><h2>عن المطوّر' + ((' — ' + _esc(dev.get('name'))) if dev.get('name') else '') + '</h2><p>' + _esc((dev.get('about') or '') + ' ' + (dev.get('track_record') or '')) + '</p></div>') if (dev.get('about') or dev.get('track_record')) else ''}
+    {intel_html}
     {others_html}
     {('<div class="sp-sec"><h2>المميزات</h2><p>' + _esc(p.get('amenities')) + '</p></div>') if p.get('amenities') else ''}
     {_viewing_form(ctx)}

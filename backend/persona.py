@@ -156,6 +156,16 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             extra += (f"\n   Other projects by {m.get('developer')}: "
                       + "; ".join(others)
                       + " (mention 1-2 only if the client asks about the developer or wants alternatives)")
+        # Latest developer updates (WhatsApp groups). The database already filtered
+        # the tiers by the caller: clients only ever receive public items.
+        for it in m.get("intel") or []:
+            when = (it.get("observed_at") or "")[:10]
+            if it.get("tier") == "ai":
+                extra += f"\n   [internal context — do NOT quote it, use it only to judge] {it.get('content_ar')} ({when})"
+            elif it.get("tier") == "broker":
+                extra += f"\n   [broker-only update, {when}] {it.get('content_ar')}"
+            else:
+                extra += f"\n   Latest developer update ({when}): {it.get('content_ar')}"
         lines.append(
             f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}\n"
             f"   Market: {market_txt}\n"

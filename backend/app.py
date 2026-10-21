@@ -494,7 +494,14 @@ async def chat(req: Request):
     if not isinstance(history, list):
         history = None
     coach = body.get("mode") == "broker"
-    return broker.handle_turn(session, message, client_history=history, coach=coach)
+    token = _bearer(req) if coach else None
+    return broker.handle_turn(session, message, client_history=history, coach=coach, user_token=token)
+
+
+def _bearer(req: Request) -> str | None:
+    """The signed-in user's Supabase JWT (sent by the site in broker mode)."""
+    h = req.headers.get("authorization") or ""
+    return h[7:].strip() if h.lower().startswith("bearer ") and len(h) > 20 else None
 
 
 @app.post("/api/chat/stream")
@@ -511,9 +518,11 @@ async def chat_stream(req: Request):
     if not isinstance(history, list):
         history = None
     coach = body.get("mode") == "broker"
+    token = _bearer(req) if coach else None
 
     def gen():
-        for evt in broker.handle_turn_stream(session, message, client_history=history, coach=coach):
+        for evt in broker.handle_turn_stream(session, message, client_history=history, coach=coach,
+                                             user_token=token):
             yield _json.dumps(evt, ensure_ascii=False) + "\n"
 
     return StreamingResponse(gen(), media_type="application/x-ndjson",

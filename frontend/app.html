@@ -577,6 +577,17 @@ async function openProject(id){
       if(p.developer){ p.developer.about=loc(p.developer.about_ar,p.developer.about); p.developer.track_record=loc(p.developer.track_record_ar,p.developer.track_record); } }
     const units=await sb('/unit_types?select=type,bedrooms,size_from,size_to,price_from,price_to,down_payment,installment_years,payment_plan,finishing,delivery&project_id=eq.'+id+'&order=price_from.asc&limit=40');
     const media=await sb('/project_media?select=kind,url,caption&project_id=eq.'+id+'&limit=20');
+    // Latest developer updates (from the developer WhatsApp groups). The database
+    // filters by the caller: everyone gets public items, brokers also broker items.
+    let intel=[];
+    try{
+      const ss=HZ.session&&HZ.session();
+      const r=await fetch('https://ceoqtkbpdxnkuptnnwjg.supabase.co/rest/v1/rpc/project_intel_for_ai',{method:'POST',
+        headers:{apikey:'sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb','Content-Type':'application/json',
+                 Authorization:'Bearer '+((ss&&ss.token)||'sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb')},
+        body:JSON.stringify({p_project_ids:[id]})});
+      if(r.ok) intel=(await r.json()).filter(x=>x.tier!=='ai').slice(0,6);
+    }catch(e){}
     // Other projects by the same developer (so the buyer can explore the portfolio).
     let others=[];
     if(p.developer_id){
@@ -640,6 +651,7 @@ function projectDetail(p,units,media,others){
       <tbody>${rows}</tbody></table></div>
       ${plans.length?`<div class="plans">${plans.map(pl=>`<p>${esc(HZ.catalog.text(pl))}</p>`).join('')}</div>`:''}</div>`:''}
     ${(dev.about||dev.track_record)?`<div class="dsec"><h3>${t('about')}${dev.name?' — '+esc(dev.name):''}</h3><p>${esc(dev.about||'')} ${esc(dev.track_record||'')}</p>${dev.website?`<a class="devlink" target="_blank" rel="noopener" href="${esc(dev.website)}">🌐 ${esc(dev.website)}</a>`:''}</div>`:''}
+    ${intel.length?`<div class="dsec"><h3>${HZ.lang==='ar'?'📰 آخر تحديثات المطوّر':'📰 Latest developer updates'}</h3>${intel.map(x=>`<p style="margin:6px 0">${x.tier==='broker'?`<span style="font-size:11px;font-weight:800;background:#FFF0E0;color:#B45309;padding:2px 8px;border-radius:99px;margin-inline-end:6px">${HZ.lang==='ar'?'للبروكرز':'Brokers only'}</span>`:''}${esc(x.content_ar)} <span style="color:#8a94a3;font-size:12px">· ${new Date(x.observed_at).toLocaleDateString(HZ.lang==='ar'?'ar-EG':'en-GB',{day:'numeric',month:'short'})}</span></p>`).join('')}</div>`:''}
     ${othersHtml}
     ${p.amenities?`<div class="dsec"><h3>${t('amen')}</h3><p>${esc(p.amenities)}</p></div>`:''}
 

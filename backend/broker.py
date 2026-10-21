@@ -273,7 +273,7 @@ def _llm_reply(history: list[dict[str, str]], language: str,
 # Public entry point
 # --------------------------------------------------------------------------
 def _prepare(session: dict[str, Any], message: str,
-             client_history: list[dict[str, str]] | None):
+             client_history: list[dict[str, str]] | None, user_token: str | None = None):
     """Shared per-turn setup: language, requirements, matches. Appends the
     user message to history and returns (language, history, req, matches)."""
     language = detect_language(message)
@@ -323,6 +323,13 @@ def _prepare(session: dict[str, Any], message: str,
         if "dev_other_projects" not in top:
             top["dev_other_projects"] = catalog.developer_projects(
                 top.get("developer"), exclude=top.get("compound_en"))
+    # 3c) latest developer updates for the matched projects (WhatsApp groups).
+    #     user_token is only passed in broker mode; the DB decides the tiers.
+    if matches:
+        intel = catalog.project_intel([m.get("project_id") for m in matches[:6]], user_token)
+        for m in matches:
+            if m.get("project_id") in intel:
+                m["intel"] = intel[m["project_id"]][:6]
     return language, history, req, matches
 
 
@@ -536,8 +543,8 @@ def _recommendation(req, matches):
 
 def handle_turn(session: dict[str, Any], message: str,
                 client_history: list[dict[str, str]] | None = None,
-                coach: bool = False) -> dict[str, Any]:
-    language, history, req, matches = _prepare(session, message, client_history)
+                coach: bool = False, user_token: str | None = None) -> dict[str, Any]:
+    language, history, req, matches = _prepare(session, message, client_history, user_token if coach else None)
 
     reply = _llm_reply(history, language, matches, coach=coach)
     mode = "ai"
@@ -559,10 +566,10 @@ def handle_turn(session: dict[str, Any], message: str,
 
 def handle_turn_stream(session: dict[str, Any], message: str,
                        client_history: list[dict[str, str]] | None = None,
-                       coach: bool = False):
+                       coach: bool = False, user_token: str | None = None):
     """Same pipeline as handle_turn, but yields events so the reply streams
     token-by-token. Events: {'type':'meta'|'token'|'done', ...}."""
-    language, history, req, matches = _prepare(session, message, client_history)
+    language, history, req, matches = _prepare(session, message, client_history, user_token if coach else None)
     yield {"type": "meta", "language": language}
 
     client = _client_or_none()
