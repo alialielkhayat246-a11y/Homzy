@@ -52,8 +52,8 @@ $$;
 grant execute on function public.project_intel_for_ai(uuid[]) to anon, authenticated;
 
 -- Shared unit writer (internal). Price is per type AND size: a new price updates
--- the existing row of the same type (+ bedrooms when given) whose size is within
--- 10% of the new size; an unseen size becomes a new row. Rows nobody updated keep
+-- the existing single-size row of the same type (+ bedrooms when given) whose size
+-- is within 3% (min 3 m²) of the new size — range rows are never overwritten; an unseen size becomes a new row. Rows nobody updated keep
 -- their last price — the newest price is the price. (p_replace kept for API
 -- compatibility: when true and the update carries no size, it updates every row
 -- of that type/bedrooms.)
@@ -71,7 +71,7 @@ begin
        where t.project_id = p_project and lower(t.type) = v_type
          and (v_beds is null or t.bedrooms is null or t.bedrooms = v_beds)
          and coalesce(t.size_from, t.size_to) is not null
-         and abs(coalesce(t.size_from, t.size_to) - v_size) <= 0.10 * v_size
+         and t.size_to is null and abs(coalesce(t.size_from, t.size_to) - v_size) <= greatest(3, 0.03 * v_size)
        order by abs(coalesce(t.size_from, t.size_to) - v_size) limit 1;
     end if;
     if v_row is not null or (v_size is null and p_replace) then
