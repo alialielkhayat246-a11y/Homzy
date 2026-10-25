@@ -17,7 +17,10 @@ from typing import Any
 
 from . import config, notify
 
-TOKEN = "ELsEiHprVIZCwcsJz0j5Hk_PGuZ7Zx9q"  # shared secret for the settle RPCs
+# Shared server secret for the payment RPCs — from the environment (Vercel:
+# PUSH_CRON_TOKEN), never hard-coded: this repo is public. The database only
+# stores its sha256 (public._check_cron_key).
+TOKEN = config.PUSH_CRON_TOKEN
 
 # Order Paymob concatenates transaction fields in, to compute the callback HMAC.
 _HMAC_ORDER = [

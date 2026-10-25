@@ -17,7 +17,8 @@ from typing import Any
 
 from . import config
 
-_SHARED = "ELsEiHprVIZCwcsJz0j5Hk_PGuZ7Zx9q"  # same shared secret as push/cron RPCs
+# Same server secret as the push/cron RPCs — from the environment, never hard-coded.
+_SHARED = config.PUSH_CRON_TOKEN
 
 
 def configured() -> bool:
