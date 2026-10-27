@@ -324,6 +324,53 @@ def my_stay_detail_page(bid: str = ""):
     return FileResponse(config.FRONTEND_DIR / "my-stays.html")
 
 
+# Same HTML for every visitor -> let Vercel's CDN serve repeats for 5 min and
+# refresh in the background (stale-while-revalidate) instead of re-rendering.
+_EDGE_CACHE_PAGE = {"Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600"}
+
+# Cached project search (same filters -> same answer). Browsers hit /api/search;
+# Vercel's CDN answers repeats for 60 s, so the database only sees new queries.
+_SEARCH_KEYS = {"p_q": str, "p_areas": list, "p_min": int, "p_max": int, "p_beds": int,
+                "p_ready": str, "p_sort": str, "p_limit": int, "p_offset": int}
+_SEARCH_MEMO: dict = {}
+
+
+@app.get("/api/search")
+def api_search(a: str = "{}"):
+    try:
+        raw = _json.loads(a)
+        args = {}
+        for k, t in _SEARCH_KEYS.items():
+            v = raw.get(k)
+            if v is None:
+                args[k] = None
+            elif t is list:
+                args[k] = [str(x)[:60] for x in v][:20] if isinstance(v, list) else None
+            elif t is int:
+                args[k] = int(v)
+            else:
+                args[k] = str(v)[:80]
+        args["p_limit"] = max(1, min(int(args.get("p_limit") or 12), 200))
+        args["p_offset"] = max(0, int(args.get("p_offset") or 0))
+        args["p_sort"] = args.get("p_sort") or "newest"
+        args["p_since"] = None
+    except Exception:
+        return JSONResponse({"error": "bad search"}, status_code=400)
+    key = _json.dumps(args, sort_keys=True, ensure_ascii=False)
+    hit = _SEARCH_MEMO.get(key)
+    if hit and _time.time() - hit[0] < 60:
+        rows = hit[1]
+    else:
+        try:
+            rows = seo._rpc("search_projects", args)
+        except Exception:
+            return JSONResponse({"error": "search unavailable"}, status_code=502)
+        if len(_SEARCH_MEMO) > 500:
+            _SEARCH_MEMO.clear()
+        _SEARCH_MEMO[key] = (_time.time(), rows)
+    return JSONResponse(rows, headers={"Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300"})
+
+
 # Public, crawlable per-project / per-listing pages (outside the login gate) so
 # broker + developer units can rank in Google; the contact action stays gated.
 @app.get("/project/{pid}")
@@ -334,7 +381,7 @@ def project_page(pid: str):
         page = None
     if not page:
         return HTMLResponse(_not_found_html(), status_code=404)
-    return HTMLResponse(page)
+    return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
 
 
 @app.get("/listing/{lid}")
@@ -345,7 +392,7 @@ def listing_page(lid: str):
         page = None
     if not page:
         return HTMLResponse(_not_found_html(), status_code=404)
-    return HTMLResponse(page)
+    return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
 
 
 @app.get("/area/{slug}")
@@ -356,7 +403,7 @@ def area_page(slug: str):
         page = None
     if not page:
         return HTMLResponse(_not_found_html(), status_code=404)
-    return HTMLResponse(page)
+    return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
 
 
 def _not_found_html() -> str:

@@ -32,6 +32,22 @@ HZ.esc = s => (s==null?'':''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>
 
 // Call a Postgres function (RPC). HZ.sb replaces the whole headers object, so
 // RPC needs its own POST helper that keeps the auth headers + JSON content-type.
+// Project search through the backend so Vercel's CDN can answer repeated
+// searches (same filters) without touching the database; falls back to the
+// direct RPC if the cached path fails. Personalised calls (p_since) stay direct.
+HZ.searchProjects = async function(args){
+  args = args||{};
+  if(!args.p_since){
+    const keys=['p_q','p_areas','p_min','p_max','p_beds','p_ready','p_sort','p_limit','p_offset'];
+    const o={}; keys.forEach(k=>{ o[k]=(args[k]===undefined?null:args[k]); });
+    try{
+      const r=await fetch('/api/search?a='+encodeURIComponent(JSON.stringify(o)));
+      if(r.ok) return await r.json();
+    }catch(e){}
+  }
+  return HZ.rpc('search_projects', args);
+};
+
 HZ.rpc = async function(fn, args){
   const r = await fetch(SB_URL+'/rest/v1/rpc/'+fn, {
     method:'POST',

@@ -275,15 +275,26 @@ def render_project(pid: str) -> str | None:
     if not rows:
         return None
     p = rows[0]
-    units = _get(f"/unit_types?select=type,bedrooms,size_from,size_to,price_from,"
-                 f"price_to,down_payment,installment_years,payment_plan,delivery"
-                 f"&project_id=eq.{pid}&order=price_from.asc&limit=40")
-    media = _get(f"/project_media?select=kind,url&project_id=eq.{pid}&limit=12")
-    others = []
-    if p.get("developer_id"):
-        others = _get(f"/projects?select=id,name,name_ar,area&developer_id=eq."
-                      f"{p['developer_id']}&id=neq.{pid}&area=not.is.null"
-                      f"&order=updated_at.desc&limit=6")
+    # The remaining lookups are independent: fetch them in parallel (was 4 round
+    # trips one after another, ~1.2 s per page under load).
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(4) as ex:
+        f_units = ex.submit(_get, f"/unit_types?select=type,bedrooms,size_from,size_to,price_from,"
+                                  f"price_to,down_payment,installment_years,payment_plan,delivery"
+                                  f"&project_id=eq.{pid}&order=price_from.asc&limit=40")
+        f_media = ex.submit(_get, f"/project_media?select=kind,url&project_id=eq.{pid}&limit=12")
+        f_others = (ex.submit(_get, f"/projects?select=id,name,name_ar,area&developer_id=eq."
+                                    f"{p['developer_id']}&id=neq.{pid}&area=not.is.null"
+                                    f"&order=updated_at.desc&limit=6")
+                    if p.get("developer_id") else None)
+        f_intel = ex.submit(_get, f"/project_intel?select=content_ar,observed_at&project_id=eq.{pid}"
+                                  f"&order=observed_at.desc&limit=5")
+        units, media = f_units.result(), f_media.result()
+        others = f_others.result() if f_others else []
+        try:
+            prefetched_intel = f_intel.result() or []
+        except Exception:
+            prefetched_intel = []
 
     dev = p.get("developer") or {}
     # This page is Arabic: prefer the Arabic briefs, fall back to English.
@@ -356,7 +367,7 @@ def render_project(pid: str) -> str | None:
         chips.append(f"<span class='c'>💰 يبدأ من {_money(minp)}</span>")
 
     # public developer updates (WhatsApp groups) — public tier only via RLS
-    intel = _get(f"/project_intel?select=content_ar,observed_at&project_id=eq.{pid}&order=observed_at.desc&limit=5") or []
+    intel = prefetched_intel
     intel_html = ""
     if intel:
         intel_html = ("<div class='sp-sec'><h2>آخر تحديثات المطوّر</h2>" + "".join(

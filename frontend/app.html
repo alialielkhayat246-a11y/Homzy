@@ -245,7 +245,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=7"></script>
+<script src="/assets/homzy.js?v=8"></script>
 <script src="/assets/crm-behavior.js"></script>
 <script src="/assets/catalog-ui.js?v=1"></script>
 <script>
@@ -816,12 +816,12 @@ async function enrichTypes(rows){
   rows.forEach(p=>p.unitKinds=TYPE_CACHE.get(p.id)||[]);
 }
 async function fetchProjectRows(args,category){
-  if(!category)return (await HZ.rpc('search_projects',args))||[];
+  if(!category)return (await (HZ.searchProjects||(a=>HZ.rpc('search_projects',a)))(args))||[];
   const key=JSON.stringify({...args,p_limit:0,p_offset:0,category});
   if(!filteredCatalog || filteredCatalog.key!==key){
     const all=[];
     for(let offset=0;;){
-      const page=(await HZ.rpc('search_projects',{...args,p_limit:200,p_offset:offset}))||[];
+      const page=(await (HZ.searchProjects||(a=>HZ.rpc('search_projects',a)))({...args,p_limit:200,p_offset:offset}))||[];
       all.push(...page); offset+=page.length;
       if(!page.length || offset>=Number(page[0].total_count))break;
     }
