@@ -777,6 +777,9 @@ async function sendMsg(text){
       if(done.requirements) chat.req=done.requirements;
       const rec=(done.recommendations&&done.recommendations[0])||done.recommendation;
       if(rec) addRec(rec);
+      // Daily AI allowance (paid plans): warn when only a few messages are left.
+      if(typeof done.ai_left==='number' && done.ai_left<=5 && done.mode!=='limit')
+        addMsg(HZ.lang==='ar'?`ℹ️ فاضل لك ${done.ai_left} رسايل ذكاء اصطناعي النهارده.`:`ℹ️ ${done.ai_left} AI messages left today.`,'bot');
     }
     saveChat();
   };
@@ -1112,7 +1115,7 @@ async function asstProcess(){
   const text=(A_TXT||'').trim();
   if(!text){ asstStatus(aLbl('مسمعتش حاجة — جرّب تاني.','Heard nothing — try again.'),true); return; }
   asstStatus(aLbl('بنفّذ…','Working…'));
-  let cmd; try{ const r=await fetch('/api/crm/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}); cmd=await r.json(); }
+  let cmd; try{ const r=await fetch('/api/crm/assistant',{method:'POST',headers:chatHeaders({mode:'broker'}),body:JSON.stringify({text})}); cmd=await r.json(); }
   catch(e){ asstStatus(aLbl('تعذّر الاتصال.','Connection failed.'),true); return; }
   try{ await asstExec(cmd); }catch(e){ asstRes(aLbl('حصل خطأ: ','Error: ')+esc(e.message||e),'err'); }
   asstStatus(aLbl('جاهز','Ready'));

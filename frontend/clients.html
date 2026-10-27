@@ -238,7 +238,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=8"></script>
+<script src="/assets/homzy.js?v=9"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { installSalesWorkspace } from '/assets/crm-sales.js';
@@ -437,7 +437,8 @@ async function processVoice(){
   if(!text){ vbar('مسمعتش حاجة واضحة — جرّب تاني.', true); return; }
   vbar('🧠 بحلّل كلامك…');
   try{
-    const r=await fetch('/api/parse-client',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const r=await fetch('/api/parse-client',{method:'POST',headers:{'Content-Type':'application/json',...(TOKEN?{Authorization:'Bearer '+TOKEN}:{})},body:JSON.stringify({text})});
+    if(r.status===429){ vbar(esc((await r.json()).detail||''), true); return; }
     const fields=(r.ok?(await r.json()).fields:null)||{};
     const n=fillFromFields(fields);
     if(n) vbar('✅ ملّيت '+n+' حقل من كلامك — راجعهم واحفظ.<div class="hint">«'+esc(text)+'»</div>');
@@ -569,7 +570,7 @@ window.aiLead=async (id)=>{
   let r;
   try{ r=await (await fetch('/api/crm/ai/lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,lead_id:id})})).json(); }
   catch(e){ r={ok:false}; }
-  if(!r||!r.ok){ $('aiBody').innerHTML='<div style="text-align:center;color:#B42318;padding:24px">تعذّر التحليل. جرّب تاني.</div>'; return; }
+  if(!r||!r.ok){ $('aiBody').innerHTML='<div style="text-align:center;color:#B42318;padding:24px">'+(r&&r.error==='ai_limit'?esc(r.detail):'تعذّر التحليل. جرّب تاني.')+'</div>'; return; }
   const prob=r.win_probability!=null?r.win_probability:0;
   const col=prob>=70?'#137a3e':prob>=40?'#B45309':'#8894a6';
   const prio={high:'أولوية عالية',medium:'أولوية متوسطة',low:'أولوية منخفضة'}[r.priority]||'';

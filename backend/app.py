@@ -15,7 +15,7 @@ import json as _json
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
-from . import (broker, config, listings as listings_mod, llm, notify,
+from . import (ai_quota, broker, config, listings as listings_mod, llm, notify,
                payments, push, seo, valuation, whatsapp)
 from .crm_routes import legacy_lead_analysis, router as crm_sales_router
 
@@ -542,13 +542,29 @@ async def chat(req: Request):
         history = None
     coach = body.get("mode") == "broker"
     token = _bearer(req) if coach else None
-    return broker.handle_turn(session, message, client_history=history, coach=coach, user_token=token)
+    q = ai_quota.consume(token) if coach else None
+    if ai_quota.blocked(q):
+        lang = _msg_lang(message)
+        return {"reply": ai_quota.limit_text(q, lang), "language": lang, "mode": "limit",
+                "requirements": {}, "recommendation": None, "matches": [], "ai_left": 0}
+    out = broker.handle_turn(session, message, client_history=history, coach=coach, user_token=token)
+    out["ai_left"] = ai_quota.left(q)
+    return out
 
 
 def _bearer(req: Request) -> str | None:
     """The signed-in user's Supabase JWT (sent by the site in broker mode)."""
     h = req.headers.get("authorization") or ""
     return h[7:].strip() if h.lower().startswith("bearer ") and len(h) > 20 else None
+
+
+def _msg_lang(text: str) -> str:
+    return "ar" if any("؀" <= ch <= "ۿ" for ch in text) else "en"
+
+
+def _quota_429(q: dict, lang: str = "ar"):
+    return JSONResponse({"error": "ai_limit", "detail": ai_quota.limit_text(q, lang), "ai_left": 0},
+                        status_code=429)
 
 
 @app.post("/api/chat/stream")
@@ -566,10 +582,21 @@ async def chat_stream(req: Request):
         history = None
     coach = body.get("mode") == "broker"
     token = _bearer(req) if coach else None
+    q = ai_quota.consume(token) if coach else None
 
     def gen():
+        if ai_quota.blocked(q):
+            lang = _msg_lang(message)
+            for evt in ({"type": "meta", "language": lang},
+                        {"type": "token", "text": ai_quota.limit_text(q, lang)},
+                        {"type": "done", "language": lang, "mode": "limit", "requirements": {},
+                         "recommendation": None, "matches": [], "ai_left": 0}):
+                yield _json.dumps(evt, ensure_ascii=False) + "\n"
+            return
         for evt in broker.handle_turn_stream(session, message, client_history=history, coach=coach,
                                              user_token=token):
+            if evt.get("type") == "done":
+                evt["ai_left"] = ai_quota.left(q)
             yield _json.dumps(evt, ensure_ascii=False) + "\n"
 
     return StreamingResponse(gen(), media_type="application/x-ndjson",
@@ -615,6 +642,9 @@ async def parse_client(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         return {"fields": {}}
+    q = ai_quota.consume(_bearer(req), "voice_client")
+    if ai_quota.blocked(q):
+        return _quota_429(q, _msg_lang(text))
     try:
         fields = broker.parse_client(text)
     except Exception:
@@ -632,6 +662,9 @@ async def crm_assistant(req: Request):
     text = (body.get("text") or "").strip()
     if not text:
         return {"intent": "unknown", "params": {}, "say": ""}
+    q = ai_quota.consume(_bearer(req), "voice_cmd")
+    if ai_quota.blocked(q):
+        return {"intent": "unknown", "params": {}, "say": ai_quota.limit_text(q, _msg_lang(text)), "ai_left": 0}
     try:
         return broker.parse_command(text)
     except Exception:
@@ -702,7 +735,11 @@ async def crm_ai_lead(req: Request):
     body = await req.json()
     if not isinstance(body, dict):
         raise HTTPException(422, "Expected a JSON object")
-    return await run_in_threadpool(legacy_lead_analysis, body.get("token"), body.get("lead_id"))
+    token = body.get("token") if isinstance(body.get("token"), str) else None
+    q = await run_in_threadpool(ai_quota.consume, token, "lead_ai")
+    if ai_quota.blocked(q):
+        return _quota_429(q)
+    return await run_in_threadpool(legacy_lead_analysis, token, body.get("lead_id"))
 
 
 @app.get("/api/wa/webhook")

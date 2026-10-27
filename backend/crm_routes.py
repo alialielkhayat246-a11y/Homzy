@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from . import config, crm_ai
+from . import ai_quota, config, crm_ai
 from . import crm_sales as sales
 
 router = APIRouter(prefix="/api/crm/sales", tags=["CRM Sales"])
@@ -148,8 +148,16 @@ class Followup(Input):
     local_day: date
 
 
+def count_ai(gateway, kind):
+    """One message of the broker's daily AI allowance; 429 when it's used up."""
+    q = ai_quota.consume(gateway.headers["Authorization"][7:], kind)
+    if ai_quota.blocked(q):
+        raise HTTPException(429, ai_quota.limit_text(q))
+
+
 @router.post("/extract")
 def extract(body: Extraction, gateway: UserGateway):
+    count_ai(gateway, "extract")
     return sales.extract_client_requirements(body.text)
 
 
@@ -239,6 +247,7 @@ def schedule_followup(lead_id: UUID, body: Followup, gateway: UserGateway):
 @router.post("/clients/{lead_id}/message")
 def message(lead_id: UUID, body: Message, gateway: UserGateway):
     lead = gateway.owned_lead(lead_id)
+    count_ai(gateway, "draft")
     return sales.generate_sales_message(lead, sales.profile_requirements(lead), **body.model_dump())
 
 
