@@ -219,7 +219,7 @@ def _parse_json(raw: str) -> dict[str, Any]:
     return {}
 
 
-def _llm_extract(history_text: str) -> dict[str, Any]:
+def _llm_extract(history_text: str, model: str | None = None) -> dict[str, Any]:
     client = _client_or_none()
     if client is None:
         return {}
@@ -228,7 +228,7 @@ def _llm_extract(history_text: str) -> dict[str, Any]:
         {"role": "user", "content": history_text},
     ]
     try:
-        raw = client.chat(messages, temperature=0.0, force_json=True, max_tokens=512)
+        raw = client.chat(messages, temperature=0.0, force_json=True, max_tokens=512, model=model)
     except llm.LLMUnavailable:
         return {}
     return _parse_json(raw)
@@ -263,7 +263,8 @@ def _llm_reply(history: list[dict[str, str]], language: str,
               else persona.broker_system(language, matches, overview))
     messages = [{"role": "system", "content": system}] + history
     try:
-        text = client.chat(messages, temperature=config.LLM_TEMPERATURE, max_tokens=900)
+        text = client.chat(messages, temperature=config.LLM_TEMPERATURE, max_tokens=900,
+                           model=_model_for(coach))
         return text or None
     except llm.LLMUnavailable:
         return None
@@ -272,8 +273,32 @@ def _llm_reply(history: list[dict[str, str]], language: str,
 # --------------------------------------------------------------------------
 # Public entry point
 # --------------------------------------------------------------------------
+def _model_for(coach: bool) -> str | None:
+    """Brokers (coach mode) get the main model; the public client chat the cheaper one."""
+    return None if coach else config.GEMINI_MODEL_PUBLIC
+
+
+def public_chat_capped(history: list[dict[str, str]] | None) -> bool:
+    """True once a client conversation (history incl. the new message) went past
+    PUBLIC_CHAT_MAX_MESSAGES client messages."""
+    cap = config.PUBLIC_CHAT_MAX_MESSAGES
+    return bool(cap) and sum(1 for m in (history or []) if isinstance(m, dict) and m.get("role") == "user") > cap
+
+
+def cap_reply(language: str, message: str = "") -> str:
+    if re.search(r"(?:\+?2)?01[0-9]{9}", re.sub(r"[\s-]", "", message or "")):
+        return ("Thank you! A Homzy advisor will call you shortly." if language == "en"
+                else "شكرًا ليك! مستشار من Homzy هيكلمك في أقرب وقت.")
+    if language == "en":
+        return ("I've enjoyed helping you! To go further, leave your phone number and a Homzy "
+                "advisor will call you with the best options — or start a new chat.")
+    return ("استمتعت جدًا بالكلام معاك! عشان نساعدك أكتر، سيب رقم موبايلك ومستشار من Homzy "
+            "هيكلمك بأنسب الاختيارات — أو ابدأ محادثة جديدة.")
+
+
 def _prepare(session: dict[str, Any], message: str,
-             client_history: list[dict[str, str]] | None, user_token: str | None = None):
+             client_history: list[dict[str, str]] | None, user_token: str | None = None,
+             coach: bool = False):
     """Shared per-turn setup: language, requirements, matches. Appends the
     user message to history and returns (language, history, req, matches)."""
     language = detect_language(message)
@@ -301,7 +326,7 @@ def _prepare(session: dict[str, Any], message: str,
     # 2) LLM extraction — but ONLY while an essential is still missing, so the
     #    recommendation turns are a single LLM round trip (≈2× faster).
     if config.LLM_EXTRACT and persona._missing(req):
-        _merge(req, _llm_extract(_history_to_text(history)))
+        _merge(req, _llm_extract(_history_to_text(history), _model_for(coach)))
 
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)
@@ -544,7 +569,8 @@ def _recommendation(req, matches):
 def handle_turn(session: dict[str, Any], message: str,
                 client_history: list[dict[str, str]] | None = None,
                 coach: bool = False, user_token: str | None = None) -> dict[str, Any]:
-    language, history, req, matches = _prepare(session, message, client_history, user_token if coach else None)
+    language, history, req, matches = _prepare(session, message, client_history,
+                                               user_token if coach else None, coach)
 
     reply = _llm_reply(history, language, matches, coach=coach)
     mode = "ai"
@@ -569,7 +595,8 @@ def handle_turn_stream(session: dict[str, Any], message: str,
                        coach: bool = False, user_token: str | None = None):
     """Same pipeline as handle_turn, but yields events so the reply streams
     token-by-token. Events: {'type':'meta'|'token'|'done', ...}."""
-    language, history, req, matches = _prepare(session, message, client_history, user_token if coach else None)
+    language, history, req, matches = _prepare(session, message, client_history,
+                                               user_token if coach else None, coach)
     yield {"type": "meta", "language": language}
 
     client = _client_or_none()
@@ -583,7 +610,7 @@ def handle_turn_stream(session: dict[str, Any], message: str,
         parts: list[str] = []
         try:
             for chunk in client.stream(messages, temperature=config.LLM_TEMPERATURE,
-                                       max_tokens=900):
+                                       max_tokens=900, model=_model_for(coach)):
                 parts.append(chunk)
                 yield {"type": "token", "text": chunk}
             reply = "".join(parts) or None

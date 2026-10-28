@@ -32,13 +32,14 @@
   <div id="content"><div style="padding:40px;text-align:center;color:var(--muted)">…</div></div>
 </div>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=9"></script>
+<script src="/assets/homzy.js?v=10"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
-let S=null, PROF={};
+let S=null, PROF={}, REF=null;
 async function boot(){
   S=HZ.session(); if(!S){ location.href='/login?next=/account'; return; }
   try{ PROF=(await HZ.sbAuth('/profiles?select=full_name,phone,email,role,company,onboarded&id=eq.'+S.uid, S.token))[0]||{}; }catch(e){ PROF={}; }
+  if(PROF.role==='broker'){ try{ REF=await HZ.sbAuth('/rpc/my_referrals', S.token,'POST',{}); }catch(e){ REF=null; } }
   render(); HZ.applyLang();
 }
 function render(){
@@ -64,6 +65,20 @@ function render(){
         <a class="btn btn-ghost btn-sm" href="/host/properties">${ar()?'الاستضافة':'Hosting'}</a>
         <a class="btn btn-ghost btn-sm" href="/pricing">${ar()?'الباقات':'Plans'}</a>
       </div></div>`;
+    if(REF&&REF.code){
+      const link=location.origin+'/leads?ref='+REF.code;
+      const msgTxt=(ar()?'جرّب Homzy — مساعد AI و CRM للبروكرز، 14 يوم مجانًا: ':'Try Homzy — AI assistant & CRM for brokers, 14 days free: ')+link;
+      html += `<div class="card"><h3>${ar()?'ادعُ بروكر واكسب شهر مجاني 🎁':'Invite a broker, get a free month 🎁'}</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:12px">${ar()?'كل بروكر يسجّل من لينكك ويشترك، بتاخد شهر كامل مجانًا على اشتراكك (لحد 12 شهر في السنة).':'Every broker who signs up with your link and subscribes earns you a free month (up to 12 a year).'}</p>
+        <div class="kv"><span class="k">${ar()?'لينكك':'Your link'}</span><span class="v" style="direction:ltr;word-break:break-all">${HZ.esc(link)}</span></div>
+        <div class="kv"><span class="k">${ar()?'سجّلوا':'Signed up'}</span><span class="v">${REF.signed_up||0}</span></div>
+        <div class="kv"><span class="k">${ar()?'اشتركوا':'Subscribed'}</span><span class="v">${REF.paid||0}</span></div>
+        <div class="kv"><span class="k">${ar()?'شهور كسبتها':'Months earned'}</span><span class="v">${REF.months_earned||0}</span></div>
+        <div class="rowbtns" style="margin-top:12px">
+          <button class="btn btn-navy btn-sm" onclick="copyRef(this)" data-link="${HZ.esc(link)}">${ar()?'انسخ اللينك':'Copy link'}</button>
+          <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msgTxt)}">WhatsApp</a>
+        </div></div>`;
+    }
   } else {
     html += `<div class="card"><h3 data-ar="ابقى بروكر" data-en="Become a broker">ابقى بروكر</h3>
       <p style="color:var(--muted);font-size:14px;margin-bottom:12px" data-ar="افتح أدوات البروكر: CRM، اعرض وحداتك، مساعد مبيعات AI، سوق الليدز، والاستضافة." data-en="Unlock broker tools: CRM, list units, AI sales assistant, leads market, hosting.">افتح أدوات البروكر: CRM، اعرض وحداتك، مساعد مبيعات AI، سوق الليدز، والاستضافة.</p>
@@ -79,6 +94,7 @@ function render(){
   document.getElementById('content').innerHTML=html;
 }
 window.setMode=(m)=>{ HZ.setMode(m); render(); HZ.applyLang(); };
+window.copyRef=async(b)=>{ try{ await navigator.clipboard.writeText(b.dataset.link); b.textContent=ar()?'اتنسخ ✓':'Copied ✓'; }catch(e){ prompt('', b.dataset.link); } };
 window.becomeBroker=async()=>{
   const msg=document.getElementById('brMsg'); msg.textContent=ar()?'...جاري':'...';
   let r; try{ r=await HZ.sbAuth('/rpc/set_my_role', S.token,'POST',{p_role:'broker'}); }catch(e){ r={ok:false}; }

@@ -547,6 +547,10 @@ async def chat(req: Request):
         lang = _msg_lang(message)
         return {"reply": ai_quota.limit_text(q, lang), "language": lang, "mode": "limit",
                 "requirements": {}, "recommendation": None, "matches": [], "ai_left": 0}
+    if not coach and broker.public_chat_capped(history):
+        lang = _msg_lang(message)
+        return {"reply": broker.cap_reply(lang, message), "language": lang, "mode": "cap",
+                "requirements": {}, "recommendation": None, "matches": []}
     out = broker.handle_turn(session, message, client_history=history, coach=coach, user_token=token)
     out["ai_left"] = ai_quota.left(q)
     return out
@@ -585,12 +589,15 @@ async def chat_stream(req: Request):
     q = ai_quota.consume(token) if coach else None
 
     def gen():
-        if ai_quota.blocked(q):
+        capped = not coach and broker.public_chat_capped(history)
+        if ai_quota.blocked(q) or capped:
             lang = _msg_lang(message)
+            text = broker.cap_reply(lang, message) if capped else ai_quota.limit_text(q, lang)
             for evt in ({"type": "meta", "language": lang},
-                        {"type": "token", "text": ai_quota.limit_text(q, lang)},
-                        {"type": "done", "language": lang, "mode": "limit", "requirements": {},
-                         "recommendation": None, "matches": [], "ai_left": 0}):
+                        {"type": "token", "text": text},
+                        {"type": "done", "language": lang, "mode": "cap" if capped else "limit",
+                         "requirements": {}, "recommendation": None, "matches": [],
+                         **({} if capped else {"ai_left": 0})}):
                 yield _json.dumps(evt, ensure_ascii=False) + "\n"
             return
         for evt in broker.handle_turn_stream(session, message, client_history=history, coach=coach,

@@ -26,7 +26,9 @@ class OllamaClient:
         self.model = config.OLLAMA_MODEL
 
     def chat(self, messages: list[dict[str, str]], temperature: float = 0.6,
-             force_json: bool = False, max_tokens: int | None = None) -> str:
+             force_json: bool = False, max_tokens: int | None = None,
+             model: str | None = None) -> str:
+        # `model` is a Gemini-only override; Ollama always uses its local model.
         import requests  # imported lazily so 'mock' mode needs no dependency
 
         options: dict[str, Any] = {"temperature": temperature}
@@ -80,10 +82,11 @@ class GeminiClient:
         self.model = config.GEMINI_MODEL
 
     def chat(self, messages: list[dict[str, str]], temperature: float = 0.6,
-             force_json: bool = False, max_tokens: int | None = None) -> str:
+             force_json: bool = False, max_tokens: int | None = None,
+             model: str | None = None) -> str:
         import requests  # imported lazily so 'mock' mode needs no dependency
 
-        system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+        system ="\n\n".join(m["content"] for m in messages if m["role"] == "system")
         contents = []
         for m in messages:
             if m["role"] == "system":
@@ -97,7 +100,8 @@ class GeminiClient:
         if max_tokens:
             base_cfg["maxOutputTokens"] = max_tokens
 
-        models = ([self.model] + [m for m in self._FALLBACKS if m != self.model])[:getattr(self, "max_attempts", 4)]
+        first = model or self.model
+        models = ([first] + [m for m in self._FALLBACKS if m != first])[:getattr(self, "max_attempts", 4)]
         last_err = "no model tried"
         for model in models:
             gen_cfg = dict(base_cfg)
@@ -148,7 +152,7 @@ class GeminiClient:
         return system, contents
 
     def stream(self, messages: list[dict[str, str]], temperature: float = 0.6,
-               max_tokens: int | None = None):
+               max_tokens: int | None = None, model: str | None = None):
         """Yield reply text chunks as the model generates them (SSE). Falls back
         across models only BEFORE the first token; once streaming starts it
         commits to that model."""
@@ -159,7 +163,8 @@ class GeminiClient:
         if max_tokens:
             base_cfg["maxOutputTokens"] = max_tokens
 
-        models = [self.model] + [m for m in self._FALLBACKS if m != self.model]
+        first = model or self.model
+        models = [first] + [m for m in self._FALLBACKS if m != first]
         last_err = "no model tried"
         for model in models:
             gen_cfg = dict(base_cfg)

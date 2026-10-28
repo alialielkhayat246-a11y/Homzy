@@ -115,7 +115,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=9"></script>
+<script src="/assets/homzy.js?v=10"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -186,7 +186,8 @@ $('authForm').addEventListener('submit', async (e)=>{
   try{
     if(mode==='register'){
       const {error}=await sb.auth.signUp({ email, password, options:{ data:{
-        role:'broker', phone, company:$('company').value.trim(), commercial_reg:$('commreg').value.trim() } } });
+        role:'broker', phone, company:$('company').value.trim(), commercial_reg:$('commreg').value.trim(),
+        ...(window.HZ&&HZ.refCode&&HZ.refCode()?{ref:HZ.refCode()}:{}) } } });
       if(error) throw error;
     }else{
       const {error}=await sb.auth.signInWithPassword({ email, password });

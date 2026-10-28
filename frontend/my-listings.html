@@ -180,7 +180,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=9"></script>
+<script src="/assets/homzy.js?v=10"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -304,7 +304,10 @@ document.addEventListener('hz:lang', ()=>{ if(UID) render(); });
 /* form */
 window.openForm=()=>{
   if(window.HZ && HZ.PLAN && HZ.PLAN.max_listings!=null && LISTINGS.length >= HZ.PLAN.max_listings){
-    if(confirm(L('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك المجانية. تحب ترقّي لباقة أعلى ووحدات غير محدودة؟','You reached the limit ('+HZ.PLAN.max_listings+' units) on your free plan. Upgrade for unlimited units?'))) location.href='/pricing';
+    const msg = HZ.PLAN.max_listings===0
+      ? L('تجربتك المجانية انتهت — اشترك عشان تضيف وحدات جديدة. تروح لصفحة الباقات؟','Your free trial has ended — subscribe to add new units. Go to plans?')
+      : L('وصلت للحد الأقصى ('+HZ.PLAN.max_listings+' وحدات) في باقتك. تحب ترقّي لباقة أعلى؟','You reached the limit ('+HZ.PLAN.max_listings+' units) on your plan. Upgrade?');
+    if(confirm(msg)) location.href='/pricing';
     return;
   }
   EDIT_ID=null; NEW_FILES=[]; NEW_360=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');

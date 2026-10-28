@@ -334,7 +334,8 @@ $('authForm').addEventListener('submit', async(e)=>{
   setLoading($('authBtn'), $('authBtnTxt'), true, mode==='register'?'جاري إنشاء الحساب...':'جاري تسجيل الدخول...', mode==='register'?'إنشاء حساب':'تسجيل الدخول');
   try{
     if(mode==='register'){
-      const {error}=await sb.auth.signUp({ email, password, options:{ data:{ role:'client', phone, name:$('name').value.trim() } } });
+      const {error}=await sb.auth.signUp({ email, password, options:{ data:{ role:'client', phone, name:$('name').value.trim(),
+        ...((()=>{ try{ const r=localStorage.getItem('hz_ref'); return r?{ref:r}:{}; }catch(e){ return {}; } })()) } } });
       if(error) throw error;
     }else{
       const {error}=await sb.auth.signInWithPassword({ email, password });

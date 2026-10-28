@@ -928,8 +928,22 @@ HZ.loadPlan = async function(){
     HZ.PLAN = (rows&&rows[0]) ? rows[0] : {plan:'free', features:{}};
   }catch(e){ HZ.PLAN = {plan:'free', features:{}}; }
   document.dispatchEvent(new CustomEvent('hz:plan', {detail:HZ.PLAN}));
+  if(HZ.isBroker && HZ.PLAN.plan==='free') trialEndedBar();
   return HZ.PLAN;
 };
+// No free broker plan: once the 14-day trial (or a subscription) ends, brokers
+// keep read access to their data but are asked to subscribe.
+function trialEndedBar(){
+  if(document.getElementById('hzTrialEnded') || location.pathname.startsWith('/pricing')) return;
+  const d=document.createElement('div'); d.id='hzTrialEnded';
+  d.style.cssText='position:sticky;top:0;z-index:999;background:#0D1B2A;color:#fff;padding:10px 16px;text-align:center;font-size:14px';
+  d.innerHTML=(HZ.lang==='ar'?'انتهت تجربتك المجانية — اشترك عشان تكمل تستخدم أدوات البروكر والذكاء الاصطناعي. ':'Your free trial has ended — subscribe to keep using the broker tools and AI. ')
+    +'<a href="/pricing" style="color:#5EEAD4;font-weight:700;text-decoration:underline">'+(HZ.lang==='ar'?'شوف الباقات':'See plans')+'</a>';
+  document.body.prepend(d);
+}
+// Referral links (?ref=CODE) are remembered until sign-up.
+HZ.refCode = function(){ try{ return localStorage.getItem('hz_ref')||''; }catch(e){ return ''; } };
+try{ const rf=new URLSearchParams(location.search).get('ref'); if(rf && /^[A-Za-z0-9]{4,12}$/.test(rf)) localStorage.setItem('hz_ref', rf.toUpperCase()); }catch(e){}
 
 /* ---------- Paymob payments ---------- */
 HZ.payEnabled = null;

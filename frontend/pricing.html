@@ -60,7 +60,7 @@
     <div class="price-hero">
       <span class="eyebrow" data-ar="Homzy للمحترفين" data-en="Homzy for pros">Homzy للمحترفين</span>
       <h1 data-ar="اختر باقتك" data-en="Choose your plan">اختر باقتك</h1>
-      <p data-ar="أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور." data-en="Professional tools for brokers and agencies — pay monthly, start with a free 3-month trial.">أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 3 شهور.</p>
+      <p data-ar="أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 14 يوم." data-en="Professional tools for brokers and agencies — pay monthly, start with a free 14-day trial.">أدوات احترافية للبروكرز والمكاتب — ادفع شهري، وابدأ بتجربة مجانية 14 يوم.</p>
       <div class="cyc"><button class="on" id="cM" onclick="setCyc('monthly')" data-ar="شهري" data-en="Monthly">شهري</button><button id="cY" onclick="setCyc('yearly')" data-ar="سنوي · وفّر شهرين" data-en="Yearly · save 2 months">سنوي · وفّر شهرين</button></div>
     </div>
     <div class="curplan" id="curplan" hidden>
@@ -69,13 +69,13 @@
     </div>
     <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
     <div class="note">
-      <span data-ar="💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>." data-en="💳 Monthly payment via the payment gateway — coming soon. For now you can start a <b>free 3-month trial</b>.">💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 3 شهور</b>.</span><br>
+      <span data-ar="💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 14 يوم</b>." data-en="💳 Monthly payment via the payment gateway — coming soon. For now you can start a <b>free 14-day trial</b>.">💳 الدفع الشهري عبر بوابة الدفع — بيتفعّل قريبًا. دلوقتي تقدر تبدأ <b>تجربة مجانية 14 يوم</b>.</span><br>
       <span data-ar="الأسعار بالجنيه المصري شاملة، وممكن تتغير." data-en="Prices are in EGP, inclusive, and may change.">الأسعار بالجنيه المصري شاملة، وممكن تتغير.</span>
     </div>
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=9"></script>
+<script src="/assets/homzy.js?v=10"></script>
 <script>
 let PLANS=[], CYC='monthly', CURRENT='free', PAY_ON=false;
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -107,7 +107,7 @@ function planCard(p){
   else if(isCur) cta = `<div class="cur">${L('باقتك الحالية ✓','Your current plan ✓')}</div>`;
   else {
     const payBtn = PAY_ON ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">${L('اشترك الآن','Subscribe now')} · ${money(price)} ${cur()}</button>` : '';
-    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('ابدأ تجربة 3 شهور مجانًا','Start 3-month free trial')}</button>`;
+    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('ابدأ تجربة 14 يوم مجانًا','Start 14-day free trial')}</button>`;
   }
   return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?`<span class="tag">${L('الأكثر رواجًا','Most popular')}</span>`:''}
     <h3>${HZ.esc(ar()?p.name_ar:(p.name_en||p.name_ar))}</h3>
@@ -121,7 +121,7 @@ window.setCyc=(c)=>{ CYC=c; document.getElementById('cM').classList.toggle('on',
 window.subscribe=async(plan)=>{
   const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
   let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan}); }catch(e){ r={ok:false}; }
-  if(r&&r.ok){ alert(L('تم تفعيل تجربتك المجانية 3 شهور لباقة '+plan.toUpperCase()+' 🎉','Your 3-month free trial of '+plan.toUpperCase()+' is active 🎉')); location.href='/my-listings'; }
+  if(r&&r.ok){ alert(L('تم تفعيل تجربتك المجانية 14 يوم لباقة '+plan.toUpperCase()+' 🎉','Your 14-day free trial of '+plan.toUpperCase()+' is active 🎉')); location.href='/my-listings'; }
   else{
     const m=ar()?{already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — الدفع هيتفعّل قريبًا.',not_authenticated:'سجّل دخولك الأول.'}
                 :{already_subscribed:'You already have an active subscription.',trial_used:'You already used the free trial — paid activation is coming soon.',not_authenticated:'Please sign in first.'};
@@ -136,19 +136,19 @@ function renderCurrentBanner(){
   const s=HZ.session(); const box=document.getElementById('curplan');
   if(!s){ box.hidden=true; return; }
   const plan=PLANS.find(p=>p.plan===CURRENT);
-  const name = plan ? (ar()?plan.name_ar:(plan.name_en||plan.name_ar)) : (CURRENT==='free'?L('المجانية','Free'):CURRENT.toUpperCase());
+  const name = plan ? (ar()?plan.name_ar:(plan.name_en||plan.name_ar)) : (CURRENT==='free'?L('لا يوجد اشتراك','No subscription'):CURRENT.toUpperCase());
   document.getElementById('cpName').textContent = name;
   let status='', meta='';
   const st = SUB && SUB.plan===CURRENT ? SUB.status : (CURRENT==='free'?'free':null);
   if(st==='trialing'){
     status=L('🎁 تجربة مجانية','🎁 Free trial');
-    if(SUB&&SUB.trial_end) meta = L('تنتهي التجربة في '+fmtDate(SUB.trial_end)+' · باقي <b>'+daysLeft(SUB.trial_end).toLocaleString('ar-EG')+'</b> يوم','Trial ends '+fmtDate(SUB.trial_end)+' · <b>'+daysLeft(SUB.trial_end)+'</b> days left');
+    if(SUB&&SUB.current_period_end) meta = L('تنتهي التجربة في '+fmtDate(SUB.current_period_end)+' · باقي <b>'+daysLeft(SUB.current_period_end).toLocaleString('ar-EG')+'</b> يوم','Trial ends '+fmtDate(SUB.current_period_end)+' · <b>'+daysLeft(SUB.current_period_end)+'</b> days left');
   } else if(st==='active'){
     status=L('✅ مفعّلة','✅ Active')+(SUB&&SUB.billing_cycle?(' · '+(SUB.billing_cycle==='yearly'?L('سنوي','yearly'):L('شهري','monthly'))):'');
     if(SUB&&SUB.current_period_end) meta = L('تتجدد في ','Renews ')+fmtDate(SUB.current_period_end);
   } else if(CURRENT==='free'){
-    status=L('باقة مجانية','Free plan');
-    meta = L('طوّر باقتك عشان تفتح كل الأدوات 👇','Upgrade to unlock every tool 👇');
+    status=L('انتهت التجربة','Trial ended');
+    meta = L('اشترك عشان تكمل تستخدم كل الأدوات 👇','Subscribe to keep using every tool 👇');
   } else {
     status = st ? st : '';
   }
