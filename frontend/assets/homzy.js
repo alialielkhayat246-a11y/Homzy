@@ -75,7 +75,7 @@ HZ.sbAuth = async function(path, token, method, body, extra){
   const h = {apikey:SB_KEY, Authorization:'Bearer '+(token||SB_KEY), 'Content-Type':'application/json'};
   if(extra) Object.assign(h, extra);
   const r = await fetch(SB_URL+'/rest/v1'+path, {method:method||'GET', headers:h, body:body?JSON.stringify(body):undefined});
-  if(!r.ok) throw new Error('sb '+r.status);
+  if(!r.ok){ let m=''; try{ m=(JSON.parse(await r.text())||{}).message||''; }catch(e){} throw new Error(m||('sb '+r.status)); }
   const t = await r.text();
   return t ? JSON.parse(t) : null;
 };

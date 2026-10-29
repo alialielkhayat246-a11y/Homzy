@@ -238,7 +238,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=10"></script>
+<script src="/assets/homzy.js?v=11"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { installSalesWorkspace } from '/assets/crm-sales.js';
@@ -295,8 +295,31 @@ async function boot(){
   if(salesLead && CLIENTS.some(c=>c.id===salesLead))openSales(salesLead);
   else if(new URLSearchParams(location.search).has('overview'))openSalesOverview();
 }
+// Agency workspace (team plans): who I am in it, so I also see clients assigned to
+// me, managers see the whole agency, and can distribute clients to the team.
+let AGX;
+async function loadAgencyCtx(){
+  AGX=null;
+  try{
+    const aid=await api('/rpc/my_primary_agency',{method:'POST',body:'{}'});
+    if(!aid) return;
+    const [perms,roster]=await Promise.all([
+      api('/rpc/my_perms',{method:'POST',body:JSON.stringify({p_agency:aid})}),
+      api('/rpc/agency_team_roster',{method:'POST',body:JSON.stringify({p_agency:aid})})]);
+    AGX={id:aid, perms:perms||[], roster:(roster||[]).filter(m=>m.status==='active')};
+  }catch(e){ AGX=null; }
+}
+const agCan=p=>!!(AGX&&AGX.perms.includes(p));
+const memberName=u=>{ const m=AGX&&AGX.roster.find(x=>x.user_id===u); return m?(m.name||m.phone||'—'):''; };
+window.assignLead=async(id,u)=>{
+  try{ await api('/rpc/agency_assign_lead',{method:'POST',body:JSON.stringify({p_lead:id,p_assignee:u,p_reason:'manual'})});
+    const c=CLIENTS.find(x=>x.id===id); if(c){ c.assigned_to=u; if(!c.agency_id) c.agency_id=AGX.id; } renderBoard();
+  }catch(e){ alert(L('تعذّر التوزيع: ','Could not assign: ')+(e.message||e)); }
+};
 window.loadClients=async ()=>{
-  try{ CLIENTS=await api('/clients?select=*&owner_id=eq.'+UID+'&order=updated_at.desc'); }catch(e){$('board').innerHTML=`<div class="workspace-empty" role="alert"><h2>${L('تعذّر تحميل العملاء','Could not load clients')}</h2><button class="btn btn-teal" onclick="loadClients()">${L('إعادة المحاولة','Retry')}</button></div>`;return;}
+  if(AGX===undefined) await loadAgencyCtx();
+  const scope = 'owner_id.eq.'+UID+',assigned_to.eq.'+UID + (agCan('lead.view.all')?',agency_id.eq.'+AGX.id:'');
+  try{ CLIENTS=await api('/clients?select=*&or=('+scope+')&order=updated_at.desc'); }catch(e){$('board').innerHTML=`<div class="workspace-empty" role="alert"><h2>${L('تعذّر تحميل العملاء','Could not load clients')}</h2><button class="btn btn-teal" onclick="loadClients()">${L('إعادة المحاولة','Retry')}</button></div>`;return;}
   let scoreNotice=$('salesScoreNotice');if(!scoreNotice){scoreNotice=document.createElement('p');scoreNotice.id='salesScoreNotice';scoreNotice.setAttribute('role','status');$('board').before(scoreNotice);}
   CLIENTS.forEach(c=>{c.stage=({contacted:'contact',negotiation:'negotiate',won:'closed'})[c.stage]||c.stage||'new';});
   try{const response=await fetch('/api/crm/sales/scores',{headers:{Authorization:'Bearer '+TOKEN},signal:AbortSignal.timeout(30000)});if(!response.ok)throw Error('scores');const result=await response.json();CLIENTS.forEach(c=>{const score=result.scores[c.id];if(score){c.lead_score=score.score;c.temperature=score.temperature;}});scoreNotice.textContent=result.limited?(HZ.lang==='en'?'Scores reflect the available sample.':'الدرجات مبنية على السجلات المتاحة ضمن حد التحميل.') : '';}
@@ -331,6 +354,12 @@ window.renderBoard=()=>{
     return `<div class="col ${s.k}" data-stage="${s.k}"><div class="col-h"><span>${L(s.label[0],s.label[1])}</span><span class="cnt">${list.length}</span></div>${cards}</div>`;
   }).join('');
 };
+function assignHTML(c){
+  if(!AGX || AGX.roster.length<2) return '';
+  const who=c.assigned_to||c.owner_id;
+  if(agCan('lead.assign')) return `<div class="req">👤 ${L('المسؤول','Assigned')}: <select class="mv" style="width:auto;margin:0" onchange="assignLead('${c.id}',this.value)">${AGX.roster.map(m=>`<option value="${m.user_id}"${m.user_id===who?' selected':''}>${esc(m.name||m.phone||'—')}</option>`).join('')}</select></div>`;
+  const n=memberName(who); return n?`<div class="req">👤 ${L('المسؤول','Assigned')}: ${esc(n)}</div>`:'';
+}
 function cardHTML(c){
   const wa=c.phone?normPhone(c.phone):'';
   const req=[c.area, c.budget?('حتى '+money(c.budget)):'', c.bedrooms?(c.bedrooms+' غرف'):'', c.purpose==='rent'?'إيجار':'شراء'].filter(Boolean).join(' · ');
@@ -348,6 +377,7 @@ function cardHTML(c){
     ${req?`<div class="req">${esc(req)}</div>`:''}
     ${fu}
     ${c.notes?`<div class="note">${esc(c.notes)}</div>`:''}
+    ${assignHTML(c)}
     <div class="acts">
       ${tel?`<a class="wa" href="tel:${tel}" onclick="logAct('${c.id}','call')">📞</a>`:''}
       ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(L('مرحبًا ','Hi ')+(c.name||''))}" onclick="logAct('${c.id}','whatsapp')">${L('واتساب','WhatsApp')}</a>`:''}

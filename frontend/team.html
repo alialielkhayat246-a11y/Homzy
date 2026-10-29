@@ -151,6 +151,22 @@
         <button class="on" data-tab="members" onclick="setTab('members')" data-ar="الأعضاء" data-en="Members">الأعضاء</button>
         <button data-tab="teams" onclick="setTab('teams')" data-ar="الفرق" data-en="Teams">الفرق</button>
         <button data-tab="roles" onclick="setTab('roles')" data-ar="الأدوار والصلاحيات" data-en="Roles & permissions">الأدوار والصلاحيات</button>
+        <button data-tab="perf" class="report-only" onclick="setTab('perf')" data-ar="أداء الفريق" data-en="Team performance">أداء الفريق</button>
+      </div>
+
+      <!-- Performance (managers with report.view) -->
+      <div class="panel" id="panel-perf">
+        <div class="toolbar">
+          <h2 data-ar="أداء الفريق" data-en="Team performance">أداء الفريق</h2>
+          <span class="sp"></span>
+          <select class="in" id="perfRange" onchange="loadPerf()" style="max-width:180px">
+            <option value="month" data-ar="الشهر ده" data-en="This month">الشهر ده</option>
+            <option value="7" data-ar="آخر 7 أيام" data-en="Last 7 days">آخر 7 أيام</option>
+            <option value="30" data-ar="آخر 30 يوم" data-en="Last 30 days">آخر 30 يوم</option>
+            <option value="90" data-ar="آخر 90 يوم" data-en="Last 90 days">آخر 90 يوم</option>
+          </select>
+        </div>
+        <div class="card" id="perfBox" style="overflow-x:auto"></div>
       </div>
 
       <!-- Members -->
@@ -232,7 +248,7 @@
 </div></div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=10"></script>
+<script src="/assets/homzy.js?v=11"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -244,7 +260,7 @@ const L=(a,e)=>ar()?a:e;
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 let TOKEN=null, UID=null;
-let AG=null, MYPERMS=[], ROSTER=[], ROLES=[], TEAMS=[], PERMS=[], EDIT_ROLE=null, PICK_USER=null;
+let AG=null, MYPERMS=[], ROSTER=[], ROLES=[], TEAMS=[], PERMS=[], EDIT_ROLE=null, PICK_USER=null, SEATS=null;
 sb.auth.onAuthStateChange((_e,s)=>{ TOKEN=s?.access_token||null; UID=s?.user?.id||null; });
 
 function normPhone(v){ let d=(v||'').replace(/[^\d]/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('0'))d='20'+d.slice(1); else if(!d.startsWith('20'))d='20'+d; return d; }
@@ -279,9 +295,11 @@ async function loadAgency(){
     rpc('agency_team_roster',{p_agency:AG.id}),
     rest('/roles?agency_id=eq.'+AG.id+'&select=*&order=rank'),
     rest('/teams?agency_id=eq.'+AG.id+'&select=*&order=created_at'),
-    rest('/permissions?select=*&order=sort')
+    rest('/permissions?select=*&order=sort'),
+    rpc('agency_seats',{p_agency:AG.id})
   ]);
-  [MYPERMS, ROSTER, ROLES, TEAMS, PERMS] = results.map(r=>r.status==='fulfilled'?(r.value||[]):[]);
+  [MYPERMS, ROSTER, ROLES, TEAMS, PERMS] = results.slice(0,5).map(r=>r.status==='fulfilled'?(r.value||[]):[]);
+  SEATS = results[5].status==='fulfilled' ? results[5].value : null;
   const failed=results.filter(r=>r.status==='rejected');
   $('loadMsg').style.display=failed.length?'block':'none';
   $('loadMsg').textContent=failed.length
@@ -289,8 +307,35 @@ async function loadAgency(){
     : '';
   MYPERMS=MYPERMS||[]; ROSTER=ROSTER||[]; ROLES=ROLES||[]; TEAMS=TEAMS||[]; PERMS=PERMS||[];
   document.querySelectorAll('.manage-only').forEach(el=>el.style.display=can('team.manage')?'':'none');
+  document.querySelectorAll('.report-only').forEach(el=>el.style.display=can('report.view')?'':'none');
   renderHeader(); renderMembers(); renderTeams(); renderRoles();
+  if(can('report.view')) loadPerf();
 }
+
+// Seat limits come from the agency owner's plan (team 5 / company 15 / extra seats).
+function errText(e){
+  const m=String((e&&e.message)||e||'');
+  const s=m.match(/SEAT_LIMIT:(\d+)/);
+  if(s) return L('وصلت لحد المقاعد في باقتك ('+s[1]+'). زوّد المقاعد أو رقّي الباقة من صفحة الأسعار.','You reached your plan\'s seat limit ('+s[1]+'). Add seats or upgrade on the pricing page.');
+  return m;
+}
+
+// ---------- performance ----------
+window.loadPerf=async()=>{
+  const v=$('perfRange').value, now=new Date();
+  const since = v==='month' ? new Date(now.getFullYear(), now.getMonth(), 1) : new Date(now.getTime()-(+v)*864e5);
+  $('perfBox').innerHTML='<div class="mini" style="padding:16px">…</div>';
+  let rows=[]; try{ rows=await rpc('agency_performance',{p_agency:AG.id,p_since:since.toISOString()})||[]; }
+  catch(e){ $('perfBox').innerHTML=`<div class="msg err">${esc(errText(e))}</div>`; return; }
+  const nf=n=>Number(n||0).toLocaleString(HZ.lang==='en'?'en-US':'ar-EG');
+  const tot=k=>rows.reduce((a,r)=>a+Number(r[k]||0),0);
+  const cols=[['leads_total',L('عملاء مسؤول عنهم','Assigned clients')],['leads_new',L('عملاء جداد','New clients')],['activities',L('متابعات','Follow-ups')],['viewings',L('معاينات','Viewings')],['deals_open',L('صفقات مفتوحة','Open deals')],['won',L('صفقات مقفولة','Won deals')],['won_value',L('قيمة المقفول (ج.م)','Won value (EGP)')],['ai_used',L('رسايل AI','AI messages')]];
+  $('perfBox').innerHTML = rows.length ? `<table style="width:100%;border-collapse:collapse;font-size:13.5px">
+    <thead><tr style="text-align:start;color:var(--muted)"><th style="padding:10px;text-align:start">${L('العضو','Member')}</th>${cols.map(c=>`<th style="padding:10px;text-align:start">${c[1]}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr style="border-top:1px solid var(--line)"><td style="padding:10px"><b>${esc(r.name||'—')}</b><div class="mini">${esc(L(r.role_ar||'',r.role_en||''))}${r.team?' · '+esc(r.team):''}</div></td>${cols.map(c=>`<td style="padding:10px">${nf(r[c[0]])}</td>`).join('')}</tr>`).join('')}
+    <tr style="border-top:2px solid var(--line);font-weight:800"><td style="padding:10px">${L('الإجمالي','Total')}</td>${cols.map(c=>`<td style="padding:10px">${nf(tot(c[0]))}</td>`).join('')}</tr></tbody></table>`
+    : `<div class="empty"><h2>${L('مفيش بيانات للفترة دي','No data for this period')}</h2></div>`;
+};
 
 function renderHeader(){
   $('agTitle').textContent = AG.name;
@@ -301,8 +346,9 @@ function renderHeader(){
   const me=ROSTER.find(m=>m.user_id===UID);
   $('myRole').textContent = me ? L(me.role_ar||me.role_key, me.role_en||me.role_key) : '';
   const active=ROSTER.filter(m=>m.status==='active').length;
+  const seatTxt = SEATS ? (SEATS.used+' / '+(SEATS.limit==null?'∞':SEATS.limit)) : active;
   $('kpis').innerHTML =
-    kpi(ROSTER.length, L('عضو','Members')) + kpi(active, L('نشِط','Active')) +
+    kpi(ROSTER.length, L('عضو','Members')) + kpi(seatTxt, L('مقاعد مستخدمة','Seats used')) +
     kpi(TEAMS.length, L('فريق','Teams')) + kpi(ROLES.length, L('دور','Roles'));
 }
 const kpi=(n,l)=>`<div class="kpi"><b>${n}</b><span>${l}</span></div>`;
@@ -404,11 +450,11 @@ window.addMember=async()=>{
   if(!PICK_USER) return; $('addMemBtn').disabled=true;
   try{ await rpc('agency_add_member',{p_agency:AG.id,p_user:PICK_USER.id,p_role_key:$('newRole').value,p_team:$('newTeam').value||null});
     closeOv('ovMember'); await loadAgency();
-  }catch(e){ $('memMsg').textContent=esc(e.message||e); $('memMsg').className='msg err'; $('addMemBtn').disabled=false; }
+  }catch(e){ $('memMsg').textContent=errText(e); $('memMsg').className='msg err'; $('addMemBtn').disabled=false; }
 };
 window.changeRole=async(u,role)=>{ try{ await rpc('agency_set_member_role',{p_agency:AG.id,p_user:u,p_role_key:role}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 window.changeTeam=async(u,team)=>{ try{ await rpc('agency_set_member_team',{p_agency:AG.id,p_user:u,p_team:team||null}); await loadAgency(); }catch(e){ alert(e.message||e); } };
-window.setStatus=async(u,st)=>{ try{ await rpc('agency_set_member_status',{p_agency:AG.id,p_user:u,p_status:st}); await loadAgency(); }catch(e){ alert(e.message||e); } };
+window.setStatus=async(u,st)=>{ try{ await rpc('agency_set_member_status',{p_agency:AG.id,p_user:u,p_status:st}); await loadAgency(); }catch(e){ alert(errText(e)); } };
 window.removeMember=async(u)=>{ const m=ROSTER.find(x=>x.user_id===u), name=m?.name||''; if(!confirm(L('إزالة ','Remove ')+name+'؟')) return; try{ await rpc('agency_remove_member',{p_agency:AG.id,p_user:u}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 
 // ---------- teams ----------

@@ -63,7 +63,9 @@ class Gateway:
         return result
 
     def owned_lead(self, lead_id):
-        rows = self.rows("clients", id="eq." + str(lead_id), owner_id="eq." + self.uid, select="*")
+        # RLS decides: own clients, clients assigned to me, or the whole agency for
+        # managers with lead.view.all (team plans).
+        rows = self.rows("clients", id="eq." + str(lead_id), select="*")
         if not rows:
             raise HTTPException(404, "Client not found")
         rows[0]["stage"] = sales.normalize_stage(rows[0].get("stage"))
@@ -97,6 +99,11 @@ def authenticated(authorization: str = Header(default="")):
 
 
 UserGateway = Annotated[Gateway, Depends(authenticated)]
+
+
+def mine(gateway):
+    """PostgREST filter: clients I own or that are assigned to me."""
+    return f"(owner_id.eq.{gateway.uid},assigned_to.eq.{gateway.uid})"
 
 
 def legacy_lead_analysis(token, lead_id):
@@ -287,7 +294,7 @@ def score_rows(leads, activities):
 
 @router.get("/scores")
 def scores(gateway: UserGateway):
-    leads = gateway.rows("clients", owner_id="eq." + gateway.uid, select="*", order="id", limit=1000)
+    leads = gateway.rows("clients", select="*", order="id", limit=1000, **{"or": mine(gateway)})
     since = "gte." + (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     activities = gateway.rows("crm_lead_activities", created_at=since,
                               select="lead_id,kind,created_at,clients!inner(owner_id)",
@@ -323,7 +330,7 @@ def public_offer(token: UUID):
 @router.get("/overview")
 def overview(gateway: UserGateway, offset: int = Query(default=0, ge=-840, le=840),
              language: Literal["ar", "en"] = "ar"):
-    leads = gateway.rows("clients", owner_id="eq." + gateway.uid, select="*", order="id", limit=1000)
+    leads = gateway.rows("clients", select="*", order="id", limit=1000, **{"or": mine(gateway)})
     deals = gateway.rows("crm_deals", owner_id="eq." + gateway.uid, select="*", order="id", limit=1000)
     tasks = gateway.rows("crm_tasks", owner_id="eq." + gateway.uid, select="*", order="id", limit=1000)
     views = gateway.rows("crm_viewings", owner_id="eq." + gateway.uid, select="*", order="id", limit=1000)

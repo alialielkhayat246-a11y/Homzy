@@ -134,17 +134,44 @@ def _amount_for(kind: str, ref: dict, user: dict, token: str) -> tuple[float, st
         return float(b["total_amount"]), b.get("currency") or "EGP", "حجز Homzy Stays"
     if kind == "subscription":
         plan = ref.get("plan"); cycle = ref.get("cycle") or "monthly"
-        if plan not in ("pro", "business"):
+        if plan not in ("pro", "team", "business") or cycle not in ("monthly", "yearly"):
             raise ValueError("bad_plan")
         r = requests.get(base + "/plan_limits",
-                         params={"plan": "eq." + plan, "select": "price_monthly,price_yearly,name_ar"},
+                         params={"plan": "eq." + plan,
+                                 "select": "price_monthly,price_yearly,name_ar,team_seats,extra_seat_price"},
                          headers=hdr, timeout=15)
         rows = r.json() if r.ok else []
         if not rows:
             raise ValueError("plan_not_found")
         p = rows[0]
         amt = float(p["price_yearly"] if cycle == "yearly" else p["price_monthly"])
+        # Team plans: seats beyond the included ones are billed per seat (yearly = 10 months).
+        included = int(p.get("team_seats") or 1)
+        if plan in ("team", "business"):
+            try:
+                seats = int(ref.get("seats") or included)
+            except (TypeError, ValueError):
+                raise ValueError("bad_seats")
+            if seats < included or seats > 500:
+                raise ValueError("bad_seats")
+            ref["seats"] = seats
+            amt += (seats - included) * float(p.get("extra_seat_price") or 0) * (10 if cycle == "yearly" else 1)
+        else:
+            ref.pop("seats", None)
         return amt, "EGP", f"اشتراك Homzy {p.get('name_ar') or plan}"
+    if kind == "ai_credits":
+        r = requests.get(base + "/ai_topup_packs",
+                         params={"key": "eq." + str(ref.get("pack") or ""), "select": "price,name_ar"},
+                         headers=hdr, timeout=15)
+        rows = r.json() if r.ok else []
+        if not rows:
+            raise ValueError("pack_not_found")
+        # Top-ups only make sense on an active plan (trial or paid).
+        cp = requests.post(base + "/rpc/current_plan", json={"p_uid": user.get("id")},
+                           headers={**hdr, "Content-Type": "application/json"}, timeout=15)
+        if not cp.ok or cp.json() == "free":
+            raise ValueError("subscription_required")
+        return float(rows[0]["price"]), "EGP", rows[0].get("name_ar") or "رسائل ذكاء اصطناعي"
     if kind == "wallet":
         amt = float(ref.get("amount") or 0)
         if amt < 50 or amt > 100000:
