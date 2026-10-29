@@ -60,6 +60,7 @@
   .curplan .cp-cancel:hover{background:rgba(255,255,255,.2);}
   .curplan .cp-btns button:disabled{opacity:.6;cursor:default;}
   @media(max-width:560px){.curplan{flex-direction:column;align-items:flex-start;} .curplan .cp-r{text-align:start;} .curplan .cp-btns{justify-content:flex-start;}}
+  .curplan[hidden],.topup[hidden]{display:none;}
 </style>
 </head>
 <body data-mode="broker">
@@ -106,13 +107,13 @@ function feats(p){
     L('عروض PDF بلوجوك + لوجوك على صور الوحدات','Branded PDF offers + logo on unit photos'),
     L('أوامر صوتية في الـCRM','Voice commands in the CRM'),
     L('استضافة Homzy Stays','Homzy Stays hosting')];
-  if(p.plan==='pro') return [L('مساعد AI: '+p.ai_daily_messages+' رسالة في اليوم','AI assistant: '+p.ai_daily_messages+' messages/day'),...common,L('تحليلات أداءك','Your performance insights')];
-  const team=[L(p.team_seats+' مقاعد للفريق (مدير + سيلز)',p.team_seats+' team seats (manager + sales)'),
+  if(p.plan==='pro') return [L('مساعد AI: '+money(p.ai_daily_messages)+' رسالة في اليوم','AI assistant: '+p.ai_daily_messages+' messages/day'),...common,L('تحليلات أداءك','Your performance insights')];
+  const team=[L(money(p.team_seats)+(p.team_seats<=10?' مقاعد':' مقعد')+' للفريق (مدير + سيلز)',p.team_seats+' team seats (manager + sales)'),
     L('رصيد AI مشترك للفريق: '+money(p.ai_monthly_per_seat)+' رسالة لكل مقعد في الشهر','Shared team AI: '+p.ai_monthly_per_seat+' messages per seat/month'),
     L('وكالة باسم شركتك + أدوار وصلاحيات','Your agency workspace + roles & permissions'),
     L('توزيع العملاء على السيلز','Assign clients to your sales team'),
     L('لوحة أداء الفريق للمدير','Team performance dashboard for managers')];
-  if(p.contact_only) return [L('أكتر من '+p.team_seats+' سيلز — سعر المقعد بالاتفاق','More than '+p.team_seats+' sales seats — per-seat pricing by agreement'),
+  if(p.contact_only) return [L('أكتر من '+money(p.team_seats)+' سيلز — سعر المقعد بالاتفاق','More than '+p.team_seats+' sales seats — per-seat pricing by agreement'),
     L('رصيد AI مشترك: '+money(p.ai_monthly_per_seat)+' رسالة لكل مقعد في الشهر','Shared AI: '+p.ai_monthly_per_seat+' messages per seat/month'),
     L('كل مزايا باقة شركة','Everything in Company'),L('تدريب لفريقك على Homzy','Training for your team')];
   return [...team, L('كل مزايا احترافي:','Everything in Pro:'), ...common];
