@@ -139,6 +139,9 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
   .sp-sub{{color:var(--muted); font-size:15px;}}
   .sp-price{{color:var(--teal-d); font-weight:800; font-size:22px; margin-top:10px;}}
   .sp-chips{{display:flex; gap:8px; flex-wrap:wrap; margin:14px 0;}}
+  .sp-top-cta{{display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 4px;}} .sp-top-cta .btn{{flex:1 1 160px; padding:11px 14px; font-size:14px;}}
+  .sp-note{{font-size:13px; color:#526074; margin:-4px 0 10px;}}
+  .sp-cover.ph{{background:linear-gradient(135deg,var(--navy),#0B5563);}}
   .sp-chips .c{{background:#fff; border:1px solid var(--line); border-radius:10px; padding:6px 12px; font-size:13px; font-weight:600; color:#40506a;}}
   .sp-sec{{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; margin-top:16px;}}
   .sp-sec h2{{font-size:17px; color:var(--navy); margin-bottom:10px;}}
@@ -166,7 +169,7 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
 {body}
 </main>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=2"></script>
+<script src="/assets/homzy.js?v=11"></script>
 <script>
 // Contact / viewing is gated: guests get sent to login, then straight back.
 function spViewing(ctx){{
@@ -264,12 +267,38 @@ def stay_meta(pid: str) -> str | None:
     return "\n".join(parts)
 
 
+# Old cover host that no longer serves images — skip it so pages never show a blank cover.
+_DEAD_IMG = re.compile(r"res\.cloudinary\.com/boody-car")
+_AR_TYPES = {"apartment": "شقة", "duplex": "دوبلكس", "penthouse": "بنتهاوس", "studio": "استوديو",
+             "townhouse": "تاون هاوس", "twinhouse": "توين هاوس", "villa": "فيلا", "chalet": "شاليه",
+             "cabin": "كابينة", "office": "مكتب إداري", "clinic": "عيادة", "shop": "محل",
+             "pharmacy": "صيدلية", "hotel apartment": "شقة فندقية"}
+
+
+def _ar_text(v) -> str:
+    """Arabic display for English catalog phrases (same rules as HZ.catalog.text)."""
+    t = str(v or "")
+    def yrs(m):
+        n = int(m.group(1))
+        return "خلال " + ("سنة" if n == 1 else "سنتين" if n == 2 else f"{n} سنوات" if n <= 10 else f"{n} سنة")
+    t = re.sub(r"after\s+(\d+)\s+years?", yrs, t, flags=re.I)
+    t = re.sub(r"ready to move", "استلام فوري", t, flags=re.I)
+    t = re.sub(r"off[ -]plan", "تحت الإنشاء", t, flags=re.I)
+    t = re.sub(r"fully finished", "تشطيب كامل", t, flags=re.I)
+    t = re.sub(r"semi[ -]finished", "نص تشطيب", t, flags=re.I)
+    return t
+
+
+def _ok_img(u) -> bool:
+    return bool(u) and not _DEAD_IMG.search(u)
+
+
 # ---------------------------------------------------------------------------
 # Project (primary / developer)
 # ---------------------------------------------------------------------------
 def render_project(pid: str) -> str | None:
     sel = ("id,developer_id,name,name_ar,area,description,description_ar,delivery,status,"
-           "amenities,amenities_ar,cover_image_url,"
+           "amenities,amenities_ar,cover_image_url,updated_at,"
            "developer:developers(name,about,about_ar,track_record,track_record_ar,website)")
     rows = _get(f"/projects?select={sel}&id=eq.{pid}&limit=1")
     if not rows:
@@ -305,9 +334,8 @@ def render_project(pid: str) -> str | None:
     name = p.get("name_ar") or p.get("name") or "مشروع"
     name_en = p.get("name") or name
     area = p.get("area") or ""
-    cover = p.get("cover_image_url") or next(
-        (m["url"] for m in media if m.get("kind") == "image" and m.get("url")), "")
-    images = [m["url"] for m in media if m.get("kind") == "image" and m.get("url")]
+    images = [m["url"] for m in media if m.get("kind") == "image" and _ok_img(m.get("url"))]
+    cover = p.get("cover_image_url") if _ok_img(p.get("cover_image_url")) else (images[0] if images else "")
     prices = sorted(u["price_from"] for u in units if u.get("price_from"))
     minp = prices[0] if prices else None
     maxp = max((u["price_to"] or u["price_from"]) for u in units) if units else None
@@ -332,8 +360,7 @@ def render_project(pid: str) -> str | None:
     if minp:
         jsonld["offers"] = {"@type": "AggregateOffer", "priceCurrency": "EGP",
                             "lowPrice": int(minp),
-                            "highPrice": int(maxp) if maxp else int(minp),
-                            "availability": "https://schema.org/InStock"}
+                            "highPrice": int(maxp) if maxp else int(minp)}
 
     # unit table
     def _beds(u):
@@ -347,11 +374,11 @@ def render_project(pid: str) -> str | None:
         return f"{a}–{b} م²" if (b and b != a) else f"{a} م²"
 
     urows = "".join(
-        f"<tr><td>{_esc(u.get('type') or '')}</td><td>{_beds(u)}</td>"
+        f"<tr><td>{_esc(_AR_TYPES.get((u.get('type') or '').lower(), u.get('type') or ''))}</td><td>{_beds(u)}</td>"
         f"<td>{_size(u)}</td><td class='pr'>{_money(u.get('price_from')) or '—'}</td>"
         f"<td>{_esc(u.get('down_payment') or '—')}</td>"
         f"<td>{(str(u.get('installment_years'))+' سنة') if u.get('installment_years') else '—'}</td>"
-        f"<td>{_esc(u.get('delivery') or '—')}</td></tr>"
+        f"<td>{_esc(_ar_text(u.get('delivery')) or '—')}</td></tr>"
         for u in units)
     plans = []
     for pl in dict.fromkeys(u.get("payment_plan") for u in units if u.get("payment_plan")):
@@ -360,11 +387,12 @@ def render_project(pid: str) -> str | None:
     status = p.get("status") or ""
     chips = []
     if p.get("delivery"):
-        chips.append(f"<span class='c'>🗓️ التسليم: {_esc(p['delivery'])}</span>")
+        chips.append(f"<span class='c'>🗓️ التسليم: {_esc(_ar_text(p['delivery']))}</span>")
     if status:
-        chips.append(f"<span class='c'>{_esc(status)}</span>")
-    if minp:
-        chips.append(f"<span class='c'>💰 يبدأ من {_money(minp)}</span>")
+        chips.append(f"<span class='c'>{_esc(_ar_text(status))}</span>")
+    if units:
+        chips.append(f"<span class='c'>🏠 {len(units)} نوع وحدة</span>")
+    updated = (p.get("updated_at") or "")[:10]
 
     # public developer updates (WhatsApp groups) — public tier only via RLS
     intel = prefetched_intel
@@ -383,19 +411,25 @@ def render_project(pid: str) -> str | None:
 
     ctx = html.escape(json.dumps(
         {"project_id": pid, "name": name, "area": area}, ensure_ascii=True), quote=True)
+    chat_ctx = html.escape(json.dumps(
+        {"name": name, "area": area, "market": "primary"}, ensure_ascii=True), quote=True)
 
     body = f"""
     <nav class="sp-crumb"><a href="/">Homzy</a> › <a href="/app">المشاريع</a>{(' › ' + _esc(area)) if area else ''} › {_esc(name)}</nav>
-    <div class="sp-cover" style="{('background-image:url(' + chr(39) + _esc(cover) + chr(39) + ')') if cover else ''}">
+    <div class="sp-cover{'' if cover else ' ph'}" style="{('background-image:url(' + chr(39) + _esc(cover) + chr(39) + ')') if cover else ''}">
       <span class="badge">مشروع تطوير{(' · ' + _esc(area)) if area else ''}</span>
     </div>
     <h1>{_esc(name)}</h1>
     <div class="sp-sub">{_esc(dev.get('name') or '')}{(' · ' + _esc(area)) if area else ''}</div>
     {('<div class="sp-price">يبدأ من ' + _money(minp) + '</div>') if minp else ''}
     <div class="sp-chips">{''.join(chips)}</div>
+    <div class="sp-top-cta">
+      <button class="btn btn-teal" onclick='HZ.openChat({{context:{chat_ctx}}})'>💬 اسأل Homzy عن المشروع ده</button>
+      <a class="btn btn-ghost" href="/app?project={pid}">⇄ قارن بمشاريع تانية</a>
+    </div>
     {('<div class="sp-sec"><p>' + _esc(p.get('description')) + '</p></div>') if p.get('description') else ''}
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(name)}">' for u in images) + '</div></div>') if images else ''}
-    {('<div class="sp-sec"><h2>الوحدات المتاحة</h2><div class="utscroll"><table class="utable"><thead><tr><th>النوع</th><th>الغرف</th><th>المساحة</th><th>السعر</th><th>المقدم</th><th>التقسيط</th><th>التسليم</th></tr></thead><tbody>' + urows + '</tbody></table></div>' + (''.join(plans)) + '</div>') if units else ''}
+    {('<div class="sp-sec"><h2>الوحدات والأسعار</h2><p class="sp-note">ℹ️ الأسعار من آخر تحديث عندنا' + ((' (' + updated + ')') if updated else '') + '، وممكن تتغير — أكّد السعر والتوفّر مع المطوّر قبل الحجز.</p><div class="utscroll"><table class="utable"><thead><tr><th>النوع</th><th>الغرف</th><th>المساحة</th><th>السعر</th><th>المقدم</th><th>التقسيط</th><th>التسليم</th></tr></thead><tbody>' + urows + '</tbody></table></div>' + (''.join(plans)) + '</div>') if units else ''}
     {('<div class="sp-sec"><h2>عن المطوّر' + ((' — ' + _esc(dev.get('name'))) if dev.get('name') else '') + '</h2><p>' + _esc((dev.get('about') or '') + ' ' + (dev.get('track_record') or '')) + '</p></div>') if (dev.get('about') or dev.get('track_record')) else ''}
     {intel_html}
     {others_html}

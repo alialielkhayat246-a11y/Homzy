@@ -165,7 +165,10 @@ class SalesTests(unittest.TestCase):
         with self.assertRaises(HTTPException) as err:
             gateway.owned_lead("lead")
         self.assertEqual(err.exception.status_code, 404)
-        self.assertEqual(gateway.rows.call_args.kwargs["owner_id"], "eq.owner")
+        # Visibility is enforced by RLS with the broker's JWT (own, assigned, or
+        # agency-wide for managers) — the lookup is by id only.
+        self.assertEqual(gateway.rows.call_args.kwargs["id"], "eq.lead")
+        self.assertNotIn("owner_id", gateway.rows.call_args.kwargs)
 
     def test_unauthenticated_endpoints(self):
         client = TestClient(app)

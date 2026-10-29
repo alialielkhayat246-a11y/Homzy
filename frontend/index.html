@@ -15,7 +15,7 @@
 <meta property="og:locale" content="ar_EG" />
 <meta property="og:url" content="https://homzy-ai.com/" />
 <meta property="og:title" content="Homzy — مستشارك العقاري الذكي" />
-<meta property="og:description" content="مساعد عقاري ذكي يفهم طلبك ويرشّحلك أنسب وحدة من 922 مشروع و629 مطوّر — primary و resale." />
+<meta property="og:description" content="مساعد عقاري ذكي يفهم طلبك ويرشّحلك أنسب وحدة من أكتر من 900 مشروع لأكتر من 400 مطوّر في مصر." />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Homzy — مستشارك العقاري الذكي في مصر" />
 <meta name="twitter:description" content="مساعد عقاري ذكي بالعربي والإنجليزي — يرشّحلك أنسب وحدة من داتا حقيقية." />
@@ -73,7 +73,19 @@
   .xcard .go{display:inline-flex; gap:6px; margin-top:12px; color:var(--teal-d); font-weight:700; font-size:14px;}
   @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px;} .phone-stage{order:1;} .hero{padding:32px 0;} .phone{width:260px;} .phone .screen{height:510px;} .explore{grid-template-columns:1fr 1fr;} .band-grid{grid-template-columns:1fr 1fr; gap:26px;} }
   @media(max-width:560px){ .explore{grid-template-columns:1fr;} }
-  .hero-note{margin-top:22px;color:#526074;font-size:14px;}
+  .hero-note{margin-top:14px;color:#526074;font-size:14px;}
+  .qsearch{display:grid;grid-template-columns:1.2fr 1fr .9fr auto;gap:8px;margin-top:26px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:var(--shadow-sm);max-width:640px;}
+  .qsearch select{min-width:0;height:46px;border:1.5px solid var(--line);border-radius:11px;padding:0 10px;font:600 14px var(--ff);color:var(--navy);background:#fff;}
+  .qsearch .btn{height:46px;padding:0 18px;white-space:nowrap;}
+  .qsearch select:focus-visible,.qsearch .btn:focus-visible,.broker-strip:focus-visible{outline:3px solid var(--teal);outline-offset:2px;}
+  .hero-cta{margin-top:16px;}
+  .broker-strip{display:flex;align-items:center;gap:10px;margin-top:18px;max-width:640px;background:var(--teal-l);border:1px solid rgba(11,85,99,.18);border-radius:14px;padding:11px 14px;color:var(--navy);font-size:14px;line-height:1.6;text-decoration:none;}
+  .broker-strip:hover{border-color:var(--teal);} .broker-strip .go{margin-inline-start:auto;font-weight:800;color:var(--teal-d);}
+  [dir=ltr] .broker-strip .go{transform:scaleX(-1);}
+  .demo-cap{position:relative;z-index:1;text-align:center;font-size:12px;color:var(--muted);margin-top:12px;}
+  .phone-stage{flex-direction:column;align-items:center;}
+  a.pm-rec{display:block;color:inherit;text-decoration:none;} a.pm-rec:hover{border-color:var(--teal);}
+  @media(max-width:600px){.qsearch{grid-template-columns:1fr 1fr;}.qsearch select:first-child{grid-column:1/-1;}.qsearch .btn{grid-column:1/-1;}}
   .home-projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;}
   .home-project{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:transform .2s;}
   .home-project:hover{transform:translateY(-3px);}
@@ -91,13 +103,35 @@
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow">🏠 <span data-ar="مدعوم بالذكاء الاصطناعي" data-en="Powered by AI">مدعوم بالذكاء الاصطناعي</span></span>
-      <h1 style="margin-top:18px" data-ar="مستشارك العقاري الذكي في <span class='hl'>مصر</span>" data-en="Your smart real-estate advisor in <span class='hl'>Egypt</span>">مستشارك العقاري الذكي في <span class="hl">مصر</span></h1>
-      <p class="lead" data-ar="قولنا ميزانيتك والمنطقة اللي بتحبها، وخلّي Homzy يساعدك تلاقي العقار المناسب من مشاريع المطوّرين وإعادة البيع." data-en="Chat with Homzy in Arabic or English — tell it your budget, area and bedrooms, and it recommends the best-fit unit from developer projects (primary) and the resale market. All grounded in real data.">قولنا ميزانيتك والمنطقة اللي بتحبها، وخلّي Homzy يساعدك تلاقي العقار المناسب من مشاريع المطوّرين وإعادة البيع.</p>
+      <h1 style="margin-top:18px" data-ar="لاقي العقار المناسب <span class='hl'>لميزانيتك</span> بالذكاء الاصطناعي" data-en="Find the home that fits <span class='hl'>your budget</span>, with AI">لاقي العقار المناسب <span class="hl">لميزانيتك</span> بالذكاء الاصطناعي</h1>
+      <p class="lead" data-ar="قول لـ Homzy ميزانيتك والمنطقة وعدد الغرف، ويرشّحلك من أسعار حقيقية لمشاريع المطوّرين ووحدات إعادة البيع المعروضة — ويقولك ليه الاختيار مناسب ليك." data-en="Tell Homzy your budget, area and bedrooms — it recommends from real prices of developer projects and listed resale units, and tells you why each option fits.">قول لـ Homzy ميزانيتك والمنطقة وعدد الغرف، ويرشّحلك من أسعار حقيقية لمشاريع المطوّرين ووحدات إعادة البيع المعروضة — ويقولك ليه الاختيار مناسب ليك.</p>
+      <form class="qsearch" id="qsearch" action="/app" method="get" role="search" aria-label="بحث سريع">
+        <select name="area" id="qsArea" aria-label="المنطقة"><option value="" data-ar="كل المناطق" data-en="All areas">كل المناطق</option></select>
+        <select name="budget" id="qsBudget" aria-label="الميزانية">
+          <option value="" data-ar="أي ميزانية" data-en="Any budget">أي ميزانية</option>
+          <option value="-2000000" data-ar="حتى ٢ مليون" data-en="Up to 2M">حتى ٢ مليون</option>
+          <option value="2000000-4000000" data-ar="٢ – ٤ مليون" data-en="2 – 4M">٢ – ٤ مليون</option>
+          <option value="4000000-6000000" data-ar="٤ – ٦ مليون" data-en="4 – 6M">٤ – ٦ مليون</option>
+          <option value="6000000-10000000" data-ar="٦ – ١٠ مليون" data-en="6 – 10M">٦ – ١٠ مليون</option>
+          <option value="10000000-20000000" data-ar="١٠ – ٢٠ مليون" data-en="10 – 20M">١٠ – ٢٠ مليون</option>
+          <option value="20000000-" data-ar="أكتر من ٢٠ مليون" data-en="20M+">أكتر من ٢٠ مليون</option>
+        </select>
+        <select name="beds" id="qsBeds" aria-label="عدد الغرف">
+          <option value="" data-ar="أي عدد غرف" data-en="Any bedrooms">أي عدد غرف</option>
+          <option value="1" data-ar="غرفة" data-en="1 bed">غرفة</option>
+          <option value="2" data-ar="غرفتين" data-en="2 beds">غرفتين</option>
+          <option value="3" data-ar="٣ غرف" data-en="3 beds">٣ غرف</option>
+          <option value="4" data-ar="٤ غرف" data-en="4 beds">٤ غرف</option>
+          <option value="5" data-ar="٥+ غرف" data-en="5+ beds">٥+ غرف</option>
+        </select>
+        <button class="btn btn-navy" type="submit" data-ar="اعرض المشاريع" data-en="Show projects">اعرض المشاريع</button>
+      </form>
       <div class="hero-cta">
-        <button class="btn btn-teal" onclick="HZ.openChat()" data-ar="ابدأ محادثة مجانية" data-en="Start a free chat">ابدأ محادثة مجانية</button>
-        <a class="btn btn-ghost" href="/app" data-ar="تصفّح المشاريع" data-en="Browse projects">تصفّح المشاريع</a>
+        <button class="btn btn-teal" onclick="HZ.openChat()" data-ar="💬 اسأل Homzy AI" data-en="💬 Ask Homzy AI">💬 اسأل Homzy AI</button>
+        <a class="btn btn-ghost" href="/app" data-ar="تصفّح كل المشاريع" data-en="Browse all projects">تصفّح كل المشاريع</a>
       </div>
-      <p class="hero-note" data-ar="بالعربي والإنجليزي · ترشيحات من بيانات فعلية" data-en="Arabic & English · Recommendations from real listings">بالعربي والإنجليزي · ترشيحات من بيانات فعلية</p>
+      <p class="hero-note" data-ar="بالعربي والإنجليزي · مجاني للباحثين عن عقار" data-en="Arabic & English · Free for home seekers">بالعربي والإنجليزي · مجاني للباحثين عن عقار</p>
+      <a class="broker-strip only-client" href="/brokers"><span>💼</span><span><b data-ar="إنت بروكر؟" data-en="Are you a broker?">إنت بروكر؟</b> <span data-ar="أسعار محدّثة يوميًا + CRM + مساعد مبيعات ذكي — جرّب 14 يوم مجانًا" data-en="Daily-updated prices + CRM + AI sales assistant — try 14 days free">أسعار محدّثة يوميًا + CRM + مساعد مبيعات ذكي — جرّب 14 يوم مجانًا</span></span><span class="go" aria-hidden="true">←</span></a>
     </div>
     <div class="phone-stage">
       <div class="blob"></div>
@@ -106,11 +140,14 @@
         <div class="ph-body">
           <div class="pm bot" data-ar="أهلاً بيك، أنا Homzy. بتدوّر على إيجار ولا تمليك؟" data-en="Hi, I’m Homzy. Are you looking to rent or buy?">أهلاً بيك، أنا Homzy. بتدوّر على إيجار ولا تمليك؟</div>
           <div class="pm me" data-ar="تمليك 3 غرف في التجمع، حوالي 6 مليون" data-en="A 3-bedroom home in New Cairo, around 6 million.">تمليك 3 غرف في التجمع، حوالي 6 مليون</div>
-          <div class="pm bot" data-ar="تمام! عندي وحدة إعادة بيع جاهزة تناسبك" data-en="Here’s a ready resale home to explore.">تمام! عندي وحدة إعادة بيع جاهزة تناسبك</div>
-          <div class="pm-rec"><span class="bd" data-ar="إعادة بيع · جاهزة" data-en="Resale · Ready">إعادة بيع · جاهزة</span><div class="t" data-ar="شقة 3 غرف — النرجس" data-en="3-bedroom apartment — El Narges">شقة 3 غرف — النرجس</div><div class="a" data-ar="التجمع الخامس" data-en="Fifth Settlement">التجمع الخامس</div><div class="pr" data-ar="3,850,000 ج.م" data-en="3,850,000 EGP">3,850,000 ج.م</div><div class="meta"><span data-ar="3 غرف" data-en="3 beds">3 غرف</span><span data-ar="160 م²" data-en="160 m²">160 م²</span><span data-ar="استلام فوري" data-en="Ready to move">استلام فوري</span></div></div>
-          <div class="pm bot" data-ar="أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟" data-en="Within your budget. Shall we arrange a viewing?">أقل من ميزانيتك وموقع ممتاز. نظبّط معاينة؟</div>
+          <div class="demo-live" id="demoLive" hidden>
+            <div class="pm bot" data-ar="تمام! ده مشروع من الكتالوج يناسب طلبك" data-en="Here’s a catalog project that fits your request.">تمام! ده مشروع من الكتالوج يناسب طلبك</div>
+            <a class="pm-rec" id="demoRec" href="/app"></a>
+            <div class="pm bot" data-ar="يبدأ في حدود ميزانيتك. تحب أوريك تفاصيل الوحدات؟" data-en="It starts within your budget. Want to see the units?">يبدأ في حدود ميزانيتك. تحب أوريك تفاصيل الوحدات؟</div>
+          </div>
         </div>
       </div></div>
+      <p class="demo-cap" data-ar="مثال لمحادثة — المشروع المعروض حقيقي من الكتالوج" data-en="Example conversation — the project shown is real catalog data">مثال لمحادثة — المشروع المعروض حقيقي من الكتالوج</p>
     </div>
   </div>
 </section>
@@ -118,7 +155,7 @@
 <!-- Stats band -->
 <div class="band"><div class="wrap band-grid">
   <div class="s"><b id="bProjects"><i>922</i></b><span data-ar="مشروع من المطوّرين" data-en="developer projects">مشروع من المطوّرين</span></div>
-  <div class="s"><b id="bDevs"><i>629</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
+  <div class="s"><b id="bDevs"><i>431</i></b><span data-ar="مطوّر عقاري" data-en="developers">مطوّر عقاري</span></div>
   <div class="s"><b id="bUnits"><i data-ar="جديد وإعادة بيع" data-en="New & resale">جديد وإعادة بيع</i></b><span id="bUnitsLbl" data-ar="سوقين في مكان واحد" data-en="two markets, one place">سوقين في مكان واحد</span></div>
   <div class="s"><b><i>24/7</i></b><span data-ar="مستشار ذكي" data-en="AI advisor">مستشار ذكي</span></div>
 </div></div>
@@ -157,7 +194,8 @@
     const head=(t,q='')=>fetch('https://ceoqtkbpdxnkuptnnwjg.supabase.co/rest/v1/'+t+'?select=id'+q+'&limit=1',{headers:{apikey:'sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Authorization:'Bearer sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb',Prefer:'count=exact'}}).then(r=>parseInt((r.headers.get('content-range')||'/0').split('/')[1]||'0',10));
     // Count only the REAL, browsable projects (those with an area) so the homepage
     // matches the browse page (was showing the raw 1,697 incl. area-less/foreign rows).
-    const [pr,dv,un]=await Promise.all([head('projects',',unit_types!inner(id)&area=not.is.null'),head('developers'),head('listings','&status=eq.active').catch(()=>0)]);
+    // Developers = those with at least one real (Egyptian, priced) project — not every row in the table.
+    const [pr,dv,un]=await Promise.all([head('projects',',unit_types!inner(id)&area=not.is.null'),head('developers',',projects!inner(id)&projects.area=not.is.null'),head('listings','&status=eq.active').catch(()=>0)]);
     if(pr)document.querySelectorAll('#stProjects i,#bProjects i').forEach(e=>e.textContent=pr.toLocaleString());
     if(dv)document.querySelectorAll('#stDevs i,#bDevs i').forEach(e=>e.textContent=dv.toLocaleString());
     // Only show a resale/marketplace number when it's REAL (>0). Otherwise keep
@@ -169,6 +207,45 @@
         l.textContent=(document.documentElement.lang==='en'?'listed units':'وحدة معروضة');}
     }
   }catch(e){}})();
+
+  // Quick search → /app with the same URL filters the browse page understands.
+  (async()=>{
+    const sel=document.getElementById('qsArea');
+    try{
+      const rows=await HZ.sb('/v_city_counts?select=area,projects&order=projects.desc&limit=60')||[];
+      const seen=new Map();
+      rows.forEach(r=>{ if(!r.area) return; const k=HZ.normArea(r.area); const c=seen.get(k);
+        if(!c) seen.set(k,{label:r.area,n:r.projects||0}); else c.n+=r.projects||0; });
+      [...seen.values()].sort((a,b)=>b.n-a.n).slice(0,20).forEach(g=>{ const o=document.createElement('option'); o.value=g.label; o.dataset.area=g.label; o.textContent=HZ.catalog?HZ.catalog.area(g.label):g.label; sel.appendChild(o); });
+      document.addEventListener('hz:lang',()=>sel.querySelectorAll('option[data-area]').forEach(o=>o.textContent=HZ.catalog.area(o.dataset.area)));
+    }catch(e){}
+    document.getElementById('qsearch').addEventListener('submit',e=>{
+      e.preventDefault(); const u=new URL('/app',location.origin);
+      new FormData(e.target).forEach((v,k)=>{ if(v) u.searchParams.set(k,v); });
+      location.href=u.pathname+u.search;
+    });
+  })();
+
+  // Chat demo: the recommended project is a REAL catalog row (New Cairo, 3 beds,
+  // up to 6M) — never an invented unit. Hidden if nothing matches / offline.
+  (async()=>{
+    try{
+      const rows=await HZ.searchProjects({p_q:null,p_areas:['New Cairo'],p_min:null,p_max:6000000,p_beds:3,p_ready:null,p_sort:'recent',p_limit:1,p_offset:0});
+      const p=rows&&rows[0]; if(!p||p.price_from_min==null) return;
+      renderDemo(p); document.addEventListener('hz:lang',()=>renderDemo(p));
+      document.getElementById('demoLive').hidden=false;
+    }catch(e){}
+  })();
+  function renderDemo(p){
+      const ar=HZ.lang!=='en', nf=n=>Number(n).toLocaleString(ar?'ar-EG':'en-US');
+      const name=ar?(p.name_ar||p.name):(p.name||p.name_ar);
+      const bits=[];
+      if(p.size_from_min) bits.push((ar?'من ':'from ')+nf(p.size_from_min)+(ar?' م²':' m²'));
+      if(p.installment_years_max) bits.push(ar?('تقسيط '+nf(p.installment_years_max)+' سنة'):(p.installment_years_max+'y plan'));
+      if(p.delivery) bits.push(HZ.catalog?HZ.catalog.text(p.delivery):p.delivery);
+      const rec=document.getElementById('demoRec'); rec.href='/app?project='+p.id;
+      rec.innerHTML=`<span class="bd">${ar?'من الكتالوج':'From the catalog'}</span><div class="t">${HZ.esc(name)}</div><div class="a">${HZ.esc([p.developer_name, HZ.catalog?HZ.catalog.area(p.area):p.area].filter(Boolean).join(' · '))}</div><div class="pr">${ar?'يبدأ من ':'From '}${nf(p.price_from_min)} ${ar?'ج.م':'EGP'}</div><div class="meta">${bits.map(b=>'<span>'+HZ.esc(b)+'</span>').join('')}</div>`;
+  }
 </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Homzy — للبروكرز</title>
-<meta name="description" content="Homzy شريكك في الشغل: اعرض وحداتك، اداري عملاءك بـ CRM، شارك بلمسة واحدة مبراند باسمك، وتنبيهات مطابقة و co-broking." />
+<meta name="description" content="Homzy للبروكرز والشركات: أسعار ومخزون +900 مشروع محدّثين يوميًا، CRM لعملاءك، مساعد مبيعات ذكي، وعروض باسمك ولوجوك — جرّب 14 يوم مجانًا." />
 <meta name="keywords" content="بروكر عقاري, تسويق عقاري, CRM عقارات, عملاء عقارات, co-broking, أدوات البروكر, سوق ليدز, عقارات مصر" />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://homzy-ai.com/brokers" />
@@ -12,8 +12,8 @@
 <link rel="alternate" hreflang="en" href="https://homzy-ai.com/brokers" />
 <meta property="og:site_name" content="Homzy" /><meta property="og:locale" content="ar_EG" /><meta property="og:type" content="website" />
 <meta property="og:url" content="https://homzy-ai.com/brokers" />
-<meta property="og:title" content="Homzy للبروكرز — أدوات وعملاء جاهزين" />
-<meta property="og:description" content="اعرض وحداتك، اداري عملاءك، ووصل عملاء جاهزين — كله مبراند باسمك." />
+<meta property="og:title" content="Homzy للبروكرز — أسعار محدّثة ومساعد مبيعات ذكي" />
+<meta property="og:description" content="أسعار المطورين المحدّثة يوميًا، CRM، ومساعد مبيعات بيرشّح المشروع المناسب لكل عميل." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
@@ -29,6 +29,13 @@
   .bhero h1{font-size:clamp(26px,3.4vw,40px); position:relative; z-index:1;}
   .bhero p{opacity:.85; margin-top:14px; font-size:17px; max-width:40em; position:relative; z-index:1;}
   .bhero .cta{display:flex; gap:12px; margin-top:26px; flex-wrap:wrap; position:relative; z-index:1;}
+  .bhero .hnote{position:relative;z-index:1;margin-top:14px;font-size:14px;opacity:.85;} .bhero .hnote a{color:inherit;text-decoration:underline;font-weight:700;}
+  .fcard .go{display:inline-block;margin-top:10px;color:var(--teal-d);font-weight:700;font-size:14px;}
+  .steps{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding:0;max-width:980px;margin:0 auto;counter-reset:st;}
+  .steps li{counter-increment:st;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:6px;}
+  .steps li::before{content:counter(st);width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .steps b{font-size:17px;} .steps span{color:#5b6b82;font-size:14.5px;line-height:1.7;}
+  @media(max-width:760px){.steps{grid-template-columns:1fr;}}
 </style>
 </head>
 <body data-mode="broker">
@@ -36,13 +43,14 @@
 
 <div class="wrap">
   <div class="bhero reveal">
-    <span class="eyebrow" data-ar="للبروكرز" data-en="For brokers">للبروكرز</span>
-    <h1 style="margin-top:14px" data-ar="Homzy شريكك في الشغل" data-en="Homzy is your work partner">Homzy شريكك في الشغل</h1>
-    <p data-ar="اعرض وحداتك، اداري عملاءك، وشارك بلمسة واحدة — وكل ده مبراند باسمك. خلّي Homzy يجيبلك عملاء جاهزين ويوفّرلك وقت المتابعة." data-en="List your units, manage your clients, and share in one tap — all branded with your name. Let Homzy bring you ready leads and save your follow-up time.">اعرض وحداتك، اداري عملاءك، وشارك بلمسة واحدة — وكل ده مبراند باسمك. خلّي Homzy يجيبلك عملاء جاهزين ويوفّرلك وقت المتابعة.</p>
+    <span class="eyebrow" data-ar="للبروكرز والشركات" data-en="For brokers &amp; agencies">للبروكرز والشركات</span>
+    <h1 style="margin-top:14px" data-ar="بيع أسرع بأسعار محدّثة ومساعد ذكي" data-en="Sell faster with up-to-date prices and an AI assistant">بيع أسرع بأسعار محدّثة ومساعد ذكي</h1>
+    <p data-ar="Homzy بيجمعلك أسعار المطورين المحدّثة، CRM لعملاءك، ومساعد مبيعات بيرشّح المشروع المناسب لكل عميل ويكتبلك المتابعة — وكل عروضك باسمك ولوجوك." data-en="Homzy brings you up-to-date developer prices, a CRM for your clients, and an AI sales assistant that matches each client to the right project and drafts your follow-up — with every offer under your name and logo.">Homzy بيجمعلك أسعار المطورين المحدّثة، CRM لعملاءك، ومساعد مبيعات بيرشّح المشروع المناسب لكل عميل ويكتبلك المتابعة — وكل عروضك باسمك ولوجوك.</p>
     <div class="cta">
-      <a class="btn btn-teal" href="/leads?register=1" data-ar="سجّل كبروكر" data-en="Join as a broker">سجّل كبروكر</a>
-      <a class="btn btn-ghost" href="/app?list=1" data-ar="اعرض وحدتك" data-en="List your unit">اعرض وحدتك</a>
+      <a class="btn btn-teal" href="/leads?register=1" data-ar="ابدأ تجربة 14 يوم مجانًا" data-en="Start a 14-day free trial">ابدأ تجربة 14 يوم مجانًا</a>
+      <a class="btn btn-ghost" href="/pricing" data-ar="شوف الباقات" data-en="See plans">شوف الباقات</a>
     </div>
+    <p class="hnote"><span data-ar="من غير كارت · عندك حساب؟" data-en="No card needed · Have an account?">من غير كارت · عندك حساب؟</span> <a href="/clients" data-ar="ادخل على الـCRM" data-en="Open the CRM">ادخل على الـCRM</a></p>
   </div>
 </div>
 
@@ -50,18 +58,32 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow" data-ar="أدوات البروكر" data-en="Broker tools">أدوات البروكر</span>
-      <h2 data-ar="كل أدواتك في مكان واحد" data-en="All your tools in one place">كل أدواتك في مكان واحد</h2>
+      <h2 data-ar="كل اللي بتحتاجه في يومك — شغّال دلوقتي" data-en="Everything your day needs — live today">كل اللي بتحتاجه في يومك — شغّال دلوقتي</h2>
     </div>
     <div class="grid-3">
-      <div class="fcard reveal"><div class="fic">👥</div><h3 data-ar="CRM للعملاء" data-en="Client CRM">CRM للعملاء</h3><p data-ar="سجّل عملاءك ومتطلباتهم في مكان واحد، وتابع كل واحد لحد ما يقفل." data-en="Log your clients and their requirements in one place and follow each one to close.">سجّل عملاءك ومتطلباتهم في مكان واحد، وتابع كل واحد لحد ما يقفل.</p></div>
-      <div class="fcard reveal"><div class="fic">🟢</div><h3 data-ar="مشاركة واتساب مبراندة" data-en="Branded WhatsApp share">مشاركة واتساب مبراندة</h3><p data-ar="ابعت الوحدة لعميلك بلمسة واحدة، بصورة وتفاصيل واسمك عليها." data-en="Send a unit to your client in one tap — photo, details, and your name on it.">ابعت الوحدة لعميلك بلمسة واحدة، بصورة وتفاصيل واسمك عليها.</p></div>
-      <div class="fcard reveal"><div class="fic">🔔</div><h3 data-ar="تنبيهات مطابقة" data-en="Match alerts">تنبيهات مطابقة</h3><p data-ar="أول ما تظهر وحدة تناسب عميل من عملاءك، يوصلك تنبيه فورًا." data-en="The moment a unit matches one of your clients, you get an instant alert.">أول ما تظهر وحدة تناسب عميل من عملاءك، يوصلك تنبيه فورًا.</p></div>
-      <div class="fcard reveal"><div class="fic">🏪</div><h3 data-ar="متجر البروكر" data-en="Broker storefront">متجر البروكر</h3><p data-ar="صفحة خاصة بيك بكل وحداتك، تبعت لينكها لأي عميل." data-en="Your own page with all your units — send its link to any client.">صفحة خاصة بيك بكل وحداتك، تبعت لينكها لأي عميل.</p></div>
-      <div class="fcard reveal"><div class="fic">🤝</div><h3 data-ar="Co-broking" data-en="Co-broking">Co-broking</h3><p data-ar="لوحة تشارك فيها وحداتك وتلاقي شركاء يقفلوا معاك أسرع." data-en="A board to share your units and find partners to close faster.">لوحة تشارك فيها وحداتك وتلاقي شركاء يقفلوا معاك أسرع.</p></div>
-      <div class="fcard reveal"><div class="fic">📊</div><h3 data-ar="عملاء جاهزين" data-en="Ready leads">عملاء جاهزين</h3><p data-ar="محادثات العملاء مع المستشار بتتحفظ كـ leads فيها كل تفاصيل طلبهم." data-en="Client conversations with the advisor are saved as leads with all their request details.">محادثات العملاء مع المستشار بتتحفظ كـ leads فيها كل تفاصيل طلبهم.</p></div>
+      <div class="fcard reveal"><div class="fic">📈</div><h3 data-ar="أسعار ومخزون محدّثين يوميًا" data-en="Prices & inventory updated daily">أسعار ومخزون محدّثين يوميًا</h3><p data-ar="أسعار ومساحات وأنظمة سداد أكتر من 900 مشروع لأكتر من 400 مطوّر، لكل مساحة — بمتابعة يومية من المطورين." data-en="Prices, sizes and payment plans for 900+ projects from 400+ developers, per size — tracked daily from the developers.">أسعار ومساحات وأنظمة سداد أكتر من 900 مشروع لأكتر من 400 مطوّر، لكل مساحة — بمتابعة يومية من المطورين.</p><a class="go" href="/app" data-ar="تصفّح المشاريع ←" data-en="Browse projects →">تصفّح المشاريع ←</a></div>
+      <div class="fcard reveal"><div class="fic">👥</div><h3 data-ar="CRM لعملاءك" data-en="Client CRM">CRM لعملاءك</h3><p data-ar="كل عميل بمرحلته واحتياجاته، متابعات ومعاينات وصفقات، ولوحة «يومي» بمهامك." data-en="Every client with stage and needs, follow-ups, viewings and deals, plus a “My day” task board.">كل عميل بمرحلته واحتياجاته، متابعات ومعاينات وصفقات، ولوحة «يومي» بمهامك.</p></div>
+      <div class="fcard reveal"><div class="fic">🤖</div><h3 data-ar="مساعد مبيعات ذكي" data-en="AI sales assistant">مساعد مبيعات ذكي</h3><p data-ar="يلخّص العميل، يرشّح المشاريع المطابقة لميزانيته ومنطقته من الكتالوج، ويكتبلك رسالة المتابعة." data-en="Summarises the client, suggests catalog projects that match their budget and area, and drafts your follow-up.">يلخّص العميل، يرشّح المشاريع المطابقة لميزانيته ومنطقته من الكتالوج، ويكتبلك رسالة المتابعة.</p></div>
+      <div class="fcard reveal"><div class="fic">🎙️</div><h3 data-ar="أوامر صوتية" data-en="Voice commands">أوامر صوتية</h3><p data-ar="قول «ضيف عميل…» أو «انقل أحمد لمرحلة التفاوض» والـCRM ينفّذ." data-en="Say “add a client…” or “move Ahmed to negotiation” and the CRM does it.">قول «ضيف عميل…» أو «انقل أحمد لمرحلة التفاوض» والـCRM ينفّذ.</p></div>
+      <div class="fcard reveal"><div class="fic">📄</div><h3 data-ar="عروض باسمك ولوجوك" data-en="Branded offers">عروض باسمك ولوجوك</h3><p data-ar="اعمل عرض PDF أو لينك مشاركة بالوحدات المختارة واسمك ولوجو شركتك." data-en="Create a PDF offer or share link with the chosen units, your name and your company logo.">اعمل عرض PDF أو لينك مشاركة بالوحدات المختارة واسمك ولوجو شركتك.</p></div>
+      <div class="fcard reveal"><div class="fic">🏠</div><h3 data-ar="وحداتك في جوجل" data-en="Your units on Google">وحداتك في جوجل</h3><p data-ar="ضيف وحداتك بالصور والسعر — كل وحدة ليها صفحة تظهر في البحث، ولوجوك على الصور." data-en="Add your units with photos and price — each gets an indexable page, with your logo on the photos.">ضيف وحداتك بالصور والسعر — كل وحدة ليها صفحة تظهر في البحث، ولوجوك على الصور.</p><a class="go" href="/my-listings" data-ar="وحداتي ←" data-en="My units →">وحداتي ←</a></div>
+      <div class="fcard reveal"><div class="fic">🤝</div><h3 data-ar="مجتمع البروكرز" data-en="Brokers community">مجتمع البروكرز</h3><p data-ar="اعرض طلب عميلك أو وحدة عندك، واقفل ديل مع بروكر في نفس المنطقة." data-en="Post a client request or a unit and close deals with brokers in the same area.">اعرض طلب عميلك أو وحدة عندك، واقفل ديل مع بروكر في نفس المنطقة.</p><a class="go" href="/community" data-ar="افتح المجتمع ←" data-en="Open community →">افتح المجتمع ←</a></div>
+      <div class="fcard reveal"><div class="fic">🏢</div><h3 data-ar="إدارة فريقك" data-en="Team management">إدارة فريقك</h3><p data-ar="لباقات الفريق والشركات: وكالة بأدوار وصلاحيات، توزيع العملاء على السيلز، ولوحة أداء للمدير." data-en="For team plans: an agency workspace with roles, client assignment and a manager performance board.">لباقات الفريق والشركات: وكالة بأدوار وصلاحيات، توزيع العملاء على السيلز، ولوحة أداء للمدير.</p><a class="go" href="/team" data-ar="إدارة الفريق ←" data-en="Team →">إدارة الفريق ←</a></div>
+      <div class="fcard reveal"><div class="fic">🏖️</div><h3 data-ar="استضافة Homzy Stays" data-en="Homzy Stays hosting">استضافة Homzy Stays</h3><p data-ar="اعرض وحدات الإيجار قصير المدة واستقبل حجوزات." data-en="List short-stay units and receive bookings.">اعرض وحدات الإيجار قصير المدة واستقبل حجوزات.</p><a class="go" href="/host" data-ar="ابدأ الاستضافة ←" data-en="Start hosting →">ابدأ الاستضافة ←</a></div>
     </div>
-    <div style="text-align:center; margin-top:36px">
-      <a class="btn btn-teal" href="/leads?register=1" data-ar="ابدأ كبروكر على Homzy" data-en="Get started as a broker">ابدأ كبروكر على Homzy</a>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head reveal"><h2 data-ar="تبدأ إزاي؟" data-en="How to start">تبدأ إزاي؟</h2></div>
+    <ol class="steps reveal">
+      <li><b data-ar="سجّل حسابك" data-en="Create your account">سجّل حسابك</b><span data-ar="برقم موبايلك — وتبدأ تجربة 14 يوم على باقة احترافي تلقائيًا." data-en="With your mobile number — your 14-day Pro trial starts automatically.">برقم موبايلك — وتبدأ تجربة 14 يوم على باقة احترافي تلقائيًا.</span></li>
+      <li><b data-ar="ضيف عملاءك" data-en="Add your clients">ضيف عملاءك</b><span data-ar="بالكتابة أو بالصوت، واكتب ميزانية ومنطقة كل عميل." data-en="By typing or by voice, with each client's budget and area.">بالكتابة أو بالصوت، واكتب ميزانية ومنطقة كل عميل.</span></li>
+      <li><b data-ar="خلّي المساعد يرشّح" data-en="Let the assistant match">خلّي المساعد يرشّح</b><span data-ar="افتح العميل، شوف المشاريع المطابقة، وابعتله عرض باسمك." data-en="Open the client, see matching projects, and send a branded offer.">افتح العميل، شوف المشاريع المطابقة، وابعتله عرض باسمك.</span></li>
+    </ol>
+    <div style="text-align:center; margin-top:30px">
+      <a class="btn btn-teal" href="/leads?register=1" data-ar="ابدأ مجانًا" data-en="Get started free">ابدأ مجانًا</a>
     </div>
   </div>
 </section>

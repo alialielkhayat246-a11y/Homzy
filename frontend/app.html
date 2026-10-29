@@ -146,6 +146,12 @@
   .filter-chip,.filter-clear{font:600 13px var(--ff);cursor:pointer;padding:7px 12px;border:1px solid var(--line);border-radius:100px;background:var(--teal-l);color:var(--teal-d);}.filter-clear{background:#fff;text-decoration:underline;}
   .savebtn:disabled{opacity:.55;cursor:not-allowed;}
   .pcard{display:flex;flex-direction:column;}.pcard .img{height:auto;aspect-ratio:16/10;flex-shrink:0;}.pcard .b{display:flex;flex-direction:column;flex:1;}.pcard .b .pr{font-size:19px;margin-top:14px;line-height:1.5;}.pcard .b .det{margin-top:auto;min-height:44px;}.pcard .b .meta2{font-size:12px;color:#526074;margin-bottom:14px;}.pcard .b .dv{color:#526074;}
+  .pcard .img{overflow:hidden;}.pcard .img>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .pcard .img .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy),var(--teal-d,#0B5563));}
+  .pcard .img .ph span{font:800 54px var(--fd);color:rgba(255,255,255,.22);}
+  .pcard .img .tag,.pcard .img .mk2,.pcard .img .cmpchk{z-index:1;}
+  .pcard:focus-visible{outline:3px solid var(--teal);outline-offset:2px;}
+  .grid-note{margin:4px 0 14px;}
   .unit-kinds{font-size:13px;font-weight:700;color:var(--teal-d);margin-top:7px;min-height:20px;}.range-note{font-size:12px;line-height:1.7;color:#526074;margin:10px 0 0;}
   .detail-skeleton{height:180px;border-radius:16px;margin-top:20px;}.detail-line{height:36px;border-radius:10px;margin-top:16px;}
   .dbody .dchips .c{font-size:14px;}.dbody .dchips{gap:10px;}.gallery img{width:160px;}.dactions{background:var(--cream);border-top:1px solid var(--line);padding-bottom:max(10px,env(safe-area-inset-bottom));}
@@ -220,6 +226,7 @@
     <span class="rescount" id="marketCount"></span>
   </div>
 
+  <p class="range-note grid-note" id="gridNote" data-ar="ℹ️ «يبدأ من» = أقل سعر وأصغر مساحة في المشروع، ومش لازم يكونوا لنفس الوحدة. افتح المشروع تشوف سعر ومساحة كل وحدة — والأسعار محتاجة تأكيد مع المطوّر قبل الحجز." data-en="ℹ️ “From” = the project's lowest price and smallest size, not necessarily the same unit. Open a project for each unit's price and size — confirm prices with the developer before booking.">ℹ️ «يبدأ من» = أقل سعر وأصغر مساحة في المشروع، ومش لازم يكونوا لنفس الوحدة. افتح المشروع تشوف سعر ومساحة كل وحدة — والأسعار محتاجة تأكيد مع المطوّر قبل الحجز.</p>
   <div class="grid" id="grid"></div>
   <div class="loadmore" id="loadMoreWrap" style="display:none">
     <button class="btn btn-navy" id="loadMoreBtn" onclick="loadProjects(false)" data-ar="عرض المزيد" data-en="Load more">عرض المزيد</button>
@@ -269,6 +276,7 @@ function switchTab(tab){
   document.getElementById('tabMarket').classList.toggle('on',tab==='market');
   document.getElementById('projFilters').style.display=tab==='projects'?'flex':'none';
   document.getElementById('marketFilters').style.display=tab==='market'?'flex':'none';
+  document.getElementById('gridNote').style.display=tab==='projects'?'':'none';
   if(tab==='projects') loadProjects(true); else loadMarket();
 }
 
@@ -301,8 +309,29 @@ function budgetRange(){
   const v=document.getElementById('fBudget').value; if(!v) return [null,null];
   const [a,b]=v.split('-'); return [a?+a:null, b?+b:null];
 }
+// Filters live in the URL (?area=&budget=&beds=&type=&ready=&sort=&q=) so a search
+// can be shared, bookmarked, and started from the homepage quick search.
+const URL_FIELDS={q:'q',area:'fArea',budget:'fBudget',beds:'fBeds',type:'fType',ready:'fReady',sort:'fSort'};
+function applyUrlFilters(){
+  const sp=new URLSearchParams(location.search);
+  for(const [k,id] of Object.entries(URL_FIELDS)){
+    if(k==='area' || !sp.has(k)) continue;   // area is resolved in loadAreas (name variants)
+    const el=document.getElementById(id), v=sp.get(k);
+    if(el.tagName==='SELECT'){ if([...el.options].some(o=>o.value===v)) el.value=v; } else el.value=v.slice(0,80);
+  }
+  if(['beds','ready','sort'].some(k=>sp.has(k))) document.querySelector('.advanced-filters')?.setAttribute('open','');
+}
+function syncUrl(){
+  const u=new URL(location.href);
+  for(const [k,id] of Object.entries(URL_FIELDS)){
+    const v=document.getElementById(id).value.trim();
+    if(v && !(k==='sort'&&v==='recent')) u.searchParams.set(k,v); else u.searchParams.delete(k);
+  }
+  if(u.href!==location.href) history.replaceState(history.state,'',u);
+}
 async function loadProjects(reset){
   renderActiveFilters();
+  if(reset) syncUrl();
   if(projLoading){ projectReloadPending=true; return; } projLoading=true;
   if(reset){ projOffset=0; skeletons(6); }
   const q=document.getElementById('q').value.trim();
@@ -319,7 +348,7 @@ async function loadProjects(reset){
     p_limit:PAGE, p_offset:projOffset };
   try{
     const rows=await fetchProjectRows(args, document.getElementById('fType').value);
-    await enrichTypes(rows);
+    await Promise.all([enrichTypes(rows), enrichImages(rows)]);
     if(TAB!=='projects')return;
     const grid=document.getElementById('grid');
     if(reset) grid.innerHTML='';
@@ -347,35 +376,60 @@ function bedsLabel(p){
   return (p.beds_min===p.beds_max)?one(p.beds_min)
     :(p.beds_min===0?t('studio'):p.beds_min)+'–'+one(p.beds_max);
 }
+// Card images: the cover first, then the project's own gallery images, then a
+// branded placeholder (some old cover hosts are gone — never show a blank box).
+const DEAD_IMG_HOSTS=/res\.cloudinary\.com\/boody-car/;
+let MEDIA_CACHE=new Map();   // project id -> [image urls]
+async function enrichImages(rows){
+  const need=rows.filter(p=>!MEDIA_CACHE.has(p.id)).map(p=>p.id);
+  if(need.length){
+    try{ const media=await sb('/project_media?select=project_id,url&kind=eq.image&project_id=in.('+need.join(',')+')&order=created_at.asc&limit=500')||[];
+      need.forEach(id=>MEDIA_CACHE.set(id,[]));
+      media.forEach(m=>{ if(m.url && !DEAD_IMG_HOSTS.test(m.url)) MEDIA_CACHE.get(m.project_id).push(m.url); });
+    }catch(e){ need.forEach(id=>MEDIA_CACHE.set(id,[])); }
+  }
+  rows.forEach(p=>{ const c=(p.cover_image_url&&!DEAD_IMG_HOSTS.test(p.cover_image_url))?[p.cover_image_url]:[];
+    p.imgs=[...new Set([...c,...(MEDIA_CACHE.get(p.id)||[]).slice(0,2)])]; });
+}
+function cardImg(p,name){
+  const ini=esc((name||'H').trim().charAt(0).toUpperCase());
+  const ph=`<span class="ph"><span>${ini}</span></span>`;
+  if(!p.imgs||!p.imgs.length) return ph;
+  return ph+`<img src="${esc(p.imgs[0])}" alt="${esc(name)}" loading="lazy" decoding="async" data-alt="${esc(JSON.stringify(p.imgs.slice(1)))}" onerror="cardImgErr(this)">`;
+}
+window.cardImgErr=(el)=>{ let rest=[]; try{ rest=JSON.parse(el.dataset.alt||'[]'); }catch(e){}
+  if(rest.length){ el.dataset.alt=JSON.stringify(rest.slice(1)); el.src=rest[0]; } else el.remove(); };
+function downLabel(p){ const m=String(p.down_payment||'').match(/(\d+(?:\.\d+)?)\s*%/); return m?(HZ.lang==='ar'?('مقدم '+m[1]+'%'):(m[1]+'% down')):''; }
 function projectCard(p){
   const d=document.createElement('div'); d.className='pcard'; d.dataset.id=p.id;
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
   const dev=p.developer_name||'';
-  const img=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
   const ready=p.status&&/ready|available/i.test(p.status);
   const stTxt=ready?(HZ.lang==='ar'?'استلام فوري':'Ready'):(HZ.lang==='ar'?'تحت الإنشاء':'Off-plan');
   const price=p.price_from_min!=null?`<div class="pr">${t('from')} ${money(p.price_from_min)}</div>`:'';
   const chips=[];
   if(p.size_from_min!=null){ const s=p.size_from_min+((p.size_to_max&&p.size_to_max>p.size_from_min)?('–'+p.size_to_max):''); chips.push(`<span class="pill">${HZ.lang==='ar'?'المساحات من':'Sizes from'} ${s} ${t('sqm')}</span>`); }
   const bl=bedsLabel(p); if(bl) chips.push(`<span class="pill">${bl}</span>`);
-  if(p.installment_years_max) chips.push(`<span class="pill">${HZ.lang==='ar'?('تقسيط حتى '+p.installment_years_max+' سنة'):('Up to '+p.installment_years_max+'y plan')}</span>`);
+  const dl=downLabel(p);
+  if(dl || p.installment_years_max) chips.push(`<span class="pill">${[dl, p.installment_years_max?(HZ.lang==='ar'?('تقسيط حتى '+p.installment_years_max+' سنة'):('up to '+p.installment_years_max+'y')):''].filter(Boolean).join(' · ')}</span>`);
   const delTxt=p.delivery?esc(HZ.catalog.text(p.delivery)):(ready?(HZ.lang==='ar'?'جاهز':'ready'):'');
   const inCmp=COMPARE.has(p.id);
-  d.innerHTML=`<div class="img" style="${img}">${p.area?`<span class="tag">${esc(HZ.catalog.area(p.area))}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span>
-      <button class="cmpchk${inCmp?' on':''}" title="${t('compare')}">${inCmp?'✓':'⇄'}<span>${t('compare')}</span></button></div>
+  d.innerHTML=`<div class="img">${cardImg(p,name)}${p.area?`<span class="tag">${esc(HZ.catalog.area(p.area))}</span>`:''}<span class="mk2 ${ready?'rdy':'off'}">${stTxt}</span>
+      <button class="cmpchk${inCmp?' on':''}" title="${t('compare')}" aria-pressed="${inCmp}">${inCmp?'✓':'⇄'}<span>${t('compare')}</span></button></div>
     <div class="b">
       <div class="nm">${esc(name)}</div>
       ${dev?`<div class="dv">${esc(dev)}</div>`:''}
       <div class="unit-kinds">${(p.unitKinds||[]).map(type=>esc(unitTypeLabel({type}))).join(' · ')}</div>
       ${price}
       <div class="row">${chips.join('')}</div>
-      <p class="range-note">${HZ.lang==='ar'?'الأسعار والمساحات حدود بداية مستقلة؛ اختار وحدة لعرض سعرها ومساحتها معًا.':'Prices and sizes are independent starting values. See units for exact combinations.'}</p>
-      <div class="meta2"><span class="del">${delTxt?delTxt:''}</span><span class="upd">${relTime(p.updated_at)}</span></div>
+      <div class="meta2"><span class="del">${delTxt?('🗓️ '+delTxt):''}</span><span class="upd">${relTime(p.updated_at)}</span></div>
       <button class="det" data-ar="عرض التفاصيل" data-en="View details">عرض التفاصيل</button>
     </div>`;
   d.querySelector('.det').onclick=(e)=>{ e.stopPropagation(); openProject(p.id); };
   d.querySelector('.cmpchk').onclick=(e)=>{ e.stopPropagation(); toggleCompare(p, d); };
   d.onclick=()=>openProject(p.id);
+  d.tabIndex=0; d.setAttribute('role','link'); d.setAttribute('aria-label',name);
+  d.onkeydown=(e)=>{ if((e.key==='Enter'||e.key===' ') && e.target===d){ e.preventDefault(); openProject(p.id); } };
   return d;
 }
 
@@ -400,7 +454,7 @@ function updateCmpTray(){
   const thumbs=document.getElementById('cmpThumbs');
   thumbs.innerHTML=[...COMPARE.values()].map(p=>{
     const nm=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
-    const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+    const im=(p.imgs&&p.imgs[0])||''; const bg=im?`background-image:url('${esc(im)}')`:'';
     return `<div class="cmp-thumb" style="${bg}" title="${esc(nm)}"><button onclick="removeCompare('${p.id}')">×</button></div>`;
   }).join('');
   document.getElementById('cmpClearBtn').textContent=t('cmpclear');
@@ -440,7 +494,7 @@ function openCompare(){
   if(items.length<2){ flashTray(t('cmppick')); return; }
   const names=items.map(p=>HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar));
   const heads=items.map((p,i)=>{
-    const bg=p.cover_image_url?`background-image:url('${esc(p.cover_image_url)}')`:'';
+    const im=(p.imgs&&p.imgs[0])||''; const bg=im?`background-image:url('${esc(im)}')`:'';
     return `<th class="cmp-h"><div class="cmp-hc"><div class="cmp-himg" style="${bg}"></div><div class="cmp-hn">${esc(names[i])}</div><button class="cmp-hview" onclick="closeCompare();openProject('${p.id}')" data-ar="التفاصيل" data-en="Details">التفاصيل</button></div></th>`;
   }).join('');
   // value helpers
@@ -607,7 +661,7 @@ function projectDetail(p,units,media,others){
   others=others||[];
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
   const dev=p.developer||{};
-  const cover=p.cover_image_url||(media.find(m=>m.kind==='image')||{}).url||'';
+  const cover=(p.cover_image_url&&!DEAD_IMG_HOSTS.test(p.cover_image_url)?p.cover_image_url:'')||(media.find(m=>m.kind==='image'&&!DEAD_IMG_HOSTS.test(m.url))||{}).url||'';
   const images=media.filter(m=>m.kind==='image'&&m.url);
   const brochure=(media.find(m=>m.kind==='brochure')||{}).url;
   const minPrice=units.map(u=>u.price_from).filter(x=>x).sort((a,b)=>a-b)[0];
@@ -853,6 +907,7 @@ for(const [id,ar,en] of [['q','ابحث باسم المشروع أو المطو�
 
 /* init */
 if(new URLSearchParams(location.search).get('list')) document.getElementById('listInfo').classList.add('show');
+applyUrlFilters();
 loadAreas().then(async()=>{ loadProjects(true); loadSaved(); const project=new URLSearchParams(location.search).get('project'); if(project && /^[0-9a-f-]{36}$/i.test(project))openProject(project); const listing=new URLSearchParams(location.search).get('listing');if(listing&&/^[0-9a-f-]{36}$/i.test(listing)){try{const rows=await sb('/listings?id=eq.'+listing+'&status=eq.active&select=*,listing_media(url,sort,is_360)');if(rows?.[0])openListing(rows[0]);}catch{/* Existing marketplace remains available. */}} });
 </script>
 </body>
