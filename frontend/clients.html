@@ -602,7 +602,7 @@ window.chatLead=async(id)=>{
   $('cvThread').innerHTML='<div style="text-align:center;color:#66717F;padding:16px">…</div>';
   $('cvText').value=''; $('cvOv').classList.add('open');
   const on=await waEnabled();
-  $('cvHint').textContent = on ? 'الإرسال عبر واتساب Homzy مفعّل.' : 'واتساب API مش مفعّل — الإرسال بيفتح واتساب ويتسجّل في المحادثة.';
+  $('cvHint').textContent = on ? 'الإرسال عبر واتساب Homzy مفعّل.' : 'الإرسال بيفتح واتساب بتاعك والرسالة بتتسجّل في المحادثة.';
   await loadThread(id);
 };
 async function loadThread(id){
