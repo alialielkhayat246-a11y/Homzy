@@ -10,6 +10,8 @@
 (function(){
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
 const SB_KEY='sb_publishable_akQqDzkDbBhYJP0q6Z4Dtg_xjQh_Xfb';
+// Pages (host dashboard, admin, pricing) call Storage directly with these public values.
+window.SB_URL=SB_URL; window.SB_KEY=SB_KEY;
 
 const HZ = window.HZ = {
   lang: localStorage.getItem('hz_lang') || 'ar',
@@ -372,9 +374,11 @@ HZ.loadNotifs=async function(){ const s=HZ.session(); if(!s) return;
   HZ._notifs=rows; const un=rows.filter(r=>!r.read_at).length; const bd=document.getElementById('hzBellBadge');
   if(bd){ bd.textContent=un>99?'99+':(''+un); bd.hidden=un===0; } if(document.getElementById('hzNotif')&&document.getElementById('hzNotif').classList.contains('open')) HZ._renderNotif(); };
 HZ._renderNotif=function(){ const p=document.getElementById('hzNotif'); if(!p) return; const rows=HZ._notifs||[];
-  const ic={lead_new:'🎯',deal_won:'🎉',task:'✅',viewing:'🏠'};
+  const ic={lead_new:'🎯',deal_won:'🎉',task:'✅',viewing:'🏠',manual_payment:'💳',payment_approved:'✅',payment_rejected:'⚠️'};
+  const go={manual_payment:'/admin/payments',payment_approved:'/pricing',payment_rejected:'/pricing'};
   const body = rows.length ? rows.map(n=>{ const t=n.created_at?new Date(n.created_at).toLocaleString(HZ.lang==='ar'?'ar-EG':'en-US',{dateStyle:'short',timeStyle:'short'}):'';
-    return `<div class="hz-notif-item${n.read_at?'':' unread'}"><div class="i">${ic[n.type]||'🔔'}</div><div class="b"><div class="t">${HZ.esc(n.title||'')}</div>${n.body?`<div class="m">${HZ.esc(n.body)}</div>`:''}<div class="d">${t}</div></div></div>`;
+    const inner=`<div class="i">${ic[n.type]||'🔔'}</div><div class="b"><div class="t">${HZ.esc(n.title||'')}</div>${n.body?`<div class="m">${HZ.esc(n.body)}</div>`:''}<div class="d">${t}</div></div>`;
+    return go[n.type]?`<a class="hz-notif-item${n.read_at?'':' unread'}" href="${go[n.type]}" style="color:inherit;text-decoration:none">${inner}</a>`:`<div class="hz-notif-item${n.read_at?'':' unread'}">${inner}</div>`;
   }).join('') : `<div class="hz-notif-empty">${HZ.lang==='ar'?'لا توجد تنبيهات':'No notifications'}</div>`;
   p.innerHTML=`<div class="hz-notif-h"><span>${HZ.lang==='ar'?'التنبيهات':'Notifications'}</span><a href="/crm">CRM</a></div><div class="hz-notif-list">${body}</div>`; };
 HZ.toggleNotifs=function(ev){ if(ev) ev.stopPropagation(); const p=document.getElementById('hzNotif'); if(!p) return;

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — مدفوعات التحويل</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  .ad{max-width:1080px;margin:0 auto;padding:22px;}
+  .filters{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;}
+  .filters button{padding:7px 13px;border-radius:100px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--ff);}
+  .filters button.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;flex-wrap:wrap;}
+  .row .info{flex:1;min-width:240px;} .row .t{font-weight:800;font-size:16px;} .row .m{color:#40506a;font-size:13.5px;margin-top:5px;line-height:1.7;}
+  .row .amt{font:800 20px var(--fd);color:var(--teal-d);}
+  .ref{direction:ltr;unicode-bidi:plaintext;font-family:monospace;background:var(--cream);padding:2px 7px;border-radius:6px;}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .acts button{font-size:13px;padding:8px 13px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;cursor:pointer;font-family:var(--ff);}
+  .acts .ok{border-color:#137a3e;color:#137a3e;} .acts .no{border-color:#B42318;color:#B42318;}
+  .badge{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:100px;}
+  .badge.pending{background:#FFF4E5;color:#B45309;} .badge.approved{background:#E6F6EC;color:#137a3e;} .badge.rejected{background:#FDECEC;color:#B42318;}
+  .form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin:10px 0 22px;}
+  .form .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;} @media(max-width:640px){.form .grid{grid-template-columns:1fr;}}
+  .fld{display:flex;flex-direction:column;gap:5px;} .fld label{font-size:13px;font-weight:700;color:#40506a;}
+  .fld input{border:1.5px solid var(--line-2);border-radius:9px;padding:9px 11px;font-family:var(--ff);font-weight:600;}
+  .msg{font-weight:800;margin-top:8px;} .empty{padding:40px;text-align:center;color:var(--muted);}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="ad">
+  <h1>مدفوعات التحويل</h1>
+  <p style="color:var(--muted);margin-top:6px">اتأكد إن التحويل وصلك فعلًا قبل ما تدوس «تأكيد» — التأكيد بيفعّل الاشتراك أو الشحن فورًا.</p>
+  <div id="content"><div class="empty">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=12"></script>
+<script>
+let S=null, FILTER='pending', SET=null;
+const money=n=>Number(n||0).toLocaleString('ar-EG');
+const rpc=(fn,a)=>HZ.sbAuth('/rpc/'+fn, S.token, 'POST', a||{});
+const esc=HZ.esc;
+const WAY={instapay:'InstaPay',wallet:'محفظة موبايل',bank:'تحويل بنكي'};
+const PLAN={pro:'احترافي',team:'فريق',business:'شركة'};
+
+function what(r){
+  if(r.kind==='ai_credits') return 'شحن رسايل AI ('+esc(r.ref.pack||'')+')';
+  return 'باقة '+(PLAN[r.ref.plan]||esc(r.ref.plan))+(r.ref.seats?' · '+r.ref.seats+' مقعد':'')+' · '+(r.ref.cycle==='yearly'?'سنوي':'شهري');
+}
+function settingsHTML(){
+  const v=k=>esc((SET&&SET[k])||'');
+  return `<div class="form"><h3 style="margin:0 0 12px">بيانات استلام التحويل (بتظهر للبروكر)</h3>
+    <div class="grid">
+      <div class="fld"><label>InstaPay (العنوان أو الرقم)</label><input id="sInsta" value="${v('instapay')}" placeholder="name@instapay"></div>
+      <div class="fld"><label>محفظة موبايل (الرقم)</label><input id="sWallet" value="${v('wallet')}" placeholder="010xxxxxxxx"></div>
+      <div class="fld"><label>تحويل بنكي (البنك · الاسم · رقم الحساب/IBAN)</label><input id="sBank" value="${v('bank')}"></div>
+      <div class="fld"><label>ملاحظة للبروكر (اختياري)</label><input id="sNote" value="${v('note_ar')}" placeholder="مثال: التأكيد خلال ساعات العمل"></div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-weight:700"><input type="checkbox" id="sActive" ${SET&&SET.active?'checked':''}> الدفع بالتحويل مفعّل في صفحة الأسعار</label>
+    <div class="acts" style="margin-top:12px"><button class="ok" onclick="saveSet()">حفظ</button><span class="msg" id="sMsg"></span></div></div>`;
+}
+async function render(){
+  const box=document.getElementById('content');
+  let rows=[]; try{ rows=await rpc('admin_manual_pay_list',{p_status:FILTER})||[]; }catch(e){ box.innerHTML='<div class="empty">الصفحة دي للأدمن بس.</div>'; return; }
+  box.innerHTML = settingsHTML()
+    + `<div class="filters">${[['pending','بانتظار التأكيد'],['approved','مؤكدة'],['rejected','مرفوضة'],['all','الكل']].map(([k,l])=>`<button class="${k===FILTER?'on':''}" onclick="setF('${k}')">${l}</button>`).join('')}</div>`
+    + (rows.map(r=>{
+      const wa=(r.phone||'').replace(/\D/g,'');
+      return `<div class="row"><div class="info">
+        <div class="t">${esc(r.name||r.phone||r.email||'—')} ${r.company?'· '+esc(r.company):''} <span class="badge ${r.status}">${({pending:'بانتظار التأكيد',approved:'مؤكد',rejected:'مرفوض'})[r.status]}</span></div>
+        <div class="m">${what(r)} — <span class="amt">${money(r.amount)} ج.م</span></div>
+        <div class="m">${WAY[r.method]||esc(r.method)} · رقم العملية/المحوِّل: <span class="ref">${esc(r.reference)}</span></div>
+        <div class="m">${new Date(r.created_at).toLocaleString('ar-EG')} · الباقة الحالية: ${esc(r.current_plan||'')}${wa?` · <a href="https://wa.me/${wa}" target="_blank" rel="noopener">واتساب</a> · <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>`:''}</div>
+        ${r.admin_note?`<div class="m">ملاحظة: ${esc(r.admin_note)}</div>`:''}
+      </div><div class="acts">
+        ${r.proof_path?`<button onclick="viewProof('${esc(r.proof_path)}')">🖼️ صورة التحويل</button>`:''}
+        ${r.status==='pending'?`<button class="ok" onclick="decide('${r.id}',true)">✅ تأكيد وتفعيل</button><button class="no" onclick="decide('${r.id}',false)">رفض</button>`:''}
+      </div></div>`; }).join('') || '<div class="empty">مفيش طلبات هنا.</div>');
+}
+window.setF=(f)=>{ FILTER=f; render(); };
+window.decide=async(id,ok)=>{
+  let note=null;
+  if(ok){ if(!confirm('اتأكدت إن التحويل وصلك؟ التأكيد بيفعّل الاشتراك فورًا.')) return; }
+  else { note=prompt('سبب الرفض (هيوصل للبروكر):',''); if(note===null) return; }
+  try{ const r=await rpc('admin_manual_pay_decide',{p_id:id,p_approve:ok,p_note:note}); if(!(r&&r.ok)) alert('خطأ: '+((r&&r.error)||'')); }
+  catch(e){ alert('خطأ: '+(e.message||e)); }
+  render();
+};
+window.viewProof=async(path)=>{
+  try{ const res=await fetch(SB_URL+'/storage/v1/object/sign/payment-proofs/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:300})});
+    const j=await res.json(); if(j&&j.signedURL) window.open(SB_URL+'/storage/v1'+j.signedURL,'_blank'); else alert('تعذّر فتح الصورة'); }catch(e){ alert('تعذّر فتح الصورة'); }
+};
+window.saveSet=async()=>{
+  const g=id=>document.getElementById(id).value.trim()||null, m=document.getElementById('sMsg');
+  const body={instapay:g('sInsta'),wallet:g('sWallet'),bank:g('sBank'),note_ar:g('sNote'),active:document.getElementById('sActive').checked,updated_at:new Date().toISOString()};
+  if(body.active && !body.instapay && !body.wallet && !body.bank){ m.style.color='#B42318'; m.textContent='اكتب طريقة دفع واحدة على الأقل.'; return; }
+  try{ await HZ.sbAuth('/manual_pay_settings?id=eq.1', S.token,'PATCH',body,{Prefer:'return=minimal'}); SET={...SET,...body}; m.style.color='#137a3e'; m.textContent='اتحفظ ✅'; }
+  catch(e){ m.style.color='#B42318'; m.textContent='تعذّر الحفظ'; }
+};
+async function boot(){
+  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
+  try{ SET=(await HZ.sb('/manual_pay_settings?select=*&id=eq.1')||[])[0]||null; }catch(e){}
+  render();
+}
+boot();
+</script>
+</body>
+</html>

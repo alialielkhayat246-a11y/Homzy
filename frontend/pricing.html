@@ -61,6 +61,20 @@
   .curplan .cp-btns button:disabled{opacity:.6;cursor:default;}
   @media(max-width:560px){.curplan{flex-direction:column;align-items:flex-start;} .curplan .cp-r{text-align:start;} .curplan .cp-btns{justify-content:flex-start;}}
   .curplan[hidden],.topup[hidden]{display:none;}
+  .mp-ov{position:fixed;inset:0;background:rgba(11,29,54,.55);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+  .mp-ov.open{display:flex;}
+  .mp{background:#fff;border-radius:18px;max-width:480px;width:100%;max-height:92vh;overflow:auto;padding:22px;box-shadow:var(--shadow);}
+  .mp h3{font-size:20px;} .mp .amt{font:800 28px var(--fd);color:var(--teal-d);margin:6px 0 2px;}
+  .mp .sum{color:#5b6b82;font-size:14px;}
+  .mp .way{border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:10px;display:flex;gap:10px;align-items:center;cursor:pointer;}
+  .mp .way.on{border-color:var(--teal);background:var(--teal-l);}
+  .mp .way b{display:block;font-size:14px;} .mp .way span{font-size:13px;color:#40506a;direction:ltr;unicode-bidi:plaintext;word-break:break-all;}
+  .mp .way button{margin-inline-start:auto;font:700 12px var(--ff);border:1px solid var(--line-2);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;}
+  .mp label{display:block;font-weight:700;font-size:13.5px;margin:14px 0 6px;}
+  .mp input[type=text],.mp input[type=file]{width:100%;border:1.5px solid var(--line-2);border-radius:10px;padding:10px 12px;font-family:var(--ff);font-size:14px;}
+  .mp .row2{display:flex;gap:10px;margin-top:18px;} .mp .row2 .btn{flex:1;}
+  .mp .msg{margin-top:10px;font-weight:700;font-size:14px;} .mp .msg.err{color:#B42318;} .mp .msg.ok{color:#137a3e;}
+  .mp .note{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.7;}
 </style>
 </head>
 <body data-mode="broker">
@@ -84,6 +98,7 @@
     </div>
     <div id="plans" class="plans"><div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:40px">…</div></div>
     <div class="topup" id="topup" hidden></div>
+    <div class="mp-ov" id="mpOv" role="dialog" aria-modal="true" aria-labelledby="mpTitle" onclick="if(event.target===this)closeMP()"><div class="mp" id="mpBox"></div></div>
     <div class="note">
       <span id="payNote"></span><br>
       <span data-ar="الأسعار بالجنيه المصري شاملة، وممكن تتغير." data-en="Prices are in EGP, inclusive, and may change.">الأسعار بالجنيه المصري شاملة، وممكن تتغير.</span>
@@ -91,9 +106,9 @@
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=11"></script>
+<script src="/assets/homzy.js?v=12"></script>
 <script>
-let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null;
+let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[];
 const ar=()=>!(window.HZ&&HZ.lang==='en');
 const L=(a,e)=>ar()?a:e;
 const money=n=>Number(n).toLocaleString(ar()?'ar-EG':'en-US');
@@ -138,8 +153,8 @@ function planCard(p){
   if(p.contact_only) cta = `<a class="btn btn-navy cta" href="/contact">${L('تواصل معانا','Contact us')}</a>`;
   else if(isCur) cta = `<div class="cur">${L('باقتك الحالية ✓','Your current plan ✓')}</div>`;
   else {
-    const payBtn = PAY_ON ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">${L('اشترك الآن','Subscribe now')} · ${money(price)} ${cur()}</button>` : '';
-    cta = payBtn + `<button class="btn ${PAY_ON?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${PAY_ON?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('جرّب 14 يوم مجانًا','Try free for 14 days')}</button>`;
+    const payBtn = (PAY_ON||MANUAL) ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">${L('اشترك الآن','Subscribe now')} · ${money(price)} ${cur()}</button>` : '';
+    cta = payBtn + `<button class="btn ${(PAY_ON||MANUAL)?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${(PAY_ON||MANUAL)?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('جرّب 14 يوم مجانًا','Try free for 14 days')}</button>`;
   }
   return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?`<span class="tag">${L('الأكثر رواجًا','Most popular')}</span>`:''}
     <h3>${HZ.esc(ar()?p.name_ar:(p.name_en||p.name_ar))}</h3>
@@ -154,7 +169,7 @@ function render(){ document.getElementById('plans').innerHTML = PLANS.map(planCa
 function renderTopup(){
   const box=document.getElementById('topup'); const pk=PACKS[0];
   if(!pk){ box.hidden=true; return; }
-  const btn = PAY_ON ? `<button class="btn btn-teal" onclick="buyPack('${pk.key}')">${L('اشحن الآن','Top up now')} · ${money(pk.price)} ${cur()}</button>`
+  const btn = (PAY_ON||MANUAL) ? `<button class="btn btn-teal" onclick="buyPack('${pk.key}')">${L('اشحن الآن','Top up now')} · ${money(pk.price)} ${cur()}</button>`
                      : `<span style="color:var(--muted);font-size:13px">${L('الشحن بيتفعّل مع بوابة الدفع قريبًا','Top-ups open with the payment gateway soon')}</span>`;
   box.innerHTML = `<div><b>⚡ ${L('شحن رسايل ذكاء اصطناعي','AI message top-up')}: ${money(pk.messages)} ${L('رسالة بـ','messages for')} ${money(pk.price)} ${cur()}</b>
     <p>${L('لما رصيدك اليومي أو رصيد فريقك الشهري يخلص، الشحن بيكمّل بيه — صالح '+pk.valid_days+' يوم. لأي باقة مدفوعة.','When your daily or team monthly allowance runs out, the top-up takes over — valid '+pk.valid_days+' days. For any paid plan.')}</p></div>${btn}`;
@@ -177,9 +192,10 @@ const payErr=r=>{ const e=(r&&r.error)||''; return ({subscription_required:L('ا
 window.payPlan=async(plan)=>{
   const p=PLANS.find(x=>x.plan===plan); const ref={plan,cycle:CYC};
   if(plan==='team'||plan==='business') ref.seats=seatsOf(p);
+  if(!PAY_ON && MANUAL) return openMP('subscription', ref, priceOf(p), (ar()?p.name_ar:p.name_en)+(ref.seats?' · '+ref.seats+L(' مقعد',' seats'):'')+' · '+(CYC==='yearly'?L('سنوي','yearly'):L('شهري','monthly')));
   const r=await HZ.pay('subscription',ref); if(!(r&&r.ok)) alert(L('تعذّر فتح صفحة الدفع: ','Could not open checkout: ')+payErr(r));
 };
-window.buyPack=async(key)=>{ const r=await HZ.pay('ai_credits',{pack:key}); if(!(r&&r.ok)) alert(L('تعذّر فتح صفحة الدفع: ','Could not open checkout: ')+payErr(r)); };
+window.buyPack=async(key)=>{ const pk=PACKS.find(x=>x.key===key); if(!PAY_ON && MANUAL) return openMP('ai_credits',{pack:key},pk.price,(ar()?pk.name_ar:pk.name_en)); const r=await HZ.pay('ai_credits',{pack:key}); if(!(r&&r.ok)) alert(L('تعذّر فتح صفحة الدفع: ','Could not open checkout: ')+payErr(r)); };
 let SUB=null;
 const fmtDate=d=>{ try{ return new Date(d).toLocaleDateString(ar()?'ar-EG':'en-US',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } };
 const daysLeft=d=>{ const n=Math.ceil((new Date(d)-Date.now())/864e5); return n>0?n:0; };
@@ -211,6 +227,7 @@ function renderCurrentBanner(){
        : (USAGE.limit!=null ? L('رسايل AI النهارده: '+money(USAGE.used)+' من '+money(USAGE.limit),'AI messages today: '+USAGE.used+' of '+USAGE.limit) : '');
     if(USAGE.credits>0) ai += L(' · رصيد مشحون: '+money(USAGE.credits),' · Top-up left: '+USAGE.credits);
   }
+  if(PENDING.length) ai += (ai?' · ':'')+L('⏳ عندك '+PENDING.length+' طلب دفع بيتراجع','⏳ '+PENDING.length+' payment request(s) under review');
   document.getElementById('cpAI').textContent = ai;
   const canCancel = own && (st==='trialing' || st==='active');
   const actions = (own && st!=='free')
@@ -234,19 +251,66 @@ window.cancelSub=async()=>{
     if(btn){ btn.disabled=false; btn.textContent=L('إلغاء الاشتراك','Cancel subscription'); }
   }
 };
+// ---------- Manual payment (InstaPay / wallet / bank) until a card gateway is live ----------
+let MP=null;
+const MP_WAYS=[['instapay','InstaPay','InstaPay'],['wallet','محفظة موبايل (فودافون كاش وغيرها)','Mobile wallet'],['bank','تحويل بنكي','Bank transfer']];
+window.openMP=(kind,ref,amount,summary)=>{
+  const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
+  const ways=MP_WAYS.filter(w=>MANUAL[w[0]]);
+  MP={kind,ref,amount,way:ways[0]&&ways[0][0]};
+  document.getElementById('mpBox').innerHTML=`<h3 id="mpTitle">${L('ادفع بالتحويل','Pay by transfer')}</h3>
+    <div class="sum">${HZ.esc(summary||'')}</div><div class="amt">${money(amount)} ${cur()}</div>
+    <p class="note">${L('1) حوّل المبلغ بالظبط على واحدة من الطرق دي  2) اكتب رقم العملية أو اسم المحوِّل  3) هنأكّد التحويل ونفعّل اشتراكك.','1) Transfer the exact amount  2) Enter the transaction number or sender name  3) We confirm and activate your plan.')}</p>
+    ${ways.map(w=>`<div class="way ${w[0]===MP.way?'on':''}" data-way="${w[0]}" onclick="pickWay('${w[0]}')"><div><b>${ar()?w[1]:w[2]}</b><span>${HZ.esc(MANUAL[w[0]])}</span></div><button type="button" onclick="event.stopPropagation();copyTxt(this,${HZ.esc(JSON.stringify(MANUAL[w[0]]))})">${L('نسخ','Copy')}</button></div>`).join('')}
+    ${(ar()?MANUAL.note_ar:MANUAL.note_en)?`<p class="note">${HZ.esc(ar()?MANUAL.note_ar:MANUAL.note_en)}</p>`:''}
+    <label for="mpRef">${L('رقم العملية / اسم المحوِّل','Transaction no. / sender name')}</label>
+    <input type="text" id="mpRef" maxlength="80" autocomplete="off">
+    <label for="mpFile">${L('صورة التحويل (اختياري)','Transfer screenshot (optional)')}</label>
+    <input type="file" id="mpFile" accept="image/jpeg,image/png,image/webp">
+    <div class="msg" id="mpMsg" role="status" aria-live="polite"></div>
+    <div class="row2"><button class="btn btn-ghost" type="button" onclick="closeMP()">${L('إلغاء','Cancel')}</button><button class="btn btn-teal" type="button" id="mpSend" onclick="sendMP()">${L('ابعت للتأكيد','Send for confirmation')}</button></div>`;
+  document.getElementById('mpOv').classList.add('open'); setTimeout(()=>document.getElementById('mpRef').focus(),50);
+};
+window.closeMP=()=>document.getElementById('mpOv').classList.remove('open');
+window.pickWay=(w)=>{ MP.way=w; document.querySelectorAll('#mpBox .way').forEach(e=>e.classList.toggle('on',e.dataset.way===w)); };
+window.copyTxt=async(b,t)=>{ try{ await navigator.clipboard.writeText(t); b.textContent=L('اتنسخ ✓','Copied ✓'); }catch(e){} };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMP(); });
+window.sendMP=async()=>{
+  const s=HZ.session(), msg=document.getElementById('mpMsg'), btn=document.getElementById('mpSend');
+  const ref=document.getElementById('mpRef').value.trim(), file=document.getElementById('mpFile').files[0];
+  if(ref.length<3){ msg.className='msg err'; msg.textContent=L('اكتب رقم العملية أو اسم المحوِّل.','Enter the transaction number or sender name.'); return; }
+  if(file && file.size>5*1024*1024){ msg.className='msg err'; msg.textContent=L('الصورة أكبر من 5 ميجا.','Image is over 5 MB.'); return; }
+  btn.disabled=true; msg.className='msg'; msg.textContent=L('جاري الإرسال…','Sending…');
+  let proof=null;
+  try{
+    if(file){
+      const ext=(file.type.split('/')[1]||'jpg').replace('jpeg','jpg'); proof=s.uid+'/'+Date.now()+'.'+ext;
+      const up=await fetch(SB_URL+'/storage/v1/object/payment-proofs/'+proof,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+s.token,'Content-Type':file.type},body:file});
+      if(!up.ok) throw new Error('upload');
+    }
+    const r=await HZ.sbAuth('/rpc/manual_pay_request', s.token,'POST',{p_kind:MP.kind,p_ref:MP.ref,p_method:MP.way,p_reference:ref,p_proof:proof});
+    if(!(r&&r.ok)){ const m={too_many_pending:L('عندك طلبات لسه بتتراجع — استنى التأكيد.','You already have requests under review.'),subscription_required:L('الشحن متاح للباقات المدفوعة بس.','Top-ups need an active plan.'),manual_disabled:L('الدفع بالتحويل مش متاح دلوقتي.','Transfer payment is not available now.')};
+      throw new Error(m[r&&r.error]||((r&&r.error)||'error')); }
+    document.getElementById('mpBox').innerHTML=`<h3>✅ ${L('وصل طلبك','Request received')}</h3><p class="note" style="font-size:14.5px">${L('هنراجع التحويل ونفعّل حسابك في أقرب وقت، وهيوصلك إشعار هنا أول ما يتأكد.','We\'ll check the transfer and activate your account soon — you\'ll get a notification once confirmed.')}</p><div class="row2"><button class="btn btn-teal" onclick="closeMP();location.reload()">${L('تمام','OK')}</button></div>`;
+  }catch(e){ msg.className='msg err'; msg.textContent=(e.message==='upload'?L('تعذّر رفع الصورة — جرّب تاني أو ابعت من غير صورة.','Could not upload the image — retry or send without it.'):e.message); btn.disabled=false; }
+};
+
 function renderPayNote(){
   document.getElementById('payNote').innerHTML = PAY_ON ? L('💳 الدفع أونلاين بالكارت أو المحفظة.','💳 Pay online by card or wallet.')
+    : MANUAL ? L('💳 الدفع بالتحويل (InstaPay / محفظة / بنك) — وبنفعّل حسابك بعد تأكيد التحويل.','💳 Pay by transfer (InstaPay / wallet / bank) — we activate your account once the transfer is confirmed.')
     : L('💳 الدفع أونلاين بيتفعّل قريبًا — دلوقتي تقدر تبدأ <b>تجربة مجانية 14 يوم</b>.','💳 Online payment opens soon — for now start a <b>free 14-day trial</b>.');
 }
 async function boot(){
   try{ PAY_ON = await HZ.checkPay(); }catch(e){ PAY_ON=false; }
   try{ PLANS=await HZ.sb('/plan_limits?select=*&active=eq.true&order=sort')||[]; }catch(e){ PLANS=[]; }
   try{ PACKS=await HZ.sb('/ai_topup_packs?select=*&active=eq.true&order=price')||[]; }catch(e){ PACKS=[]; }
+  try{ const m=(await HZ.sb('/manual_pay_settings?select=*&id=eq.1')||[])[0]; MANUAL=(m&&m.active&&(m.instapay||m.wallet||m.bank))?m:null; }catch(e){ MANUAL=null; }
   const s=HZ.session();
   if(s){
     try{ const cp=await HZ.rpc('current_plan',{p_uid:s.uid}); CURRENT=(typeof cp==='string')?cp:((cp&&cp[0])||'free'); }catch(e){}
     try{ SUB=(await HZ.sbAuth('/subscriptions?user_id=eq.'+s.uid+'&select=plan,status,billing_cycle,trial_end,current_period_end,seats', s.token))[0]||null; }catch(e){}
     try{ USAGE=await HZ.sbAuth('/rpc/ai_usage_today', s.token,'POST',{}); }catch(e){}
+    try{ PENDING=await HZ.sbAuth('/manual_payments?user_id=eq.'+s.uid+'&status=eq.pending&select=amount,created_at', s.token)||[]; }catch(e){}
   }
   render(); renderPayNote();
   renderCurrentBanner();

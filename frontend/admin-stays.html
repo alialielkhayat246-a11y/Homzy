@@ -42,11 +42,12 @@
 <div id="hz-header"></div>
 <div class="ad">
   <h1 data-ar="إدارة Homzy Stays" data-en="Homzy Stays admin">إدارة Homzy Stays</h1>
+  <a href="/admin/payments" style="display:inline-block;margin-top:8px;font-weight:800;color:var(--teal-d)">💳 مدفوعات التحويل (InstaPay / محفظة / بنك) ←</a>
   <div class="anav" id="anav"></div>
   <div id="content"><div class="empty">…</div></div>
 </div>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=11"></script>
+<script src="/assets/homzy.js?v=12"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 const money=n=>n==null?'0':Number(n).toLocaleString(ar()?'ar-EG':'en-US');

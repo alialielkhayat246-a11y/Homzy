@@ -862,6 +862,12 @@ def admin_stays_page():
     return FileResponse(config.FRONTEND_DIR / "admin-stays.html")
 
 
+@app.get("/admin/payments")
+def admin_payments_page():
+    """Manual (InstaPay / wallet / bank) payment review — data is admin-only via RPC."""
+    return FileResponse(config.FRONTEND_DIR / "admin-payments.html")
+
+
 def _require_admin(token: str | None) -> None:
     if config.ADMIN_TOKEN:
         if token != config.ADMIN_TOKEN:
