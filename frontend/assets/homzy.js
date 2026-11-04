@@ -600,14 +600,17 @@ HZ.requestContact = async function(btn){
   const ar=HZ.lang==='ar', s=HZ.session();
   if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
   if(btn){ btn.disabled=true; btn.textContent=ar?'بنبعت طلبك…':'Sending…'; }
-  let prof={}; try{ prof=(await HZ.sbAuth('/profiles?select=full_name,phone&id=eq.'+s.uid, s.token))[0]||{}; }catch(e){}
+  let prof={}; try{ prof=(await HZ.sbAuth('/profiles?select=full_name,phone,phone_verified_at&id=eq.'+s.uid, s.token))[0]||{}; }catch(e){}
   let name=prof.full_name||chat.lead.name||null;
   let phone=prof.phone||chat.lead.phone||null;
+  const reset=()=>{ if(btn){ btn.disabled=false; btn.textContent=ar?'✅ عايز حد من المبيعات يتواصل معايا':'✅ Have a sales rep contact me'; } };
   if(!phone){
     phone=((prompt(ar?'اكتب رقم موبايلك عشان فريق المبيعات يتواصل معاك:':'Your phone so sales can reach you:')||'').trim())||null;
-    if(!phone){ if(btn){ btn.disabled=false; btn.textContent=ar?'✅ عايز حد من المبيعات يتواصل معايا':'✅ Have a sales rep contact me'; } return; }
+    if(!phone){ reset(); return; }
     chat.lead.phone=phone;
   }
+  // the sales team only gets requests whose phone was confirmed by a code
+  if(!(prof.phone_verified_at && phone===prof.phone) && !(await HZ.verifyPhone(phone))){ reset(); return; }
   const ctx = chat.context ? (chat.context.name+(chat.context.area?(' · '+chat.context.area):'')) : null;
   const lastMsg=(chat.history.slice(-1)[0]||{}).content||'';
   const hdr={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'};
@@ -913,7 +916,7 @@ async function checkBrokerAccount(){
     const rows=await r.json();
     const p=rows&&rows[0];
     HZ.user={ name:(p&&p.full_name)||'', role:(p&&p.role)||'user' };
-    if(p&&p.role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; HZ.setMode('broker'); rebuildChrome(); HZ.loadPlan(); HZ.initNotifs(); }
+    if(p&&p.role==='broker'){ document.body.classList.add('hz-broker'); HZ.isBroker=true; HZ.setMode('broker'); rebuildChrome(); HZ.loadPlan(); HZ.initNotifs(); brokerPhoneGate(); }
     else notBroker();
   }catch(e){ notBroker(); }
 }
@@ -955,6 +958,73 @@ function trialEndedBar(companyMember){
       +'<a href="/pricing" style="color:#5EEAD4;font-weight:700;text-decoration:underline">'+(HZ.lang==='ar'?'شوف الباقات':'See plans')+'</a>';
   document.body.prepend(d);
 }
+/* ---------- Phone verification (6-digit code on WhatsApp) ---------- */
+// Off until the server has WhatsApp credentials (/api/otp/config); then brokers
+// must verify their phone, and clients verify the phone on a contact/viewing request.
+HZ._otpOn = null;
+HZ.otpEnabled = async function(){
+  if(HZ._otpOn!==null) return HZ._otpOn;
+  try{ HZ._otpOn = !!(await (await fetch('/api/otp/config')).json()).enabled; }catch(e){ HZ._otpOn=false; }
+  return HZ._otpOn;
+};
+// Resolves true once the code is confirmed (or when verification is switched off).
+HZ.verifyPhone = function(phone, opts){
+  opts=opts||{};
+  return new Promise(async resolve=>{
+    if(!(await HZ.otpEnabled())) return resolve(true);
+    const ar=HZ.lang!=='en', L=(a,e)=>ar?a:e;
+    const shown='+'+String(phone||'').replace(/\D/g,'').replace(/^0/,'20');
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(11,29,54,.62);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML=`<div dir="${ar?'rtl':'ltr'}" style="background:#fff;border-radius:18px;max-width:380px;width:100%;padding:22px;font-family:Cairo,system-ui,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+      <div style="font-size:19px;font-weight:800;color:#0B1D36">${L('أكّد رقم موبايلك','Verify your mobile')}</div>
+      <div style="color:#5b6675;font-size:14px;margin:6px 0 14px">${opts.reason||L('هنبعتلك كود من 6 أرقام على واتساب على:','We will send a 6-digit code on WhatsApp to:')} <b dir="ltr">${HZ.esc(shown)}</b></div>
+      <input id="hzOtpIn" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" dir="ltr" hidden
+        style="width:100%;font-size:26px;letter-spacing:10px;text-align:center;border:1.5px solid #D8CFC0;border-radius:12px;padding:10px;margin-bottom:10px;font-weight:800">
+      <div id="hzOtpMsg" style="min-height:20px;font-size:13.5px;font-weight:700;margin-bottom:10px"></div>
+      <button id="hzOtpGo" style="width:100%;background:#0B5563;color:#fff;border:none;border-radius:12px;padding:12px;font:800 15px Cairo,sans-serif;cursor:pointer">${L('ابعت الكود على واتساب','Send code on WhatsApp')}</button>
+      <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:13px">
+        <a id="hzOtpRe" style="color:#0B5563;font-weight:800;cursor:pointer" hidden></a>
+        ${opts.blocking?`<a href="/account" style="color:#5b6675">${L('الرقم غلط؟ عدّله','Wrong number? Edit it')}</a>`:`<a id="hzOtpX" style="color:#5b6675;cursor:pointer">${L('إلغاء','Cancel')}</a>`}</div></div>`;
+    document.body.appendChild(ov);
+    const $=id=>ov.querySelector('#'+id), msg=(t,ok)=>{ $('hzOtpMsg').textContent=t||''; $('hzOtpMsg').style.color=ok?'#137a3e':'#B42318'; };
+    const ERR={bad_phone:L('رقم الموبايل ده مش رقم مصري صحيح.','This is not a valid Egyptian mobile.'),wait:L('استنى دقيقة وابعت تاني.','Wait a minute before resending.'),
+      daily_limit:L('وصلت للحد اليومي للأكواد — جرّب بكرة.','Daily code limit reached — try tomorrow.'),too_many:L('محاولات كتير — جرّب بعد شوية.','Too many attempts — try later.'),
+      send_failed:L('مقدرناش نبعت على واتساب — اتأكد إن الرقم عليه واتساب.','Could not send on WhatsApp — make sure this number has WhatsApp.'),
+      wrong:L('الكود غلط.','Wrong code.'),expired:L('الكود انتهى — ابعت كود جديد.','Code expired — send a new one.')};
+    let sent=false, timer=null;
+    const countdown=()=>{ let n=60; const re=$('hzOtpRe'); re.hidden=false; clearInterval(timer);
+      timer=setInterval(()=>{ n--; re.textContent=n>0?L('إعادة الإرسال بعد '+n+'ث','Resend in '+n+'s'):L('ابعت كود جديد','Send a new code'); re.style.pointerEvents=n>0?'none':''; if(n<=0) clearInterval(timer); },1000); };
+    const send=async()=>{
+      $('hzOtpGo').disabled=true; msg(L('بنبعت الكود…','Sending…'),true);
+      let r; try{ r=await (await fetch('/api/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,lang:ar?'ar':'en'})})).json(); }catch(e){ r={ok:false}; }
+      $('hzOtpGo').disabled=false;
+      if(!r||!r.ok){ msg(ERR[r&&r.error]||L('حصلت مشكلة — جرّب تاني.','Something went wrong — try again.')); if(r&&r.error==='wait') countdown(); return; }
+      sent=true; $('hzOtpIn').hidden=false; $('hzOtpIn').focus(); $('hzOtpGo').textContent=L('تأكيد','Verify'); msg(L('الكود اتبعت على واتساب ✓','Code sent on WhatsApp ✓'),true); countdown();
+    };
+    const check=async()=>{
+      const code=$('hzOtpIn').value.replace(/\D/g,''); if(code.length!==6){ msg(L('اكتب الـ 6 أرقام.','Enter the 6 digits.')); return; }
+      $('hzOtpGo').disabled=true; const s=HZ.session();
+      let r; try{ r = s ? await HZ.sbAuth('/rpc/phone_otp_verify', s.token,'POST',{p_phone:phone,p_code:code}) : await HZ.rpc('phone_otp_verify',{p_phone:phone,p_code:code}); }catch(e){ r={ok:false}; }
+      $('hzOtpGo').disabled=false;
+      if(!r||!r.ok){ msg((ERR[r&&r.error]||L('حصلت مشكلة — جرّب تاني.','Something went wrong — try again.'))+(r&&r.left!=null?L(' (فاضل '+r.left+' محاولات)',' ('+r.left+' tries left)'):'')); return; }
+      clearInterval(timer); msg(L('رقمك اتأكد ✓','Number verified ✓'),true); setTimeout(()=>{ ov.remove(); resolve(true); },600);
+    };
+    $('hzOtpGo').onclick=()=>sent?check():send();
+    $('hzOtpIn').oninput=e=>{ if(e.target.value.replace(/\D/g,'').length===6) check(); };
+    $('hzOtpRe').onclick=send;
+    if($('hzOtpX')) $('hzOtpX').onclick=()=>{ clearInterval(timer); ov.remove(); resolve(false); };
+  });
+};
+// Brokers: their phone must be verified (asked once, on any broker page).
+async function brokerPhoneGate(){
+  if(/^\/(login|welcome|join|account|delete-account)/.test(location.pathname) || !(await HZ.otpEnabled())) return;
+  const s=HZ.session(); if(!s) return;
+  let p=null; try{ p=(await HZ.sbAuth('/profiles?select=phone,phone_verified_at&id=eq.'+s.uid, s.token))[0]; }catch(e){ return; }
+  if(!p || p.phone_verified_at || !p.phone) return;
+  await HZ.verifyPhone(p.phone, {blocking:true, reason:(HZ.lang!=='en'?'عشان عملاءك يثقوا في حسابك، أكّد رقمك — هنبعتلك كود من 6 أرقام على واتساب على:':'So clients can trust your account, verify your number — we will send a 6-digit code on WhatsApp to:')});
+}
+
 // Referral links (?ref=CODE) are remembered until sign-up.
 HZ.refCode = function(){ try{ return localStorage.getItem('hz_ref')||''; }catch(e){ return ''; } };
 try{ const rf=new URLSearchParams(location.search).get('ref'); if(rf && /^[A-Za-z0-9]{4,12}$/.test(rf)) localStorage.setItem('hz_ref', rf.toUpperCase()); }catch(e){}

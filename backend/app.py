@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from . import (ai_quota, broker, config, listings as listings_mod, llm, notify,
-               payments, push, seo, valuation, whatsapp)
+               otp, payments, push, seo, valuation, whatsapp)
 from .crm_routes import legacy_lead_analysis, router as crm_sales_router
 
 app = FastAPI(title="Homzy Broker")
@@ -838,6 +838,20 @@ async def lead_contact(req: Request):
         token, body.get("context") or "", body.get("message") or "",
         body.get("lang") or "ar",
     )
+
+
+@app.get("/api/otp/config")
+def otp_config():
+    """Whether phone verification is switched on (WhatsApp credentials set)."""
+    return {"enabled": otp.enabled()}
+
+
+@app.post("/api/otp/send")
+async def otp_send(req: Request):
+    """Send a 6-digit verification code to an Egyptian mobile on WhatsApp."""
+    body = await req.json()
+    ip = (req.headers.get("x-forwarded-for") or (req.client.host if req.client else "") or "").split(",")[0].strip()
+    return await run_in_threadpool(otp.send_code, str(body.get("phone") or ""), body.get("lang") or "ar", ip)
 
 
 @app.post("/api/reset")

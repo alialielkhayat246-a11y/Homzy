@@ -86,6 +86,16 @@ VAPID_SUBJECT = _get("VAPID_SUBJECT", "mailto:hello@homzy-ai.com")
 # follow-ups + prune dead subscriptions — so no service_role key is needed.
 PUSH_CRON_TOKEN = _get("PUSH_CRON_TOKEN", "")
 
+# --- Phone verification codes over WhatsApp (Meta Cloud API) -------------------
+# Off until both are set in Vercel. OTP_WA_TOKEN is a permanent System User
+# token (secret — never commit it); OTP_WA_PHONE_ID is the sender's
+# "Phone number ID" from WhatsApp Manager. The template is an Authentication
+# template with a copy-code button, approved in Arabic ("ar") and English ("en").
+OTP_WA_TOKEN = _get("OTP_WA_TOKEN", "")
+OTP_WA_PHONE_ID = _get("OTP_WA_PHONE_ID", "")
+OTP_WA_TEMPLATE = _get("OTP_WA_TEMPLATE", "homzy_otp")
+OTP_WA_API_VERSION = _get("OTP_WA_API_VERSION", "v24.0")
+
 # --- Lead notification email (a client asks a sales rep to contact them) ------
 # SMTP is optional: if not configured, the lead is still recorded (visible in
 # /inbox) — the email is just an extra. Spacemail: mail.spacemail.com:465 (SSL).

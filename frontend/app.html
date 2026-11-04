@@ -252,7 +252,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=15"></script>
+<script src="/assets/homzy.js?v=16"></script>
 <script src="/assets/crm-behavior.js"></script>
 <script src="/assets/catalog-ui.js?v=1"></script>
 <script>
@@ -734,6 +734,7 @@ async function submitViewing(){
   const note=(document.getElementById('vNote').value||'').trim();
   const msg=document.getElementById('vMsg');
   if(name.length<2 || phone.replace(/\D/g,'').length<8){ msg.className='vmsg err'; msg.textContent=t('needphone'); return; }
+  if(!(await HZ.verifyPhone(phone))) return;   // viewing requests carry a code-confirmed phone
   const btn=document.getElementById('vSend'); btn.disabled=true; const old=btn.textContent; btn.textContent=t('sending');
   const c=VIEW_CTX||{};
   const ctxTxt=(HZ.lang==='ar'?'طلب معاينة':'Viewing request')+': '+(c.name||'')+(c.area?(' · '+c.area):'')+(c.developer?(' — '+c.developer):'');
