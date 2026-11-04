@@ -197,6 +197,12 @@ def welcome_page():
     return FileResponse(config.FRONTEND_DIR / "welcome.html")
 
 
+@app.get("/broker-setup")
+def broker_setup_page():
+    """Broker onboarding: independent vs company details, before picking a plan."""
+    return FileResponse(config.FRONTEND_DIR / "broker-setup.html")
+
+
 @app.get("/account")
 @app.get("/settings")
 def account_page():

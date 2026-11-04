@@ -106,9 +106,9 @@
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=13"></script>
+<script src="/assets/homzy.js?v=14"></script>
 <script>
-let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[];
+let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[], PROF=null, SUGGEST='';
 const ar=()=>!(window.HZ&&HZ.lang==='en');
 const L=(a,e)=>ar()?a:e;
 const money=n=>Number(n).toLocaleString(ar()?'ar-EG':'en-US');
@@ -156,7 +156,8 @@ function planCard(p){
     const payBtn = (PAY_ON||MANUAL) ? `<button class="btn ${p.plan==='pro'?'btn-teal':'btn-navy'} cta" onclick="payPlan('${p.plan}')">${L('اشترك الآن','Subscribe now')} · ${money(price)} ${cur()}</button>` : '';
     cta = payBtn + `<button class="btn ${(PAY_ON||MANUAL)?'btn-ghost':(p.plan==='pro'?'btn-teal':'btn-navy')} cta" style="${(PAY_ON||MANUAL)?'margin-top:8px':''}" onclick="subscribe('${p.plan}')">${L('جرّب 14 يوم مجانًا','Try free for 14 days')}</button>`;
   }
-  return `<div class="plan ${p.plan==='pro'?'pop':''}">${p.plan==='pro'?`<span class="tag">${L('الأكثر رواجًا','Most popular')}</span>`:''}
+  const pop = SUGGEST ? p.plan===SUGGEST : p.plan==='pro';
+  return `<div class="plan ${pop?'pop':''}">${pop?`<span class="tag">${SUGGEST?L('مقترحة ليك','Suggested for you'):L('الأكثر رواجًا','Most popular')}</span>`:''}
     <h3>${HZ.esc(ar()?p.name_ar:(p.name_en||p.name_ar))}</h3>
     <div class="for">${(forTxt[p.plan]||['',''])[ar()?0:1]}</div>
     <div class="price">${p.contact_only?`<b style="font-size:26px">${L('بالاتفاق','Custom')}</b>`:`<b>${money(price)}</b> <span>${cur()} / ${per}</span>`}</div>
@@ -311,6 +312,11 @@ async function boot(){
     try{ SUB=(await HZ.sbAuth('/subscriptions?user_id=eq.'+s.uid+'&select=plan,status,billing_cycle,trial_end,current_period_end,seats', s.token))[0]||null; }catch(e){}
     try{ USAGE=await HZ.sbAuth('/rpc/ai_usage_today', s.token,'POST',{}); }catch(e){}
     try{ PENDING=await HZ.sbAuth('/manual_payments?user_id=eq.'+s.uid+'&status=eq.pending&select=amount,created_at', s.token)||[]; }catch(e){}
+    try{ PROF=(await HZ.sbAuth('/profiles?select=role,broker_type,team_size&id=eq.'+s.uid, s.token))[0]||null; }catch(e){}
+    if(onboarding()){
+      if(!PROF.broker_type){ location.replace('/broker-setup'); return; }   // company step comes first
+      suggestPlan();
+    }
   }
   render(); renderPayNote();
   renderCurrentBanner();
@@ -318,11 +324,24 @@ async function boot(){
 }
 // A new broker lands here before anything else: the plan they pick is the one
 // their 14-day trial runs on and the one they continue on after it.
+function onboarding(){ return !!(HZ.session() && !SUB && CURRENT==='free' && PROF && PROF.role==='broker'); }
+// Independent broker → Pro. Company → the cheaper team plan for its sales-team size, seats pre-filled.
+function suggestPlan(){
+  if(PROF.broker_type!=='company'){ SUGGEST='pro'; return; }
+  const n=Math.max(1, PROF.team_size||1); let best=null;
+  for(const k of ['team','business']){
+    const p=PLANS.find(x=>x.plan===k); if(!p) continue;
+    SEATS[k]=Math.min(500, Math.max(p.team_seats, n));
+    if(!best || priceOf(p) < priceOf(best)) best=p;
+  }
+  SUGGEST = best ? best.plan : 'pro';
+}
 function renderOnboarding(){
-  const s=HZ.session(); if(!s || SUB || CURRENT!=='free') return;
+  if(!onboarding()) return;
   const h=document.getElementById('heroSub');
   h.innerHTML=L('<b>خطوة أخيرة:</b> اختار الباقة اللي تناسبك — هتبدأ عليها تجربة مجانية 14 يوم من غير كارت، وبعد التجربة تكمل عليها.',
-                '<b>One last step:</b> pick the plan that fits you — your free 14-day trial runs on it (no card), and you continue on it after the trial.');
+                '<b>One last step:</b> pick the plan that fits you — your free 14-day trial runs on it (no card), and you continue on it after the trial.')
+    + (PROF.broker_type==='company' ? L('<br>فريق شركتك اتعمل، وعدد المقاعد محسوب على عدد فريقك — تقدر تغيّره.','<br>Your company team is ready, and seats are set to your team size — you can change them.') : '');
   document.getElementById('curplan').hidden=true;
 }
 document.addEventListener('hz:lang', ()=>{ if(PLANS.length){ render(); renderPayNote(); renderCurrentBanner(); renderOnboarding(); } });

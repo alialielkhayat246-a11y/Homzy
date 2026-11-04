@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — بيانات حسابك المهني</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="manifest" href="/site.webmanifest" />
+<meta name="theme-color" content="#0B1D36" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  body{background:linear-gradient(160deg,#0B1D36,#0B5563);min-height:100vh;}
+  .wc{max-width:720px;margin:0 auto;padding:40px 18px 60px;}
+  .wc .top{text-align:center;color:#fff;margin-bottom:22px;}
+  .wc .top h1{font-size:clamp(24px,4vw,32px);font-family:var(--fd);}
+  .wc .top p{color:#d7e6ea;font-size:16px;margin-top:8px;}
+  .steps{display:flex;justify-content:center;gap:8px;margin-bottom:18px;color:#cfe3e7;font-size:13px;font-weight:700;flex-wrap:wrap;}
+  .steps span{background:rgba(255,255,255,.12);border-radius:100px;padding:5px 12px;}
+  .steps span.on{background:#fff;color:var(--navy);}
+  .card{background:#fff;border-radius:20px;padding:26px;box-shadow:var(--shadow);}
+  .types{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+  @media(max-width:560px){.types{grid-template-columns:1fr;}}
+  .type{border:2px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .15s,background .15s;}
+  .type.on{border-color:var(--teal);background:#f1f9f9;}
+  .type b{display:block;font-size:17px;} .type small{color:var(--muted);font-size:13px;}
+  .fld{margin-bottom:15px;} .fld label{display:block;font-weight:800;font-size:14px;margin-bottom:6px;}
+  .fld label .opt{color:var(--muted);font-weight:600;font-size:12.5px;}
+  .fld input{width:100%;border:1.5px solid var(--line-2,#D8CFC0);border-radius:12px;padding:11px 13px;font:600 15px var(--ff);background:#fff;}
+  .fld input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(11,85,99,.12);}
+  .fld .hint{color:var(--muted);font-size:12.5px;margin-top:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;} @media(max-width:560px){.row2{grid-template-columns:1fr;}}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1.5px solid var(--line);border-radius:100px;padding:7px 13px;font:700 13.5px var(--ff);background:#fff;cursor:pointer;color:#33404f;}
+  .chip.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .logo{display:flex;align-items:center;gap:12px;}
+  .logo .pv{width:64px;height:64px;border-radius:14px;border:1.5px dashed var(--line-2,#D8CFC0);background:#faf8f5 center/contain no-repeat;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;flex:none;}
+  .logo label.btn{margin:0;cursor:pointer;}
+  .terms{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:6px 0 16px;}
+  .terms input{width:18px;height:18px;margin-top:3px;flex:none;}
+  .msg{min-height:22px;font-weight:700;font-size:14px;margin-bottom:10px;color:#B42318;}
+  .msg.ok{color:#137a3e;}
+  .co[hidden]{display:none;}
+  .go{width:100%;}
+</style>
+</head>
+<body>
+<div class="wc">
+  <div class="top">
+    <h1 data-ar="بيانات حسابك المهني" data-en="Your professional details">بيانات حسابك المهني</h1>
+    <p data-ar="دقيقة واحدة — البيانات دي بتظهر على عروضك وبتظبطلك الباقة المناسبة." data-en="One minute — these appear on your offers and set up the right plan.">دقيقة واحدة — البيانات دي بتظهر على عروضك وبتظبطلك الباقة المناسبة.</p>
+  </div>
+  <div class="steps"><span data-ar="١. الحساب ✓" data-en="1. Account ✓">١. الحساب ✓</span><span class="on" data-ar="٢. بيانات الشركة" data-en="2. Company details">٢. بيانات الشركة</span><span data-ar="٣. اختيار الباقة" data-en="3. Choose a plan">٣. اختيار الباقة</span></div>
+
+  <div class="card">
+    <div class="types">
+      <div class="type on" id="tInd" onclick="setType('independent')"><b data-ar="💼 بروكر مستقل" data-en="💼 Independent broker">💼 بروكر مستقل</b><small data-ar="بتشتغل لوحدك" data-en="You work on your own">بتشتغل لوحدك</small></div>
+      <div class="type" id="tCo" onclick="setType('company')"><b data-ar="🏢 شركة وساطة" data-en="🏢 Brokerage company">🏢 شركة وساطة</b><small data-ar="عندك فريق سيلز" data-en="You have a sales team">عندك فريق سيلز</small></div>
+    </div>
+
+    <div class="fld"><label for="company" id="companyLbl"></label><input id="company" type="text" maxlength="80" autocomplete="organization" /></div>
+
+    <div class="co" id="coBox" hidden>
+      <div class="row2">
+        <div class="fld"><label for="teamSize" data-ar="عدد فريق المبيعات" data-en="Sales team size">عدد فريق المبيعات</label><input id="teamSize" type="number" min="1" max="1000" inputmode="numeric" placeholder="5" /><div class="hint" data-ar="بنحسب بيه عدد المقاعد في باقة الفريق" data-en="Used to set the seats on your team plan">بنحسب بيه عدد المقاعد في باقة الفريق</div></div>
+        <div class="fld"><label for="creg"><span data-ar="رقم السجل التجاري" data-en="Commercial registration no.">رقم السجل التجاري</span> <span class="opt" data-ar="(اختياري)" data-en="(optional)">(اختياري)</span></label><input id="creg" type="text" maxlength="40" /></div>
+      </div>
+      <div class="row2">
+        <div class="fld"><label for="address"><span data-ar="عنوان الشركة" data-en="Company address">عنوان الشركة</span> <span class="opt" data-ar="(اختياري)" data-en="(optional)">(اختياري)</span></label><input id="address" type="text" maxlength="160" /></div>
+        <div class="fld"><label for="coEmail"><span data-ar="إيميل الشركة" data-en="Company email">إيميل الشركة</span> <span class="opt" data-ar="(اختياري)" data-en="(optional)">(اختياري)</span></label><input id="coEmail" type="email" maxlength="120" dir="ltr" /></div>
+      </div>
+    </div>
+
+    <div class="fld"><label><span data-ar="اللوجو" data-en="Logo">اللوجو</span> <span class="opt" data-ar="(اختياري — بيظهر على عروض الـ PDF)" data-en="(optional — shown on PDF offers)">(اختياري — بيظهر على عروض الـ PDF)</span></label>
+      <div class="logo"><div class="pv" id="logoPv" data-ar="لوجو" data-en="Logo">لوجو</div>
+        <label class="btn btn-ghost btn-sm"><span data-ar="ارفع اللوجو" data-en="Upload logo">ارفع اللوجو</span><input type="file" accept="image/png,image/jpeg,image/webp" hidden onchange="uploadLogo(event)"></label></div>
+    </div>
+
+    <div class="fld"><label for="wa"><span data-ar="رقم واتساب للعملاء" data-en="WhatsApp for clients">رقم واتساب للعملاء</span> <span class="opt" data-ar="(اختياري)" data-en="(optional)">(اختياري)</span></label><input id="wa" type="tel" inputmode="tel" dir="ltr" maxlength="20" /><div class="hint" data-ar="لو سبته فاضي بنستخدم رقم موبايلك" data-en="Left empty, we use your mobile number">لو سبته فاضي بنستخدم رقم موبايلك</div></div>
+
+    <div class="fld"><label><span data-ar="المناطق اللي بتشتغل فيها" data-en="Areas you work in">المناطق اللي بتشتغل فيها</span> <span class="opt" data-ar="(اختياري)" data-en="(optional)">(اختياري)</span></label>
+      <div class="chips" id="areas"></div><div class="hint" data-ar="المساعد الذكي بيرشّح من المناطق دي الأول" data-en="The AI assistant recommends from these areas first">المساعد الذكي بيرشّح من المناطق دي الأول</div></div>
+
+    <label class="terms"><input type="checkbox" id="terms"><span><span data-ar="موافق على" data-en="I agree to the">موافق على</span> <a href="/terms" target="_blank" data-ar="الشروط والأحكام" data-en="Terms">الشروط والأحكام</a> <span data-ar="و" data-en="and">و</span> <a href="/privacy" target="_blank" data-ar="سياسة الخصوصية" data-en="Privacy policy">سياسة الخصوصية</a></span></label>
+    <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+    <button class="btn btn-navy go" id="goBtn" onclick="save()" data-ar="التالي: اختيار الباقة ←" data-en="Next: choose a plan →">التالي: اختيار الباقة ←</button>
+  </div>
+</div>
+<script src="/assets/homzy.js?v=14"></script>
+<script>
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const $=id=>document.getElementById(id);
+// Values match projects.area in the catalog so the AI can filter on them.
+const AREAS=[['New Cairo','التجمع'],['New Capital','العاصمة الإدارية'],['Mostakbal City','المستقبل سيتي'],['Shorouk','الشروق'],['Obour','العبور'],
+  ['Sheikh Zayed','الشيخ زايد'],['New Zayed','زايد الجديدة'],['6th of October','6 أكتوبر'],['October Gardens','حدائق أكتوبر'],
+  ['North Coast','الساحل الشمالي'],['Ras El Hekma','رأس الحكمة'],['Ain Sokhna','العين السخنة'],['Galala','الجلالة'],['Red Sea','البحر الأحمر']];
+let TYPE='independent', LOGO='', PICK=new Set(), BUSY=false;
+const S=HZ.session();
+if(!S) location.replace('/login?next='+encodeURIComponent('/broker-setup'));
+
+function renderAreas(){ $('areas').innerHTML=AREAS.map(([v,a])=>`<button type="button" class="chip ${PICK.has(v)?'on':''}" onclick="toggleArea('${v}')">${ar()?a:v}</button>`).join(''); }
+window.toggleArea=v=>{ PICK.has(v)?PICK.delete(v):PICK.add(v); renderAreas(); };
+window.setType=t=>{
+  TYPE=t; $('tInd').classList.toggle('on',t==='independent'); $('tCo').classList.toggle('on',t==='company');
+  $('coBox').hidden = t!=='company';
+  $('companyLbl').innerHTML = t==='company' ? L('اسم الشركة','Company name')
+    : L('الاسم التجاري','Brand name')+' <span class="opt">'+L('(اختياري — بيظهر على عروضك)','(optional — shown on your offers)')+'</span>';
+  $('company').placeholder = t==='company' ? L('مثلاً: Axis One للتسويق العقاري','e.g. Axis One Real Estate') : L('اسمك أو اسم البراند بتاعك','Your name or brand');
+};
+function msg(t,ok){ $('msg').textContent=t||''; $('msg').className='msg'+(ok?' ok':''); }
+
+window.uploadLogo=async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  if(f.size>3*1024*1024){ msg(L('اللوجو لازم يكون أقل من 3 ميجا.','Logo must be under 3 MB.')); return; }
+  msg(L('بيرفع اللوجو…','Uploading logo…'),true);
+  try{
+    const path=S.uid+'/logo_'+Date.now()+'.'+((f.name.split('.').pop()||'png').toLowerCase());
+    const up=await fetch(SB_URL+'/storage/v1/object/avatars/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+S.token,'Content-Type':f.type,'x-upsert':'true'},body:f});
+    if(!up.ok) throw new Error(await up.text());
+    LOGO=SB_URL+'/storage/v1/object/public/avatars/'+path;
+    $('logoPv').style.backgroundImage="url('"+LOGO+"')"; $('logoPv').textContent='';
+    msg(L('اترفع ✓','Uploaded ✓'),true);
+  }catch(err){ console.warn(err); msg(L('مقدرناش نرفع اللوجو — جرّب صورة تانية.','Could not upload the logo — try another image.')); }
+};
+
+window.save=async()=>{
+  if(BUSY) return;
+  const company=$('company').value.trim(), team=parseInt($('teamSize').value,10);
+  if(TYPE==='company' && company.length<2){ msg(L('اكتب اسم الشركة.','Enter the company name.')); $('company').focus(); return; }
+  if(TYPE==='company' && !(team>=1)){ msg(L('اكتب عدد فريق المبيعات.','Enter your sales team size.')); $('teamSize').focus(); return; }
+  if(!$('terms').checked){ msg(L('لازم توافق على الشروط والأحكام.','Please accept the terms.')); return; }
+  BUSY=true; $('goBtn').disabled=true; msg(L('جاري الحفظ…','Saving…'),true);
+  let r; try{
+    r=await HZ.sbAuth('/rpc/complete_broker_setup', S.token,'POST',{
+      p_type:TYPE, p_company:company||null, p_logo:LOGO||null, p_whatsapp:$('wa').value.trim()||null,
+      p_areas:[...PICK], p_team_size:TYPE==='company'?team:null, p_commercial_reg:$('creg').value.trim()||null,
+      p_address:$('address').value.trim()||null, p_email:$('coEmail').value.trim()||null, p_terms:true});
+  }catch(e){ r={ok:false}; }
+  if(!r||!r.ok){
+    const m={company_required:L('اكتب اسم الشركة.','Enter the company name.'),team_size_required:L('اكتب عدد فريق المبيعات.','Enter your sales team size.'),terms_required:L('لازم توافق على الشروط والأحكام.','Please accept the terms.')};
+    msg((r&&m[r.error])||L('حصلت مشكلة في الحفظ — جرّب تاني.','Something went wrong — please try again.'));
+    BUSY=false; $('goBtn').disabled=false; return;
+  }
+  try{ localStorage.setItem('hz_mode','broker'); }catch(e){}
+  location.replace('/pricing?start=1');
+};
+
+// Prefill from the profile (coming back to this step later).
+(async()=>{
+  setType('independent'); renderAreas();
+  if(!S) return;
+  try{
+    const p=(await HZ.sbAuth('/profiles?select=phone,company,company_logo_url,broker_type,whatsapp,work_areas,team_size,commercial_reg&id=eq.'+S.uid, S.token))[0]||{};
+    if(p.broker_type) setType(p.broker_type);
+    if(p.company) $('company').value=p.company;
+    if(p.team_size) $('teamSize').value=p.team_size;
+    if(p.commercial_reg) $('creg').value=p.commercial_reg;
+    $('wa').placeholder=p.phone||'01XXXXXXXXX'; if(p.whatsapp) $('wa').value=p.whatsapp;
+    if(p.company_logo_url){ LOGO=p.company_logo_url; $('logoPv').style.backgroundImage="url('"+LOGO+"')"; $('logoPv').textContent=''; }
+    (p.work_areas||[]).forEach(a=>PICK.add(a)); renderAreas();
+  }catch(e){}
+})();
+document.addEventListener('hz:lang',()=>{ setType(TYPE); renderAreas(); });
+document.addEventListener('DOMContentLoaded',()=>HZ.applyLang&&HZ.applyLang());
+</script>
+</body>
+</html>

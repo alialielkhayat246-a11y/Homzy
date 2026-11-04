@@ -935,7 +935,7 @@ HZ.loadPlan = async function(){
   if(HZ.isBroker && HZ.PLAN.plan==='free'){
     // never picked a plan (no subscription row at all) → plans first; otherwise the trial/plan ended
     let sub=null; try{ sub=(await HZ.sbAuth('/subscriptions?user_id=eq.'+s.uid+'&select=status', s.token))[0]||null; }catch(e){ sub={}; }
-    if(!sub && !/^\/(pricing|account|welcome|login|delete-account)/.test(location.pathname)){ location.replace('/pricing?start=1'); return HZ.PLAN; }
+    if(!sub && !/^\/(pricing|broker-setup|account|welcome|login|delete-account)/.test(location.pathname)){ location.replace('/pricing?start=1'); return HZ.PLAN; }
     if(sub) trialEndedBar();
   }
   return HZ.PLAN;
