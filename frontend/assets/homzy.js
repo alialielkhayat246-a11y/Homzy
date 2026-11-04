@@ -935,19 +935,24 @@ HZ.loadPlan = async function(){
   if(HZ.isBroker && HZ.PLAN.plan==='free'){
     // never picked a plan (no subscription row at all) → plans first; otherwise the trial/plan ended
     let sub=null; try{ sub=(await HZ.sbAuth('/subscriptions?user_id=eq.'+s.uid+'&select=status', s.token))[0]||null; }catch(e){ sub={}; }
-    if(!sub && !/^\/(pricing|broker-setup|account|welcome|login|delete-account)/.test(location.pathname)){ location.replace('/pricing?start=1'); return HZ.PLAN; }
-    if(sub) trialEndedBar();
+    // a salesperson in someone else's company uses the company plan — never send them to buy their own
+    let member=false; if(!sub){ try{ member=((await HZ.sbAuth('/agency_members?user_id=eq.'+s.uid+'&status=eq.active&role=neq.owner&select=agency_id', s.token))||[]).length>0; }catch(e){} }
+    if(member) trialEndedBar(true);
+    else if(!sub && !/^\/(pricing|broker-setup|account|welcome|login|join|delete-account)/.test(location.pathname)){ location.replace('/pricing?start=1'); return HZ.PLAN; }
+    else if(sub) trialEndedBar();
   }
   return HZ.PLAN;
 };
 // No free broker plan: once the 14-day trial (or a subscription) ends, brokers
 // keep read access to their data but are asked to subscribe.
-function trialEndedBar(){
+function trialEndedBar(companyMember){
   if(document.getElementById('hzTrialEnded') || location.pathname.startsWith('/pricing')) return;
   const d=document.createElement('div'); d.id='hzTrialEnded';
   d.style.cssText='position:sticky;top:0;z-index:999;background:#0D1B2A;color:#fff;padding:10px 16px;text-align:center;font-size:14px';
-  d.innerHTML=(HZ.lang==='ar'?'انتهت تجربتك المجانية — اشترك عشان تكمل تستخدم أدوات البروكر والذكاء الاصطناعي. ':'Your free trial has ended — subscribe to keep using the broker tools and AI. ')
-    +'<a href="/pricing" style="color:#5EEAD4;font-weight:700;text-decoration:underline">'+(HZ.lang==='ar'?'شوف الباقات':'See plans')+'</a>';
+  d.innerHTML = companyMember
+    ? (HZ.lang==='ar'?'باقة شركتك مش مفعّلة دلوقتي — كلّم مدير الشركة عشان يفعّلها وتكمل تستخدم أدوات البروكر.':'Your company plan is not active right now — ask your company manager to activate it.')
+    : (HZ.lang==='ar'?'انتهت تجربتك المجانية — اشترك عشان تكمل تستخدم أدوات البروكر والذكاء الاصطناعي. ':'Your free trial has ended — subscribe to keep using the broker tools and AI. ')
+      +'<a href="/pricing" style="color:#5EEAD4;font-weight:700;text-decoration:underline">'+(HZ.lang==='ar'?'شوف الباقات':'See plans')+'</a>';
   document.body.prepend(d);
 }
 // Referral links (?ref=CODE) are remembered until sign-up.

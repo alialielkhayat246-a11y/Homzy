@@ -203,6 +203,12 @@ def broker_setup_page():
     return FileResponse(config.FRONTEND_DIR / "broker-setup.html")
 
 
+@app.get("/join/{code}")
+def join_team_page(code: str):
+    """Team invite link: a salesperson signs up / signs in and joins the company."""
+    return FileResponse(config.FRONTEND_DIR / "join.html")
+
+
 @app.get("/account")
 @app.get("/settings")
 def account_page():

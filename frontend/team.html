@@ -174,6 +174,7 @@
         <div class="toolbar">
           <h2 data-ar="أعضاء الفريق" data-en="Team members">أعضاء الفريق</h2>
           <span class="sp"></span>
+          <button class="btn btn-navy manage-only" onclick="openInvite()" data-ar="🔗 رابط دعوة" data-en="🔗 Invite link">🔗 رابط دعوة</button>
           <button class="btn btn-teal manage-only" onclick="openAddMember()" data-ar="＋ إضافة عضو" data-en="＋ Add member">＋ إضافة عضو</button>
         </div>
         <div class="card" id="membersList"></div>
@@ -202,11 +203,26 @@
   </div>
 </div>
 
+<!-- Invite link modal -->
+<div class="ov" id="ovInvite"><div class="modal">
+  <div class="mh"><h3 data-ar="رابط دعوة للفريق" data-en="Team invite link">رابط دعوة للفريق</h3><button class="mx" onclick="closeOv('ovInvite')">×</button></div>
+  <div class="mb">
+    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="ابعت الرابط للسيلز — بيعمل حسابه بالاسم والموبايل وكلمة المرور وينضم لفريقك على طول على باقة الشركة." data-en="Send the link to your sales team — they sign up with name, phone and password and join your team on the company plan.">ابعت الرابط للسيلز — بيعمل حسابه بالاسم والموبايل وكلمة المرور وينضم لفريقك على طول على باقة الشركة.</p>
+    <div class="fld"><label data-ar="هينضموا بدور" data-en="They join as">هينضموا بدور</label><select class="in" id="invRole"></select></div>
+    <div class="fld"><label data-ar="الفريق (اختياري)" data-en="Team (optional)">الفريق (اختياري)</label><select class="in" id="invTeam"><option value="">—</option></select></div>
+    <button class="btn btn-teal" id="invMake" onclick="makeInvite()" style="width:100%" data-ar="اعمل الرابط" data-en="Create link">اعمل الرابط</button>
+    <div id="invOut" style="margin-top:12px"></div>
+    <div class="mini" id="invSeats" style="margin-top:8px"></div>
+    <div id="invList" style="margin-top:14px"></div>
+    <div class="msg" id="invMsg"></div>
+  </div>
+</div></div>
+
 <!-- Add member modal -->
 <div class="ov" id="ovMember"><div class="modal">
   <div class="mh"><h3 data-ar="إضافة عضو" data-en="Add member">إضافة عضو</h3><button class="mx" onclick="closeOv('ovMember')">×</button></div>
   <div class="mb">
-    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك." data-en="Enter the phone or email of a Homzy user to add them to your team.">اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط دعوة." data-en="Enter the phone or email of a Homzy user to add them to your team. No account yet? Send them an invite link.">اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط دعوة.</p>
     <div class="fld"><label data-ar="رقم الموبايل أو الإيميل" data-en="Phone or email">رقم الموبايل أو الإيميل</label>
       <div style="display:flex;gap:8px"><input class="in" id="lookupQ" placeholder="01xxxxxxxxx" style="flex:1"/><button class="btn btn-ghost" onclick="lookupUser()" data-ar="بحث" data-en="Find">بحث</button></div>
     </div>
@@ -248,7 +264,7 @@
 </div></div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=14"></script>
+<script src="/assets/homzy.js?v=15"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -432,6 +448,42 @@ window.createAgency=async()=>{
     const ags=await rest('/agencies?id=eq.'+id+'&select=*'); AG=ags[0]; await loadAgency();
   }catch(e){ $('agMsg').textContent=L('تعذّر الإنشاء: ','Could not create: ')+(e.message||e); $('agMsg').className='msg err'; $('createAgBtn').disabled=false; }
 };
+
+// ---------- invite links ----------
+const inviteUrl=code=>location.origin+'/join/'+code;
+window.openInvite=async()=>{
+  $('invRole').innerHTML=roleOptions('agent'); $('invTeam').innerHTML='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  $('invOut').innerHTML=''; $('invMsg').textContent='';
+  const full = SEATS && SEATS.limit!=null && SEATS.used>=SEATS.limit;
+  $('invSeats').innerHTML = SEATS ? L('المقاعد: ','Seats: ')+SEATS.used+' / '+(SEATS.limit==null?'∞':SEATS.limit)
+    + (full?` · <b style="color:#B42318">${L('مكتملة — ','full — ')}<a href="/pricing">${L('زوّد المقاعد','add seats')}</a></b>`:'') : '';
+  $('ovInvite').classList.add('open'); await loadInvites();
+};
+async function loadInvites(){
+  let rows=[]; try{ rows=await rest('/agency_invites?agency_id=eq.'+AG.id+'&revoked_at=is.null&select=id,code,role_key,team_id,uses,created_at&order=created_at.desc')||[]; }catch(e){}
+  const rn=k=>{ const r=ROLES.find(x=>x.key===k); return r?L(r.name_ar,r.name_en):k; };
+  $('invList').innerHTML = rows.length ? `<div class="mini" style="margin-bottom:6px">${L('الروابط الشغالة','Active links')}</div>`+rows.map(r=>`
+    <div class="mrow" style="border:1px solid var(--line);border-radius:12px;margin-bottom:6px">
+      <div class="who"><b>${esc(rn(r.role_key))}</b><div class="c" dir="ltr">${esc(inviteUrl(r.code))}</div><div class="c">${L('انضم بيه: ','Joined: ')+r.uses}</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="copyInvite('${r.code}',this)">${L('نسخ','Copy')}</button>
+      <button class="btn btn-ghost btn-sm" style="color:#B42318" onclick="revokeInvite('${r.id}')">${L('إلغاء','Revoke')}</button></div>`).join('') : '';
+}
+window.makeInvite=async()=>{
+  $('invMake').disabled=true; $('invMsg').textContent='';
+  try{
+    const r=await rpc('agency_create_invite',{p_agency:AG.id,p_role_key:$('invRole').value,p_team:$('invTeam').value||null});
+    const url=inviteUrl(r.code), text=L('انضم لفريق '+AG.name+' على Homzy: ','Join '+AG.name+' on Homzy: ')+url;
+    $('invOut').innerHTML=`<div class="fld"><input class="in" dir="ltr" readonly value="${esc(url)}" onclick="this.select()"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1" onclick="copyInvite('${r.code}',this)">${L('نسخ الرابط','Copy link')}</button>
+      <a class="btn btn-teal" style="flex:1;text-align:center" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text)}">${L('ابعته واتساب','Send on WhatsApp')}</a></div>
+      <div class="mini" style="margin-top:6px">${L('أي رابط قديم لنفس الدور اتلغى.','Any older link for this role was revoked.')}</div>`;
+    await loadInvites();
+  }catch(e){ $('invMsg').textContent=errText(e); $('invMsg').className='msg err'; }
+  $('invMake').disabled=false;
+};
+window.copyInvite=async(code,btn)=>{ try{ await navigator.clipboard.writeText(inviteUrl(code)); const t=btn.textContent; btn.textContent=L('اتنسخ ✓','Copied ✓'); setTimeout(()=>btn.textContent=t,1500); }catch(e){ prompt(L('انسخ الرابط:','Copy the link:'), inviteUrl(code)); } };
+window.revokeInvite=async(id)=>{ if(!confirm(L('إلغاء الرابط ده؟ اللي معاه الرابط مش هيقدر ينضم بيه.','Revoke this link? Nobody can join with it anymore.'))) return;
+  try{ await rpc('agency_revoke_invite',{p_invite:id}); await loadInvites(); }catch(e){ alert(errText(e)); } };
 
 // ---------- members ----------
 window.openAddMember=()=>{ PICK_USER=null; $('lookupQ').value=''; $('lookupResult').innerHTML=''; $('memMsg').textContent=''; $('addMemBtn').disabled=true;

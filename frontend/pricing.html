@@ -106,7 +106,7 @@
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=14"></script>
+<script src="/assets/homzy.js?v=15"></script>
 <script>
 let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[], PROF=null, SUGGEST='';
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -180,7 +180,8 @@ window.setSeats=(plan,v)=>{ const p=PLANS.find(x=>x.plan===plan); SEATS[plan]=Ma
 window.setCyc=(c)=>{ CYC=c; document.getElementById('cM').classList.toggle('on',c==='monthly'); document.getElementById('cY').classList.toggle('on',c==='yearly'); render(); };
 window.subscribe=async(plan)=>{
   const s=HZ.session(); if(!s){ location.href='/login?next='+encodeURIComponent('/pricing'); return; }
-  let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan}); }catch(e){ r={ok:false}; }
+  const tp=PLANS.find(x=>x.plan===plan), isTeam=plan==='team'||plan==='business';
+  let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan, p_seats: isTeam&&tp ? seatsOf(tp) : null}); }catch(e){ r={ok:false}; }
   const name=(PLANS.find(p=>p.plan===plan)||{})[ar()?'name_ar':'name_en']||plan;
   if(r&&r.ok){ alert(r.switched?L('تم تحويل تجربتك لباقة '+name+' — بنفس معاد الانتهاء.','Your trial now uses the '+name+' plan — same end date.'):L('تم تفعيل تجربتك المجانية 14 يوم لباقة '+name+' 🎉','Your 14-day free trial of '+name+' is active 🎉')); location.href=(plan==='pro'?'/my-listings':'/team'); }
   else{
@@ -313,6 +314,8 @@ async function boot(){
     try{ USAGE=await HZ.sbAuth('/rpc/ai_usage_today', s.token,'POST',{}); }catch(e){}
     try{ PENDING=await HZ.sbAuth('/manual_payments?user_id=eq.'+s.uid+'&status=eq.pending&select=amount,created_at', s.token)||[]; }catch(e){}
     try{ PROF=(await HZ.sbAuth('/profiles?select=role,broker_type,team_size&id=eq.'+s.uid, s.token))[0]||null; }catch(e){}
+    // salespeople of another company use its plan — no own onboarding for them
+    if(PROF && !SUB){ try{ if(((await HZ.sbAuth('/agency_members?user_id=eq.'+s.uid+'&status=eq.active&role=neq.owner&select=agency_id', s.token))||[]).length) PROF.member=true; }catch(e){} }
     if(onboarding()){
       if(!PROF.broker_type){ location.replace('/broker-setup'); return; }   // company step comes first
       suggestPlan();
@@ -324,7 +327,7 @@ async function boot(){
 }
 // A new broker lands here before anything else: the plan they pick is the one
 // their 14-day trial runs on and the one they continue on after it.
-function onboarding(){ return !!(HZ.session() && !SUB && CURRENT==='free' && PROF && PROF.role==='broker'); }
+function onboarding(){ return !!(HZ.session() && !SUB && CURRENT==='free' && PROF && PROF.role==='broker' && !PROF.member); }
 // Independent broker → Pro. Company → the cheaper team plan for its sales-team size, seats pre-filled.
 function suggestPlan(){
   if(PROF.broker_type!=='company'){ SUGGEST='pro'; return; }
