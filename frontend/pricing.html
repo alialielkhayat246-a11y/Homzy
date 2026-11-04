@@ -84,7 +84,7 @@
     <div class="price-hero">
       <span class="eyebrow" data-ar="Homzy للمحترفين" data-en="Homzy for pros">Homzy للمحترفين</span>
       <h1 data-ar="اختر باقتك" data-en="Choose your plan">اختر باقتك</h1>
-      <p data-ar="ابدأ بتجربة مجانية 14 يوم — من غير كارت." data-en="Start with a free 14-day trial — no card needed.">ابدأ بتجربة مجانية 14 يوم — من غير كارت.</p>
+      <p id="heroSub" data-ar="ابدأ بتجربة مجانية 14 يوم — من غير كارت." data-en="Start with a free 14-day trial — no card needed.">ابدأ بتجربة مجانية 14 يوم — من غير كارت.</p>
     </div>
     <div class="value">
       <div class="star"><b data-ar="📈 أسعار محدّثة كل يوم" data-en="📈 Prices updated daily">📈 أسعار محدّثة كل يوم</b><span data-ar="أسعار ومساحات وأنظمة سداد أكتر من 900 مشروع لأكتر من 400 مطوّر — بتتحدّث يوميًا من المطورين، لكل مساحة." data-en="Prices, sizes and payment plans for 900+ projects from 400+ developers — updated daily from the developers, per size.">أسعار ومساحات وأنظمة سداد أكتر من 900 مشروع لأكتر من 400 مطوّر — بتتحدّث يوميًا من المطورين، لكل مساحة.</span></div>
@@ -106,7 +106,7 @@
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=12"></script>
+<script src="/assets/homzy.js?v=13"></script>
 <script>
 let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[];
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -314,8 +314,18 @@ async function boot(){
   }
   render(); renderPayNote();
   renderCurrentBanner();
+  renderOnboarding();
 }
-document.addEventListener('hz:lang', ()=>{ if(PLANS.length){ render(); renderPayNote(); renderCurrentBanner(); } });
+// A new broker lands here before anything else: the plan they pick is the one
+// their 14-day trial runs on and the one they continue on after it.
+function renderOnboarding(){
+  const s=HZ.session(); if(!s || SUB || CURRENT!=='free') return;
+  const h=document.getElementById('heroSub');
+  h.innerHTML=L('<b>خطوة أخيرة:</b> اختار الباقة اللي تناسبك — هتبدأ عليها تجربة مجانية 14 يوم من غير كارت، وبعد التجربة تكمل عليها.',
+                '<b>One last step:</b> pick the plan that fits you — your free 14-day trial runs on it (no card), and you continue on it after the trial.');
+  document.getElementById('curplan').hidden=true;
+}
+document.addEventListener('hz:lang', ()=>{ if(PLANS.length){ render(); renderPayNote(); renderCurrentBanner(); renderOnboarding(); } });
 boot();
 </script>
 </body>

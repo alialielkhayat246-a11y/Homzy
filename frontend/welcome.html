@@ -66,7 +66,7 @@
   <div class="msg" id="msg"></div>
   <button class="skip" onclick="choose('user')" data-ar="مش متأكد؟ ابدأ كمستخدم" data-en="Not sure? Start as a user">مش متأكد؟ ابدأ كمستخدم</button>
 </div>
-<script src="/assets/homzy.js?v=12"></script>
+<script src="/assets/homzy.js?v=13"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
 function nextParam(){ const n=new URLSearchParams(location.search).get('next')||''; return (n.startsWith('/')&&!n.startsWith('//'))?n:''; }
@@ -77,7 +77,8 @@ window.choose=async(role)=>{
   BUSY=true; document.getElementById('msg').textContent=ar()?'جاري التجهيز…':'Setting up…';
   let r; try{ r=await HZ.sbAuth('/rpc/set_my_role', s.token,'POST',{p_role:role}); }catch(e){ r={ok:false}; }
   if(role==='broker'){ localStorage.setItem('hz_mode','broker'); }
-  const dest = role==='broker' ? '/my-listings' : (nextParam() || '/app');
+  // brokers choose the plan their 14-day trial runs on (and continues after it)
+  const dest = role==='broker' ? '/pricing?start=1' : (nextParam() || '/app');
   location.replace(dest);
 };
 // already onboarded? skip straight through.
