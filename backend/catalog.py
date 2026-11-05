@@ -74,7 +74,17 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
     cover = proj.get("cover_image_url")
     if cover:
         images = [cover] + [i for i in images if i != cover]
+    ar_first = lambda *ks: next((src.get(k) for src, k in ks if src.get(k)), None)  # noqa: E731
     return {
+        # project-level detail (Arabic brief when we have it) for the advisor
+        "project_about": ar_first((proj, "description_ar"), (proj, "description")),
+        "project_amenities": ar_first((proj, "amenities_ar"), (proj, "amenities")),
+        "project_location": proj.get("location"),
+        "project_delivery": proj.get("delivery"),
+        "project_status": proj.get("status"),
+        "developer_id": proj.get("developer_id"),
+        "developer_ar": dev.get("name_ar"),
+        "developer_website": dev.get("website"),
         "id": "TC-" + str(u.get("id", ""))[:8],
         "project_id": proj.get("id"),
         "purpose": "sale",
@@ -85,8 +95,8 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
         "compound_ar": name_ar,
         "developer": dev.get("name"),
         "developer_phone": dev.get("phone"),
-        "developer_about": dev.get("about"),
-        "developer_track": dev.get("track_record"),
+        "developer_about": dev.get("about_ar") or dev.get("about"),
+        "developer_track": dev.get("track_record_ar") or dev.get("track_record"),
         "price": price,
         "currency": "EGP",
         "price_period": None,
@@ -112,9 +122,9 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
 
 _SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
            "installment_years,payment_plan,finishing,delivery,"
-           "project:projects!inner(id,name,name_ar,area,description,cover_image_url,"
-           "project_media(kind,url),"
-           "developer:developers(name,phone,about,track_record))")
+           "project:projects!inner(id,developer_id,name,name_ar,area,description,description_ar,amenities,amenities_ar,"
+           "location,delivery,status,cover_image_url,project_media(kind,url),"
+           "developer:developers(name,name_ar,phone,website,about,about_ar,track_record,track_record_ar))")
 
 
 def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
@@ -240,6 +250,120 @@ def units_for_projects(project_ids: list[str], n: int = 12) -> list[dict[str, An
         return rows
     except Exception:
         return []
+
+
+# Developers the client names ("مين بالم هيلز وايه سابقة أعمالهم", "Is Artal reliable?").
+_DEVS: list[tuple[str, list[str], int]] | None = None
+_DEVS_AT = 0.0
+_DEV_SUFFIX = r"\b(developments?|developers?|development company|properties|property|real estate development|" \
+              r"real estate|group|holding|company|l\.?l\.?c|fz)\b"
+# words that signal the client is talking about a company, so even a short or
+# common-word name ("Times", "Prime", "كود") can be taken as a developer
+_DEV_CUES = ("شركه", "شركة", "مطور", "المطور", "سابقه", "سابقة", "اعمال", "أعمال", "مشاريع", "مشروعات",
+             "developer", "company", "track record", "projects by")
+
+
+def _developers() -> list[tuple[str, list[str], int]]:
+    global _DEVS, _DEVS_AT
+    if _DEVS is not None and time.time() - _DEVS_AT < 1800:
+        return _DEVS
+    import re
+    import requests
+    r = requests.get(config.SUPABASE_URL.rstrip("/") + "/rest/v1/developers",
+                     params={"select": "id,name,name_ar,projects(count)"},
+                     headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}",
+                              "Range": "0-1999"}, timeout=8)
+    r.raise_for_status()
+    out = []
+    for d in r.json():
+        core = re.sub(_DEV_SUFFIX, " ", (d.get("name") or "").lower())
+        keys = {k for k in (_fold(d.get("name")), _fold(core), _fold(d.get("name_ar"))) if len(k.strip()) >= 3}
+        n = ((d.get("projects") or [{}])[0] or {}).get("count") or 0
+        if keys:
+            out.append((d["id"], sorted(keys, key=len, reverse=True), n))
+    _DEVS, _DEVS_AT = out, time.time()
+    return out
+
+
+def mentioned_developers(text: str, limit: int = 2) -> list[str]:
+    if not text or not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return []
+    try:
+        devs = _developers()
+    except Exception:
+        return []
+    t = _fold(text)
+    cue = any(_fold(c) in t for c in _DEV_CUES)
+    import re
+    hits = []
+    for did, keys, n in devs:
+        for k in keys:
+            if k not in t:
+                continue
+            words = len(k.split())
+            latin = bool(re.search(r"[a-z]", k))
+            # a bare single word ("prime", "times", "هيلز") only counts with a company
+            # cue, or when it's a distinctive Arabic name of a sizeable developer ("سوديك")
+            if words >= 2 or cue or (not latin and len(k.strip()) >= 4 and n >= 3):
+                hits.append((len(k), did, k))
+                break
+    hits.sort(reverse=True)
+    # "بالم هيلز" must not also bring in a developer called just "هيلز"
+    kept = [h for h in hits if not any(h[2] != o[2] and h[2] in o[2] for o in hits)]
+    return [d for _, d, _ in kept[:limit]]
+
+
+def developer_profile(dev_id: str, user_token: str | None = None) -> str:
+    """A grounded profile of one developer for the advisor: who they are, their
+    track record and their projects on Homzy with starting prices."""
+    try:
+        import requests
+        h = {"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}"}
+        base = config.SUPABASE_URL.rstrip("/") + "/rest/v1"
+        d = requests.get(base + "/developers", headers=h, timeout=8, params={
+            "select": "name,name_ar,website,about,about_ar,track_record,track_record_ar", "id": f"eq.{dev_id}"}).json()[0]
+        ps = requests.get(base + "/projects", headers=h, timeout=8, params={
+            "select": "name,name_ar,area,delivery,status,unit_types(price_from,type)",
+            "developer_id": f"eq.{dev_id}", "limit": "40"}).json()
+    except Exception:
+        return ""
+    lines = [f"DEVELOPER: {d.get('name')}" + (f" ({d['name_ar']})" if d.get("name_ar") else "")]
+    about = d.get("about_ar") or d.get("about")
+    track = d.get("track_record_ar") or d.get("track_record")
+    if about:
+        lines.append(f"   About: {about[:900]}")
+    if track:
+        lines.append(f"   Track record: {track[:900]}")
+    if d.get("website"):
+        lines.append(f"   Website: {d['website']}")
+    if not about and not track:
+        lines.append("   (No company background on file — don't guess; offer to check with the developer.)")
+    rows = []
+    for p in ps:
+        prices = [u.get("price_from") for u in (p.get("unit_types") or []) if u.get("price_from")]
+        types = sorted({u.get("type") for u in (p.get("unit_types") or []) if u.get("type")})
+        bits = [p.get("area") or "", f"from {int(min(prices)):,} EGP" if prices else "",
+                ", ".join(types[:4]), (f"delivery {p['delivery']}" if p.get("delivery") else "")]
+        rows.append(f"     - {p.get('name')}" + (f" / {p['name_ar']}" if p.get("name_ar") else "")
+                    + ": " + " | ".join(b for b in bits if b))
+    if rows:
+        lines.append(f"   Projects on Homzy ({len(rows)}):")
+        lines += rows[:25]
+    # company-level updates from the developers' WhatsApp groups; the database
+    # filters the tiers by the caller (clients only ever get public ones)
+    try:
+        r = requests.post(base + "/rpc/developer_intel_for_ai", json={"p_developer_ids": [dev_id]}, timeout=8,
+                          headers={**h, "Content-Type": "application/json",
+                                   "Authorization": f"Bearer {user_token or config.SUPABASE_KEY}"})
+        intel = r.json() if r.ok else []
+    except Exception:
+        intel = []
+    for it in (intel if isinstance(intel, list) else [])[:6]:
+        when = (it.get("observed_at") or "")[:10]
+        tag = {"broker": "broker-only update", "ai": "internal context — do NOT quote"}.get(
+            it.get("tier"), "Latest developer update")
+        lines.append(f"   [{tag}, {when}] {it.get('content_ar')}")
+    return "\n".join(lines)
 
 
 _DEV_CACHE: dict[str, list[str]] = {}

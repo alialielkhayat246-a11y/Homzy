@@ -134,6 +134,7 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             "(entries marked ASKED below). Answer about it directly in this reply — starting price, unit "
             "types and sizes, developer, payment plan / delivery when listed — even if you haven't finished "
             "qualifying them yet; then continue with your questions. NEVER say it is unavailable or not on our list.")
+    seen_projects: set = set()
     for i, m in enumerate(matches, 1):
         price = listings_mod.price_str(m, "en")
         beds = m.get("bedrooms")
@@ -149,7 +150,20 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
         media_txt = (", ".join(has_media)) or "none"
         about = (m.get("developer_about") or "").strip()
         track = (m.get("developer_track") or "").strip()
-        dev_info = " ".join(x for x in (about, track) if x)[:300]
+        deep = i == 1 or m.get("asked_for")
+        dev_info = " ".join(x for x in (about, track) if x)[:(800 if deep else 250)]
+        # project-level facts once per project (several unit rows share them)
+        pkey = m.get("project_id") or m.get("compound_en")
+        proj_txt = ""
+        if pkey not in seen_projects:
+            seen_projects.add(pkey)
+            for label, key, cap in (("About the project", "project_about", 700 if deep else 300),
+                                    ("Amenities", "project_amenities", 400), ("Location", "project_location", 200),
+                                    ("Project delivery", "project_delivery", 80), ("Project status", "project_status", 60)):
+                if m.get(key):
+                    proj_txt += f"\n   {label}: {str(m[key])[:cap]}"
+            if m.get("developer_ar"):
+                proj_txt += f"\n   Developer (Arabic name): {m['developer_ar']}"
         market = m.get("market") or "primary"
         market_txt = "RESALE (secondary, ready)" if market == "resale" else "PRIMARY (new launch, from developer)"
         vnote = m.get("value_note")
@@ -190,6 +204,7 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             + (f"   Market value: {vnote}\n" if vnote else "")
             + f"   Attached to the client: {media_txt}\n"
             f"   Developer/project info: {dev_info or '-'}"
+            + proj_txt
             + extra
         )
     return ("AVAILABLE MATCHES (talk about ONLY these; recommend the FIRST one; "

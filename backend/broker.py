@@ -254,11 +254,11 @@ def _merge(req: dict[str, Any], found: dict[str, Any]) -> None:
 # Reply generation
 # --------------------------------------------------------------------------
 def _llm_reply(history: list[dict[str, str]], language: str,
-               matches: list[dict[str, Any]], coach: bool = False):
+               matches: list[dict[str, Any]], coach: bool = False, knowledge: str = ""):
     client = _client_or_none()
     if client is None:
         return None
-    overview = catalog.market_overview()
+    overview = "\n\n".join(x for x in (catalog.market_overview(), knowledge) if x)
     system = (persona.broker_coach_system(language, matches, overview) if coach
               else persona.broker_system(language, matches, overview))
     messages = [{"role": "system", "content": system}] + history
@@ -350,6 +350,19 @@ def _prepare(session: dict[str, Any], message: str,
             rest_named = [x for x in named if x not in first[:1]]
             others = [x for x in matches if x.get("project_id") not in named_ids]
             matches = (first[:1] + rest_named + others)[:max(config.MAX_RESULTS, 4)]
+
+    # 3a') developer questions: a developer named in the message (or the developer
+    #      of a named project when the client asks about "the developer / track
+    #      record") gets a grounded profile — background + all its projects on Homzy.
+    dev_ids = catalog.mentioned_developers(message)
+    folded = catalog._fold(message)
+    if not dev_ids and named_ids and any(catalog._fold(c) in folded for c in catalog._DEV_CUES):
+        dev_ids = list(dict.fromkeys(m.get("developer_id") for m in matches
+                                     if m.get("asked_for") and m.get("developer_id")))[:1]
+    profiles = [p for p in (catalog.developer_profile(d, user_token) for d in dev_ids) if p]
+    session["_knowledge"] = (
+        "DEVELOPER PROFILES (real Homzy data — the client asked about these developers; answer from it, "
+        "including their other projects and starting prices):\n" + "\n\n".join(profiles)) if profiles else ""
 
     # 3b) enrich the top unit so the advisor can speak with real depth: position
     #     it against ITS own market, describe its AREA, and know the developer's
@@ -616,7 +629,7 @@ def handle_turn(session: dict[str, Any], message: str,
     language, history, req, matches = _prepare(session, message, client_history,
                                                user_token if coach else None, coach)
 
-    reply = _llm_reply(history, language, matches, coach=coach)
+    reply = _llm_reply(history, language, matches, coach=coach, knowledge=session.get("_knowledge", ""))
     mode = "ai"
     if reply is None:
         greet = sum(1 for m in history if m["role"] == "user") <= 1
@@ -646,7 +659,7 @@ def handle_turn_stream(session: dict[str, Any], message: str,
     client = _client_or_none()
     reply = None
     if client is not None and hasattr(client, "stream"):
-        overview = catalog.market_overview()
+        overview = "\n\n".join(x for x in (catalog.market_overview(), session.get("_knowledge", "")) if x)
         system = (persona.broker_coach_system(language, matches, overview) if coach
                   else persona.broker_system(language, matches, overview))
         messages = [{"role": "system", "content": system}] + [
@@ -663,7 +676,7 @@ def handle_turn_stream(session: dict[str, Any], message: str,
 
     mode = "ai"
     if reply is None:  # non-streaming engine, or streaming failed → one shot
-        reply = _llm_reply(history, language, matches, coach=coach)
+        reply = _llm_reply(history, language, matches, coach=coach, knowledge=session.get("_knowledge", ""))
         if reply is None:
             greet = sum(1 for m in history if m["role"] == "user") <= 1
             reply = persona.template_reply(language, req, matches, greet=greet)
