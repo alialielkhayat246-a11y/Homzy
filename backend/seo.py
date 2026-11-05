@@ -99,10 +99,30 @@ def _clip(s: str, n: int) -> str:
 # ---------------------------------------------------------------------------
 # Shared HTML shell
 # ---------------------------------------------------------------------------
+def _share_bar(url: str, text: str) -> str:
+    """WhatsApp / Facebook / copy-link buttons, so visitors can pass a page on too."""
+    wa = quote(f"{text}\n{url}")
+    fb = quote(url, safe="")
+    btn = ("display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;"
+           "padding:9px 15px;border-radius:11px;text-decoration:none;cursor:pointer;border:none;font-family:inherit;")
+    return (
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0 2px">'
+        '<span style="font-size:13px;color:var(--muted);font-weight:700;margin-inline-end:4px">شارك:</span>'
+        f'<a target="_blank" rel="noopener" href="https://wa.me/?text={wa}" style="{btn}background:#22C55E;color:#fff">واتساب</a>'
+        f'<a target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u={fb}" style="{btn}background:#1877F2;color:#fff">فيسبوك</a>'
+        f'<button type="button" onclick="navigator.clipboard.writeText(\'{_esc(url)}\').then(()=>{{this.textContent=\'✓ اتنسخ\'}})" '
+        f'style="{btn}background:#fff;color:var(--navy);border:1.5px solid var(--line-2)">🔗 نسخ اللينك</button>'
+        '</div>')
+
+
 def _page(title: str, desc: str, canonical: str, og_image: str,
-          jsonld: dict, body: str) -> str:
+          jsonld: dict, body: str, og_size: tuple[int, int] | None = None) -> str:
     ld = json.dumps(jsonld, ensure_ascii=False)
     og_img_tag = (f'<meta property="og:image" content="{_esc(og_image)}" />'
+                  + (f'<meta property="og:image:width" content="{og_size[0]}" />'
+                     f'<meta property="og:image:height" content="{og_size[1]}" />'
+                     '<meta property="og:image:type" content="image/jpeg" />' if og_size else '')
+                  + f'<meta property="og:image:alt" content="{_esc(title)}" />'
                   '<meta name="twitter:card" content="summary_large_image" />'
                   if og_image else '')
     return f"""<!DOCTYPE html>
@@ -427,6 +447,7 @@ def render_project(pid: str) -> str | None:
       <button class="btn btn-teal" onclick='HZ.openChat({{context:{chat_ctx}}})'>💬 اسأل Homzy عن المشروع ده</button>
       <a class="btn btn-ghost" href="/app?project={pid}">⇄ قارن بمشاريع تانية</a>
     </div>
+    {_share_bar(canonical, name)}
     {('<div class="sp-sec"><p>' + _esc(p.get('description')) + '</p></div>') if p.get('description') else ''}
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(name)}">' for u in images) + '</div></div>') if images else ''}
     {('<div class="sp-sec"><h2>الوحدات والأسعار</h2><p class="sp-note">ℹ️ الأسعار من آخر تحديث عندنا' + ((' (' + updated + ')') if updated else '') + '، وممكن تتغير — أكّد السعر والتوفّر مع المطوّر قبل الحجز.</p><div class="utscroll"><table class="utable"><thead><tr><th>النوع</th><th>الغرف</th><th>المساحة</th><th>السعر</th><th>المقدم</th><th>التقسيط</th><th>التسليم</th></tr></thead><tbody>' + urows + '</tbody></table></div>' + (''.join(plans)) + '</div>') if units else ''}
@@ -444,7 +465,7 @@ def render_project(pid: str) -> str | None:
 # ---------------------------------------------------------------------------
 def render_listing(lid: str) -> str | None:
     sel = ("id,title,description,purpose,type,price,currency,area,address,"
-           "bedrooms,bathrooms,size_sqm,status,listing_media(url,sort)")
+           "bedrooms,bathrooms,size_sqm,status,updated_at,listing_media(url,sort)")
     rows = _get(f"/listings?select={sel}&id=eq.{lid}&status=eq.active&limit=1")
     if not rows:
         return None
@@ -457,10 +478,20 @@ def render_listing(lid: str) -> str | None:
     images = [m["url"] for m in media if m.get("url")]
     price = l.get("price")
 
-    title = f"{title_txt} {('- ' + area) if area else ''} {purpose} | Homzy".replace("  ", " ")
-    desc = _clip(f"{title_txt}{(' في ' + area) if area else ''} {purpose}. "
-                 f"{(_money(price) + '. ') if price else ''}{l.get('description') or ''}", 160)
+    # brokers usually already wrote the area / "للبيع" into the title — don't repeat them
+    said = lambda w: bool(w) and w.replace("ال", "") in title_txt.replace("ال", "")
+    title = (title_txt + (f" - {area}" if area and not said(area) else "")
+             + ("" if said(purpose[2:]) else f" {purpose}") + " | Homzy")
+    size = l.get("size_sqm")
+    facts = " · ".join(x for x in [
+        _money(price) if price else "",
+        f"{l['bedrooms']} غرف" if l.get("bedrooms") else "",
+        f"{float(size):g} م²" if size else "",
+        area if area and not said(area) else ""] if x)
+    desc = _clip(f"{facts}. {l.get('description') or ''}" if facts else (l.get("description") or title_txt), 160)
     canonical = f"{SEO_BASE}/listing/{lid}"
+    ver = re.sub(r"\D", "", str(l.get("updated_at") or ""))[:14]
+    share_img = f"{SEO_BASE}/og/listing/{lid}.jpg?v={ver}"
 
     jsonld = {"@context": "https://schema.org", "@type": "Product",
               "name": title_txt, "description": desc, "category": "Real Estate",
@@ -525,12 +556,13 @@ def render_listing(lid: str) -> str | None:
     <div class="sp-sub">{_esc(l.get('address') or area)}</div>
     {('<div class="sp-price">' + _money(price) + '</div>') if price else ''}
     <div class="sp-chips">{''.join(chips)}</div>
+    {_share_bar(canonical, title_txt)}
     {('<div class="sp-sec"><p>' + _esc(l.get('description')) + '</p></div>') if l.get('description') else ''}
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(title_txt)}">' for u in images) + '</div></div>') if images else ''}
     {contact_html}
     {_viewing_form(ctx)}
     """
-    return _page(title, desc, canonical, cover, jsonld, body)
+    return _page(title, desc, canonical, share_img, jsonld, body, og_size=(1200, 630))
 
 
 # ---------------------------------------------------------------------------

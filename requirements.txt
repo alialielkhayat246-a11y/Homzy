@@ -7,3 +7,9 @@ pywebpush>=1.14
 
 # Optional — only needed if you set LLM_PROVIDER=gemini
 # google-generativeai>=0.8
+
+# Share cards (/og/listing/{id}.jpg)
+pillow>=10
+arabic-reshaper>=3.0
+python-bidi>=0.6
+fonttools>=4.40

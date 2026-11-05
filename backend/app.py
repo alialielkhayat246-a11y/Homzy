@@ -10,8 +10,10 @@ from typing import Any
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (FileResponse, HTMLResponse, JSONResponse,
-                               PlainTextResponse, Response, StreamingResponse)
+                               PlainTextResponse, RedirectResponse, Response,
+                               StreamingResponse)
 import json as _json
+import re
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
@@ -405,6 +407,44 @@ def listing_page(lid: str):
     if not page:
         return HTMLResponse(_not_found_html(), status_code=404)
     return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
+
+
+@app.get("/og/listing/{lid}.jpg")
+def listing_share_card(lid: str, sq: int = 0):
+    """Branded share image of a published unit: the og:image of /listing/{id}
+    (1200x630) or, with ?sq=1, a 1080x1080 post for Instagram."""
+    import requests
+    from . import sharecard  # imported here so an image-stack problem never takes the site down
+    if not re.fullmatch(r"[0-9a-f-]{36}", lid):
+        return Response(status_code=404)
+    try:
+        rows = seo._get(f"/listings?select=title,purpose,price,area,bedrooms,bathrooms,size_sqm,"
+                        f"listing_media(url,sort)&id=eq.{lid}&status=eq.active&limit=1")
+    except Exception:
+        rows = None
+    if not rows:
+        return Response(status_code=404)
+    l = rows[0]
+    media = sorted(l.get("listing_media") or [], key=lambda m: m.get("sort") or 0)
+    photo = None
+    if media and media[0].get("url"):
+        try:
+            r = requests.get(media[0]["url"], timeout=15)
+            photo = r.content if r.ok else None
+        except Exception:
+            photo = None
+    try:
+        c = (seo._rpc("listing_contact", {"p_lid": lid}) or [{}])[0]
+    except Exception:
+        c = {}
+    try:
+        img = sharecard.render(l, photo, square=bool(sq), company=c.get("company") or c.get("full_name") or "")
+    except Exception:
+        if media and media[0].get("url"):
+            return RedirectResponse(media[0]["url"], status_code=302)
+        return Response(status_code=404)
+    return Response(img, media_type="image/jpeg",
+                    headers={"Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"})
 
 
 @app.get("/area/{slug}")
