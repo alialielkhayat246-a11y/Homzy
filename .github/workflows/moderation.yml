@@ -1,0 +1,22 @@
+name: Listing content review
+
+# Reviews listings waiting for the automatic content check (photos + text) —
+# mainly ones published from the mobile app or AXIS ONE; the website already
+# triggers a review right after publishing. The endpoint only processes
+# listings that are already queued, one per call, so it needs no secret.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Review queued listings
+        run: |
+          for i in 1 2 3 4 5; do
+            out=$(curl -s --max-time 60 -X POST "https://homzy-ai.com/api/moderation/run?limit=1")
+            echo "$out"
+            case "$out" in *'"reviewed":[]'*) break;; esac
+          done

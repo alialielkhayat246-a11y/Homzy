@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>/* auth gate */
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+<title>Homzy — مراجعة الإعلانات</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  .ad{max-width:1080px;margin:0 auto;padding:22px;}
+  .filters{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap;}
+  .filters button{padding:7px 13px;border-radius:100px;border:1.5px solid var(--line-2);background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--ff);}
+  .filters button.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .row{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .row .t{font-weight:800;font-size:16px;} .row .m{color:#40506a;font-size:13.5px;margin-top:5px;line-height:1.7;white-space:pre-line;}
+  .why{background:#FFF4E5;color:#8a4b00;border-radius:10px;padding:9px 12px;font-size:13.5px;font-weight:700;margin-top:8px;}
+  .why.rej{background:#FDECEC;color:#B42318;}
+  .ph{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;}
+  .ph img{height:120px;border-radius:10px;border:1px solid var(--line);flex:none;cursor:zoom-in;}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+  .acts button{font-size:13px;padding:8px 14px;border-radius:9px;border:1.5px solid var(--line-2);background:#fff;font-weight:800;cursor:pointer;font-family:var(--ff);}
+  .acts .ok{border-color:#137a3e;color:#137a3e;} .acts .no{border-color:#B42318;color:#B42318;}
+  .badge{font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:100px;margin-inline-start:6px;}
+  .b-manual{background:#FFF4E5;color:#B45309;} .b-queued{background:#EEF2FF;color:#3949AB;} .b-rejected{background:#FDECEC;color:#B42318;}
+  .empty{padding:40px;text-align:center;color:var(--muted);}
+</style>
+</head>
+<body data-mode="broker">
+<div id="hz-header"></div>
+<div class="ad">
+  <h1>مراجعة الإعلانات</h1>
+  <p style="color:var(--muted);margin-top:6px">كل إعلان بيتنشر بيتفحص تلقائياً (الصور والكلام). هنا الإعلانات اللي الفحص الآلي مكانش متأكد منها، واللي مستنية الفحص، واللي اترفضت — تقدر توافق أو ترفض بنفسك.</p>
+  <div class="filters" id="filters"></div>
+  <div id="content"><div class="empty">…</div></div>
+</div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=17"></script>
+<script>
+let S=null, ROWS=[], FILTER='manual';
+const esc=HZ.esc;
+const rpc=(fn,a)=>HZ.sbAuth('/rpc/'+fn, S.token, 'POST', a||{});
+const TAB={manual:'محتاجة قرارك',queued:'مستنية الفحص',rejected:'مرفوضة'};
+function stateOf(r){ return r.moderation_status==='rejected'?'rejected':r.moderation_status; }
+function renderFilters(){
+  document.getElementById('filters').innerHTML=Object.keys(TAB).map(k=>{
+    const n=ROWS.filter(r=>stateOf(r)===k).length;
+    return `<button class="${k===FILTER?'on':''}" onclick="FILTER='${k}';render()">${TAB[k]} (${n})</button>`; }).join('');
+}
+function render(){
+  renderFilters();
+  const rows=ROWS.filter(r=>stateOf(r)===FILTER), box=document.getElementById('content');
+  if(!rows.length){ box.innerHTML='<div class="empty">مفيش إعلانات هنا 👌</div>'; return; }
+  box.innerHTML=rows.map(r=>`<div class="row">
+    <div class="t">${esc(r.title||'')}<span class="badge b-${stateOf(r)}">${TAB[stateOf(r)]}</span></div>
+    <div class="m">${esc(r.owner_name||'')}${r.area?' · '+esc(r.area):''}${r.price?' · '+Number(r.price).toLocaleString('en-US')+' ج.م':''}</div>
+    ${r.moderation_reason?`<div class="why${stateOf(r)==='rejected'?' rej':''}">⚠️ ${esc(r.moderation_reason)}</div>`:''}
+    ${r.description?`<div class="m">${esc(r.description.slice(0,600))}</div>`:''}
+    ${(r.photos||[]).length?`<div class="ph">${r.photos.map(u=>`<img loading="lazy" src="${esc(u)}" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
+    <div class="acts">
+      <button class="ok" onclick="decide('${r.id}',true)">✅ موافقة ونشر</button>
+      <button class="no" onclick="decide('${r.id}',false)">رفض</button>
+    </div></div>`).join('');
+}
+async function load(){
+  try{ ROWS=await rpc('admin_listing_review_queue')||[]; }
+  catch(e){ document.getElementById('content').innerHTML='<div class="empty">الصفحة دي للأدمن بس.</div>'; return; }
+  render();
+}
+window.decide=async(id,ok)=>{
+  let reason=null;
+  if(!ok){ reason=prompt('سبب الرفض (هيظهر للبروكر):','محتوى غير لائق'); if(reason===null) return; }
+  try{ await rpc('admin_listing_decide',{p_listing:id,p_approve:ok,p_reason:reason}); await load(); }
+  catch(e){ alert('تعذّر الحفظ: '+(e.message||e)); }
+};
+(async()=>{ S=HZ.session(); if(!S) return; await load(); })();
+</script>
+</body>
+</html>

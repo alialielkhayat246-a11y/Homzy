@@ -65,6 +65,8 @@
   .ucard .acts button.pub{background:var(--teal); color:#fff; border-color:var(--teal);}
   .ucard .acts button.del{color:#B42318; border-color:#F0C9C4;}
   .ucard .acts button.share{background:#1877F2; color:#fff; border-color:#1877F2;}
+  .mod-note{margin-top:8px; font-size:12.5px; font-weight:700; line-height:1.6; background:#FFF4E5; color:#8a4b00; border-radius:9px; padding:7px 10px;}
+  .mod-note.rej{background:#FDECEC; color:#B42318;}
   .sh-body > *{flex:none;} /* the scrolling column must not squash the card / text box */
   .sh-row{display:flex; gap:8px; flex-wrap:wrap;}
   .sh{flex:1 1 120px; font-family:"Cairo",sans-serif; font-weight:800; font-size:13.5px; border-radius:11px; padding:10px 12px; cursor:pointer; text-align:center; text-decoration:none; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
@@ -314,12 +316,14 @@ function render(){
     return `<div class="ucard">
       <div class="img" style="cursor:pointer;${cover?`background-image:url('${esc(cover)}')`:''}" onclick="${open}" title="${on?L('فتح صفحة الوحدة','Open unit page'):L('تعديل','Edit')}">
         ${cover?'':'<div class="no-img">🏠</div>'}
-        <span class="st ${on?'on':'off'}">${on?L('منشور','Published'):L('مسودة','Draft')}</span>
+        <span class="st ${on?'on':'off'}">${stLabel(l)}</span>
       </div>
       <div class="b">
         <div class="t" style="cursor:pointer" onclick="${open}">${esc(l.title||L('وحدة','Unit'))}</div>
         <div class="pr">${l.price?money(l.price):'—'}${l.purpose==='rent'?L(' / شهر',' / mo'):''}</div>
         <div class="mt">${esc(l.area||'')}${l.bedrooms?(' · '+l.bedrooms+' '+L('غرف','beds')):''}${l.size_sqm?(' · '+l.size_sqm+' '+L('م²','m²')):''}</div>
+        ${l.status==='pending'?`<div class="mod-note">⏳ ${L('بنراجع الصور والكلام تلقائياً — الإعلان هيتنشر أول ما المراجعة تخلص.','We are checking the photos and text — it goes live as soon as the review passes.')}</div>`:''}
+        ${l.status==='rejected'?`<div class="mod-note rej">❌ ${L('الإعلان ماتنشرش','Not published')}: ${esc(l.moderation_reason||L('محتوى غير مناسب','Inappropriate content'))}<br>${L('عدّل الصور أو الكلام وانشره تاني.','Edit the photos or text and publish again.')}</div>`:''}
         <div class="acts">
           <button onclick="editListing('${l.id}')">✏️ ${L('تعديل','Edit')}</button>
           <button class="pub" onclick="${on?'togglePub':'editListing'}('${l.id}')">${on?L('إخفاء','Hide'):L('معاينة ونشر','Preview & publish')}</button>
@@ -382,6 +386,16 @@ window.dlPhotos=async(btn)=>{ const l=LISTINGS.find(x=>x.id===SHARE_ID); btn.dis
   try{ for(const [i,m] of media.entries()){ const ext=(m.url.split('?')[0].split('.').pop()||'jpg').slice(0,4); await saveAs(m.url,'homzy-'+l.id.slice(0,8)+'-'+(i+1)+'.'+ext); } }
   catch(e){ alert(L('تعذّر تحميل بعض الصور.','Some photos failed to download.')); }
   btn.disabled=false; };
+function stLabel(l){
+  return ({active:L('منشور','Published'), pending:L('قيد المراجعة','In review'), rejected:L('مرفوض','Rejected')})[l.status]
+    || L('مسودة','Draft');
+}
+// Publishing puts the unit in automatic review (photos + text); kick the reviewer
+// now instead of waiting for the scheduler, then refresh to show the verdict.
+async function reviewNow(){
+  try{ await fetch('/api/moderation/run?limit=1',{method:'POST'}); }catch(e){}
+  loadMine();
+}
 window.renderListings=render;
 document.addEventListener('hz:lang', ()=>{ if(UID) render(); });
 /* form */
@@ -509,6 +523,7 @@ window.saveListing=async (status)=>{
     }
     if(status==='active')await api('/listings?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status:'active'})});
     closeForm(); loadMine();
+    if(status==='active') reviewNow();
   }catch(e){ fmsg('حصل خطأ في الحفظ: '+(e.message||e)); }
   finally{window.listingSaving=false;$('draftBtn').disabled=false; $('saveBtn').disabled=false; }
 };
@@ -516,7 +531,7 @@ window.saveListing=async (status)=>{
 window.togglePub=async (id)=>{
   const l=LISTINGS.find(x=>x.id===id); if(!l) return;
   const ns=l.status==='active'?'draft':'active';
-  try{ await api('/listings?id=eq.'+id, {method:'PATCH', body:JSON.stringify({status:ns})}); loadMine(); }catch(e){}
+  try{ await api('/listings?id=eq.'+id, {method:'PATCH', body:JSON.stringify({status:ns})}); loadMine(); if(ns==='active') reviewNow(); }catch(e){}
 };
 window.delListing=async (id)=>{
   if(!confirm('متأكد إنك عايز تمسح الوحدة دي؟')) return;

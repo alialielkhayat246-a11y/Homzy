@@ -455,6 +455,22 @@ def listing_page(lid: str):
     return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
 
 
+@app.api_route("/api/moderation/run", methods=["GET", "POST"])
+async def moderation_run(limit: int = 1):
+    """Review queued listings (photos + text) — called right after a broker
+    publishes, and every few minutes by the scheduler for app / AXIS ONE
+    listings. Only touches listings already waiting, so it's safe to expose."""
+    from . import moderation
+    done = await run_in_threadpool(moderation.run, max(1, min(limit, 3)))
+    return {"reviewed": done}
+
+
+@app.get("/admin/listings")
+def admin_listings_page():
+    """Listings the automatic review flagged or wasn't sure about."""
+    return FileResponse(config.FRONTEND_DIR / "admin-listings.html")
+
+
 @app.get("/og/listing/{lid}.jpg")
 def listing_share_card(lid: str, sq: int = 0):
     """Branded share image of a published unit: the og:image of /listing/{id}
