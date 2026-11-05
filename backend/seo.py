@@ -91,6 +91,21 @@ def _money(n: Any) -> str:
         return ""
 
 
+def _intl_phone(raw: str) -> str:
+    """Any way a broker typed an Egyptian number (01…, 1…, 201…, +20 …, 0020…)
+    -> 2010… digits, for wa.me links and tel:+ dialling."""
+    d = re.sub(r"\D", "", raw or "")
+    if d.startswith("00"):
+        d = d[2:]
+    if d.startswith("20"):
+        return d
+    if d.startswith("0"):
+        return "2" + d               # 01… -> 201…
+    if d.startswith("1") and len(d) == 10:
+        return "20" + d              # 1… (leading 0 dropped) -> 201…
+    return d                         # already international (another country code)
+
+
 def _clip(s: str, n: int) -> str:
     s = " ".join((s or "").split())
     return s if len(s) <= n else s[: n - 1].rstrip() + "…"
@@ -558,13 +573,7 @@ def render_listing(lid: str) -> str | None:
         c = {}
     phone_raw = (c.get("phone") or "").strip()
     if phone_raw:
-        wa = re.sub(r"\D", "", phone_raw)
-        if wa.startswith("00"):
-            wa = wa[2:]
-        elif wa.startswith("0"):
-            wa = "2" + wa            # Egypt local 01... -> 201...
-        elif not wa.startswith("2"):
-            wa = "2" + wa
+        wa = _intl_phone(phone_raw)
         who = _esc(c.get("company") or c.get("full_name") or "")
         wtext = quote(f"مهتم بـ {title_txt} — Homzy")
         contact_html = (
