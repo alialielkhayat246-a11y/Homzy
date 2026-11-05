@@ -167,7 +167,14 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
   .sp-sec h2{{font-size:17px; color:var(--navy); margin-bottom:10px;}}
   .sp-sec p{{color:#40506a; font-size:14.5px; line-height:1.8;}}
   .sp-gallery{{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px;}}
-  .sp-gallery img{{height:150px; border-radius:12px; flex:none; object-fit:cover; border:1px solid var(--line);}}
+  .sp-gallery img{{height:150px; border-radius:12px; flex:none; object-fit:cover; border:1px solid var(--line); cursor:zoom-in;}}
+  .sp-cover[data-photos]{{cursor:zoom-in;}}
+  .lbx{{position:fixed; inset:0; z-index:200; background:rgba(5,12,24,.94); display:none; align-items:center; justify-content:center;}}
+  .lbx.open{{display:flex;}}
+  .lbx img{{max-width:94vw; max-height:84vh; border-radius:10px; object-fit:contain; user-select:none;}}
+  .lbx button{{position:absolute; border:none; background:rgba(255,255,255,.14); color:#fff; width:46px; height:46px; border-radius:50%; font-size:24px; cursor:pointer;}}
+  .lbx .x{{top:16px; inset-inline-end:16px;}} .lbx .pv{{right:14px;}} .lbx .nx{{left:14px;}}
+  .lbx .n{{position:absolute; bottom:18px; color:#cfd8e3; font-size:14px; font-weight:700;}}
   .utscroll{{overflow-x:auto;}} .utable{{width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px;}}
   .utable th{{text-align:start; color:var(--muted); font-weight:700; padding:8px; border-bottom:1px solid var(--line); white-space:nowrap;}}
   .utable td{{padding:9px 8px; border-bottom:1px solid var(--line); color:#40506a;}}
@@ -189,6 +196,31 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
 {body}
 </main>
 <div id="hz-footer"></div>
+<div class="lbx" id="lbx" onclick="if(event.target===this)lbClose()">
+  <button class="x" onclick="lbClose()" aria-label="close">×</button>
+  <button class="pv" onclick="lbGo(-1)" aria-label="previous">›</button>
+  <img id="lbImg" alt="">
+  <button class="nx" onclick="lbGo(1)" aria-label="next">‹</button>
+  <div class="n" id="lbN"></div>
+</div>
+<script>
+// Photo viewer: gallery thumbnails and the cover open the full-size photos.
+var LB=[], LBI=0;
+function lbShow(){{ document.getElementById('lbImg').src=LB[LBI]; document.getElementById('lbN').textContent=(LBI+1)+' / '+LB.length; }}
+function lbOpen(list,i){{ LB=list; LBI=i||0; if(!LB.length) return; lbShow(); document.getElementById('lbx').classList.add('open'); }}
+function lbClose(){{ document.getElementById('lbx').classList.remove('open'); }}
+function lbGo(d){{ LBI=(LBI+d+LB.length)%LB.length; lbShow(); }}
+document.addEventListener('keydown',function(e){{ if(!document.getElementById('lbx').classList.contains('open')) return;
+  if(e.key==='Escape') lbClose(); else if(e.key==='ArrowLeft') lbGo(1); else if(e.key==='ArrowRight') lbGo(-1); }});
+(function(){{ var x0=null, box=document.getElementById('lbx');
+  box.addEventListener('touchstart',function(e){{ x0=e.touches[0].clientX; }},{{passive:true}});
+  box.addEventListener('touchend',function(e){{ if(x0===null) return; var dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>40) lbGo(dx<0?-1:1); x0=null; }}); }})();
+document.addEventListener('DOMContentLoaded',function(){{
+  var imgs=[].slice.call(document.querySelectorAll('.sp-gallery img')), urls=imgs.map(function(i){{ return i.src; }});
+  imgs.forEach(function(im,i){{ im.addEventListener('click',function(){{ lbOpen(urls,i); }}); }});
+  var cv=document.querySelector('.sp-cover'); if(cv&&urls.length){{ cv.setAttribute('data-photos','1'); cv.addEventListener('click',function(){{ lbOpen(urls,0); }}); }}
+}});
+</script>
 <script src="/assets/homzy.js?v=11"></script>
 <script>
 // Contact / viewing is gated: guests get sent to login, then straight back.
@@ -542,7 +574,8 @@ def render_listing(lid: str) -> str | None:
                '<span style="font-weight:800;margin-inline-end:auto">تواصل مع المعلن</span>')
             + f'<a target="_blank" rel="noopener" href="https://wa.me/{wa}?text={wtext}" '
             'style="background:#22C55E;color:#fff;font-weight:800;padding:11px 18px;border-radius:12px;text-decoration:none">💬 واتساب</a>'
-            + f'<a href="tel:{_esc(phone_raw)}" '
+            # stored as 2010…: dial it in international form, or the phone treats the 2 as a digit
+            + f'<a href="tel:+{wa}" '
             'style="background:#0B1D36;color:#fff;font-weight:800;padding:11px 18px;border-radius:12px;text-decoration:none">📞 اتصال</a>'
             '</div>'
         )
