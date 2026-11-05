@@ -211,6 +211,16 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             "never invent others):\n" + "\n".join(lines))
 
 
+def _language_lock(language: str) -> str:
+    # Much of the project/developer data is Arabic; without this the model drifts
+    # into Arabic for an English-speaking client.
+    if language == "en":
+        return ("\n\nFINAL RULE — LANGUAGE: the client is writing in ENGLISH. Write your whole reply in "
+                "English, even though some project/developer data above is in Arabic (translate it).")
+    return ("\n\nFINAL RULE — LANGUAGE: the client is writing in Arabic. Reply in Egyptian Arabic; keep "
+            "project/developer names as they are.")
+
+
 def broker_system(language: str, matches: list[dict[str, Any]], overview: str = "") -> str:
     language_name = "Arabic (Egyptian dialect)" if language == "ar" else "English"
     return BROKER_TEMPLATE.format(
@@ -219,7 +229,7 @@ def broker_system(language: str, matches: list[dict[str, Any]], overview: str = 
         language=language_name,
         overview=overview or "",
         matches=_render_matches(matches),
-    )
+    ) + _language_lock(language)
 
 
 # The person chatting is a BROKER (not a buyer). Coach them to sell to THEIR client.
@@ -265,7 +275,7 @@ def broker_coach_system(language: str, matches: list[dict[str, Any]], overview: 
         language=language_name,
         overview=overview or "",
         matches=_render_matches(matches),
-    )
+    ) + _language_lock(language)
 
 
 # ----------------------------------------------------------------------------
