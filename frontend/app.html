@@ -648,7 +648,7 @@ async function openProject(id){
       try{ others=await sb('/projects?select=id,name,name_ar,area&developer_id=eq.'+p.developer_id+'&id=neq.'+id+'&area=not.is.null&order=updated_at.desc&limit=8'); }catch(_){}
     }
     if(request!==detailRequest)return;
-    dr.innerHTML=projectDetail(p,units,media,others);
+    dr.innerHTML=projectDetail(p,units,media,others,intel);
     HZ.applyLang();
   }catch(e){ if(request!==detailRequest)return; dr.innerHTML='<div class="dbody"><button class="btn btn-ghost" onclick="closeDetail()">'+(HZ.lang==='ar'?'إغلاق':'Close')+'</button><p role="alert">'+(HZ.lang==='ar'?'تعذّر تحميل التفاصيل. حاول تاني.':'Could not load details. Please try again.')+'</p></div>'; }
 }
@@ -657,8 +657,8 @@ function unitTypeLabel(u){
   const m=map[u.type]; return m?m[HZ.lang]:(u.type||'');
 }
 let VIEW_CTX=null;   // project context for the active viewing-request form
-function projectDetail(p,units,media,others){
-  others=others||[];
+function projectDetail(p,units,media,others,intel){
+  others=others||[]; intel=intel||[];
   const name=HZ.lang==='ar'?(p.name_ar||p.name):(p.name||p.name_ar);
   const dev=p.developer||{};
   const cover=(p.cover_image_url&&!DEAD_IMG_HOSTS.test(p.cover_image_url)?p.cover_image_url:'')||(media.find(m=>m.kind==='image'&&!DEAD_IMG_HOSTS.test(m.url))||{}).url||'';
