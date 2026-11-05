@@ -140,7 +140,7 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
 
     if any(w in low for w in ["rent", "rental", "lease", "إيجار", "ايجار", "للايجار", "للإيجار"]):
         out["purpose"] = "rent"
-    elif any(w in low for w in ["buy", "sale", "purchase", "own", "تمليك", "للبيع", "شراء", "اشتري", "أشتري"]):
+    elif any(w in low for w in ["buy", "sale", "purchase", "own", "تمليك", "للبيع", "شراء", "اشتري", "أشتري", "يشتري", "يشترى", "هيشتري"]):
         out["purpose"] = "sale"
 
     if any(w in low for w in ["villa", "فيلا", "فيلة", "فله"]):
@@ -331,6 +331,26 @@ def _prepare(session: dict[str, Any], message: str,
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)
 
+    # 3a) a project the client asked about BY NAME goes first, even if the
+    #     budget/type search above didn't surface it — it exists, so never
+    #     tell them it's unavailable. Look at this message, else the last few.
+    named_ids = catalog.mentioned_projects(message)
+    if not named_ids:
+        for m in reversed([h for h in history[:-1] if h["role"] == "user"][-3:]):
+            named_ids = catalog.mentioned_projects(m["content"])
+            if named_ids:
+                break
+    if named_ids:
+        named = catalog.units_for_projects(named_ids)
+        if named:
+            named.sort(key=lambda x: listings_mod._score(
+                x, req.get("budget_max"), req.get("bedrooms"), req.get("delivery_pref")))
+            # the top-ranked unit of the FIRST named project leads; keep a couple more
+            first = [x for x in named if x.get("project_id") == named_ids[0]]
+            rest_named = [x for x in named if x not in first[:1]]
+            others = [x for x in matches if x.get("project_id") not in named_ids]
+            matches = (first[:1] + rest_named + others)[:max(config.MAX_RESULTS, 4)]
+
     # 3b) enrich the top unit so the advisor can speak with real depth: position
     #     it against ITS own market, describe its AREA, and know the developer's
     #     wider portfolio (other projects).
@@ -432,9 +452,15 @@ def parse_client(text: str) -> dict[str, Any]:
     Returns only the fields the model is confident about (so it also works for
     partial UPDATES). Empty dict if the LLM is unavailable or nothing parsed."""
     import datetime as _dt
-    client = _client_or_none()
-    if client is None or not (text or "").strip():
+    text = _norm(text or "")           # ٠١٠… → 010…, so phones/budgets read as digits
+    if not text.strip():
         return {}
+    # Fields we can read without the AI (phone, budget, rooms, area, buy/rent, type):
+    # they back the AI up when it's unavailable or misses one.
+    fallback = _parse_client_heuristic(text)
+    client = _client_or_none()
+    if client is None:
+        return fallback
     today = _dt.date.today().isoformat()
     system = (
         "You extract Egyptian real-estate CRM client info from a broker's spoken Arabic "
@@ -468,7 +494,7 @@ def parse_client(text: str) -> dict[str, Any]:
             if v in (None, "", []):
                 continue
             if k == "phone":
-                v = re.sub(r"\D", "", str(v))
+                v = re.sub(r"[^0-9]", "", _norm(str(v)))
                 if len(v) < 10:
                     continue
             if k == "budget":
@@ -482,9 +508,27 @@ def parse_client(text: str) -> dict[str, Any]:
                 except (TypeError, ValueError):
                     continue
             out[k] = v
+        for k, v in fallback.items():
+            out.setdefault(k, v)
         return out
     except Exception:
-        return {}
+        return fallback
+
+
+def _parse_client_heuristic(text: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    digits = re.sub(r"(?<=\d)[\s\-.]+(?=\d)", "", text)      # "010 1234 5678" → one number
+    m = re.search(r"(?:\+?20|0020)?(1[0125]\d{8})(?!\d)", digits)
+    if m:
+        out["phone"] = "0" + m.group(1)
+    h = _heuristic_extract(digits)
+    if h.get("type") not in ("apartment", "villa", "duplex", "penthouse", "studio", "townhouse", "office", "shop"):
+        h.pop("type", None)
+    for src, dst in (("purpose", "purpose"), ("type", "type"), ("area", "area"),
+                     ("bedrooms", "bedrooms"), ("budget_max", "budget")):
+        if h.get(src) not in (None, ""):
+            out[dst] = h[src]
+    return out
 
 
 def parse_command(text: str) -> dict[str, Any]:

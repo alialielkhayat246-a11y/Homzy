@@ -158,6 +158,90 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
         return []
 
 
+# ---------------------------------------------------------------------------
+# Projects the client names ("ايه اسعار نيوم اكتوبر", "tell me about Plato"):
+# the budget/type search above only returns the cheapest fits, so a named
+# project that exists in the catalog could be missing and the advisor would
+# wrongly call it unavailable. These pin the named project's units in.
+# ---------------------------------------------------------------------------
+_NAMES: list[tuple[str, list[str]]] | None = None
+_NAMES_AT = 0.0
+_AR_FOLD = str.maketrans({"أ": "ا", "إ": "ا", "آ": "ا", "ة": "ه", "ى": "ي", "ؤ": "و", "ئ": "ي", "ـ": ""})
+
+
+def _fold(s: str) -> str:
+    import re
+    s = (s or "").lower().translate(_AR_FOLD)
+    s = re.sub(r"[ً-ْ]", "", s)            # Arabic diacritics
+    return " " + re.sub(r"[^0-9a-zء-ي]+", " ", s).strip() + " "
+
+
+def _project_names() -> list[tuple[str, list[str]]]:
+    global _NAMES, _NAMES_AT
+    if _NAMES is not None and time.time() - _NAMES_AT < 1800:
+        return _NAMES
+    import requests
+    rows, start = [], 0
+    while True:   # PostgREST pages at 1000 rows
+        r = requests.get(config.SUPABASE_URL.rstrip("/") + "/rest/v1/projects",
+                         params={"select": "id,name,name_ar", "order": "id"},
+                         headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}",
+                                  "Range": f"{start}-{start + 999}"}, timeout=8)
+        r.raise_for_status()
+        page = r.json(); rows += page; start += 1000
+        if len(page) < 1000:
+            break
+    out = []
+    for p in rows:
+        keys = {k for k in (_fold(p.get("name")), _fold(p.get("name_ar"))) if len(k.strip()) >= 4}
+        if keys:
+            out.append((p["id"], sorted(keys, key=len, reverse=True)))
+    _NAMES, _NAMES_AT = out, time.time()
+    return out
+
+
+def mentioned_projects(text: str, limit: int = 3) -> list[str]:
+    """Ids of catalog projects whose full name appears (as whole words) in `text`;
+    the longest names win, so "Nyoum October" beats a bare "Nyoum"."""
+    if not text or not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return []
+    try:
+        names = _project_names()
+    except Exception:
+        return []
+    t = _fold(text)
+    hits = []
+    for pid, keys in names:
+        k = next((k for k in keys if k in t), None)
+        if k:
+            hits.append((len(k), pid))
+    hits.sort(reverse=True)
+    return [pid for _, pid in hits[:limit]]
+
+
+def units_for_projects(project_ids: list[str], n: int = 12) -> list[dict[str, Any]]:
+    if not project_ids or not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return []
+    try:
+        import requests
+        r = requests.get(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
+            params={"select": _SELECT, "project_id": "in.(" + ",".join(project_ids) + ")",
+                    "order": "price_from.asc.nullslast", "limit": str(n)},
+            headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+            timeout=8)
+        r.raise_for_status()
+        rows = [_to_listing(x) for x in r.json()]
+        # keep the order the client named them in
+        rank = {pid: i for i, pid in enumerate(project_ids)}
+        rows.sort(key=lambda x: rank.get(x.get("project_id"), 99))
+        for x in rows:
+            x["asked_for"] = True
+        return rows
+    except Exception:
+        return []
+
+
 _DEV_CACHE: dict[str, list[str]] = {}
 
 

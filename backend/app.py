@@ -57,6 +57,27 @@ class _HeadAsGet:
 
 app.add_middleware(_HeadAsGet)
 
+# Homzy Stays isn't open yet: its public pages show a "coming soon" page.
+# The team can still see the real pages with ?preview=1 (remembered by a cookie).
+_STAYS_PATHS = re.compile(r"^/(stays|my-stays|host)(/|$)")
+
+
+@app.middleware("http")
+async def _stays_soon(request: Request, call_next):
+    if request.method in ("GET", "HEAD") and _STAYS_PATHS.match(request.url.path):
+        if request.query_params.get("preview") == "1":
+            resp = await call_next(request)
+            resp.set_cookie("hz_stays_preview", "1", max_age=7 * 86400, samesite="lax")
+            resp.headers["Cache-Control"] = "private, no-store"  # never let the CDN serve it to the public
+            return resp
+        if request.cookies.get("hz_stays_preview") != "1":
+            return FileResponse(config.FRONTEND_DIR / "stays-soon.html",
+                                headers={"Cache-Control": "no-store"})
+        resp = await call_next(request)
+        resp.headers["Cache-Control"] = "private, no-store"
+        return resp
+    return await call_next(request)
+
 # Brand assets (logo etc.) — drop files into frontend/assets/ and they're served.
 # The mkdir is best-effort: on a read-only host (e.g. Vercel) the dir is shipped
 # in the bundle and creating it would fail, so we tolerate that.

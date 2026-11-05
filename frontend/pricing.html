@@ -106,7 +106,7 @@
   </div>
 </section>
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=16"></script>
+<script src="/assets/homzy.js?v=17"></script>
 <script>
 let PLANS=[], PACKS=[], CYC='monthly', CURRENT='free', PAY_ON=false, SEATS={}, USAGE=null, MANUAL=null, PENDING=[], PROF=null, SUGGEST='';
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -121,7 +121,7 @@ function feats(p){
     L('وحدات غير محدودة بصفحات تظهر في جوجل','Unlimited listings with Google-indexed pages'),
     L('عروض PDF بلوجوك + لوجوك على صور الوحدات','Branded PDF offers + logo on unit photos'),
     L('أوامر صوتية في الـCRM','Voice commands in the CRM'),
-    L('استضافة Homzy Stays','Homzy Stays hosting')];
+    L('استضافة Homzy Stays (قريباً)','Homzy Stays hosting (soon)')];
   if(p.plan==='pro') return [L('مساعد AI: '+money(p.ai_daily_messages)+' رسالة في اليوم','AI assistant: '+p.ai_daily_messages+' messages/day'),...common,L('تحليلات أداءك','Your performance insights')];
   const team=[L(money(p.team_seats)+(p.team_seats<=10?' مقاعد':' مقعد')+' للفريق (مدير + سيلز)',p.team_seats+' team seats (manager + sales)'),
     L('رصيد AI مشترك للفريق: '+money(p.ai_monthly_per_seat)+' رسالة لكل مقعد في الشهر','Shared team AI: '+p.ai_monthly_per_seat+' messages per seat/month'),

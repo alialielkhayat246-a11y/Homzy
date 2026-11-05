@@ -123,7 +123,7 @@ const T = {
   disclaimer:{ar:'Homzy ممكن يغلط — راجع المعلومات المهمة قبل أي قرار.',en:'Homzy can make mistakes — verify important info before deciding.'},
   chatAbout:{ar:'بنتكلم عن',en:'Talking about'}, newChat:{ar:'محادثة جديدة',en:'New chat'}, close:{ar:'إغلاق',en:'Close'},
   leads:{ar:'الليدز',en:'Leads'}, mylistings:{ar:'وحداتي',en:'My units'},
-  stays:{ar:'إقامات Homzy',en:'Homzy Stays'},
+  stays:{ar:'إقامات Homzy',en:'Homzy Stays'}, soon:{ar:'قريباً',en:'Soon'},
   hosting:{ar:'الاستضافة',en:'Hosting'},
   pricing:{ar:'الباقات والأسعار',en:'Pricing'},
   settings:{ar:'الإعدادات',en:'Settings'},
@@ -238,12 +238,12 @@ function productSwitcherHTML(){
   const target = cur==='stays' ? {ic:SVG.home, nm:HZ.t('prodHomzy')} : {ic:SVG.stays, nm:HZ.t('prodStays')};
   return `<div class="hz-prod" id="hzProd">
     <button class="hz-prod-btn" id="hzProdBtn" aria-haspopup="menu" aria-expanded="false" onclick="HZ.toggleProd(event)">
-      <span class="pi">${target.ic}</span><span class="pn">${target.nm}</span>${SVG.chevron}</button>
+      <span class="pi">${target.ic}</span><span class="pn">${target.nm}</span>${cur==='homzy'?`<span class="hz-soon" style="display:inline-block;margin-inline-start:4px;padding:1px 7px;border-radius:99px;background:#FDF0D5;color:#9A5B00;font-size:10.5px;font-weight:800;line-height:1.6;vertical-align:middle">${HZ.t('soon')}</span>`:''}${SVG.chevron}</button>
     <div class="hz-menu hz-prod-menu" id="hzProdMenu" role="menu" aria-label="${HZ.t('switchProduct')}">
       <a class="hz-menu-row${cur==='homzy'?' on':''}" role="menuitem" href="/">
         <span class="ri">${SVG.home}</span><span class="rt"><b>${HZ.t('prodHomzy')}</b><small>${HZ.t('prodHomzyDesc')}</small></span>${cur==='homzy'?'<span class="dot" aria-hidden="true"></span>':''}</a>
       <a class="hz-menu-row${cur==='stays'?' on':''}" role="menuitem" href="/stays">
-        <span class="ri">${SVG.stays}</span><span class="rt"><b>${HZ.t('prodStays')}</b><small>${HZ.t('prodStaysDesc')}</small></span>${cur==='stays'?'<span class="dot" aria-hidden="true"></span>':''}</a>
+        <span class="ri">${SVG.stays}</span><span class="rt"><b>${HZ.t('prodStays')} <span class="hz-soon" style="display:inline-block;margin-inline-start:4px;padding:1px 7px;border-radius:99px;background:#FDF0D5;color:#9A5B00;font-size:10.5px;font-weight:800;line-height:1.6;vertical-align:middle">${HZ.t('soon')}</span></b><small>${HZ.t('prodStaysDesc')}</small></span>${cur==='stays'?'<span class="dot" aria-hidden="true"></span>':''}</a>
     </div></div>`;
 }
 function profileHTML(){
@@ -280,7 +280,6 @@ function buildHeader(){
         <a class="hz-crm-entry" id="hzCrmEntry" href="/crm" aria-label="CRM">CRM</a>
         ${productSwitcherHTML()}
         <button class="hz-lang" id="hzLang" onclick="HZ.toggleLang()" aria-label="language">EN</button>
-        ${bellHTML()}
         <span id="hzProfileSlot">${profileHTML()}</span>
         <button class="hz-menu-btn" id="hzMenuBtn" onclick="HZ.toggleDrawer(event)" aria-label="${HZ.t('menu')}" aria-expanded="false">${SVG.hamburger}</button>
       </div>
@@ -354,7 +353,7 @@ function buildDrawer(){
     <nav class="hz-draw-nav" id="hzDrawerNav" aria-label="${HZ.t('menu')}">${drawerNavHTML()}</nav>
     <div class="hz-draw-prod">
       <a class="hz-draw-link" href="/">${SVG.home}${HZ.t('prodHomzy')}</a>
-      <a class="hz-draw-link" href="/stays">${SVG.stays}${HZ.t('prodStays')}</a>
+      <a class="hz-draw-link" href="/stays">${SVG.stays}${HZ.t('prodStays')} <span class="hz-soon" style="display:inline-block;margin-inline-start:4px;padding:1px 7px;border-radius:99px;background:#FDF0D5;color:#9A5B00;font-size:10.5px;font-weight:800;line-height:1.6;vertical-align:middle">${HZ.t('soon')}</span></a>
     </div>
     <div class="hz-draw-sep"></div>
     ${prof}`;
@@ -462,7 +461,7 @@ function buildFooter(){
         </div>
         <div class="hz-foot-col">
           <h4>${HZ.t('platform')}</h4>
-          <a href="/stays">${HZ.t('stays')}</a><a href="/features">${HZ.t('features')}</a>
+          <a href="/stays">${HZ.t('stays')} (${HZ.t('soon')})</a><a href="/features">${HZ.t('features')}</a>
           <a href="/areas">${HZ.t('areas')}</a><a href="/app">${HZ.t('browse')}</a><a href="/download">${HZ.t('app')}</a>
         </div>
         <div class="hz-foot-col">
@@ -500,6 +499,32 @@ function saveChat(){ try{ localStorage.setItem(CHAT_KEY, JSON.stringify(chat)); 
 
 const isAr = x => /[؀-ۿ]/.test(x||'');
 
+// The floating chat / voice buttons sit over page content. On phones they step
+// aside while you scroll down (back on scroll-up or when scrolling stops), and
+// they rise above a bottom tray such as the projects compare bar.
+function floatingButtonsStayClear(){
+  if(HZ._fabClear) return; HZ._fabClear=true;
+  const root=document.documentElement;
+  const tray=()=>document.getElementById('cmpTray');
+  const lift=()=>{ const t=tray(); root.style.setProperty('--hz-fab-lift', (t&&t.classList.contains('show'))?(t.offsetHeight+'px'):'0px'); };
+  let lastY=scrollY, idle;
+  addEventListener('scroll',()=>{
+    if(innerWidth>900) return;
+    const y=scrollY; root.classList.toggle('hz-fab-away', y>lastY+4 && y>120); lastY=y;
+    clearTimeout(idle); idle=setTimeout(()=>root.classList.remove('hz-fab-away'), 700);
+  }, {passive:true});
+  const t=tray(); if(t){ new MutationObserver(lift).observe(t,{attributes:true,attributeFilter:['class']});
+    if(window.ResizeObserver) new ResizeObserver(lift).observe(t); }
+  addEventListener('resize', lift); lift();
+  if(!document.getElementById('hzFabCss')){ const st=document.createElement('style'); st.id='hzFabCss';
+    st.textContent=`.chat-fab,.hz-asst-fab{transition:transform .22s ease, opacity .22s ease, bottom .25s ease;}
+      .chat-fab{bottom:calc(22px + var(--hz-fab-lift,0px));} .hz-asst-fab{bottom:calc(22px + var(--hz-fab-lift,0px));}
+      @media(max-width:900px){ .chat-fab{width:50px;height:50px;bottom:calc(14px + var(--hz-fab-lift,0px));inset-inline-end:14px;}
+        .chat-fab svg{width:23px;height:23px;} .hz-asst-fab{width:50px;height:50px;bottom:calc(14px + var(--hz-fab-lift,0px));}
+        .hz-fab-away .chat-fab,.hz-fab-away .hz-asst-fab{opacity:0;transform:translateY(90px);pointer-events:none;} }`;
+    document.head.appendChild(st); }
+}
+
 function buildChat(){
   if(document.getElementById('hzChatPanel')) return;
   const fab=document.createElement('button');
@@ -522,6 +547,7 @@ function buildChat(){
     <div class="cp-chips" id="hzCpChips"></div>
     <form class="cp-form" id="hzCpForm"><button type="button" class="cp-mic" id="hzCpMic" title="صوت" aria-label="voice">🎤</button><input id="hzCpInput" autocomplete="off"/><button type="submit" id="hzCpSend"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10.2 15 12 3.4 13.8Z" fill="currentColor"/></svg></button></form>`;
   document.body.appendChild(fab); document.body.appendChild(panel);
+  floatingButtonsStayClear();
   document.getElementById('hzCpClose').onclick=()=>HZ.toggleChat();
   document.getElementById('hzCpNew').onclick=()=>{ chat=newChatState(); saveChat(); renderChat(); seedGreeting(); };
   document.getElementById('hzCpForm').addEventListener('submit',e=>{e.preventDefault(); sendMsg(document.getElementById('hzCpInput').value);});
@@ -1160,6 +1186,36 @@ const MIC_SVG='<svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 0 0 3-
 let AREC=null, A_ON=false, A_TXT='', A_DONE=false, A_TIMER=null;
 const esc=HZ.esc;
 const asstSupported=()=>!!(window.SpeechRecognition||window.webkitSpeechRecognition);
+
+/* Dictation that survives pauses. The browser recogniser stops after a short
+   silence (and on Android it only does one phrase per session, repeating earlier
+   words inside each result). This keeps restarting until you press stop or go
+   quiet for `silenceMs`, stitches the phrases together once each, and hands the
+   whole sentence to onDone. */
+HZ.speech=function(o){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return null;
+  const android=/Android/i.test(navigator.userAgent);
+  let rec=null, on=false, done=false, finals=[], interim='', timer=null;
+  const text=()=>(finals.join(' ')+' '+interim).replace(/\s+/g,' ').trim();
+  const finish=()=>{ if(done) return; done=true; on=false; clearTimeout(timer); try{ rec&&rec.stop(); }catch(e){} o.onDone&&o.onDone(text()); };
+  const arm=()=>{ clearTimeout(timer); if(text()) timer=setTimeout(finish, o.silenceMs||3500); };
+  const addFinal=t=>{ const last=finals[finals.length-1]||'';
+    if(last && t.startsWith(last)) finals[finals.length-1]=t;      // Android: cumulative result
+    else if(!last || !last.endsWith(t)) finals.push(t); };
+  function session(){
+    rec=new SR(); rec.lang=o.lang||'ar-EG'; rec.interimResults=true; rec.continuous=!android; rec.maxAlternatives=1;
+    rec.onresult=e=>{ interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){ const r=e.results[i], t=(r[0].transcript||'').trim(); if(!t) continue;
+        if(r.isFinal) addFinal(t); else interim=t; }
+      o.onUpdate&&o.onUpdate(text()); arm(); };
+    rec.onerror=e=>{ const er=e.error||'';
+      if(er==='not-allowed'||er==='service-not-allowed'||er==='audio-capture'){ done=true; on=false; clearTimeout(timer); o.onError&&o.onError(er); } };
+    rec.onend=()=>{ if(!on||done) return; if(interim){ addFinal(interim); interim=''; }
+      try{ session(); rec.start(); }catch(e){ finish(); } };
+  }
+  return { start(){ session(); rec.start(); on=true; }, stop:finish, isOn:()=>on && !done,
+           abort(){ done=true; on=false; clearTimeout(timer); try{ rec&&rec.abort(); }catch(e){} } };
+};
 const aLbl=(a,e)=>HZ.lang==='en'?e:a;
 
 function buildAssistant(){
@@ -1195,18 +1251,16 @@ function asstSpeak(t){ try{ if(!t)return; const u=new SpeechSynthesisUtterance(t
 function asstToggle(){
   if(A_ON){ asstFinish(); return; }
   if(!asstSupported()){ asstStatus(aLbl('المتصفح مش بيدعم الصوت.','Speech not supported.'),true); return; }
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  try{ AREC=new SR(); }catch(e){ asstStatus(aLbl('تعذّر التسجيل.','Could not start.'),true); return; }
-  AREC.lang=HZ.lang==='en'?'en-US':'ar-EG'; AREC.interimResults=true; AREC.continuous=true; A_TXT=''; A_DONE=false;
-  const tr=document.getElementById('hzAsstTr');
-  AREC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript+' '; A_TXT=t.trim(); if(tr) tr.textContent='«'+A_TXT+'»'; };
-  AREC.onerror=(e)=>{ const err=e.error||''; if(err==='no-speech'||err==='aborted') return; A_ON=false; asstMicUI(false); clearTimeout(A_TIMER); asstStatus(aLbl('تعذّر التسجيل — اسمح للميكروفون.','Mic error — allow the microphone.'),true); };
-  AREC.onend=()=>{ clearTimeout(A_TIMER); if(!A_ON){ asstProcess(); return; } if(A_TXT){ A_ON=false; asstMicUI(false); asstProcess(); } else { try{ AREC.start(); }catch(e){ A_ON=false; asstMicUI(false); } } };
-  try{ AREC.start(); A_ON=true; asstMicUI(true); asstStatus(aLbl('بسمعك… اتكلم ودوس لما تخلص','Listening… tap when done')); if(tr)tr.textContent=''; asstRes('',''); document.getElementById('hzAsstRes').className='res'; }
+  const tr=document.getElementById('hzAsstTr'); A_TXT=''; A_DONE=false;
+  AREC=HZ.speech({lang:HZ.lang==='en'?'en-US':'ar-EG',
+    onUpdate:t=>{ A_TXT=t; if(tr) tr.textContent='«'+t+'»'; },
+    onDone:t=>{ A_TXT=t; A_ON=false; asstMicUI(false); asstProcess(); },
+    onError:()=>{ A_ON=false; asstMicUI(false); asstStatus(aLbl('تعذّر التسجيل — اسمح للميكروفون.','Mic error — allow the microphone.'),true); }});
+  try{ AREC.start(); A_ON=true; asstMicUI(true); asstStatus(aLbl('بسمعك… اتكلم براحتك ودوس لما تخلص','Listening… take your time, tap when done')); if(tr)tr.textContent=''; asstRes('',''); document.getElementById('hzAsstRes').className='res'; }
   catch(e){ A_ON=false; asstMicUI(false); asstStatus(aLbl('تعذّر التسجيل.','Could not start.'),true); }
 }
-function asstFinish(){ A_ON=false; asstMicUI(false); asstStatus(aLbl('بحلّل…','Thinking…')); try{ AREC&&AREC.stop(); }catch(e){} clearTimeout(A_TIMER); A_TIMER=setTimeout(asstProcess,1400); }
-function asstStop(){ if(A_ON||AREC){ A_ON=false; A_DONE=true; clearTimeout(A_TIMER); try{ AREC&&AREC.stop(); }catch(e){} asstMicUI(false); } }
+function asstFinish(){ asstStatus(aLbl('بحلّل…','Thinking…')); if(AREC) AREC.stop(); }
+function asstStop(){ if(AREC){ A_ON=false; A_DONE=true; AREC.abort(); asstMicUI(false); } }
 
 async function asstProcess(){
   if(A_DONE) return; A_DONE=true; clearTimeout(A_TIMER);
@@ -1315,5 +1369,56 @@ function boot(){
   HZ.initReveal();
   buildAssistant();       // CRM voice assistant (self-gates to CRM pages + session)
 }
+/* ---------- Field rules for every form on every page ----------
+   Phone fields take digits only (a leading + and spaces/dashes allowed; Arabic
+   digits are converted), email fields take no spaces. A filled field that is
+   still invalid is flagged on blur, and the save/submit button next to it is
+   blocked until it's fixed — so a letter can't slip into a phone or a number
+   into an email, whichever page the form is on. */
+const isPhoneField=el=>el&&el.tagName==='INPUT'&&(el.type==='tel'||el.inputMode==='tel'||/(phone|mobile|whats)/i.test(el.id)||/^(wa|oWa|coWa)$/.test(el.id));
+const isEmailField=el=>el&&el.tagName==='INPUT'&&(el.type==='email'||/email/i.test(el.id));
+const AR_DIG={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+function fieldError(el){
+  const v=(el.value||'').trim(); if(!v) return '';
+  const ar=HZ.lang==='ar';
+  if(isPhoneField(el)){ const d=v.replace(/\D/g,'');
+    if(d.length<8||d.length>15 || (/^01/.test(d)&&d.length!==11))
+      return ar?'رقم الموبايل غير صحيح — مثال: 01012345678':'Invalid phone number — e.g. 01012345678';
+  } else if(isEmailField(el) && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v))
+    return ar?'الإيميل غير صحيح — مثال: name@example.com':'Invalid email — e.g. name@example.com';
+  return '';
+}
+function showFieldError(el,msg){
+  let tip=el.nextElementSibling&&el.nextElementSibling.classList&&el.nextElementSibling.classList.contains('hz-ferr')?el.nextElementSibling:null;
+  if(!msg){ el.style.borderColor=''; el.removeAttribute('aria-invalid'); if(tip) tip.remove(); return; }
+  el.style.borderColor='#D92D20'; el.setAttribute('aria-invalid','true');
+  if(!tip){ tip=document.createElement('div'); tip.className='hz-ferr'; tip.style.cssText='color:#D92D20;font-size:12.5px;font-weight:700;margin-top:4px'; el.insertAdjacentElement('afterend',tip); }
+  tip.textContent=msg;
+}
+document.addEventListener('input',e=>{ const el=e.target;
+  if(isPhoneField(el)){ let v=el.value.replace(/[٠-٩۰-۹]/g,c=>AR_DIG[c]); const lead=v.trim().startsWith('+');
+    v=v.replace(/[^\d\s\-]/g,''); v=(lead?'+':'')+v.replace(/^\s+/,''); if(v!==el.value){ const p=el.selectionStart-(el.value.length-v.length); el.value=v; try{ el.setSelectionRange(p,p); }catch(_){} }
+    if(el.getAttribute('aria-invalid')) showFieldError(el,fieldError(el)); }
+  else if(isEmailField(el)){ const v=el.value.replace(/\s+/g,''); if(v!==el.value) el.value=v;
+    if(el.getAttribute('aria-invalid')) showFieldError(el,fieldError(el)); }
+}, true);
+document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneField(el)||isEmailField(el)) showFieldError(el,fieldError(el)); }, true);
+// block the save/submit that sits with an invalid field (capture runs before the button's own onclick)
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('button,input[type=submit]'); if(!b) return;
+  const sig=(b.getAttribute('onclick')||'')+' '+b.id+' '+b.textContent;
+  if(/(close|cancel|إلغاء|الغاء|إغلاق|×)/i.test(sig) || b.classList.contains('mx')) return;
+  if(!((b.type==='submit'&&b.form) || /(save|create|add|submit|send|join|setup|حفظ|إضافة|اضافة|أضف|إنشاء|انشاء|سجّل|سجل|كمّل|كمل|ابعت|إرسال|ارسال|تأكيد)/i.test(sig))) return;
+  let box=b.closest('form,.modal'); if(!box){ box=b; for(let i=0;i<5&&box.parentElement;i++){ box=box.parentElement; if(box.querySelector('input')) break; } }
+  const bad=[...box.querySelectorAll('input')].filter(el=>(isPhoneField(el)||isEmailField(el))&&el.offsetParent!==null&&fieldError(el));
+  if(!bad.length) return;
+  e.preventDefault(); e.stopPropagation();
+  bad.forEach(el=>showFieldError(el,fieldError(el))); bad[0].focus();
+}, true);
+document.addEventListener('submit',e=>{
+  const bad=[...e.target.querySelectorAll('input')].filter(el=>(isPhoneField(el)||isEmailField(el))&&fieldError(el));
+  if(bad.length){ e.preventDefault(); e.stopPropagation(); bad.forEach(el=>showFieldError(el,fieldError(el))); bad[0].focus(); }
+}, true);
+
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();

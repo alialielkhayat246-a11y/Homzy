@@ -132,5 +132,13 @@ $('joinBtn').onclick=()=>{ if(BUSY) return; BUSY=true; $('joinBtn').disabled=tru
   }else{ $('authBox').hidden=false; setMode('register'); }
 })();
 </script>
+<script>
+// Phone fields: digits only (Arabic digits converted, leading + kept). This page
+// doesn't load homzy.js, which applies the same rule everywhere else.
+document.addEventListener('input',function(e){ var el=e.target; if(!el||el.tagName!=='INPUT'||(el.type!=='tel'&&el.inputMode!=='tel')) return;
+  var v=el.value.replace(/[٠-٩]/g,function(c){return String(c.charCodeAt(0)-0x0660);}).replace(/[۰-۹]/g,function(c){return String(c.charCodeAt(0)-0x06F0);});
+  var lead=v.trim().charAt(0)==='+'; v=(lead?'+':'')+v.replace(/[^\d\s\-]/g,'').replace(/^\s+/,'');
+  if(v!==el.value){ var p=el.selectionStart-(el.value.length-v.length); el.value=v; try{ el.setSelectionRange(p,p); }catch(_){} } },true);
+</script>
 </body>
 </html>

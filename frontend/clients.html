@@ -238,7 +238,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=16"></script>
+<script src="/assets/homzy.js?v=17"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { installSalesWorkspace } from '/assets/crm-sales.js';
@@ -438,29 +438,18 @@ function micUI(on){ const b=$('micBtn'); if(!b) return; b.classList.toggle('rec'
 window.toggleVoice=()=>{
   if(VOICE_ON){ finishVoice(); return; }   // user pressed stop → analyse what we heard
   if(!speechSupported()){ vbar('المتصفح ده مش بيدعم الإدخال الصوتي — جرّب Chrome على الموبايل أو الكمبيوتر.', true); return; }
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  try{ REC=new SR(); }catch(e){ vbar('تعذّر بدء التسجيل.', true); return; }
-  REC.lang='ar-EG'; REC.interimResults=true; REC.continuous=true; VOICE_TXT=''; VOICE_DONE=false;
-  REC.onresult=(e)=>{ let t=''; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript+' '; VOICE_TXT=t.trim(); vbar('🎤 بسمعك… «'+esc(VOICE_TXT)+'»'); };
-  REC.onerror=(e)=>{ const err=e.error||''; if(err==='no-speech'||err==='aborted') return; // transient — let onend decide
-    VOICE_ON=false; micUI(false); clearTimeout(VOICE_TIMER); vbar('تعذّر التسجيل ('+err+'). اسمح للميكروفون وجرّب تاني.', true); };
-  REC.onend=()=>{ clearTimeout(VOICE_TIMER);
-    if(!VOICE_ON){ processVoice(); return; }              // manual stop / final end → analyse
-    if(VOICE_TXT){ VOICE_ON=false; micUI(false); processVoice(); }  // ended on its own with speech
-    else { try{ REC.start(); }catch(e){ VOICE_ON=false; micUI(false); } } // silence timeout → keep listening
-  };
+  VOICE_TXT=''; VOICE_DONE=false;
+  // HZ.speech keeps listening through pauses (and fixes Android's repeated words)
+  REC=HZ.speech({lang:'ar-EG', silenceMs:4000,
+    onUpdate:t=>{ VOICE_TXT=t; vbar('🎤 بسمعك… «'+esc(t)+'»'); },
+    onDone:t=>{ VOICE_TXT=t; VOICE_ON=false; micUI(false); processVoice(); },
+    onError:err=>{ VOICE_ON=false; micUI(false); vbar('تعذّر التسجيل ('+err+'). اسمح للميكروفون وجرّب تاني.', true); }});
   try{ REC.start(); VOICE_ON=true; micUI(true);
-    vbar('🎤 اتكلم دلوقتي… مثلاً: «عميل اسمه أحمد، رقمه ٠١٠١٢٣٤٥٦٧٨، عايز يشتري شقة في التجمع بـ٦ مليون، ٣ غرف، متابعة الخميس الجاي». ودوس ⏹ لما تخلص.');
+    vbar('🎤 اتكلم براحتك… مثلاً: «عميل اسمه أحمد، رقمه 01012345678، عايز يشتري شقة في التجمع بـ6 مليون، 3 غرف، متابعة الخميس الجاي». ودوس ⏹ لما تخلص.');
   }catch(e){ VOICE_ON=false; micUI(false); vbar('تعذّر بدء التسجيل.', true); }
 };
-// Stop listening and analyse. A fallback timer guarantees processing even if the
-// browser never fires `onend` (common hang on mobile Chrome with continuous mode).
-function finishVoice(){
-  VOICE_ON=false; micUI(false); vbar('🧠 بحلّل كلامك…');
-  try{ REC&&REC.stop(); }catch(e){}
-  clearTimeout(VOICE_TIMER); VOICE_TIMER=setTimeout(processVoice, 1400);
-}
-function stopVoice(silent){ if(VOICE_ON||REC){ VOICE_ON=false; VOICE_DONE=true; clearTimeout(VOICE_TIMER); try{REC&&REC.stop();}catch(e){} micUI(false); } }
+function finishVoice(){ vbar('🧠 بحلّل كلامك…'); if(REC) REC.stop(); }
+function stopVoice(silent){ if(REC){ VOICE_ON=false; VOICE_DONE=true; REC.abort(); micUI(false); } }
 async function processVoice(){
   if(VOICE_DONE) return; VOICE_DONE=true; clearTimeout(VOICE_TIMER);
   const text=(VOICE_TXT||'').trim();

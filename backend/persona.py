@@ -123,6 +123,17 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             "instead help the client adjust their budget / area / bedrooms / rent-or-buy / timing.)"
         )
     lines = []
+    asked = []
+    for m in matches:
+        nm = m.get("compound_en")
+        if m.get("asked_for") and nm and nm not in asked:
+            asked.append(nm)
+    if asked:
+        lines.append(
+            "NOTE — the client asked about " + " / ".join(asked) + " BY NAME. It IS in our catalog "
+            "(entries marked ASKED below). Answer about it directly in this reply — starting price, unit "
+            "types and sizes, developer, payment plan / delivery when listed — even if you haven't finished "
+            "qualifying them yet; then continue with your questions. NEVER say it is unavailable or not on our list.")
     for i, m in enumerate(matches, 1):
         price = listings_mod.price_str(m, "en")
         beds = m.get("bedrooms")
@@ -167,7 +178,8 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             else:
                 extra += f"\n   Latest developer update ({when}): {it.get('content_ar')}"
         lines.append(
-            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}\n"
+            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}"
+            + (" [ASKED]" if m.get("asked_for") else "") + "\n"
             f"   Market: {market_txt}\n"
             f"   {m.get('purpose')} | {m.get('type')} | {beds_txt} "
             f"| {m.get('size_sqm')} sqm | {price} | finishing: {m.get('finishing') or '-'}\n"
