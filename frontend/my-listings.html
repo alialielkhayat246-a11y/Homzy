@@ -65,6 +65,7 @@
   .ucard .acts button.pub{background:var(--teal); color:#fff; border-color:var(--teal);}
   .ucard .acts button.del{color:#B42318; border-color:#F0C9C4;}
   .ucard .acts button.share{background:#1877F2; color:#fff; border-color:#1877F2;}
+  .sh-body > *{flex:none;} /* the scrolling column must not squash the card / text box */
   .sh-row{display:flex; gap:8px; flex-wrap:wrap;}
   .sh{flex:1 1 120px; font-family:"Cairo",sans-serif; font-weight:800; font-size:13.5px; border-radius:11px; padding:10px 12px; cursor:pointer; text-align:center; text-decoration:none; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
   .sh.fb{background:#1877F2; border-color:#1877F2; color:#fff;} .sh.wa{background:#22C55E; border-color:#22C55E; color:#fff;}
@@ -147,16 +148,16 @@
 <!-- share kit: post text + branded card + photos for Facebook / Instagram / WhatsApp -->
 <div class="ov" id="shareOv" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="mh"><h3 data-ar="📣 انشر الوحدة على السوشيال" data-en="📣 Share this unit">📣 انشر الوحدة على السوشيال</h3><button class="mx" onclick="$('shareOv').classList.remove('open')">×</button></div>
-    <div class="mb">
+    <div class="mh"><h3 data-ar="📣 انشر الوحدة على السوشيال" data-en="📣 Share this unit">📣 انشر الوحدة على السوشيال</h3><button class="mx" onclick="document.getElementById('shareOv').classList.remove('open')">×</button></div>
+    <div class="mb sh-body">
       <img id="shCard" alt="" style="width:100%;border-radius:14px;border:1px solid var(--line);background:#e9e2da;aspect-ratio:1200/630;object-fit:cover">
       <div class="sh-row">
         <a class="sh fb" id="shFb" target="_blank" rel="noopener">فيسبوك</a>
         <a class="sh wa" id="shWa" target="_blank" rel="noopener">واتساب</a>
-        <button class="sh" onclick="copyUnitLink(SHARE_ID,this)">🔗 <span data-ar="نسخ اللينك" data-en="Copy link">نسخ اللينك</span></button>
+        <button class="sh" onclick="copyShareLink(this)">🔗 <span data-ar="نسخ اللينك" data-en="Copy link">نسخ اللينك</span></button>
       </div>
       <label class="sh-l" data-ar="نص البوست (تقدر تعدّله)" data-en="Post text (editable)">نص البوست (تقدر تعدّله)</label>
-      <textarea id="shText" rows="9" style="width:100%;box-sizing:border-box;font-family:var(--ff);font-size:14px;line-height:1.7;padding:12px;border:1.5px solid var(--line-2);border-radius:12px;resize:vertical"></textarea>
+      <textarea id="shText" rows="9" dir="rtl" style="width:100%;min-height:220px;box-sizing:border-box;font-family:var(--ff);font-size:14px;line-height:1.7;padding:12px;border:1.5px solid var(--line-2);border-radius:12px;resize:vertical"></textarea>
       <div class="sh-row">
         <button class="sh main" onclick="copyPost(this)">📋 <span data-ar="نسخ النص" data-en="Copy text">نسخ النص</span></button>
         <button class="sh" onclick="dlCard(this)">🖼️ <span data-ar="كارت إنستجرام" data-en="Instagram card">كارت إنستجرام</span></button>
@@ -365,6 +366,7 @@ window.openShare=(id)=>{
   $('shWa').href='https://wa.me/?text='+encodeURIComponent((l.title||'')+'\n'+unitUrl(id));
   $('shareOv').classList.add('open');
 };
+window.copyShareLink=(btn)=>copyUnitLink(SHARE_ID,btn);
 window.copyPost=async(btn)=>{ const t=btn.innerHTML;
   try{ await navigator.clipboard.writeText($('shText').value); btn.textContent='✓ '+L('اتنسخ','Copied'); setTimeout(()=>btn.innerHTML=t,1500); }
   catch(e){ $('shText').select(); } };
