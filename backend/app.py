@@ -32,6 +32,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+class _HeadAsGet:
+    """Answer HEAD like GET minus the body. FastAPI routes are GET-only, so HEAD got
+    405 — and link-preview fetchers (WhatsApp) probe with HEAD first and then give
+    up, showing a bare domain instead of the page's title and image."""
+
+    def __init__(self, inner):
+        self.inner = inner
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["method"] != "HEAD":
+            return await self.inner(scope, receive, send)
+
+        async def send_headers_only(message):
+            if message["type"] == "http.response.body":
+                if not message.get("more_body"):
+                    await send({"type": "http.response.body", "body": b""})
+                return
+            await send(message)
+
+        await self.inner(dict(scope, method="GET"), receive, send_headers_only)
+
+
+app.add_middleware(_HeadAsGet)
+
 # Brand assets (logo etc.) — drop files into frontend/assets/ and they're served.
 # The mkdir is best-effort: on a read-only host (e.g. Vercel) the dir is shipped
 # in the bundle and creating it would fail, so we tolerate that.
