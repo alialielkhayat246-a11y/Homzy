@@ -318,7 +318,7 @@ window.assignLead=async(id,u)=>{
 };
 window.loadClients=async ()=>{
   if(AGX===undefined) await loadAgencyCtx();
-  const scope = 'owner_id.eq.'+UID+',assigned_to.eq.'+UID + (agCan('lead.view.all')?',agency_id.eq.'+AGX.id:'');
+  const scope = 'owner_id.eq.'+UID+',assigned_to.eq.'+UID + (agCan('lead.view.all')||agCan('lead.view.team')?',agency_id.eq.'+AGX.id:''); // RLS narrows team scope
   try{ CLIENTS=await api('/clients?select=*&or=('+scope+')&order=updated_at.desc'); }catch(e){$('board').innerHTML=`<div class="workspace-empty" role="alert"><h2>${L('تعذّر تحميل العملاء','Could not load clients')}</h2><button class="btn btn-teal" onclick="loadClients()">${L('إعادة المحاولة','Retry')}</button></div>`;return;}
   let scoreNotice=$('salesScoreNotice');if(!scoreNotice){scoreNotice=document.createElement('p');scoreNotice.id='salesScoreNotice';scoreNotice.setAttribute('role','status');$('board').before(scoreNotice);}
   CLIENTS.forEach(c=>{c.stage=({contacted:'contact',negotiation:'negotiate',won:'closed'})[c.stage]||c.stage||'new';});
