@@ -22,6 +22,7 @@ from typing import Any
 from . import config
 
 MAX_PHOTOS = 8
+WHY: list[str] = []   # why the last review could not run (shown by /api/moderation/run)
 _SYSTEM = (
     "You are the content-safety reviewer for Homzy, an Egyptian real-estate marketplace. "
     "You get a property listing: its title, description and photos. Decide if it is appropriate "
@@ -69,7 +70,9 @@ def _photo_part(url: str) -> dict | None:
 def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | None:
     """{'verdict','reason','issues'}; None when the reviewer couldn't run (retry later)."""
     import requests
+    WHY.clear()
     if not config.GEMINI_API_KEY:
+        WHY.append("no GEMINI_API_KEY")
         return None
     parts: list[dict] = [{"text": f"TITLE: {title or ''}\nDESCRIPTION: {description or ''}\nPHOTOS: {min(len(photos), MAX_PHOTOS)}"}]
     for i, u in enumerate(photos[:MAX_PHOTOS], 1):
@@ -94,11 +97,14 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 headers={"x-goog-api-key": config.GEMINI_API_KEY, "Content-Type": "application/json"},
                 json={**payload, "generationConfig": cfg}, timeout=40)
-        except Exception:
+        except Exception as exc:
+            WHY.append(f"{model}: {exc}")
             continue
         if resp.status_code in (429, 500, 503):
+            WHY.append(f"{model}: HTTP {resp.status_code}")
             continue
         if resp.status_code != 200:
+            WHY.append(f"{model}: HTTP {resp.status_code} {resp.text[:200]}")
             return None
         data = resp.json()
         # Gemini refusing to even look at the content is itself a signal: a person checks it
@@ -113,6 +119,7 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
         try:
             out = json.loads(text[text.find("{"): text.rfind("}") + 1])
         except Exception:
+            WHY.append(f"{model}: unreadable reply {text[:120]!r}")
             return None
         verdict = out.get("verdict") if out.get("verdict") in ("ok", "reject", "review") else "review"
         issues = [i for i in (out.get("issues") or []) if isinstance(i, dict)][:6]
@@ -141,7 +148,7 @@ def run(limit: int = 1) -> list[dict[str, Any]]:
     for item in q if isinstance(q, list) else []:
         res = review(item.get("title"), item.get("description"), item.get("photos") or [])
         if res is None:
-            done.append({"id": item["id"], "verdict": "retry"})
+            done.append({"id": item["id"], "verdict": "retry", "why": WHY[-3:]})
             continue
         try:
             r = requests.post(base + "listing_moderation_apply", headers=h, timeout=10, json={
