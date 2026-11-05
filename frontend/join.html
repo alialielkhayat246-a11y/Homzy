@@ -65,7 +65,7 @@ async function rpc(fn, body){
   const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+(session?session.access_token:SB_KEY),'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!r.ok) throw new Error(await r.text()); return r.json();
 }
-const ERR={invalid:'رابط الدعوة ده مش شغال — اطلب رابط جديد من مدير الشركة.',
+const ERR={invalid:'رابط الإضافة ده مش شغال — اطلب رابط جديد من مدير الشركة.',
   seats_full:'مقاعد الفريق مكتملة — كلّم مدير الشركة يزوّد المقاعد وجرّب تاني. (وصله تنبيه بالفعل)'};
 
 async function join(){

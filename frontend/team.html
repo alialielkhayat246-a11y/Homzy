@@ -174,7 +174,7 @@
         <div class="toolbar">
           <h2 data-ar="أعضاء الفريق" data-en="Team members">أعضاء الفريق</h2>
           <span class="sp"></span>
-          <button class="btn btn-navy manage-only" onclick="openInvite()" data-ar="🔗 رابط دعوة" data-en="🔗 Invite link">🔗 رابط دعوة</button>
+          <button class="btn btn-navy manage-only" onclick="openInvite()" data-ar="🔗 إضافة برابط" data-en="🔗 Add via link">🔗 إضافة برابط</button>
           <button class="btn btn-teal manage-only" onclick="openAddMember()" data-ar="＋ إضافة عضو" data-en="＋ Add member">＋ إضافة عضو</button>
         </div>
         <div class="card" id="membersList"></div>
@@ -205,10 +205,10 @@
 
 <!-- Invite link modal -->
 <div class="ov" id="ovInvite"><div class="modal">
-  <div class="mh"><h3 data-ar="رابط دعوة للفريق" data-en="Team invite link">رابط دعوة للفريق</h3><button class="mx" onclick="closeOv('ovInvite')">×</button></div>
+  <div class="mh"><h3 data-ar="إضافة أعضاء للفريق برابط" data-en="Add team members via link">إضافة أعضاء للفريق برابط</h3><button class="mx" onclick="closeOv('ovInvite')">×</button></div>
   <div class="mb">
-    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="ابعت الرابط للسيلز — بيعمل حسابه بالاسم والموبايل وكلمة المرور وينضم لفريقك على طول على باقة الشركة." data-en="Send the link to your sales team — they sign up with name, phone and password and join your team on the company plan.">ابعت الرابط للسيلز — بيعمل حسابه بالاسم والموبايل وكلمة المرور وينضم لفريقك على طول على باقة الشركة.</p>
-    <div class="fld"><label data-ar="هينضموا بدور" data-en="They join as">هينضموا بدور</label><select class="in" id="invRole"></select></div>
+    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="ابعت رابط الإضافة لأعضاء فريقك — كل عضو بيسجّل بالاسم والموبايل وكلمة المرور ويتضاف لفريقك على طول على باقة الشركة." data-en="Send the registration link to your team — each member signs up with name, phone and password and is added to your team on the company plan.">ابعت رابط الإضافة لأعضاء فريقك — كل عضو بيسجّل بالاسم والموبايل وكلمة المرور ويتضاف لفريقك على طول على باقة الشركة.</p>
+    <div class="fld"><label data-ar="المسمّى الوظيفي" data-en="Job role">المسمّى الوظيفي</label><select class="in" id="invRole"></select></div>
     <div class="fld"><label data-ar="الفريق (اختياري)" data-en="Team (optional)">الفريق (اختياري)</label><select class="in" id="invTeam"><option value="">—</option></select></div>
     <button class="btn btn-teal" id="invMake" onclick="makeInvite()" style="width:100%" data-ar="اعمل الرابط" data-en="Create link">اعمل الرابط</button>
     <div id="invOut" style="margin-top:12px"></div>
@@ -222,7 +222,7 @@
 <div class="ov" id="ovMember"><div class="modal">
   <div class="mh"><h3 data-ar="إضافة عضو" data-en="Add member">إضافة عضو</h3><button class="mx" onclick="closeOv('ovMember')">×</button></div>
   <div class="mb">
-    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط دعوة." data-en="Enter the phone or email of a Homzy user to add them to your team. No account yet? Send them an invite link.">اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط دعوة.</p>
+    <p style="color:var(--muted);font-size:13px;margin:0" data-ar="اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط إضافة." data-en="Enter the phone or email of a Homzy user to add them to your team. No account yet? Send them a registration link.">اكتب رقم موبايل أو إيميل عضو عنده حساب Homzy عشان تضيفه لفريقك. لو لسه معندوش حساب ابعتله رابط إضافة.</p>
     <div class="fld"><label data-ar="رقم الموبايل أو الإيميل" data-en="Phone or email">رقم الموبايل أو الإيميل</label>
       <div style="display:flex;gap:8px"><input class="in" id="lookupQ" placeholder="01xxxxxxxxx" style="flex:1"/><button class="btn btn-ghost" onclick="lookupUser()" data-ar="بحث" data-en="Find">بحث</button></div>
     </div>
@@ -472,7 +472,7 @@ window.makeInvite=async()=>{
   $('invMake').disabled=true; $('invMsg').textContent='';
   try{
     const r=await rpc('agency_create_invite',{p_agency:AG.id,p_role_key:$('invRole').value,p_team:$('invTeam').value||null});
-    const url=inviteUrl(r.code), text=L('انضم لفريق '+AG.name+' على Homzy: ','Join '+AG.name+' on Homzy: ')+url;
+    const url=inviteUrl(r.code), text=L('تمت إضافتك لفريق '+AG.name+' على Homzy. برجاء استكمال التسجيل من الرابط: ','You have been added to the '+AG.name+' team on Homzy. Please complete your registration: ')+url;
     $('invOut').innerHTML=`<div class="fld"><input class="in" dir="ltr" readonly value="${esc(url)}" onclick="this.select()"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1" onclick="copyInvite('${r.code}',this)">${L('نسخ الرابط','Copy link')}</button>
       <a class="btn btn-teal" style="flex:1;text-align:center" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(text)}">${L('ابعته واتساب','Send on WhatsApp')}</a></div>
