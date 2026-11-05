@@ -209,7 +209,7 @@
   <div class="mb">
     <p style="color:var(--muted);font-size:13px;margin:0" data-ar="ابعت رابط الإضافة لأعضاء فريقك — كل عضو بيسجّل بالاسم والموبايل وكلمة المرور ويتضاف لفريقك على طول على باقة الشركة." data-en="Send the registration link to your team — each member signs up with name, phone and password and is added to your team on the company plan.">ابعت رابط الإضافة لأعضاء فريقك — كل عضو بيسجّل بالاسم والموبايل وكلمة المرور ويتضاف لفريقك على طول على باقة الشركة.</p>
     <div class="fld"><label data-ar="المسمّى الوظيفي" data-en="Job role">المسمّى الوظيفي</label><select class="in" id="invRole"></select></div>
-    <div class="fld"><label data-ar="الفريق (اختياري)" data-en="Team (optional)">الفريق (اختياري)</label><select class="in" id="invTeam"><option value="">—</option></select></div>
+    <div class="fld"><label data-ar="الفريق / التيم ليدر (اختياري)" data-en="Team / team leader (optional)">الفريق / التيم ليدر (اختياري)</label><select class="in" id="invTeam"><option value="">—</option></select></div>
     <button class="btn btn-teal" id="invMake" onclick="makeInvite()" style="width:100%" data-ar="اعمل الرابط" data-en="Create link">اعمل الرابط</button>
     <div id="invOut" style="margin-top:12px"></div>
     <div class="mini" id="invSeats" style="margin-top:8px"></div>
@@ -228,7 +228,7 @@
     </div>
     <div id="lookupResult"></div>
     <div class="fld"><label data-ar="الدور" data-en="Role">الدور</label><select class="in" id="newRole"></select></div>
-    <div class="fld"><label data-ar="الفريق (اختياري)" data-en="Team (optional)">الفريق (اختياري)</label><select class="in" id="newTeam"><option value="">—</option></select></div>
+    <div class="fld"><label data-ar="الفريق / التيم ليدر (اختياري)" data-en="Team / team leader (optional)">الفريق / التيم ليدر (اختياري)</label><select class="in" id="newTeam"><option value="">—</option></select></div>
     <div class="msg" id="memMsg"></div>
   </div>
   <div class="mf"><button class="btn btn-ghost" onclick="closeOv('ovMember')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
@@ -237,14 +237,15 @@
 
 <!-- Create team modal -->
 <div class="ov" id="ovTeam"><div class="modal" style="width:min(440px,100%)">
-  <div class="mh"><h3 data-ar="فريق جديد" data-en="New team">فريق جديد</h3><button class="mx" onclick="closeOv('ovTeam')">×</button></div>
+  <div class="mh"><h3 id="teamModalTitle">فريق جديد</h3><button class="mx" onclick="closeOv('ovTeam')">×</button></div>
   <div class="mb">
     <div class="fld"><label data-ar="اسم الفريق" data-en="Team name">اسم الفريق</label><input class="in" id="teamName" placeholder="مثلاً: فريق المبيعات A" data-ph-ar="مثلاً: فريق المبيعات A" data-ph-en="e.g. Sales Team A" /></div>
     <div class="fld"><label data-ar="قائد الفريق (اختياري)" data-en="Team leader (optional)">قائد الفريق (اختياري)</label><select class="in" id="teamLeader"><option value="">—</option></select></div>
+    <div class="mini" data-ar="لو القائد بروكر هيتحوّل تلقائياً لـ Team Leader ويشوف عملاء فريقه." data-en="A Broker picked as leader becomes a Team Leader and sees the team's clients.">لو القائد بروكر هيتحوّل تلقائياً لـ Team Leader ويشوف عملاء فريقه.</div>
     <div class="msg" id="teamMsg"></div>
   </div>
   <div class="mf"><button class="btn btn-ghost" onclick="closeOv('ovTeam')" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
-    <button class="btn btn-teal" onclick="createTeam()" data-ar="إنشاء" data-en="Create">إنشاء</button></div>
+    <button class="btn btn-teal" id="teamSaveBtn" onclick="createTeam()">إنشاء</button></div>
 </div></div>
 
 <!-- Role editor modal -->
@@ -373,6 +374,11 @@ function statusBadge(s){
   const m={active:['st-active',L('نشِط','Active')],suspended:['st-suspended',L('موقوف','Suspended')],inactive:['st-inactive',L('غير نشط','Inactive')],pending:['st-pending',L('بانتظار','Pending')]};
   const x=m[s]||m.active; return `<span class="stat-badge ${x[0]}">${x[1]}</span>`;
 }
+// team picker labelled with its leader, so picking a team = picking whose team the member joins
+function teamOptions(sel){
+  return `<option value="">${L('بدون فريق','No team')}</option>`+TEAMS.map(t=>{ const ld=ROSTER.find(m=>m.user_id===t.leader_id);
+    return `<option value="${t.id}" ${t.id===sel?'selected':''}>${esc(t.name)}${ld?' — '+esc(ld.name||ld.phone||''):''}</option>`; }).join('');
+}
 function roleOptions(sel){ return ROLES.filter(r=>r.key!=='owner').map(r=>`<option value="${r.key}" ${r.key===sel?'selected':''}>${esc(L(r.name_ar,r.name_en))}</option>`).join(''); }
 
 function renderMembers(){
@@ -387,7 +393,7 @@ function renderMembers(){
       ? `<select class="in" onchange="changeRole('${m.user_id}',this.value)">${roleOptions(m.role_key)}</select>`
       : `<span class="rolebadge">${esc(L(m.role_ar||m.role_key,m.role_en||m.role_key))}</span>`;
     const teamCell = (mgr && !m.is_owner)
-      ? `<select class="in" onchange="changeTeam('${m.user_id}',this.value)"><option value="">—</option>${TEAMS.map(t=>`<option value="${t.id}" ${t.id===m.team_id?'selected':''}>${esc(t.name)}</option>`).join('')}</select>`
+      ? `<select class="in" title="${L('الفريق','Team')}" onchange="changeTeam('${m.user_id}',this.value)">${teamOptions(m.team_id)}</select>`
       : (m.team_name?`<span class="mini">${esc(m.team_name)}</span>`:'');
     let actions='';
     if(mgr && !m.is_owner){
@@ -413,8 +419,9 @@ function renderTeams(){
   $('teamsGrid').innerHTML = TEAMS.map(t=>{
     const count=ROSTER.filter(m=>m.team_id===t.id).length;
     const leader=ROSTER.find(m=>m.user_id===t.leader_id);
-    return `<div class="rcard"><h3>${esc(t.name)}</h3>
-      <div class="k">${count} ${L('عضو','members')}${leader?(' · '+L('قائد: ','Lead: ')+esc(leader.name||'')):''}</div></div>`;
+    return `<div class="rcard" ${mgr?`style="cursor:pointer" onclick="openEditTeam('${t.id}')"`:''}><h3>${esc(t.name)}</h3>
+      <div class="k">${count} ${L('عضو','members')} · ${leader?L('القائد: ','Lead: ')+esc(leader.name||leader.phone||''):L('من غير قائد','No leader')}</div>
+      ${mgr?`<div class="k" style="margin-top:8px;color:var(--teal-d);font-weight:700">${L('تعديل الفريق ←','Edit team ←')}</div>`:''}</div>`;
   }).join('') || `<div class="empty" style="grid-column:1/-1"><h2>${L('لا توجد فرق','No teams')}</h2><p>${mgr?L('أنشئ فريق لتنظيم أعضائك.','Create a team to organise members.'):''}</p></div>`;
 }
 
@@ -452,7 +459,7 @@ window.createAgency=async()=>{
 // ---------- invite links ----------
 const inviteUrl=code=>location.origin+'/join/'+code;
 window.openInvite=async()=>{
-  $('invRole').innerHTML=roleOptions('agent'); $('invTeam').innerHTML='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  $('invRole').innerHTML=roleOptions('agent'); $('invTeam').innerHTML=teamOptions(null);
   $('invOut').innerHTML=''; $('invMsg').textContent='';
   const full = SEATS && SEATS.limit!=null && SEATS.used>=SEATS.limit;
   $('invSeats').innerHTML = SEATS ? L('المقاعد: ','Seats: ')+SEATS.used+' / '+(SEATS.limit==null?'∞':SEATS.limit)
@@ -464,7 +471,7 @@ async function loadInvites(){
   const rn=k=>{ const r=ROLES.find(x=>x.key===k); return r?L(r.name_ar,r.name_en):k; };
   $('invList').innerHTML = rows.length ? `<div class="mini" style="margin-bottom:6px">${L('الروابط الشغالة','Active links')}</div>`+rows.map(r=>`
     <div class="mrow" style="border:1px solid var(--line);border-radius:12px;margin-bottom:6px">
-      <div class="who"><b>${esc(rn(r.role_key))}</b><div class="c" dir="ltr">${esc(inviteUrl(r.code))}</div><div class="c">${L('انضم بيه: ','Joined: ')+r.uses}</div></div>
+      <div class="who"><b>${esc(rn(r.role_key))}${(t=>t?' · '+esc(t.name):'')(TEAMS.find(t=>t.id===r.team_id))}</b><div class="c" dir="ltr">${esc(inviteUrl(r.code))}</div><div class="c">${L('انضم بيه: ','Joined: ')+r.uses}</div></div>
       <button class="btn btn-ghost btn-sm" onclick="copyInvite('${r.code}',this)">${L('نسخ','Copy')}</button>
       <button class="btn btn-ghost btn-sm" style="color:#B42318" onclick="revokeInvite('${r.id}')">${L('إلغاء','Revoke')}</button></div>`).join('') : '';
 }
@@ -487,7 +494,7 @@ window.revokeInvite=async(id)=>{ if(!confirm(L('إلغاء الرابط ده؟ �
 
 // ---------- members ----------
 window.openAddMember=()=>{ PICK_USER=null; $('lookupQ').value=''; $('lookupResult').innerHTML=''; $('memMsg').textContent=''; $('addMemBtn').disabled=true;
-  $('newRole').innerHTML=roleOptions('agent'); $('newTeam').innerHTML='<option value="">—</option>'+TEAMS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+  $('newRole').innerHTML=roleOptions('agent'); $('newTeam').innerHTML=teamOptions(null);
   $('ovMember').classList.add('open'); };
 window.lookupUser=async()=>{
   const q=$('lookupQ').value.trim(); if(!q) return;
@@ -510,13 +517,24 @@ window.setStatus=async(u,st)=>{ try{ await rpc('agency_set_member_status',{p_age
 window.removeMember=async(u)=>{ const m=ROSTER.find(x=>x.user_id===u), name=m?.name||''; if(!confirm(L('إزالة ','Remove ')+name+'؟')) return; try{ await rpc('agency_remove_member',{p_agency:AG.id,p_user:u}); await loadAgency(); }catch(e){ alert(e.message||e); } };
 
 // ---------- teams ----------
-window.openCreateTeam=()=>{ $('teamName').value=''; $('teamMsg').textContent='';
-  $('teamLeader').innerHTML='<option value="">—</option>'+ROSTER.filter(m=>m.status==='active').map(m=>`<option value="${m.user_id}">${esc(m.name||m.phone||'')}</option>`).join('');
-  $('ovTeam').classList.add('open'); };
+let EDIT_TEAM=null;
+function openTeamModal(t){
+  EDIT_TEAM=t; $('teamName').value=t?t.name:''; $('teamMsg').textContent='';
+  $('teamModalTitle').textContent=t?L('تعديل الفريق','Edit team'):L('فريق جديد','New team');
+  $('teamSaveBtn').textContent=t?L('حفظ','Save'):L('إنشاء','Create');
+  $('teamLeader').innerHTML='<option value="">—</option>'+ROSTER.filter(m=>m.status==='active').map(m=>`<option value="${m.user_id}" ${t&&t.leader_id===m.user_id?'selected':''}>${esc(m.name||m.phone||'')}</option>`).join('');
+  $('ovTeam').classList.add('open');
+}
+window.openCreateTeam=()=>openTeamModal(null);
+window.openEditTeam=(id)=>openTeamModal(TEAMS.find(t=>t.id===id));
 window.createTeam=async()=>{
   const name=$('teamName').value.trim(); if(name.length<2){ $('teamMsg').textContent=L('اكتب اسم الفريق.','Enter a team name.'); $('teamMsg').className='msg err'; return; }
-  try{ await rpc('agency_create_team',{p_agency:AG.id,p_name:name,p_leader:$('teamLeader').value||null}); closeOv('ovTeam'); await loadAgency(); }
-  catch(e){ $('teamMsg').textContent=esc(e.message||e); $('teamMsg').className='msg err'; }
+  const leader=$('teamLeader').value||null;
+  try{
+    if(EDIT_TEAM) await rpc('agency_update_team',{p_agency:AG.id,p_team:EDIT_TEAM.id,p_name:name,p_leader:leader});
+    else await rpc('agency_create_team',{p_agency:AG.id,p_name:name,p_leader:leader});
+    closeOv('ovTeam'); await loadAgency();
+  }catch(e){ $('teamMsg').textContent=esc(e.message||e); $('teamMsg').className='msg err'; }
 };
 
 // ---------- roles ----------
