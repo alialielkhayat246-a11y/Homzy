@@ -41,7 +41,7 @@ GEMINI_API_KEY = _get("GEMINI_API_KEY", "")
 # other free models if it's rate-limited).
 GEMINI_MODEL = _get("GEMINI_MODEL", "gemini-2.5-flash")
 # Public (client) chat runs on the ~4x cheaper Lite model; brokers keep the main one.
-GEMINI_MODEL_PUBLIC = _get("GEMINI_MODEL_PUBLIC", "gemini-2.5-flash-lite")
+GEMINI_MODEL_PUBLIC = _get("GEMINI_MODEL_PUBLIC", "gemini-flash-lite-latest")
 # Client messages per conversation before the chat asks for a phone number
 # instead of calling the AI again (cost cap; 0 = no cap).
 PUBLIC_CHAT_MAX_MESSAGES = int(_get("PUBLIC_CHAT_MAX_MESSAGES", "15"))

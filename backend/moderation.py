@@ -88,7 +88,9 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
             "HARM_CATEGORY_HARASSMENT", "HARM_CATEGORY_HATE_SPEECH",
             "HARM_CATEGORY_SEXUALLY_EXPLICIT", "HARM_CATEGORY_DANGEROUS_CONTENT")],
     }
-    for model in (config.GEMINI_MODEL_PUBLIC, "gemini-2.5-flash", "gemini-flash-latest"):
+    # "-latest" aliases follow Google's current models; retired ones answer 404 -> next
+    models = dict.fromkeys(("gemini-flash-lite-latest", "gemini-flash-latest", config.GEMINI_MODEL_PUBLIC, config.GEMINI_MODEL))
+    for model in models:
         cfg = dict(payload["generationConfig"])
         if model.startswith("gemini-2.5"):
             cfg["thinkingConfig"] = {"thinkingBudget": 0}
@@ -100,7 +102,7 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
         except Exception as exc:
             WHY.append(f"{model}: {exc}")
             continue
-        if resp.status_code in (429, 500, 503):
+        if resp.status_code in (404, 429, 500, 503):
             WHY.append(f"{model}: HTTP {resp.status_code}")
             continue
         if resp.status_code != 200:

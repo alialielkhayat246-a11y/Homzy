@@ -15,7 +15,7 @@
   "env": {
     "LLM_PROVIDER": "gemini",
     "GEMINI_MODEL": "gemini-2.5-flash",
-    "GEMINI_MODEL_PUBLIC": "gemini-2.5-flash-lite",
+    "GEMINI_MODEL_PUBLIC": "gemini-flash-lite-latest",
     "PUBLIC_CHAT_MAX_MESSAGES": "15",
     "BROKER_NAME": "Homzy",
     "BRAND_NAME": "Homzy",
