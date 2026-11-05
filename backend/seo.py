@@ -174,7 +174,7 @@ def _page(title: str, desc: str, canonical: str, og_image: str,
   .lbx img{{max-width:94vw; max-height:84vh; border-radius:10px; object-fit:contain; user-select:none;}}
   .lbx button{{position:absolute; border:none; background:rgba(255,255,255,.14); color:#fff; width:46px; height:46px; border-radius:50%; font-size:24px; cursor:pointer;}}
   .lbx .x{{top:16px; inset-inline-end:16px;}} .lbx .pv{{right:14px;}} .lbx .nx{{left:14px;}}
-  .lbx .n{{position:absolute; bottom:18px; color:#cfd8e3; font-size:14px; font-weight:700;}}
+  .lbx .n{{position:absolute; bottom:18px; direction:ltr; color:#cfd8e3; font-size:14px; font-weight:700;}}
   .utscroll{{overflow-x:auto;}} .utable{{width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px;}}
   .utable th{{text-align:start; color:var(--muted); font-weight:700; padding:8px; border-bottom:1px solid var(--line); white-space:nowrap;}}
   .utable td{{padding:9px 8px; border-bottom:1px solid var(--line); color:#40506a;}}
