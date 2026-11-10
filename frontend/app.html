@@ -148,7 +148,13 @@
   .pcard{display:flex;flex-direction:column;}.pcard .img{height:auto;aspect-ratio:16/10;flex-shrink:0;}.pcard .b{display:flex;flex-direction:column;flex:1;}.pcard .b .pr{font-size:19px;margin-top:14px;line-height:1.5;}.pcard .b .det{margin-top:auto;min-height:44px;}.pcard .b .meta2{font-size:12px;color:#526074;margin-bottom:14px;}.pcard .b .dv{color:#526074;}
   .pcard .img{overflow:hidden;}.pcard .img>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .pcard .img .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy),var(--teal-d,#0B5563));}
-  .pcard .img .ph span{font:800 54px var(--fd);color:rgba(255,255,255,.22);}
+  .pcard .img .ph{flex-direction:column;gap:4px;padding:26px 14px 44px;text-align:center;overflow:hidden;
+    background:radial-gradient(120% 90% at 85% 0%,rgba(95,211,198,.28),transparent 55%),linear-gradient(135deg,var(--navy),var(--teal-d,#0B5563));}
+  .pcard .img .ph::before{content:"";position:absolute;inset:-30%;background:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 14px,transparent 14px 28px);}
+  .pcard .img .ph .ph-mk{width:28px;height:28px;flex:none;position:relative;opacity:.9;}
+  .pcard .img .ph b{position:relative;color:#fff;font:800 18px/1.25 var(--fd);max-width:92%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .pcard .img .ph small{position:relative;color:rgba(255,255,255,.75);font-size:12.5px;font-weight:700;max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pcard .img .ph i{position:absolute;bottom:10px;inset-inline-start:12px;font:800 11px var(--fd);font-style:normal;color:rgba(255,255,255,.45);letter-spacing:.5px;}
   .pcard .img .tag,.pcard .img .mk2,.pcard .img .cmpchk{z-index:1;}
   .pcard:focus-visible{outline:3px solid var(--teal);outline-offset:2px;}
   .grid-note{margin:4px 0 14px;}
@@ -392,8 +398,9 @@ async function enrichImages(rows){
     p.imgs=[...new Set([...c,...(MEDIA_CACHE.get(p.id)||[]).slice(0,2)])]; });
 }
 function cardImg(p,name){
-  const ini=esc((name||'H').trim().charAt(0).toUpperCase());
-  const ph=`<span class="ph"><span>${ini}</span></span>`;
+  // no photo yet: a branded cover (house mark, project name, developer · area)
+  const sub=esc(p.developer_name||'');   // the area already shows in the card's top tag
+  const ph=`<span class="ph"><svg class="ph-mk" viewBox="0 0 64 64" aria-hidden="true"><path d="M15 51V29L32 15l17 14v22" stroke="#fff" stroke-width="4.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/><rect x="26.5" y="33" width="11" height="11" rx="2.4" fill="#5FD3C6"/></svg><b>${esc(name||'')}</b>${sub?`<small>${sub}</small>`:''}<i>Homzy</i></span>`;
   if(!p.imgs||!p.imgs.length) return ph;
   return ph+`<img src="${esc(p.imgs[0])}" alt="${esc(name)}" loading="lazy" decoding="async" data-alt="${esc(JSON.stringify(p.imgs.slice(1)))}" onerror="cardImgErr(this)">`;
 }
