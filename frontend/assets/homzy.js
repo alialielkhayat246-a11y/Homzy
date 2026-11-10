@@ -135,14 +135,14 @@ const T = {
   crm:{ar:'CRM',en:'CRM'},
   // CRM workspace sub-navigation
   crmOverview:{ar:'نظرة عامة',en:'Overview'}, crmClients:{ar:'العملاء',en:'Clients'},
-  crmDeals:{ar:'الصفقات',en:'Deals'}, crmPerf:{ar:'الأداء',en:'Performance'},
+  crmDeals:{ar:'الصفقات',en:'Deals'}, crmAppts:{ar:'المواعيد',en:'Appointments'}, crmPerf:{ar:'الأداء',en:'Performance'},
   crmTeam:{ar:'الفريق',en:'Team'}, crmOwners:{ar:'المُلّاك والتوريد',en:'Owners & acquisition'},
   // product switcher
   prodHomzy:{ar:'Homzy',en:'Homzy'}, prodHomzyDesc:{ar:'العقارات',en:'Real estate'},
   prodStays:{ar:'Homzy Stays',en:'Homzy Stays'}, prodStaysDesc:{ar:'الإقامات والحجوزات',en:'Stays & bookings'},
   switchProduct:{ar:'المنتجات',en:'Products'},
   // profile menu
-  account:{ar:'الحساب',en:'Account'}, feedback:{ar:'الشكاوى والمقترحات',en:'Feedback'},
+  account:{ar:'الحساب',en:'Account'}, myBookings:{ar:'حجوزات المعاينة',en:'My viewings'}, feedback:{ar:'الشكاوى والمقترحات',en:'Feedback'},
   becomeBroker:{ar:'ابدأ العمل كبروكر',en:'Start working as a broker'},
   plansMenu:{ar:'الباقات والاشتراك',en:'Plans & subscription'},
   logout:{ar:'تسجيل الخروج',en:'Log out'}, login:{ar:'تسجيل الدخول',en:'Log in'},
@@ -184,6 +184,7 @@ const SVG = {
   home:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21H4a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg>',
   stays:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 18v-6a2 2 0 0 1 2-2h10a4 4 0 0 1 4 4v4M3 18h18M3 18v2m18-2v2M7 10V8a2 2 0 0 1 2-2h2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   bell:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 16V11a6 6 0 1 0-12 0v5l-1.6 2.4A.6.6 0 0 0 4.9 20h14.2a.6.6 0 0 0 .5-.9L18 16Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   user:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.8"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   chevron:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" class="chev"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   cog:'<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 6.6 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 13.4H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 6.6l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-1.2 2.9H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
@@ -207,7 +208,7 @@ function navItems(){
   return [['/','home'],['/app','browse'],['/areas','areas'],['/crm','crm']];
 }
 T.myDay={ar:'يومي',en:'My day'};
-const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights','/team','/owners'];
+const CRM_PATHS=['/crm','/my-day','/clients','/my-listings','/deals','/insights','/team','/owners','/appointments'];
 function isCrmPath(p){ return CRM_PATHS.some(x=>p===x||p.startsWith(x+'/')); }
 function isStaysPath(p){ return /^\/(stays|my-stays|host)(\/|$)/.test(p); }
 function navActive(href){
@@ -258,6 +259,7 @@ function profileHTML(){
     <div class="hz-menu hz-prof-menu" id="hzProfMenu" role="menu">
       <div class="hz-prof-head"><span class="av lg">${HZ.esc(initial)}</span><span class="pn"><b>${HZ.esc(nm)}</b><small>${typ}</small></span></div>
       <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.user}</span>${HZ.t('account')}</a>
+      <a class="hz-menu-item" role="menuitem" href="/my-bookings"><span class="mi">${SVG.calendar}</span>${HZ.t('myBookings')}</a>
       <a class="hz-menu-item" role="menuitem" href="/account"><span class="mi">${SVG.cog}</span>${HZ.t('settings')}</a>
       ${HZ.isBroker?`<a class="hz-menu-item" role="menuitem" href="/pricing"><span class="mi">${SVG.gem}</span>${HZ.t('plansMenu')}</a>`:''}
       <button class="hz-menu-item" role="menuitem" onclick="HZ.openFeedback()"><span class="mi">${SVG.chat}</span>${HZ.t('feedback')}</button>
@@ -301,7 +303,7 @@ function buildCrmSubnav(){
   const bar=document.getElementById('hzCrmSub'); if(!bar) return;
   if(!(HZ.isBroker && isCrmPath(location.pathname))){ bar.hidden=true; bar.innerHTML=''; return; }
   const path=location.pathname;
-  const tabs=[['/crm','myDay'],['/clients','crmClients'],['/owners','crmOwners'],['/my-listings','mylistings'],['/deals','crmDeals'],['/insights','crmPerf'],['/team','crmTeam'],['/app','browse'],['/community','communityNav']];
+  const tabs=[['/crm','myDay'],['/appointments','crmAppts'],['/clients','crmClients'],['/owners','crmOwners'],['/my-listings','mylistings'],['/deals','crmDeals'],['/insights','crmPerf'],['/team','crmTeam'],['/app','browse'],['/community','communityNav']];
   const act=h=> h==='/crm' ? (path==='/crm'||path==='/my-day') : (path===h||path.startsWith(h+'/'));
   bar.hidden=false;
   bar.innerHTML=`<div class="wrap hz-crmsub-in" role="tablist" aria-label="CRM">`

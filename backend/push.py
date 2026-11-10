@@ -71,6 +71,53 @@ def _delete_subscription(endpoint: str) -> None:
         pass
 
 
+def run_notifications() -> dict[str, Any]:
+    """Deliver queued notification-centre items (appointment requests, status
+    changes, reminders) as Web Push to the user's devices. pg_cron calls the
+    endpoint every 2 minutes; the database marks users with no device itself."""
+    if not enabled():
+        return {"ok": False, "error": "push_not_configured"}
+    import requests
+
+    base = config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/"
+    try:
+        r = requests.post(base + "notif_push_queue", headers=_anon_headers(),
+                          json={"p_key": config.PUSH_CRON_TOKEN, "p_limit": 50}, timeout=20)
+        r.raise_for_status()
+        items = r.json() or []
+    except Exception as exc:  # pragma: no cover - network
+        return {"ok": False, "error": f"rpc_failed: {exc}"}
+    sent_ids, failed_ids, pruned = [], [], 0
+    for it in items:
+        delivered = False
+        for sub in it.get("subs") or []:
+            if isinstance(sub, str):
+                try:
+                    sub = json.loads(sub)
+                except Exception:
+                    continue
+            if not isinstance(sub, dict) or not sub.get("endpoint"):
+                continue
+            try:
+                send_one(sub, {"title": it.get("title") or "Homzy", "body": it.get("body") or "",
+                               "url": it.get("url") or "/", "tag": f"homzy-n{it['id']}"})
+                delivered = True
+            except Exception as exc:
+                code = getattr(getattr(exc, "response", None), "status_code", None)
+                if code in (404, 410):
+                    _delete_subscription(sub["endpoint"])
+                    pruned += 1
+        (sent_ids if delivered else failed_ids).append(it["id"])
+    for ids, state in ((sent_ids, "sent"), (failed_ids, "failed")):
+        if ids:
+            try:
+                requests.post(base + "notif_push_mark", headers=_anon_headers(), timeout=10,
+                              json={"p_key": config.PUSH_CRON_TOKEN, "p_ids": ids, "p_state": state})
+            except Exception:
+                pass
+    return {"ok": True, "sent": len(sent_ids), "failed": len(failed_ids), "pruned": pruned}
+
+
 def run_followups() -> dict[str, Any]:
     """Fan out follow-up reminders. Returns a small report dict."""
     if not enabled():

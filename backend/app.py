@@ -819,6 +819,26 @@ async def push_run_followups(req: Request):
     return push.run_followups()
 
 
+@app.post("/api/notifications/push")
+async def notifications_push():
+    """Push queued notification-centre items (viewing requests, confirmations,
+    reminders…) to users' devices. Called by pg_cron every 2 minutes; it only
+    delivers what the database already queued, so it needs no secret."""
+    return await run_in_threadpool(push.run_notifications)
+
+
+@app.get("/appointments")
+def appointments_page():
+    """CRM — viewing appointments: requests, calendar, settings."""
+    return FileResponse(config.FRONTEND_DIR / "appointments.html")
+
+
+@app.get("/my-bookings")
+def my_bookings_page():
+    """Client — my viewing bookings."""
+    return FileResponse(config.FRONTEND_DIR / "my-bookings.html")
+
+
 @app.post("/api/stays/cron")
 async def stays_cron(req: Request):
     """Daily Homzy Stays maintenance: complete past-checkout bookings and publish
