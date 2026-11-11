@@ -827,6 +827,47 @@ async def notifications_push():
     return await run_in_threadpool(push.run_notifications)
 
 
+@app.get("/api/appointments/ical/{token}.ics")
+def appointments_ical(token: str):
+    """A broker's private calendar feed (Google Calendar / iPhone 'subscribe by
+    URL'). The random token in the URL is the secret; the broker can reset it."""
+    import datetime as _dt
+    import requests
+    if not re.fullmatch(r"[0-9a-f-]{36}", token):
+        return Response(status_code=404)
+    try:
+        r = requests.post(config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/appt_ical", timeout=10,
+                          headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}",
+                                   "Content-Type": "application/json"}, json={"p_token": token})
+        rows = r.json() if r.ok else []
+    except Exception:
+        rows = []
+
+    def ts(v: str) -> str:
+        return _dt.datetime.fromisoformat(v.replace("Z", "+00:00")).astimezone(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+    def esc(v: Any) -> str:
+        return str(v or "").replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+    status_ar = {"pending": "مستني تأكيدك", "confirmed": "مؤكد", "completed": "تمت"}
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Homzy//Appointments//AR", "CALSCALE:GREGORIAN",
+             "X-WR-CALNAME:Homzy — المعاينات", "X-WR-TIMEZONE:Africa/Cairo"]
+    for a in rows if isinstance(rows, list) else []:
+        desc = f"العميل: {a.get('client')} — {a.get('phone')}\\nالحالة: {status_ar.get(a.get('status'), a.get('status'))}"
+        if a.get("video_url"):
+            desc += f"\\nلينك الفيديو: {a['video_url']}"
+        desc += f"\\nhttps://homzy-ai.com/appointments?id={a['id']}"
+        lines += ["BEGIN:VEVENT", f"UID:{a['id']}@homzy-ai.com", f"DTSTAMP:{ts(a['updated_at'])}",
+                  f"DTSTART:{ts(a['starts_at'])}", f"DTEND:{ts(a['ends_at'])}",
+                  f"SUMMARY:{esc(('🎥 ' if a.get('kind') == 'video' else '🏠 ') + 'معاينة: ' + str(a.get('title') or ''))}"
+                  + (" (مستني تأكيد)" if a.get("status") == "pending" else ""),
+                  f"LOCATION:{esc(a.get('video_url') or a.get('location'))}", f"DESCRIPTION:{desc}",
+                  "STATUS:" + ("TENTATIVE" if a.get("status") == "pending" else "CONFIRMED"), "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+    return Response("\r\n".join(lines) + "\r\n", media_type="text/calendar; charset=utf-8",
+                    headers={"Cache-Control": "no-store"})
+
+
 @app.get("/appointments")
 def appointments_page():
     """CRM — viewing appointments: requests, calendar, settings."""

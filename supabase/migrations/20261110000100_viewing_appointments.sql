@@ -284,7 +284,7 @@ declare a public.appointments%rowtype; l public.listings%rowtype; vid bigint; st
 begin
   select * into a from public.appointments where id = p_id;
   if not found then return; end if;
-  st := case a.status when 'confirmed' then 'confirmed' when 'completed' then 'done' else 'cancelled' end;
+  st := case a.status when 'confirmed' then 'confirmed' when 'completed' then 'completed' else 'cancelled' end;
   if a.viewing_id is null then
     if a.status <> 'confirmed' then return; end if;
     select * into l from public.listings where id = a.listing_id;

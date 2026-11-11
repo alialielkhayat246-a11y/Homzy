@@ -603,7 +603,7 @@ def render_listing(lid: str) -> str | None:
     {('<div class="sp-sec"><div class="sp-gallery">' + ''.join(f'<img loading="lazy" src="{_esc(u)}" alt="{_esc(title_txt)}">' for u in images) + '</div></div>') if images else ''}
     {contact_html}
     <div id="book" style="margin-top:16px"></div>
-    <script src="/assets/booking.js?v=1"></script>
+    <script src="/assets/booking.js?v=2"></script>
     <script>document.addEventListener('DOMContentLoaded',function(){{ HZBook.mount(document.getElementById('book'),{{listingId:'{lid}'}}); if(location.hash==='#book') document.getElementById('book').scrollIntoView(); }});</script>
     """
     return _page(title, desc, canonical, share_img, jsonld, body, og_size=(1200, 630))

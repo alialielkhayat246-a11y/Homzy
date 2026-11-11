@@ -52,6 +52,12 @@
   .s-confirmed{background:#E1F4F1;color:#0B5563;border-inline-start:3px solid var(--teal);}
   .s-completed{background:#E6F6EC;color:#137a3e;border-inline-start:3px solid #22A35A;}
   .s-rejected,.s-cancelled{background:#F1F1F1;color:#8a8f98;border-inline-start:3px solid #C4C7CC;text-decoration:line-through;}
+  .s-no_show{background:#FDECEC;color:#B42318;border-inline-start:3px solid #E5484D;}
+  .tag{display:inline-block;font-size:11px;font-weight:800;border-radius:100px;padding:2px 8px;background:#EEF2FF;color:#3949AB;}
+  .tag.sig{background:#FFF4E5;color:#9A5B00;} .stars{color:#F59E0B;letter-spacing:1px;}
+  .rep{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;} @media(max-width:680px){.rep{grid-template-columns:1fr 1fr;}}
+  .rep div{background:var(--cream);border-radius:12px;padding:10px;text-align:center;} .rep b{display:block;font-size:19px;color:var(--navy);} .rep span{font-size:12px;color:var(--muted);}
+  .toplist{margin-top:10px;font-size:13px;} .toplist div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:6px 2px;}
   .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;text-decoration:none;border:none;}
   /* week / day / list */
   .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
@@ -114,6 +120,9 @@
     </div>
     <div id="cal"></div>
   </div>
+  <div class="sec"><h2 style="display:flex;align-items:center;gap:8px"><span data-ar="📊 تقرير المعاينات" data-en="📊 Viewings report">📊 تقرير المعاينات</span>
+      <select id="repDays" onchange="renderReport()" style="margin-inline-start:auto;font-family:var(--ff);font-size:12.5px;padding:5px 8px;border:1.5px solid var(--line-2);border-radius:8px"><option value="30">30 يوم</option><option value="90">90 يوم</option><option value="365">سنة</option></select></h2>
+    <div id="report"></div></div>
   <div class="sec"><h2 data-ar="آخر التنبيهات" data-en="Latest notifications">آخر التنبيهات</h2><div id="ntfList"><div class="empty">…</div></div></div>
 </div>
 
@@ -136,7 +145,7 @@
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js?v=17"></script>
 <script src="/assets/broker-session.js?v=1"></script>
-<script src="/assets/booking.js?v=1"></script>
+<script src="/assets/booking.js?v=2"></script>
 <script>
 const $=id=>document.getElementById(id);
 const ar=()=>!(window.HZ&&HZ.lang==='en');
@@ -148,7 +157,8 @@ const tm=iso=>new Date(iso).toLocaleTimeString(L('ar-EG','en-GB'),{hour:'numeric
 const dt=iso=>new Date(iso).toLocaleString(L('ar-EG','en-GB'),{weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit',timeZone:TZ});
 const dlabel=k=>new Date(k+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{weekday:'long',day:'numeric',month:'long'});
 const addDays=(k,n)=>{ const d=new Date(k+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
-const STATUS={pending:['مستني تأكيدك','Pending'],confirmed:['مؤكد','Confirmed'],completed:['تمت','Completed'],rejected:['مرفوض','Rejected'],cancelled:['ملغي','Cancelled']};
+const STATUS={pending:['مستني تأكيدك','Pending'],confirmed:['مؤكد','Confirmed'],completed:['تمت','Completed'],no_show:['العميل ماجاش','No-show'],rejected:['مرفوض','Rejected'],cancelled:['ملغي','Cancelled']};
+const SIGNAL={on_the_way:['🚗 في الطريق','🚗 On the way'],arrived:['📍 وصل','📍 Arrived']};
 const stTxt=a=>a.status==='cancelled'&&a.status_reason==='expired'?L('انتهى من غير رد','Expired'):L(STATUS[a.status][0],STATUS[a.status][1]);
 const ERRS={expired:L('الطلب انتهى قبل ما تأكّده.','The request expired.'),bad_status:L('الحالة اتغيّرت — حدّث الصفحة.','Status changed — refresh.'),not_started:L('تقدر تعلّمها "تمت" بعد ميعادها.','Mark it done after it starts.'),forbidden:L('مش مسموح.','Not allowed.')};
 
@@ -186,7 +196,7 @@ function filtered(){
 }
 function render(){
   document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
-  renderKpis(); renderRequests(); renderNotifs();
+  renderKpis(); renderRequests(); renderNotifs(); renderReport();
   ({day:renderDay,week:renderWeek,month:renderMonth,list:renderList})[VIEW]();
 }
 function renderKpis(){
@@ -216,7 +226,7 @@ function renderRequests(){
       <button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>
       <button onclick="openDetail('${a.id}')">${L('تفاصيل','Details')}</button></div></div>`).join('');
 }
-function evHTML(a,long){ return `<div class="ev s-${a.status}" onclick="openDetail('${a.id}')"><b>${esc(tm(a.starts_at))}</b><span>${esc(a.client_name)}</span>${long?`<span>${esc(a.listing_title||'')}</span>`:''}</div>`; }
+function evHTML(a,long){ return `<div class="ev s-${a.status}" onclick="openDetail('${a.id}')"><b>${esc(tm(a.starts_at))}${a.kind==='video'?' 🎥':''}${a.client_signal&&a.status==='confirmed'?' '+(a.client_signal==='arrived'?'📍':'🚗'):''}</b><span>${esc(a.client_name)}</span>${long?`<span>${esc(a.listing_title||'')}</span>`:''}</div>`; }
 function byDay(list){ const m={}; list.forEach(a=>{ (m[dkey(a.starts_at)]=m[dkey(a.starts_at)]||[]).push(a); }); Object.values(m).forEach(x=>x.sort((p,q)=>new Date(p.starts_at)-new Date(q.starts_at))); return m; }
 function weekStart(k){ const d=new Date(k+'T12:00:00'); const back=(d.getDay()+1)%7; return addDays(k,-back); } // weeks start on Saturday
 function renderDay(){
@@ -281,7 +291,8 @@ async function openDetail(id){
   const past=new Date(a.starts_at)<=Date.now()+3600e3;
   const btn=[];
   if(a.status==='pending') btn.push(`<button class="ok" onclick="act('${a.id}','confirm')">✅ ${L('تأكيد','Confirm')}</button>`,`<button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>`);
-  if(a.status==='confirmed'&&past) btn.push(`<button class="ok" onclick="act('${a.id}','complete')">✔️ ${L('تمت المعاينة','Mark completed')}</button>`);
+  if(a.status==='confirmed'||a.status==='pending') btn.push(`<a class="ok" style="background:#22C55E;border-color:#22C55E" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(waText(a))}">📲 ${a.status==='confirmed'?L('ابعت التأكيد واتساب','Send confirmation on WhatsApp'):L('كلّمه واتساب','WhatsApp the client')}</a>`);
+  if(a.status==='confirmed'&&past) btn.push(`<button class="ok" onclick="act('${a.id}','complete')">✔️ ${L('تمت المعاينة','Mark completed')}</button>`,`<button class="no" onclick="act('${a.id}','no_show')">🚫 ${L('العميل ماجاش','No-show')}</button>`);
   if(active(a)) btn.push(`<button onclick="openMove('${a.id}','${a.listing_id}')">🔁 ${L('تغيير الميعاد','Reschedule')}</button>`,`<button class="no" onclick="act('${a.id}','cancel')">${L('إلغاء','Cancel')}</button>`);
   $('detailBody').innerHTML=`${a.cover?`<div class="dcover" style="background-image:url('${esc(a.cover)}')"></div>`:''}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px;color:var(--navy)">${esc(a.listing_title||'')}</b><span class="badge s-${a.status}">${esc(stTxt(a))}</span></div>
@@ -292,6 +303,9 @@ async function openDetail(id){
       <b>${L('الموبايل','Phone')}</b><span><a href="tel:${esc(a.client_phone)}" dir="ltr">${esc(a.client_phone)}</a> · <a target="_blank" rel="noopener" href="https://wa.me/${wa}">${L('واتساب','WhatsApp')}</a></span>
       <b>${L('اتحجز في','Booked on')}</b><span>${esc(dt(a.created_at))}</span>
       ${a.status==='pending'?`<b>${L('رُد قبل','Answer by')}</b><span style="color:#B45309;font-weight:800">${esc(dt(a.hold_expires_at))}</span>`:''}
+      <b>${L('نوع المعاينة','Type')}</b><span>${a.kind==='video'?'🎥 '+L('مكالمة فيديو','Video call')+(a.video_url?` — <a href="${esc(a.video_url)}" target="_blank" rel="noopener">${L('افتح المكالمة','Open call')}</a>`:''):'🏠 '+L('في المكان','In person')}</span>
+      ${a.client_signal?`<b>${L('حالة العميل','Client status')}</b><span><span class="tag sig">${L(SIGNAL[a.client_signal][0],SIGNAL[a.client_signal][1])}</span> ${esc(tm(a.client_signal_at))}</span>`:''}
+      ${a.interest?`<b>${L('تقييم العميل','Client feedback')}</b><span>${L('اهتمامه بالوحدة','Interest')}: <span class="stars">${stars(a.interest)}</span> · ${L('تقييمه ليك','Rated you')}: <span class="stars">${stars(a.broker_rating)}</span>${a.feedback_comment?'<br>«'+esc(a.feedback_comment)+'»':''}</span>`:''}
       ${a.client_notes?`<b>${L('ملاحظة العميل','Client note')}</b><span>${esc(a.client_notes)}</span>`:''}
       ${a.status_reason&&a.status_reason!=='expired'?`<b>${L('السبب','Reason')}</b><span>${esc(a.status_reason)}</span>`:''}
     </div>
@@ -301,9 +315,48 @@ async function openDetail(id){
   $('ovDetail').classList.add('open');
 }
 window.openDetail=openDetail;
+const stars=n=>'★'.repeat(n||0)+'☆'.repeat(5-(n||0));
+// ready-made WhatsApp message; the broker sends it from their own phone
+function waText(a){
+  const where=[a.area,a.address].filter(Boolean).join(' — ');
+  const map=(a.lat&&a.lng)?`https://maps.google.com/?q=${a.lat},${a.lng}`:'';
+  if(a.status!=='confirmed') return L(`أهلاً ${a.client_name} 👋 بخصوص طلب معاينة "${a.listing_title||''}" يوم ${dt(a.starts_at)}.`,`Hi ${a.client_name} 👋 about your viewing request for "${a.listing_title||''}" on ${dt(a.starts_at)}.`);
+  return [L(`أهلاً ${a.client_name} 👋`,`Hi ${a.client_name} 👋`),
+    L(`ميعاد معاينة "${a.listing_title||''}" اتأكد ✅`,`Your viewing of "${a.listing_title||''}" is confirmed ✅`),
+    `📅 ${dt(a.starts_at)}`,
+    a.kind==='video'?`🎥 ${L('لينك مكالمة الفيديو','Video call link')}: ${a.video_url||''}`:(where?`📍 ${where}`:''),
+    a.kind!=='video'&&map?`🗺️ ${map}`:'',
+    L('لو حصل أي تغيير كلّمني هنا. في انتظارك 🙏','If anything changes, message me here. See you 🙏')].filter(Boolean).join('\n');
+}
+function renderReport(){
+  const days=+(($('repDays')||{}).value||30), since=Date.now()-days*864e5;
+  const r=APPTS.filter(a=>new Date(a.created_at)>since);
+  const confirmed=r.filter(a=>a.confirmed_at);
+  const decided=r.filter(a=>a.confirmed_at||a.status==='rejected'||a.status_reason==='expired');
+  const resp=confirmed.map(a=>(new Date(a.confirmed_at)-new Date(a.created_at))/36e5);
+  const avgResp=resp.length?resp.reduce((x,y)=>x+y,0)/resp.length:null;
+  const done=r.filter(a=>a.status==='completed'), ns=r.filter(a=>a.status==='no_show'), expired=r.filter(a=>a.status_reason==='expired');
+  const avg=(xs,f)=>{ const v=xs.map(f).filter(Boolean); return v.length?v.reduce((x,y)=>x+y,0)/v.length:null; };
+  const avgInt=avg(done,a=>a.interest), avgBrk=avg(done,a=>a.broker_rating);
+  const pct=(n,d)=>d?Math.round(100*n/d)+'%':'—';
+  const by={}; r.forEach(a=>{ const k=a.listing_title||'—'; by[k]=(by[k]||0)+1; });
+  const top=Object.entries(by).sort((x,y)=>y[1]-x[1]).slice(0,5);
+  $('report').innerHTML=!r.length?`<div class="empty">${L('لسه مفيش طلبات معاينة في الفترة دي.','No viewing requests in this period yet.')}</div>`:`<div class="rep">
+    <div><b>${r.length}</b><span>${L('طلبات معاينة','Requests')}</span></div>
+    <div><b>${pct(confirmed.length,decided.length)}</b><span>${L('نسبة التأكيد','Confirm rate')}</span></div>
+    <div><b>${avgResp==null?'—':(avgResp<1?Math.round(avgResp*60)+L(' دقيقة',' min'):avgResp.toFixed(1)+L(' ساعة',' h'))}</b><span>${L('متوسط وقت ردّك','Avg. response time')}</span></div>
+    <div><b>${done.length}</b><span>${L('معاينات تمّت','Completed')}</span></div>
+    <div><b>${pct(ns.length,done.length+ns.length)}</b><span>${L('نسبة اللي ماجوش','No-show rate')}</span></div>
+    <div><b>${expired.length}</b><span>${L('طلبات انتهت من غير رد','Expired unanswered')}</span></div>
+    <div><b>${avgInt==null?'—':avgInt.toFixed(1)+'/5'}</b><span>${L('اهتمام العملاء بعد المعاينة','Interest after viewing')}</span></div>
+    <div><b>${avgBrk==null?'—':avgBrk.toFixed(1)+'/5'}</b><span>${L('تقييم العملاء ليك','Your rating')}</span></div></div>
+    ${top.length?`<div class="toplist"><b style="font-size:13px;color:var(--navy)">${L('أكتر الوحدات طلباً للمعاينة','Most requested properties')}</b>${top.map(([t,n])=>`<div><span>${esc(t)}</span><b>${n}</b></div>`).join('')}</div>`:''}`;
+}
+window.renderReport=renderReport;
 function histTxt(e){ const who={client:L('العميل','client'),broker:L('إنت','you'),system:L('النظام','system')}[e.actor_role]||'';
   const what={requested:L('طلب معاينة','requested'),confirmed:L('أكّد','confirmed'),rejected:L('رفض','rejected'),cancelled:L('ألغى','cancelled'),
-    completed:L('علّمها تمت','completed'),rescheduled:L('غيّر الميعاد','rescheduled'),expired:L('انتهى من غير رد','expired')}[e.action]||e.action;
+    completed:L('علّمها تمت','completed'),no_show:L('علّمه إنه ماجاش','marked no-show'),on_the_way:L('قال إنه في الطريق','is on the way'),arrived:L('قال إنه وصل','arrived'),
+    rescheduled:L('غيّر الميعاد','rescheduled'),expired:L('انتهى من غير رد','expired')}[e.action]||e.action;
   return `${who} ${what}`+(e.to_start&&e.action==='rescheduled'?` → ${dt(e.to_start)}`:'')+(e.note?` (${e.note})`:''); }
 window.act=async(id,action)=>{
   let reason=null;
@@ -330,12 +383,18 @@ window.openSettings=async()=>{
       ${num('sHold',L('مهلة الرد على الطلب (ساعة)','Hold a request for (hours)'),s.pending_hold_hours||24,[2,4,6,12,24,48,72])}
       ${num('sNotice',L('أقل وقت قبل الحجز (ساعة)','Minimum notice (hours)'),s.min_notice_hours??2,[0,1,2,3,6,12,24])}
     </div>
+    <label style="display:flex;gap:8px;align-items:center;font-weight:800;font-size:13px;margin:4px 0 10px"><input type="checkbox" id="sVideo" ${s.allow_video!==false?'checked':''}> 🎥 ${L('اسمح للعملاء يطلبوا معاينة بمكالمة فيديو','Allow video-call viewings')}</label>
     <div class="fld"><label>${L('مواعيد شغلك في الأسبوع (بتسري على كل وحداتك)','Your weekly hours (all your properties)')}</label>
       <div class="wk">${WD.map(([d,n])=>{ const h=hrs[d]||(noRows?{start:'10:00',end:'20:00'}:null);
         return `<label><input type="checkbox" id="wd${d}" ${h?'checked':''}> ${L(n[0],n[1])}</label><input type="time" id="ws${d}" value="${h?h.start:'10:00'}"><input type="time" id="we${d}" value="${h?h.end:'20:00'}">`; }).join('')}</div></div>
     <div class="fld"><label>${L('أيام أو ساعات مش متاح فيها','Days/times off')}</label><div id="boList"></div>
       <div class="acts"><button onclick="addBo()">＋ ${L('إضافة','Add')}</button></div></div>
-    <div class="acts"><button class="ok" onclick="saveSettings()">${L('حفظ','Save')}</button></div><div class="msg" id="sMsg"></div>`;
+    <div class="acts"><button class="ok" onclick="saveSettings()">${L('حفظ','Save')}</button></div><div class="msg" id="sMsg"></div>
+    <div class="fld" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px"><label>📆 ${L('ضيف مواعيدك على تقويم جوجل أو الآيفون','Add your appointments to Google / iPhone calendar')}</label>
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">${L('انسخ اللينك ده: في تقويم جوجل اختار «Other calendars ← From URL»، وفي الآيفون «Add Subscribed Calendar». اللينك سري — ماتبعتهوش لحد.','Copy this link — Google Calendar: Other calendars → From URL; iPhone: Add Subscribed Calendar. Keep it private.')}</div>
+      <input id="icalUrl" readonly dir="ltr" onclick="this.select()" value="…" style="width:100%">
+      <div class="acts" style="margin-top:6px"><button onclick="copyIcal(this)">${L('نسخ اللينك','Copy link')}</button><button onclick="loadIcal(true)">${L('لينك جديد (يوقف القديم)','New link (disables the old one)')}</button></div></div>`;
+  loadIcal(false);
   (s.blackouts||[]).forEach(b=>addBo(b));
   $('ovSet').classList.add('open');
 };
@@ -348,11 +407,15 @@ window.saveSettings=async()=>{
   if(hours.some(h=>!h.start||!h.end||h.end<=h.start)){ $('sMsg').className='msg err'; $('sMsg').textContent=L('راجع المواعيد: النهاية لازم بعد البداية.','End must be after start.'); return; }
   const blackouts=[...document.querySelectorAll('#boList .bo')].map(r=>({day:r.querySelector('.bd').value,start:r.querySelector('.bs').value,end:r.querySelector('.be').value,note:r.querySelector('.bn').value}))
     .filter(b=>b.day).map(b=>(b.start&&b.end)?b:{day:b.day,start:'',end:'',note:b.note});
-  try{ await HZ.sbAuth('/rpc/appt_save_settings',S.token,'POST',{p:{daily_limit:+$('sLimit').value,slot_minutes:+$('sSlot').value,
+  try{ await HZ.sbAuth('/rpc/appt_save_settings',S.token,'POST',{p:{daily_limit:+$('sLimit').value,slot_minutes:+$('sSlot').value,allow_video:$('sVideo').checked,
       pending_hold_hours:+$('sHold').value,min_notice_hours:+$('sNotice').value,horizon_days:30,hours,blackouts}});
     $('sMsg').className='msg ok'; $('sMsg').textContent=L('اتحفظ ✓','Saved ✓'); setTimeout(()=>closeOv('ovSet'),900);
   }catch(e){ $('sMsg').className='msg err'; $('sMsg').textContent=L('تعذّر الحفظ: ','Could not save: ')+(e.message||e); }
 };
+window.loadIcal=async(reset)=>{ if(reset&&!confirm(L('اللينك القديم هيبطّل يشتغل. تكمّل؟','The old link will stop working. Continue?'))) return;
+  try{ const t=await HZ.sbAuth('/rpc/appt_ical_token',S.token,'POST',{p_reset:!!reset}); $('icalUrl').value=location.origin+'/api/appointments/ical/'+t+'.ics'; }
+  catch(e){ $('icalUrl').value=L('تعذّر التحميل','Could not load'); } };
+window.copyIcal=async(b)=>{ try{ await navigator.clipboard.writeText($('icalUrl').value); b.textContent=L('اتنسخ ✓','Copied ✓'); }catch(e){ $('icalUrl').select(); } };
 boot();
 </script>
 </body>
