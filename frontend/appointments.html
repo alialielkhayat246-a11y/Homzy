@@ -115,6 +115,7 @@
       <div class="nav"><button onclick="move(-1)">›</button><b id="calTitle"></b><button onclick="move(1)">‹</button><button onclick="goToday()" data-ar="النهارده" data-en="Today">النهارده</button></div>
     </div>
     <div class="filters">
+      <select id="fScope" onchange="applyScope()" hidden></select>
       <select id="fStatus" onchange="render()"></select>
       <select id="fListing" onchange="render()"></select>
     </div>
@@ -159,10 +160,22 @@ const dlabel=k=>new Date(k+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{w
 const addDays=(k,n)=>{ const d=new Date(k+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
 const STATUS={pending:['مستني تأكيدك','Pending'],confirmed:['مؤكد','Confirmed'],completed:['تمت','Completed'],no_show:['العميل ماجاش','No-show'],rejected:['مرفوض','Rejected'],cancelled:['ملغي','Cancelled']};
 const SIGNAL={on_the_way:['🚗 في الطريق','🚗 On the way'],arrived:['📍 وصل','📍 Arrived']};
-const stTxt=a=>a.status==='cancelled'&&a.status_reason==='expired'?L('انتهى من غير رد','Expired'):L(STATUS[a.status][0],STATUS[a.status][1]);
+const RA_ERR={broker_unavailable:L('البروكر ده مش متاح في الوقت ده حسب مواعيد شغله.','That broker is off at this time.'),daily_limit:L('البروكر ده وصل لأقصى عدد معاينات في اليوم ده.','That broker hit their daily limit.'),
+  slot_taken:L('البروكر ده عنده معاينة تانية في نفس الوقت.','That broker already has a viewing then.'),owner_unavailable:L('المالك مش متاح في الوقت ده.','The owner is unavailable then.'),
+  forbidden:L('مش مسموحلك تنقل مواعيد البروكر ده.','You cannot reassign this broker.'),bad_status:L('الميعاد ده خلص أو اتقفل.','This viewing is closed.')};
+window.reassign=async(id,force)=>{ const to=$('raTo').value, m=$('dMsg');
+  try{ const r=await HZ.sbAuth('/rpc/appt_reassign',S.token,'POST',{p_id:id,p_broker:to,p_force:!!force});
+    if(!r||!r.ok){ const e=r&&r.error;
+      if(!force&&(e==='broker_unavailable'||e==='daily_limit')&&confirm(RA_ERR[e]+'\n'+L('تنقله برضه؟','Move it anyway?'))) return reassign(id,true);
+      m.className='msg err'; m.textContent=RA_ERR[e]||L('تعذّر النقل.','Could not move.'); return; }
+    await load(); openDetail(id); const m2=$('dMsg'); if(m2){ m2.className='msg ok'; m2.textContent=L('اتنقل ✓ — البروكرين والعميل وصلهم تنبيه.','Moved ✓ — both brokers and the client were notified.'); }
+  }catch(e){ m.className='msg err'; m.textContent=L('تعذّر النقل.','Could not move.'); } };
+const stTxt=a=>a.status==='cancelled'&&a.status_reason==='expired'?L('انتهى من غير رد','Expired'):a.status==='pending'&&S&&a.broker_id!==S.uid?L('مستني تأكيد البروكر','Pending'):L(STATUS[a.status][0],STATUS[a.status][1]);
 const ERRS={expired:L('الطلب انتهى قبل ما تأكّده.','The request expired.'),bad_status:L('الحالة اتغيّرت — حدّث الصفحة.','Status changed — refresh.'),not_started:L('تقدر تعلّمها "تمت" بعد ميعادها.','Mark it done after it starts.'),forbidden:L('مش مسموح.','Not allowed.')};
 
-let S=null, APPTS=[], VIEW='week', CUR=dkey(Date.now()), NOTIFS=[];
+let S=null, APPTS=[], ALL=[], TEAM=null, VIEW='week', CUR=dkey(Date.now()), NOTIFS=[];
+const mine=a=>a.broker_id===S.uid;
+const brokerName=id=>((TEAM&&TEAM.brokers.find(b=>b.id===id))||{}).name||'';
 
 async function boot(){
   S=await HZ.requireSession(); if(!S) return;
@@ -181,7 +194,15 @@ async function boot(){
 }
 async function load(){
   const from=new Date(Date.now()-90*864e5).toISOString(), to=new Date(Date.now()+180*864e5).toISOString();
-  try{ APPTS=await HZ.sbAuth('/rpc/appt_broker_list',S.token,'POST',{p_from:from,p_to:to})||[]; }catch(e){ APPTS=[]; }
+  // managers / team leaders get their team's calendar too (appt_team_list returns just me otherwise)
+  try{ TEAM=await HZ.sbAuth('/rpc/appt_team_list',S.token,'POST',{p_from:from,p_to:to}); ALL=(TEAM&&TEAM.appts)||[]; }
+  catch(e){ TEAM=null; try{ ALL=await HZ.sbAuth('/rpc/appt_broker_list',S.token,'POST',{p_from:from,p_to:to})||[]; }catch(_){ ALL=[]; } }
+  const sc=$('fScope'), sv=sc.value||'me', many=TEAM&&TEAM.brokers.length>1;
+  sc.hidden=!many;
+  if(many){ sc.innerHTML=`<option value="me">${L('مواعيدي أنا','My appointments')}</option><option value="team">👥 ${L('كل الفريق','Whole team')}</option>`
+      +TEAM.brokers.filter(b=>!b.me).map(b=>`<option value="${b.id}">${esc(b.name)}${b.team?' · '+esc(b.team):''}</option>`).join('');
+    sc.value=[...sc.options].some(o=>o.value===sv)?sv:'me'; }
+  scopeRows();
   try{ NOTIFS=await HZ.sbAuth('/crm_notifications?user_id=eq.'+S.uid+'&type=like.appt_*&select=*&order=created_at.desc&limit=15',S.token)||[]; }catch(e){ NOTIFS=[]; }
   const ls={}; APPTS.forEach(a=>{ if(a.listing_id) ls[a.listing_id]=a.listing_title; });
   const cur=$('fListing').value;
@@ -189,6 +210,10 @@ async function load(){
   $('fListing').value=cur;
   render();
 }
+function scopeRows(){ const v=$('fScope').hidden?'me':$('fScope').value;
+  APPTS=v==='team'?ALL:ALL.filter(a=>a.broker_id===(v==='me'?S.uid:v)); }
+window.applyScope=()=>{ scopeRows(); render(); };
+const teamView=()=>!$('fScope').hidden&&$('fScope').value!=='me';
 const active=a=>a.status==='pending'||a.status==='confirmed';
 function filtered(){
   const st=$('fStatus').value, li=$('fListing').value;
@@ -215,7 +240,7 @@ window.kpiGo=(g)=>{ if(g==='pending'){ $('reqSec').scrollIntoView({behavior:'smo
   if(g==='completed'){ $('fStatus').value='completed'; VIEW='list'; } else if(g==='day'){ VIEW='day'; CUR=dkey(Date.now()); } else { VIEW='list'; $('fStatus').value='active'; }
   render(); };
 function renderRequests(){
-  const p=APPTS.filter(a=>a.status==='pending').sort((x,y)=>new Date(x.hold_expires_at)-new Date(y.hold_expires_at));
+  const p=ALL.filter(a=>a.status==='pending'&&mine(a)).sort((x,y)=>new Date(x.hold_expires_at)-new Date(y.hold_expires_at));
   $('reqSec').hidden=!p.length; $('reqCnt').textContent=p.length;
   $('reqList').innerHTML=p.map(a=>`<div class="req">
     <div class="im" style="${a.cover?`background-image:url('${esc(a.cover)}')`:''}"></div>
@@ -226,7 +251,7 @@ function renderRequests(){
       <button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>
       <button onclick="openDetail('${a.id}')">${L('تفاصيل','Details')}</button></div></div>`).join('');
 }
-function evHTML(a,long){ return `<div class="ev s-${a.status}" onclick="openDetail('${a.id}')"><b>${esc(tm(a.starts_at))}${a.kind==='video'?' 🎥':''}${a.client_signal&&a.status==='confirmed'?' '+(a.client_signal==='arrived'?'📍':'🚗'):''}</b><span>${esc(a.client_name)}</span>${long?`<span>${esc(a.listing_title||'')}</span>`:''}</div>`; }
+function evHTML(a,long){ return `<div class="ev s-${a.status}" onclick="openDetail('${a.id}')"><b>${esc(tm(a.starts_at))}${a.kind==='video'?' 🎥':''}${a.client_signal&&a.status==='confirmed'?' '+(a.client_signal==='arrived'?'📍':'🚗'):''}</b><span>${esc(a.client_name)}</span>${long?`<span>${esc(a.listing_title||'')}</span>`:''}${teamView()?`<span style="opacity:.75">👤 ${esc(a.broker_name||'')}</span>`:''}</div>`; }
 function byDay(list){ const m={}; list.forEach(a=>{ (m[dkey(a.starts_at)]=m[dkey(a.starts_at)]||[]).push(a); }); Object.values(m).forEach(x=>x.sort((p,q)=>new Date(p.starts_at)-new Date(q.starts_at))); return m; }
 function weekStart(k){ const d=new Date(k+'T12:00:00'); const back=(d.getDay()+1)%7; return addDays(k,-back); } // weeks start on Saturday
 function renderDay(){
@@ -265,7 +290,7 @@ function renderList(){
   const keys=Object.keys(m).sort();
   $('cal').innerHTML=keys.length?keys.map(k=>`<div class="lday${k===today?' today':''}">${esc(dlabel(k))}${k===today?' — '+L('النهارده','today'):''}</div>`
     +m[k].map(a=>`<div class="lrow" onclick="openDetail('${a.id}')"><div class="tm">${esc(tm(a.starts_at))}</div>
-      <div class="in"><b>${esc(a.client_name)}</b> · ${esc(a.listing_title||'')}<br><span style="color:var(--muted)">${esc([a.area,a.address].filter(Boolean).join(' — '))}</span></div>
+      <div class="in"><b>${esc(a.client_name)}</b> · ${esc(a.listing_title||'')}${teamView()?` · 👤 ${esc(a.broker_name||'')}`:''}<br><span style="color:var(--muted)">${esc([a.area,a.address].filter(Boolean).join(' — '))}</span></div>
       <span class="badge s-${a.status}">${esc(stTxt(a))}</span></div>`).join('')).join('')
     :`<div class="empty">${L('مفيش مواعيد بالفلتر ده.','No appointments match.')}</div>`;
 }
@@ -285,19 +310,20 @@ window.move=dir=>{ if(VIEW==='day') CUR=addDays(CUR,dir); else if(VIEW==='week')
 window.closeOv=id=>$(id).classList.remove('open');
 
 async function openDetail(id){
-  const a=APPTS.find(x=>x.id===id); if(!a){ return; }
+  const a=ALL.find(x=>x.id===id); if(!a){ return; }
   let ev=[]; try{ ev=await HZ.sbAuth('/rpc/appt_events',S.token,'POST',{p_id:id})||[]; }catch(e){}
   const wa=String(a.client_phone||'').replace(/\D/g,'').replace(/^0/,'20');
   const past=new Date(a.starts_at)<=Date.now()+3600e3;
-  const btn=[];
-  if(a.status==='pending') btn.push(`<button class="ok" onclick="act('${a.id}','confirm')">✅ ${L('تأكيد','Confirm')}</button>`,`<button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>`);
+  const btn=[], own=mine(a);
+  if(own&&a.status==='pending') btn.push(`<button class="ok" onclick="act('${a.id}','confirm')">✅ ${L('تأكيد','Confirm')}</button>`,`<button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>`);
   if(a.status==='confirmed'||a.status==='pending') btn.push(`<a class="ok" style="background:#22C55E;border-color:#22C55E" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(waText(a))}">📲 ${a.status==='confirmed'?L('ابعت التأكيد واتساب','Send confirmation on WhatsApp'):L('كلّمه واتساب','WhatsApp the client')}</a>`);
-  if(a.status==='confirmed'&&past) btn.push(`<button class="ok" onclick="act('${a.id}','complete')">✔️ ${L('تمت المعاينة','Mark completed')}</button>`,`<button class="no" onclick="act('${a.id}','no_show')">🚫 ${L('العميل ماجاش','No-show')}</button>`);
-  if(active(a)) btn.push(`<button onclick="openMove('${a.id}','${a.listing_id}')">🔁 ${L('تغيير الميعاد','Reschedule')}</button>`,`<button class="no" onclick="act('${a.id}','cancel')">${L('إلغاء','Cancel')}</button>`);
+  if(own&&a.status==='confirmed'&&past) btn.push(`<button class="ok" onclick="act('${a.id}','complete')">✔️ ${L('تمت المعاينة','Mark completed')}</button>`,`<button class="no" onclick="act('${a.id}','no_show')">🚫 ${L('العميل ماجاش','No-show')}</button>`);
+  if(own&&active(a)) btn.push(`<button onclick="openMove('${a.id}','${a.listing_id}')">🔁 ${L('تغيير الميعاد','Reschedule')}</button>`,`<button class="no" onclick="act('${a.id}','cancel')">${L('إلغاء','Cancel')}</button>`);
   $('detailBody').innerHTML=`${a.cover?`<div class="dcover" style="background-image:url('${esc(a.cover)}')"></div>`:''}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px;color:var(--navy)">${esc(a.listing_title||'')}</b><span class="badge s-${a.status}">${esc(stTxt(a))}</span></div>
     <div class="kv">
       <b>${L('الميعاد','When')}</b><span>${esc(dt(a.starts_at))}</span>
+      ${!own?`<b>${L('البروكر','Broker')}</b><span>👤 ${esc(a.broker_name||'')}</span>`:''}
       <b>${L('المكان','Location')}</b><span>${esc([a.area,a.address].filter(Boolean).join(' — ')||'—')}</span>
       <b>${L('العميل','Client')}</b><span>${esc(a.client_name)}</span>
       <b>${L('الموبايل','Phone')}</b><span><a href="tel:${esc(a.client_phone)}" dir="ltr">${esc(a.client_phone)}</a> · <a target="_blank" rel="noopener" href="https://wa.me/${wa}">${L('واتساب','WhatsApp')}</a></span>
@@ -310,6 +336,9 @@ async function openDetail(id){
       ${a.status_reason&&a.status_reason!=='expired'?`<b>${L('السبب','Reason')}</b><span>${esc(a.status_reason)}</span>`:''}
     </div>
     <div class="acts">${btn.join('')}${a.listing_id?`<a href="/listing/${a.listing_id}" target="_blank">🏠 ${L('صفحة الوحدة','Property page')}</a>`:''}${a.lead_id?`<a href="/clients?lead=${a.lead_id}">👤 ${L('ملف العميل','Client file')}</a>`:''}</div>
+    ${TEAM&&TEAM.can_reassign&&active(a)&&new Date(a.ends_at)>Date.now()&&TEAM.brokers.length>1?`<div class="fld"><label>👥 ${L('انقل الميعاد لبروكر تاني (نفس الوقت)','Hand this viewing to another broker (same time)')}</label>
+      <div style="display:flex;gap:6px"><select id="raTo">${TEAM.brokers.filter(b=>b.id!==a.broker_id).map(b=>`<option value="${b.id}">${esc(b.name)}${b.me?' ('+L('أنا','me')+')':''}</option>`).join('')}</select>
+      <div class="acts"><button onclick="reassign('${a.id}')">${L('انقل','Move')}</button></div></div></div>`:''}
     <div class="msg" id="dMsg"></div>
     ${ev.length?`<div><b style="font-size:13px;color:var(--navy)">${L('السجل','History')}</b><div class="hist">${ev.map(e=>`<div>${esc(new Date(e.created_at).toLocaleString(L('ar-EG','en-GB'),{dateStyle:'short',timeStyle:'short'}))} — ${esc(histTxt(e))}</div>`).join('')}</div></div>`:''}`;
   $('ovDetail').classList.add('open');
@@ -337,7 +366,7 @@ function renderReport(){
   const avgResp=resp.length?resp.reduce((x,y)=>x+y,0)/resp.length:null;
   const done=r.filter(a=>a.status==='completed'), ns=r.filter(a=>a.status==='no_show'), expired=r.filter(a=>a.status_reason==='expired');
   const avg=(xs,f)=>{ const v=xs.map(f).filter(Boolean); return v.length?v.reduce((x,y)=>x+y,0)/v.length:null; };
-  const avgInt=avg(done,a=>a.interest), avgBrk=avg(done,a=>a.broker_rating);
+  const avgInt=avg(done,a=>a.interest), avgBrk=avg(done,a=>a.broker_rating), won=done.filter(a=>a.deal_won);
   const pct=(n,d)=>d?Math.round(100*n/d)+'%':'—';
   const by={}; r.forEach(a=>{ const k=a.listing_title||'—'; by[k]=(by[k]||0)+1; });
   const top=Object.entries(by).sort((x,y)=>y[1]-x[1]).slice(0,5);
@@ -347,16 +376,30 @@ function renderReport(){
     <div><b>${avgResp==null?'—':(avgResp<1?Math.round(avgResp*60)+L(' دقيقة',' min'):avgResp.toFixed(1)+L(' ساعة',' h'))}</b><span>${L('متوسط وقت ردّك','Avg. response time')}</span></div>
     <div><b>${done.length}</b><span>${L('معاينات تمّت','Completed')}</span></div>
     <div><b>${pct(ns.length,done.length+ns.length)}</b><span>${L('نسبة اللي ماجوش','No-show rate')}</span></div>
-    <div><b>${expired.length}</b><span>${L('طلبات انتهت من غير رد','Expired unanswered')}</span></div>
+    <div><b>${pct(won.length,done.length)}</b><span>${L('معاينات اتحوّلت لصفقة','Viewings → won deals')}</span></div>
     <div><b>${avgInt==null?'—':avgInt.toFixed(1)+'/5'}</b><span>${L('اهتمام العملاء بعد المعاينة','Interest after viewing')}</span></div>
-    <div><b>${avgBrk==null?'—':avgBrk.toFixed(1)+'/5'}</b><span>${L('تقييم العملاء ليك','Your rating')}</span></div></div>
+    <div><b>${avgBrk==null?'—':avgBrk.toFixed(1)+'/5'}</b><span>${teamView()?L('تقييم العملاء للبروكرز','Broker rating'):L('تقييم العملاء ليك','Your rating')}</span></div></div>
+    ${expired.length?`<div style="font-size:12.5px;color:#B45309;font-weight:700;margin-top:8px">⏳ ${L(`${expired.length} طلب انتهى من غير رد — كل طلب بيضيع ده عميل ممكن يروح لغيرك.`,`${expired.length} request(s) expired unanswered.`)}</div>`:''}
+    ${teamView()?brokerTable(r):''}
     ${top.length?`<div class="toplist"><b style="font-size:13px;color:var(--navy)">${L('أكتر الوحدات طلباً للمعاينة','Most requested properties')}</b>${top.map(([t,n])=>`<div><span>${esc(t)}</span><b>${n}</b></div>`).join('')}</div>`:''}`;
+}
+// team scope: one row per broker
+function brokerTable(r){
+  const g={}; r.forEach(a=>{ (g[a.broker_id]=g[a.broker_id]||[]).push(a); });
+  const rows=Object.entries(g).map(([id,xs])=>{ const done=xs.filter(a=>a.status==='completed'), ns=xs.filter(a=>a.status==='no_show');
+    const rt=done.map(a=>a.broker_rating).filter(Boolean);
+    return {name:xs[0].broker_name||brokerName(id),n:xs.length,done:done.length,ns:ns.length,won:done.filter(a=>a.deal_won).length,
+      exp:xs.filter(a=>a.status_reason==='expired').length,rate:rt.length?(rt.reduce((x,y)=>x+y,0)/rt.length).toFixed(1):'—'}; })
+    .sort((x,y)=>y.done-x.done||y.n-x.n);
+  return `<div class="toplist"><b style="font-size:13px;color:var(--navy)">👥 ${L('أداء البروكرز','By broker')}</b>
+    <div style="color:var(--muted);font-size:11.5px"><span style="flex:1">${L('البروكر','Broker')}</span><span>${L('طلبات · تمّت · ماجوش · صفقات · ضاعت · تقييم','Req · Done · No-show · Won · Expired · Rating')}</span></div>
+    ${rows.map(x=>`<div><span style="flex:1">${esc(x.name)}</span><b>${x.n} · ${x.done} · ${x.ns} · ${x.won} · ${x.exp} · ${x.rate}</b></div>`).join('')}</div>`;
 }
 window.renderReport=renderReport;
 function histTxt(e){ const who={client:L('العميل','client'),broker:L('إنت','you'),system:L('النظام','system')}[e.actor_role]||'';
   const what={requested:L('طلب معاينة','requested'),confirmed:L('أكّد','confirmed'),rejected:L('رفض','rejected'),cancelled:L('ألغى','cancelled'),
     completed:L('علّمها تمت','completed'),no_show:L('علّمه إنه ماجاش','marked no-show'),on_the_way:L('قال إنه في الطريق','is on the way'),arrived:L('قال إنه وصل','arrived'),
-    rescheduled:L('غيّر الميعاد','rescheduled'),expired:L('انتهى من غير رد','expired')}[e.action]||e.action;
+    rescheduled:L('غيّر الميعاد','rescheduled'),expired:L('انتهى من غير رد','expired'),reassigned:L('نقل الميعاد','reassigned')}[e.action]||e.action;
   return `${who} ${what}`+(e.to_start&&e.action==='rescheduled'?` → ${dt(e.to_start)}`:'')+(e.note?` (${e.note})`:''); }
 window.act=async(id,action)=>{
   let reason=null;
