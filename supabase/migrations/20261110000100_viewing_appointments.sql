@@ -524,7 +524,7 @@ begin
     select jsonb_agg(to_jsonb(x) order by x.starts_at) from (
       select a.id, a.listing_id, coalesce(l.title, a.listing_title) as listing_title, l.area, l.address,
              (select m.url from public.listing_media m where m.listing_id = a.listing_id order by m.sort limit 1) as cover,
-             a.lead_id, a.client_name, a.client_phone, a.client_notes, a.broker_notes, a.starts_at, a.ends_at,
+             a.lead_id, a.viewing_id, a.client_name, a.client_phone, a.client_notes, a.broker_notes, a.starts_at, a.ends_at,
              a.status, a.status_reason, a.cancelled_by, a.hold_expires_at, a.created_at, a.confirmed_at
         from public.appointments a left join public.listings l on l.id = a.listing_id
        where a.broker_id = uid

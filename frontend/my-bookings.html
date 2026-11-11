@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — حجوزات المعاينة</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  .wrap2{max-width:760px;margin:0 auto;padding:20px 14px 48px;}
+  h1{font-size:22px;margin:4px 0 4px;} .sub{color:var(--muted);font-size:14px;margin-bottom:16px;}
+  .tabs{display:inline-flex;background:var(--cream);border-radius:11px;padding:3px;margin-bottom:12px;}
+  .tabs button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;color:var(--navy);}
+  .tabs button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .bk{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px;display:flex;flex-wrap:wrap;}
+  .bk .im{width:150px;min-height:120px;background:#e9e2da center/cover no-repeat;flex:none;}
+  @media(max-width:520px){.bk .im{width:100%;height:140px;}}
+  .bk .in{flex:1;min-width:220px;padding:12px 14px;}
+  .bk .t{font-weight:900;color:var(--navy);font-size:15.5px;} .bk .m{font-size:13.5px;color:#40506a;margin-top:4px;line-height:1.7;}
+  .badge{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:100px;display:inline-block;margin-top:6px;}
+  .s-pending{background:#FFF4E5;color:#9A5B00;} .s-confirmed{background:#E1F4F1;color:#0B5563;} .s-completed{background:#E6F6EC;color:#137a3e;}
+  .s-rejected,.s-cancelled{background:#F1F1F1;color:#6b7280;}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .acts button,.acts a{font-family:var(--ff);font-size:12.5px;font-weight:800;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
+  .acts .no{color:#B42318;border-color:#F0C9C4;} .acts .wa{background:#22C55E;border-color:#22C55E;color:#fff;}
+  .note{font-size:12.5px;font-weight:700;margin-top:6px;color:#9A5B00;}
+  .empty{color:var(--muted);text-align:center;padding:30px;background:#fff;border:1px solid var(--line);border-radius:16px;}
+  .ntf{display:flex;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);font-size:13px;}
+  .ntf b{display:block;color:var(--navy);} .ntf small{color:var(--muted);} .ntf.unread{background:#F2FBFA;}
+  .sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:18px;}
+  .sec h2{font-size:15.5px;margin:0 0 6px;color:var(--navy);}
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:flex-start;justify-content:center;padding:16px;z-index:90;overflow:auto;}
+  .ov.open{display:flex;} .modal{background:var(--cream);width:min(520px,100%);border-radius:18px;overflow:hidden;margin:auto;}
+  .modal .mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);}
+  .modal .mh h3{margin:0;font-size:17px;} .modal .mb{padding:14px;}
+  .mx{width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;font-size:18px;cursor:pointer;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="wrap2" id="app">
+  <h1 data-ar="حجوزات المعاينة" data-en="My viewings">حجوزات المعاينة</h1>
+  <div class="sub" data-ar="مواعيد المعاينة اللي طلبتها، وحالة كل واحد." data-en="The viewings you requested and their status.">مواعيد المعاينة اللي طلبتها، وحالة كل واحد.</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"><div class="empty">…</div></div>
+  <div class="sec"><h2 data-ar="التنبيهات" data-en="Notifications">التنبيهات</h2><div id="ntf"></div></div>
+</div>
+<div class="ov" id="ovMove" onclick="if(event.target===this)this.classList.remove('open')"><div class="modal">
+  <div class="mh"><h3 data-ar="طلب تغيير الميعاد" data-en="Request a new time">طلب تغيير الميعاد</h3><button class="mx" onclick="document.getElementById('ovMove').classList.remove('open')">×</button></div>
+  <div class="mb"><div id="moveBox"></div></div>
+</div></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=17"></script>
+<script src="/assets/broker-session.js?v=1"></script>
+<script src="/assets/booking.js?v=1"></script>
+<script>
+const $=id=>document.getElementById(id);
+const L=(a,e)=>(window.HZ&&HZ.lang==='en')?e:a;
+const esc=s=>(s==null?'':''+s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dt=iso=>new Date(iso).toLocaleString(L('ar-EG','en-GB'),{weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit',timeZone:'Africa/Cairo'});
+const STATUS={pending:['مستني تأكيد البروكر','Waiting for the broker'],confirmed:['مؤكد ✅','Confirmed ✅'],completed:['تمت','Completed'],rejected:['مرفوض','Rejected'],cancelled:['ملغي','Cancelled']};
+let S=null, ROWS=[], TAB='up';
+async function boot(){
+  S=await HZ.requireSession(); if(!S) return;
+  $('tabs').innerHTML=[['up',L('الجاية','Upcoming')],['past',L('السابقة','Past')]].map(([k,t])=>`<button data-k="${k}" onclick="TAB='${k}';render()">${t}</button>`).join('');
+  await load(); setInterval(()=>{ if(!document.hidden) load(); },30000);
+}
+async function load(){
+  try{ ROWS=await HZ.sbAuth('/rpc/appt_my_list',S.token,'POST',{})||[]; }catch(e){ ROWS=[]; }
+  let n=[]; try{ n=await HZ.sbAuth('/crm_notifications?user_id=eq.'+S.uid+'&type=like.appt_*&select=*&order=created_at.desc&limit=10',S.token)||[]; }catch(e){}
+  $('ntf').innerHTML=n.length?n.map(x=>`<div class="ntf${x.read_at?'':' unread'}"><div><b>${esc(x.title)}</b>${esc(x.body||'')}<br><small>${esc(new Date(x.created_at).toLocaleString(L('ar-EG','en-GB'),{dateStyle:'short',timeStyle:'short'}))}</small></div></div>`).join('')
+    :`<div style="color:var(--muted);font-size:13px;padding:8px">${L('مفيش تنبيهات لسه.','No notifications yet.')}</div>`;
+  const unread=n.filter(x=>!x.read_at).map(x=>x.id);
+  if(unread.length) HZ.sbAuth('/crm_notifications?id=in.('+unread.join(',')+')',S.token,'PATCH',{read_at:new Date().toISOString()},{Prefer:'return=minimal'}).catch(()=>{});
+  render();
+}
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===TAB));
+  const now=Date.now();
+  const up=r=>(r.status==='pending'||r.status==='confirmed')&&new Date(r.ends_at)>now;
+  const list=ROWS.filter(r=>TAB==='up'?up(r):!up(r));
+  if(TAB==='up') list.sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  $('list').innerHTML=list.length?list.map(r=>{
+    const st=r.status==='cancelled'&&r.status_reason==='expired'?L('انتهى من غير رد','Expired — no reply'):L(STATUS[r.status][0],STATUS[r.status][1]);
+    const open=r.status==='pending'||r.status==='confirmed';
+    const wa=r.broker_phone?String(r.broker_phone).replace(/\D/g,'').replace(/^0/,'20'):'';
+    return `<div class="bk"><div class="im" style="${r.cover?`background-image:url('${esc(r.cover)}')`:''}"></div><div class="in">
+      <div class="t">${esc(r.listing_title||'')}</div>
+      <div class="m">📅 ${esc(dt(r.starts_at))}<br>📍 ${esc([r.area,r.address].filter(Boolean).join(' — ')||'—')}${r.broker_name?`<br>🏢 ${esc(r.broker_name)}`:''}</div>
+      <span class="badge s-${r.status}">${esc(st)}</span>
+      ${r.status==='pending'?`<div class="note">⏳ ${L('الميعاد محجوز ليك لحد','Held for you until')} ${esc(dt(r.hold_expires_at))}</div>`:''}
+      ${r.status_reason&&r.status_reason!=='expired'?`<div class="note">${L('السبب','Reason')}: ${esc(r.status_reason)}</div>`:''}
+      <div class="acts">
+        ${r.listing_id?`<a href="/listing/${r.listing_id}">🏠 ${L('صفحة الوحدة','Property')}</a>`:''}
+        ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}">${L('كلّم البروكر','Message the broker')}</a>`:''}
+        ${open?`<button onclick="moveIt('${r.id}','${r.listing_id}')">🔁 ${L('غيّر الميعاد','Change time')}</button><button class="no" onclick="cancelIt('${r.id}')">${L('إلغاء الحجز','Cancel')}</button>`:''}
+        ${!open&&r.listing_id&&r.status!=='completed'?`<a href="/listing/${r.listing_id}#book">📅 ${L('احجز ميعاد تاني','Book again')}</a>`:''}
+      </div></div></div>`; }).join('')
+    :`<div class="empty">${TAB==='up'?L('مفيش حجوزات جاية. افتح أي وحدة واحجز معاينة من صفحتها.','No upcoming viewings. Open any property and book from its page.'):L('مفيش حجوزات سابقة.','No past bookings.')}</div>`;
+}
+window.cancelIt=async(id)=>{ const reason=prompt(L('سبب الإلغاء (اختياري):','Reason (optional):'),''); if(reason===null) return;
+  try{ const r=await HZ.sbAuth('/rpc/appt_action',S.token,'POST',{p_id:id,p_action:'cancel',p_reason:reason||null}); if(!r||!r.ok) alert(L('تعذّر الإلغاء.','Could not cancel.')); }catch(e){ alert(L('تعذّر الإلغاء.','Could not cancel.')); }
+  load(); };
+window.moveIt=(id,listing)=>{ $('ovMove').classList.add('open');
+  HZBook.mount($('moveBox'),{listingId:listing,mode:'reschedule',apptId:id,onDone:()=>setTimeout(()=>{ $('ovMove').classList.remove('open'); load(); },1800)}); };
+boot();
+</script>
+</body>
+</html>

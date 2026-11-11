@@ -44,7 +44,7 @@
 <script src="/assets/broker-session.js?v=1"></script>
 <script>
 const ar=()=>HZ.lang==='ar';
-let S=null, ISBROKER=false;
+let S=null, ISBROKER=false, APPTS=[];
 const localDay=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const today=()=>localDay(new Date());
 const now=()=>new Date().toISOString();
@@ -63,7 +63,8 @@ async function load(){
     HZ.sbAuth('/clients?owner_id=eq.'+uid+'&select=id,name,phone,temperature,lead_score,stage,next_followup,area,budget&order=lead_score.desc',S.token),
     HZ.sbAuth('/crm_tasks?owner_id=eq.'+uid+'&status=eq.open&select=*&order=due_at.asc',S.token),
     HZ.sbAuth('/crm_viewings?owner_id=eq.'+uid+'&status=in.(scheduled,confirmed)&select=*&order=scheduled_at.asc',S.token)
-  ]); }catch(e){document.getElementById('app').innerHTML='<div class="workspace-empty"><h2>تعذّر تحميل يومك</h2><p>حاول تاني لعرض المتابعات والمهام.</p><button class="btn btn-teal" onclick="load()">إعادة المحاولة</button></div>';return;}
+  ]); APPTS=await HZ.sbAuth('/rpc/appt_broker_list',S.token,'POST',{p_from:new Date(Date.now()-30*864e5).toISOString(),p_to:new Date(Date.now()+60*864e5).toISOString()}).catch(()=>[])||[];
+  }catch(e){document.getElementById('app').innerHTML='<div class="workspace-empty"><h2>تعذّر تحميل يومك</h2><p>حاول تاني لعرض المتابعات والمهام.</p><button class="btn btn-teal" onclick="load()">إعادة المحاولة</button></div>';return;}
   const active=l=>l.stage!=='closed'&&l.stage!=='lost'&&l.stage!=='won';
   const todayF=(leads||[]).filter(l=>l.next_followup===today()&&active(l));
   const overdueF=(leads||[]).filter(l=>l.next_followup&&l.next_followup<today()&&active(l));
@@ -71,6 +72,7 @@ async function load(){
   const overdueT=(tasks||[]).filter(t=>t.due_at&&t.due_at<now());
   const todayT=(tasks||[]).filter(t=>t.due_at&&localDay(t.due_at)===today()&&t.due_at>=now());
   const upT=(tasks||[]).filter(t=>t.due_at&&localDay(t.due_at)>today());
+  const bookedV=new Set(APPTS.map(x=>x.viewing_id).filter(Boolean)); views=(views||[]).filter(v=>!bookedV.has(v.id));
   const todayV=(views||[]).filter(v=>v.scheduled_at&&localDay(v.scheduled_at)===today());
   const upV=(views||[]).filter(v=>v.scheduled_at&&localDay(v.scheduled_at)>today());
   const leadName={}; (leads||[]).forEach(l=>leadName[l.id]=l.name);
@@ -98,10 +100,32 @@ async function load(){
       <div class="kpi"><div class="n">${todayT.length}</div><div class="l">${ar()?'مهام النهارده':'Tasks today'}</div></div>
       <div class="kpi"><div class="n">${todayV.length}</div><div class="l">${ar()?'معاينات':'Viewings'}</div></div>
     </div>
+    ${apptCard()}
     ${sec(ar()?'عاجل':'Urgent','',[...overdueT.map(t=>taskItem(t,'urgent')),...overdueF.map(l=>leadItem(l,'urgent')),...hot.slice(0,5).map(l=>leadItem(l,'urgent'))])}
     ${sec(ar()?'النهارده':'Today','',[...todayF.map(l=>leadItem(l,'today')),...todayT.map(t=>taskItem(t,'today')),...todayV.map(viewItem)])}
     ${sec(ar()?'قادم':'Upcoming','',[...upT.slice(0,10).map(t=>taskItem(t,'')),...upV.slice(0,10).map(viewItem)])}
   `;
+}
+// Viewing appointments booked by clients: today's list + quick counts -> /appointments
+function apptCard(){
+  const tz='Africa/Cairo', day=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:tz}), now=Date.now(), t=day(now);
+  const live=a=>a.status==='pending'||a.status==='confirmed';
+  const todayA=APPTS.filter(a=>day(a.starts_at)===t&&(live(a)||a.status==='completed')).sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at));
+  const pending=APPTS.filter(a=>a.status==='pending'), upcoming=APPTS.filter(a=>live(a)&&new Date(a.starts_at)>now);
+  const done=APPTS.filter(a=>a.status==='completed'&&new Date(a.starts_at)>now-30*864e5);
+  const next=upcoming.filter(a=>a.status==='confirmed').sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at))[0];
+  const tm=iso=>new Date(iso).toLocaleTimeString(ar()?'ar-EG':'en-GB',{hour:'numeric',minute:'2-digit',timeZone:tz});
+  const when=iso=>new Date(iso).toLocaleString(ar()?'ar-EG':'en-GB',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit',timeZone:tz});
+  const st={pending:ar()?'مستني تأكيدك':'pending',confirmed:ar()?'مؤكد':'confirmed',completed:ar()?'تمت':'done'};
+  const chip=(n,l,c)=>`<div class="kpi" style="${c?'color:'+c:''}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  return `<div class="sec"><h2>📅 ${ar()?'مواعيد المعاينة':'Viewing appointments'} <a href="/appointments" style="font-size:12.5px;font-weight:800;margin-inline-start:auto">${ar()?'التقويم الكامل ←':'Full calendar →'}</a></h2>
+    <div class="kpis" style="margin:4px 0 10px">${chip(todayA.length,ar()?'النهارده':'Today')}${chip(pending.length,ar()?'طلبات مستنية':'Pending requests',pending.length?'#B45309':'')}${chip(upcoming.length,ar()?'جاية':'Upcoming')}${chip(done.length,ar()?'تمّت (30 يوم)':'Done (30d)')}</div>
+    ${next?`<div class="m" style="margin-bottom:8px">⏭️ ${ar()?'الجاي':'Next'}: <b>${HZ.esc(when(next.starts_at))}</b> — ${HZ.esc(next.listing_title||'')} — ${HZ.esc(next.client_name)}</div>`:''}
+    ${todayA.length?todayA.map(a=>`<div class="item today"><div class="t">${HZ.esc(tm(a.starts_at))} — ${HZ.esc(a.client_name)} · ${HZ.esc(a.listing_title||'')}</div>
+      <div class="m">${st[a.status]||a.status}${a.area?' · '+HZ.esc(a.area):''}</div>
+      <div class="row"><a href="/appointments?id=${a.id}">${ar()?'فتح':'Open'}</a>${a.client_phone?`<a href="tel:${HZ.esc(a.client_phone)}">📞</a>`:''}</div></div>`).join('')
+      :`<div class="empty">${ar()?'مفيش معاينات محجوزة النهارده.':'No booked viewings today.'}${pending.length?` <a href="/appointments">${ar()?'عندك '+pending.length+' طلب مستني ردّك ←':pending.length+' requests waiting →'}</a>`:''}</div>`}
+  </div>`;
 }
 window.act=async(id,kind)=>{ try{ await HZ.sbAuth('/rpc/crm_log_activity',S.token,'POST',{p_lead:id,p_kind:kind,p_body:null,p_meta:null}); }catch(e){} };
 window.doneTask=async(id)=>{ try{ await HZ.sbAuth('/crm_tasks?id=eq.'+id,S.token,'PATCH',{status:'done',completed_at:new Date().toISOString()},{Prefer:'return=minimal'}); }catch(e){} load(); };

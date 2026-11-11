@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — المواعيد</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  .wrap2{max-width:1080px;margin:0 auto;padding:18px 14px 44px;}
+  .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;}
+  .toolbar h1{font-size:20px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 12px;}
+  @media(max-width:680px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center;cursor:pointer;}
+  .kpi .n{font-size:22px;font-weight:900;color:var(--navy);} .kpi .l{color:var(--muted);font-size:12px;margin-top:3px;}
+  .kpi.warn .n{color:#B45309;} .kpi.ok .n{color:#137a3e;}
+  .next{background:linear-gradient(135deg,var(--navy),#0B5563);color:#fff;border-radius:14px;padding:12px 16px;margin-bottom:14px;font-weight:700;font-size:14px;cursor:pointer;}
+  .next small{display:block;opacity:.75;font-weight:600;font-size:12px;}
+  .sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px;}
+  .sec h2{font-size:16px;margin:0 0 10px;color:var(--navy);display:flex;align-items:center;gap:8px;}
+  .sec h2 .cnt{background:#FFF4E5;color:#B45309;border-radius:100px;padding:1px 9px;font-size:12px;}
+  .req{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;flex-wrap:wrap;}
+  .req .im{width:64px;height:52px;border-radius:9px;background:#e9e2da center/cover no-repeat;flex:none;}
+  .req .in{flex:1;min-width:180px;} .req .t{font-weight:800;color:var(--navy);font-size:14px;} .req .m{font-size:12.5px;color:#526074;margin-top:2px;}
+  .req .hold{font-size:11.5px;color:#B45309;font-weight:700;margin-top:2px;}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;}
+  .acts button,.acts a{font-family:var(--ff);font-size:12.5px;font-weight:800;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
+  .acts .ok{background:var(--teal);border-color:var(--teal);color:#fff;} .acts .no{color:#B42318;border-color:#F0C9C4;}
+  .calbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px;}
+  .seg{display:inline-flex;background:var(--cream);border-radius:11px;padding:3px;}
+  .seg button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:12.5px;padding:6px 11px;border-radius:9px;cursor:pointer;color:var(--navy);}
+  .seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .nav{display:flex;gap:6px;align-items:center;} .nav b{font-size:14px;color:var(--navy);min-width:150px;text-align:center;}
+  .nav button{border:1.5px solid var(--line-2);background:#fff;border-radius:9px;padding:5px 10px;cursor:pointer;font-weight:800;font-family:var(--ff);}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .filters select{font-family:var(--ff);font-size:13px;padding:7px 9px;border:1.5px solid var(--line-2);border-radius:9px;background:#fff;}
+  /* month */
+  .month{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .month .wd{font-size:11.5px;font-weight:800;color:var(--muted);text-align:center;padding:4px 0;}
+  .cell{min-height:86px;background:var(--cream);border-radius:10px;padding:5px;cursor:pointer;overflow:hidden;}
+  .cell.out{opacity:.45;} .cell.today{outline:2px solid var(--teal);background:#E8F6F4;}
+  .cell .dn{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+  .chip{display:block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+  .more{font-size:10.5px;color:var(--muted);font-weight:700;}
+  @media(max-width:600px){.cell{min-height:58px}.cell .chip{font-size:0;height:6px;padding:0;margin-bottom:2px}}
+  /* status colours */
+  .s-pending{background:#FFF4E5;color:#9A5B00;border-inline-start:3px solid #F59E0B;}
+  .s-confirmed{background:#E1F4F1;color:#0B5563;border-inline-start:3px solid var(--teal);}
+  .s-completed{background:#E6F6EC;color:#137a3e;border-inline-start:3px solid #22A35A;}
+  .s-rejected,.s-cancelled{background:#F1F1F1;color:#8a8f98;border-inline-start:3px solid #C4C7CC;text-decoration:line-through;}
+  .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;text-decoration:none;border:none;}
+  /* week / day / list */
+  .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  @media(max-width:760px){.week{grid-template-columns:1fr;}}
+  .wcol{background:var(--cream);border-radius:12px;padding:7px;min-height:120px;}
+  .wcol.today{outline:2px solid var(--teal);background:#E8F6F4;}
+  .wcol h4{margin:0 0 6px;font-size:12.5px;color:var(--navy);}
+  .ev{border-radius:9px;padding:6px 8px;margin-bottom:5px;font-size:12px;font-weight:700;cursor:pointer;}
+  .ev b{display:block;font-size:12.5px;} .ev span{display:block;font-weight:600;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hours{border-top:1px solid var(--line);} .hr{display:flex;gap:8px;border-bottom:1px solid var(--line);min-height:46px;padding:4px 0;}
+  .hr .h{width:58px;flex:none;font-size:12px;color:var(--muted);font-weight:700;padding-top:4px;} .hr .es{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .hr.now{background:#F2FBFA;}
+  .lday{font-size:13px;font-weight:900;color:var(--navy);margin:12px 0 6px;} .lday.today{color:var(--teal-d);}
+  .lrow{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:8px 10px;margin-bottom:6px;cursor:pointer;flex-wrap:wrap;}
+  .lrow .tm{font-weight:900;color:var(--navy);min-width:70px;} .lrow .in{flex:1;min-width:160px;font-size:13px;}
+  .empty{color:var(--muted);text-align:center;padding:22px;font-size:13.5px;}
+  /* notifications */
+  .ntf{display:flex;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);font-size:13px;cursor:pointer;}
+  .ntf.unread{background:#F2FBFA;} .ntf b{color:var(--navy);display:block;} .ntf small{color:var(--muted);}
+  /* modals */
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:flex-start;justify-content:center;padding:16px;z-index:90;overflow:auto;}
+  .ov.open{display:flex;} .modal{background:var(--cream);width:min(560px,100%);border-radius:18px;overflow:hidden;margin:auto;}
+  .modal .mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid var(--line);}
+  .modal .mh h3{margin:0;font-size:17px;color:var(--navy);}
+  .modal .mb{padding:16px;display:flex;flex-direction:column;gap:10px;max-height:76vh;overflow:auto;}
+  .mx{width:32px;height:32px;border:none;background:var(--cream);border-radius:8px;font-size:18px;cursor:pointer;}
+  .dcover{height:150px;border-radius:12px;background:#e9e2da center/cover no-repeat;}
+  .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:13.5px;} .kv b{color:var(--muted);font-weight:700;}
+  .hist{font-size:12.5px;color:#526074;border-inline-start:2px solid var(--line-2);padding-inline-start:10px;}
+  .hist div{margin-bottom:4px;}
+  .fld label{display:block;font-size:12.5px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+  .fld input,.fld select,.fld textarea{width:100%;box-sizing:border-box;padding:9px;border:1.5px solid var(--line-2);border-radius:9px;font-family:var(--ff);font-size:13px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .wk{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;align-items:center;font-size:13px;}
+  .wk input[type=time]{padding:6px;border:1.5px solid var(--line-2);border-radius:8px;font-family:var(--ff);}
+  .bo{display:flex;gap:6px;align-items:center;font-size:13px;margin-bottom:5px;flex-wrap:wrap;}
+  .bo input{padding:6px;border:1.5px solid var(--line-2);border-radius:8px;font-family:var(--ff);}
+  .msg{font-weight:800;font-size:13px;} .msg.err{color:#B42318;} .msg.ok{color:#137a3e;}
+</style>
+<link rel="stylesheet" href="/assets/broker-workspace.css?v=1">
+</head>
+<body class="broker-workspace" data-mode="broker">
+<div id="hz-header"></div>
+<div class="wrap2" id="app">
+  <div class="toolbar">
+    <h1 data-ar="المواعيد" data-en="Appointments">المواعيد</h1>
+    <div class="acts"><button onclick="openSettings()">⚙️ <span data-ar="مواعيدي والإعدادات" data-en="Hours & settings">مواعيدي والإعدادات</span></button></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div id="nextBox"></div>
+  <div class="sec" id="reqSec" hidden><h2><span data-ar="طلبات مستنية ردّك" data-en="Requests awaiting you">طلبات مستنية ردّك</span><span class="cnt" id="reqCnt"></span></h2><div id="reqList"></div></div>
+  <div class="sec">
+    <div class="calbar">
+      <div class="seg" id="views"></div>
+      <div class="nav"><button onclick="move(-1)">›</button><b id="calTitle"></b><button onclick="move(1)">‹</button><button onclick="goToday()" data-ar="النهارده" data-en="Today">النهارده</button></div>
+    </div>
+    <div class="filters">
+      <select id="fStatus" onchange="render()"></select>
+      <select id="fListing" onchange="render()"></select>
+    </div>
+    <div id="cal"></div>
+  </div>
+  <div class="sec"><h2 data-ar="آخر التنبيهات" data-en="Latest notifications">آخر التنبيهات</h2><div id="ntfList"><div class="empty">…</div></div></div>
+</div>
+
+<!-- appointment details -->
+<div class="ov" id="ovDetail" onclick="if(event.target===this)closeOv('ovDetail')"><div class="modal">
+  <div class="mh"><h3 data-ar="تفاصيل الميعاد" data-en="Appointment">تفاصيل الميعاد</h3><button class="mx" onclick="closeOv('ovDetail')">×</button></div>
+  <div class="mb" id="detailBody"></div>
+</div></div>
+<!-- reschedule -->
+<div class="ov" id="ovMove" onclick="if(event.target===this)closeOv('ovMove')"><div class="modal">
+  <div class="mh"><h3 data-ar="تغيير الميعاد" data-en="Reschedule">تغيير الميعاد</h3><button class="mx" onclick="closeOv('ovMove')">×</button></div>
+  <div class="mb"><div id="moveBox"></div></div>
+</div></div>
+<!-- settings -->
+<div class="ov" id="ovSet" onclick="if(event.target===this)closeOv('ovSet')"><div class="modal">
+  <div class="mh"><h3 data-ar="مواعيدي والإعدادات" data-en="Hours & settings">مواعيدي والإعدادات</h3><button class="mx" onclick="closeOv('ovSet')">×</button></div>
+  <div class="mb" id="setBody"></div>
+</div></div>
+
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=17"></script>
+<script src="/assets/broker-session.js?v=1"></script>
+<script src="/assets/booking.js?v=1"></script>
+<script>
+const $=id=>document.getElementById(id);
+const ar=()=>!(window.HZ&&HZ.lang==='en');
+const L=(a,e)=>ar()?a:e;
+const esc=s=>(s==null?'':''+s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TZ='Africa/Cairo';
+const dkey=d=>new Date(d).toLocaleDateString('en-CA',{timeZone:TZ});            // YYYY-MM-DD in Cairo
+const tm=iso=>new Date(iso).toLocaleTimeString(L('ar-EG','en-GB'),{hour:'numeric',minute:'2-digit',timeZone:TZ});
+const dt=iso=>new Date(iso).toLocaleString(L('ar-EG','en-GB'),{weekday:'long',day:'numeric',month:'long',hour:'numeric',minute:'2-digit',timeZone:TZ});
+const dlabel=k=>new Date(k+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{weekday:'long',day:'numeric',month:'long'});
+const addDays=(k,n)=>{ const d=new Date(k+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+const STATUS={pending:['مستني تأكيدك','Pending'],confirmed:['مؤكد','Confirmed'],completed:['تمت','Completed'],rejected:['مرفوض','Rejected'],cancelled:['ملغي','Cancelled']};
+const stTxt=a=>a.status==='cancelled'&&a.status_reason==='expired'?L('انتهى من غير رد','Expired'):L(STATUS[a.status][0],STATUS[a.status][1]);
+const ERRS={expired:L('الطلب انتهى قبل ما تأكّده.','The request expired.'),bad_status:L('الحالة اتغيّرت — حدّث الصفحة.','Status changed — refresh.'),not_started:L('تقدر تعلّمها "تمت" بعد ميعادها.','Mark it done after it starts.'),forbidden:L('مش مسموح.','Not allowed.')};
+
+let S=null, APPTS=[], VIEW='week', CUR=dkey(Date.now()), NOTIFS=[];
+
+async function boot(){
+  S=await HZ.requireSession(); if(!S) return;
+  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0];
+    if(!p||p.role!=='broker'){ $('app').innerHTML=`<div class="empty"><h2>${L('المواعيد للبروكرز','Appointments are for brokers')}</h2><p><a href="/my-bookings">${L('حجوزاتي كعميل ←','My bookings →')}</a></p></div>`; return; } }catch(e){}
+  $('views').innerHTML=[['day',L('يوم','Day')],['week',L('أسبوع','Week')],['month',L('شهر','Month')],['list',L('قائمة','List')]]
+    .map(([v,t])=>`<button data-v="${v}" onclick="setView('${v}')">${t}</button>`).join('');
+  $('fStatus').innerHTML=`<option value="">${L('كل الحالات','All statuses')}</option><option value="active">${L('المعلّق والمؤكد','Pending + confirmed')}</option>`
+    +Object.keys(STATUS).map(k=>`<option value="${k}">${L(STATUS[k][0],STATUS[k][1])}</option>`).join('');
+  $('fStatus').value='active';
+  await load();
+  const id=new URLSearchParams(location.search).get('id'); if(id) openDetail(id);
+  // near real time: refresh every 30 s and whenever the tab comes back
+  setInterval(()=>{ if(!document.hidden) load(); }, 30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) load(); });
+}
+async function load(){
+  const from=new Date(Date.now()-90*864e5).toISOString(), to=new Date(Date.now()+180*864e5).toISOString();
+  try{ APPTS=await HZ.sbAuth('/rpc/appt_broker_list',S.token,'POST',{p_from:from,p_to:to})||[]; }catch(e){ APPTS=[]; }
+  try{ NOTIFS=await HZ.sbAuth('/crm_notifications?user_id=eq.'+S.uid+'&type=like.appt_*&select=*&order=created_at.desc&limit=15',S.token)||[]; }catch(e){ NOTIFS=[]; }
+  const ls={}; APPTS.forEach(a=>{ if(a.listing_id) ls[a.listing_id]=a.listing_title; });
+  const cur=$('fListing').value;
+  $('fListing').innerHTML=`<option value="">${L('كل الوحدات','All properties')}</option>`+Object.entries(ls).map(([id,t])=>`<option value="${id}">${esc(t||'')}</option>`).join('');
+  $('fListing').value=cur;
+  render();
+}
+const active=a=>a.status==='pending'||a.status==='confirmed';
+function filtered(){
+  const st=$('fStatus').value, li=$('fListing').value;
+  return APPTS.filter(a=>(!li||a.listing_id===li)&&(!st||(st==='active'?active(a):a.status===st)));
+}
+function render(){
+  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
+  renderKpis(); renderRequests(); renderNotifs();
+  ({day:renderDay,week:renderWeek,month:renderMonth,list:renderList})[VIEW]();
+}
+function renderKpis(){
+  const today=dkey(Date.now()), now=Date.now();
+  const todayA=APPTS.filter(a=>dkey(a.starts_at)===today&&(active(a)||a.status==='completed'));
+  const pending=APPTS.filter(a=>a.status==='pending');
+  const upcoming=APPTS.filter(a=>active(a)&&new Date(a.starts_at)>now);
+  const done30=APPTS.filter(a=>a.status==='completed'&&new Date(a.starts_at)>now-30*864e5);
+  $('kpis').innerHTML=[[todayA.length,L('مواعيد النهارده','Today'),'','day'],[pending.length,L('طلبات مستنية','Pending requests'),'warn','pending'],
+    [upcoming.length,L('مواعيد جاية','Upcoming'),'','list'],[done30.length,L('معاينات تمّت (30 يوم)','Completed (30d)'),'ok','completed']]
+    .map(([n,l,c,go])=>`<div class="kpi ${c}" onclick="kpiGo('${go}')"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  const nx=upcoming.filter(a=>a.status==='confirmed').sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at))[0];
+  $('nextBox').innerHTML=nx?`<div class="next" onclick="openDetail('${nx.id}')"><small>${L('الميعاد الجاي','Next appointment')}</small>${esc(dt(nx.starts_at))} — ${esc(nx.listing_title||'')} — ${esc(nx.client_name)}</div>`:'';
+}
+window.kpiGo=(g)=>{ if(g==='pending'){ $('reqSec').scrollIntoView({behavior:'smooth'}); return; }
+  if(g==='completed'){ $('fStatus').value='completed'; VIEW='list'; } else if(g==='day'){ VIEW='day'; CUR=dkey(Date.now()); } else { VIEW='list'; $('fStatus').value='active'; }
+  render(); };
+function renderRequests(){
+  const p=APPTS.filter(a=>a.status==='pending').sort((x,y)=>new Date(x.hold_expires_at)-new Date(y.hold_expires_at));
+  $('reqSec').hidden=!p.length; $('reqCnt').textContent=p.length;
+  $('reqList').innerHTML=p.map(a=>`<div class="req">
+    <div class="im" style="${a.cover?`background-image:url('${esc(a.cover)}')`:''}"></div>
+    <div class="in"><div class="t">${esc(a.client_name)} — ${esc(a.listing_title||'')}</div>
+      <div class="m">📅 ${esc(dt(a.starts_at))} · 📞 <span dir="ltr">${esc(a.client_phone)}</span></div>
+      <div class="hold">⏳ ${L('رُد قبل','Answer before')} ${esc(dt(a.hold_expires_at))}</div></div>
+    <div class="acts"><button class="ok" onclick="act('${a.id}','confirm')">✅ ${L('تأكيد','Confirm')}</button>
+      <button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>
+      <button onclick="openDetail('${a.id}')">${L('تفاصيل','Details')}</button></div></div>`).join('');
+}
+function evHTML(a,long){ return `<div class="ev s-${a.status}" onclick="openDetail('${a.id}')"><b>${esc(tm(a.starts_at))}</b><span>${esc(a.client_name)}</span>${long?`<span>${esc(a.listing_title||'')}</span>`:''}</div>`; }
+function byDay(list){ const m={}; list.forEach(a=>{ (m[dkey(a.starts_at)]=m[dkey(a.starts_at)]||[]).push(a); }); Object.values(m).forEach(x=>x.sort((p,q)=>new Date(p.starts_at)-new Date(q.starts_at))); return m; }
+function weekStart(k){ const d=new Date(k+'T12:00:00'); const back=(d.getDay()+1)%7; return addDays(k,-back); } // weeks start on Saturday
+function renderDay(){
+  $('calTitle').textContent=dlabel(CUR);
+  const list=(byDay(filtered())[CUR])||[], nowH=dkey(Date.now())===CUR?Number(new Date().toLocaleString('en-GB',{hour:'2-digit',hour12:false,timeZone:TZ})):-1;
+  const hourOf=a=>Number(new Date(a.starts_at).toLocaleString('en-GB',{hour:'2-digit',hour12:false,timeZone:TZ}));
+  let h0=8,h1=22; list.forEach(a=>{ h0=Math.min(h0,hourOf(a)); h1=Math.max(h1,hourOf(a)+1); });
+  let html='<div class="hours">';
+  for(let h=h0;h<h1;h++){ const ev=list.filter(a=>hourOf(a)===h);
+    html+=`<div class="hr${h===nowH?' now':''}"><div class="h">${new Date(2000,0,1,h).toLocaleTimeString(L('ar-EG','en-GB'),{hour:'numeric'})}</div><div class="es">${ev.map(a=>evHTML(a,true)).join('')}</div></div>`; }
+  $('cal').innerHTML=html+'</div>'+(list.length?'':`<div class="empty">${L('مفيش مواعيد اليوم ده.','No appointments this day.')}</div>`);
+}
+function renderWeek(){
+  const s=weekStart(CUR), m=byDay(filtered()), today=dkey(Date.now());
+  $('calTitle').textContent=`${new Date(s+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{day:'numeric',month:'short'})} – ${new Date(addDays(s,6)+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{day:'numeric',month:'short'})}`;
+  let html='<div class="week">';
+  for(let i=0;i<7;i++){ const k=addDays(s,i);
+    html+=`<div class="wcol${k===today?' today':''}"><h4>${esc(new Date(k+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{weekday:'short',day:'numeric'}))}</h4>${(m[k]||[]).map(a=>evHTML(a,true)).join('')||`<div class="more">—</div>`}</div>`; }
+  $('cal').innerHTML=html+'</div>';
+}
+function renderMonth(){
+  const first=CUR.slice(0,8)+'01', s=weekStart(first), m=byDay(filtered()), today=dkey(Date.now()), mon=CUR.slice(5,7);
+  $('calTitle').textContent=new Date(first+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{month:'long',year:'numeric'});
+  let html='<div class="month">';
+  for(let i=0;i<7;i++) html+=`<div class="wd">${esc(new Date(addDays(s,i)+'T12:00:00').toLocaleDateString(L('ar-EG','en-GB'),{weekday:'short'}))}</div>`;
+  for(let i=0;i<42;i++){ const k=addDays(s,i); const ev=m[k]||[];
+    if(i>=35 && k.slice(5,7)!==mon) break;
+    html+=`<div class="cell${k.slice(5,7)!==mon?' out':''}${k===today?' today':''}" onclick="CUR='${k}';setView('day')"><div class="dn">${Number(k.slice(8))}</div>`
+      +ev.slice(0,3).map(a=>`<span class="chip s-${a.status}" onclick="event.stopPropagation();openDetail('${a.id}')">${esc(tm(a.starts_at))} ${esc(a.client_name)}</span>`).join('')
+      +(ev.length>3?`<div class="more">+${ev.length-3}</div>`:'')+'</div>'; }
+  $('cal').innerHTML=html+'</div>';
+}
+function renderList(){
+  $('calTitle').textContent=L('كل المواعيد','All appointments');
+  const list=filtered().slice().sort((x,y)=>new Date(x.starts_at)-new Date(y.starts_at)), today=dkey(Date.now()), m=byDay(list);
+  const keys=Object.keys(m).sort();
+  $('cal').innerHTML=keys.length?keys.map(k=>`<div class="lday${k===today?' today':''}">${esc(dlabel(k))}${k===today?' — '+L('النهارده','today'):''}</div>`
+    +m[k].map(a=>`<div class="lrow" onclick="openDetail('${a.id}')"><div class="tm">${esc(tm(a.starts_at))}</div>
+      <div class="in"><b>${esc(a.client_name)}</b> · ${esc(a.listing_title||'')}<br><span style="color:var(--muted)">${esc([a.area,a.address].filter(Boolean).join(' — '))}</span></div>
+      <span class="badge s-${a.status}">${esc(stTxt(a))}</span></div>`).join('')).join('')
+    :`<div class="empty">${L('مفيش مواعيد بالفلتر ده.','No appointments match.')}</div>`;
+}
+function renderNotifs(){
+  $('ntfList').innerHTML=NOTIFS.length?NOTIFS.map(n=>`<div class="ntf${n.read_at?'':' unread'}" onclick="openNotif(${n.id})"><div>${n.read_at?'':'🔵'}</div>
+    <div><b>${esc(n.title)}</b>${esc(n.body||'')}<br><small>${esc(new Date(n.created_at).toLocaleString(L('ar-EG','en-GB'),{dateStyle:'short',timeStyle:'short'}))}</small></div></div>`).join('')
+    :`<div class="empty">${L('مفيش تنبيهات لسه.','No notifications yet.')}</div>`;
+}
+window.openNotif=async(id)=>{ const n=NOTIFS.find(x=>x.id===id); if(!n) return;
+  if(!n.read_at){ try{ await HZ.sbAuth('/crm_notifications?id=eq.'+id,S.token,'PATCH',{read_at:new Date().toISOString()},{Prefer:'return=minimal'}); n.read_at=1; renderNotifs(); }catch(e){} }
+  const aid=n.data&&n.data.appointment_id; if(aid) openDetail(aid); };
+window.setView=v=>{ VIEW=v; render(); };
+window.goToday=()=>{ CUR=dkey(Date.now()); render(); };
+window.move=dir=>{ if(VIEW==='day') CUR=addDays(CUR,dir); else if(VIEW==='week') CUR=addDays(CUR,7*dir);
+  else if(VIEW==='month'){ const d=new Date(CUR.slice(0,8)+'15T12:00:00'); d.setMonth(d.getMonth()+dir); CUR=d.toISOString().slice(0,10); }
+  render(); };
+window.closeOv=id=>$(id).classList.remove('open');
+
+async function openDetail(id){
+  const a=APPTS.find(x=>x.id===id); if(!a){ return; }
+  let ev=[]; try{ ev=await HZ.sbAuth('/rpc/appt_events',S.token,'POST',{p_id:id})||[]; }catch(e){}
+  const wa=String(a.client_phone||'').replace(/\D/g,'').replace(/^0/,'20');
+  const past=new Date(a.starts_at)<=Date.now()+3600e3;
+  const btn=[];
+  if(a.status==='pending') btn.push(`<button class="ok" onclick="act('${a.id}','confirm')">✅ ${L('تأكيد','Confirm')}</button>`,`<button class="no" onclick="act('${a.id}','reject')">${L('رفض','Reject')}</button>`);
+  if(a.status==='confirmed'&&past) btn.push(`<button class="ok" onclick="act('${a.id}','complete')">✔️ ${L('تمت المعاينة','Mark completed')}</button>`);
+  if(active(a)) btn.push(`<button onclick="openMove('${a.id}','${a.listing_id}')">🔁 ${L('تغيير الميعاد','Reschedule')}</button>`,`<button class="no" onclick="act('${a.id}','cancel')">${L('إلغاء','Cancel')}</button>`);
+  $('detailBody').innerHTML=`${a.cover?`<div class="dcover" style="background-image:url('${esc(a.cover)}')"></div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:16px;color:var(--navy)">${esc(a.listing_title||'')}</b><span class="badge s-${a.status}">${esc(stTxt(a))}</span></div>
+    <div class="kv">
+      <b>${L('الميعاد','When')}</b><span>${esc(dt(a.starts_at))}</span>
+      <b>${L('المكان','Location')}</b><span>${esc([a.area,a.address].filter(Boolean).join(' — ')||'—')}</span>
+      <b>${L('العميل','Client')}</b><span>${esc(a.client_name)}</span>
+      <b>${L('الموبايل','Phone')}</b><span><a href="tel:${esc(a.client_phone)}" dir="ltr">${esc(a.client_phone)}</a> · <a target="_blank" rel="noopener" href="https://wa.me/${wa}">${L('واتساب','WhatsApp')}</a></span>
+      <b>${L('اتحجز في','Booked on')}</b><span>${esc(dt(a.created_at))}</span>
+      ${a.status==='pending'?`<b>${L('رُد قبل','Answer by')}</b><span style="color:#B45309;font-weight:800">${esc(dt(a.hold_expires_at))}</span>`:''}
+      ${a.client_notes?`<b>${L('ملاحظة العميل','Client note')}</b><span>${esc(a.client_notes)}</span>`:''}
+      ${a.status_reason&&a.status_reason!=='expired'?`<b>${L('السبب','Reason')}</b><span>${esc(a.status_reason)}</span>`:''}
+    </div>
+    <div class="acts">${btn.join('')}${a.listing_id?`<a href="/listing/${a.listing_id}" target="_blank">🏠 ${L('صفحة الوحدة','Property page')}</a>`:''}${a.lead_id?`<a href="/clients?lead=${a.lead_id}">👤 ${L('ملف العميل','Client file')}</a>`:''}</div>
+    <div class="msg" id="dMsg"></div>
+    ${ev.length?`<div><b style="font-size:13px;color:var(--navy)">${L('السجل','History')}</b><div class="hist">${ev.map(e=>`<div>${esc(new Date(e.created_at).toLocaleString(L('ar-EG','en-GB'),{dateStyle:'short',timeStyle:'short'}))} — ${esc(histTxt(e))}</div>`).join('')}</div></div>`:''}`;
+  $('ovDetail').classList.add('open');
+}
+window.openDetail=openDetail;
+function histTxt(e){ const who={client:L('العميل','client'),broker:L('إنت','you'),system:L('النظام','system')}[e.actor_role]||'';
+  const what={requested:L('طلب معاينة','requested'),confirmed:L('أكّد','confirmed'),rejected:L('رفض','rejected'),cancelled:L('ألغى','cancelled'),
+    completed:L('علّمها تمت','completed'),rescheduled:L('غيّر الميعاد','rescheduled'),expired:L('انتهى من غير رد','expired')}[e.action]||e.action;
+  return `${who} ${what}`+(e.to_start&&e.action==='rescheduled'?` → ${dt(e.to_start)}`:'')+(e.note?` (${e.note})`:''); }
+window.act=async(id,action)=>{
+  let reason=null;
+  if(action==='reject'||action==='cancel'){ reason=prompt(action==='reject'?L('سبب الرفض (هيوصل للعميل — اختياري):','Reason (sent to the client — optional):'):L('سبب الإلغاء (اختياري):','Reason (optional):'),''); if(reason===null) return; }
+  if(action==='cancel'&&!confirm(L('متأكد إنك عايز تلغي الميعاد؟','Cancel this appointment?'))) return;
+  try{ const r=await HZ.sbAuth('/rpc/appt_action',S.token,'POST',{p_id:id,p_action:action,p_reason:reason||null});
+    if(!r||!r.ok){ const m=$('dMsg'); const t=ERRS[r&&r.error]||L('تعذّر التنفيذ.','Failed.'); if(m&&$('ovDetail').classList.contains('open')){ m.className='msg err'; m.textContent=t; } else alert(t); await load(); return; }
+    await load(); if($('ovDetail').classList.contains('open')) openDetail(id);
+  }catch(e){ alert(L('تعذّر التنفيذ.','Failed.')); }
+};
+window.openMove=(id,listing)=>{ closeOv('ovDetail'); $('ovMove').classList.add('open');
+  HZBook.mount($('moveBox'),{listingId:listing,mode:'reschedule',apptId:id,onDone:()=>{ setTimeout(()=>{ closeOv('ovMove'); load(); },1500); }}); };
+
+/* ---------- settings: limits, weekly hours, days off ---------- */
+const WD=[[6,['السبت','Sat']],[0,['الأحد','Sun']],[1,['الاتنين','Mon']],[2,['التلات','Tue']],[3,['الأربع','Wed']],[4,['الخميس','Thu']],[5,['الجمعة','Fri']]];
+window.openSettings=async()=>{
+  let s={}; try{ s=await HZ.sbAuth('/rpc/appt_get_settings',S.token,'POST',{})||{}; }catch(e){}
+  const hrs={}; (s.hours||[]).forEach(h=>{ if(!hrs[h.weekday]) hrs[h.weekday]=h; });
+  const noRows=!(s.hours||[]).length;
+  const num=(id,lbl,v,opts)=>`<div class="fld"><label>${lbl}</label>${opts?`<select id="${id}">${opts.map(o=>`<option value="${o}" ${o==v?'selected':''}>${o}</option>`).join('')}</select>`:`<input id="${id}" type="number" value="${v}">`}</div>`;
+  $('setBody').innerHTML=`<div class="grid2">
+      ${num('sLimit',L('أقصى عدد معاينات في اليوم','Max viewings per day'),s.daily_limit||2,[1,2,3,4,5,6,8,10])}
+      ${num('sSlot',L('مدة المعاينة (دقيقة)','Viewing length (min)'),s.slot_minutes||60,[30,45,60,90,120])}
+      ${num('sHold',L('مهلة الرد على الطلب (ساعة)','Hold a request for (hours)'),s.pending_hold_hours||24,[2,4,6,12,24,48,72])}
+      ${num('sNotice',L('أقل وقت قبل الحجز (ساعة)','Minimum notice (hours)'),s.min_notice_hours??2,[0,1,2,3,6,12,24])}
+    </div>
+    <div class="fld"><label>${L('مواعيد شغلك في الأسبوع (بتسري على كل وحداتك)','Your weekly hours (all your properties)')}</label>
+      <div class="wk">${WD.map(([d,n])=>{ const h=hrs[d]||(noRows?{start:'10:00',end:'20:00'}:null);
+        return `<label><input type="checkbox" id="wd${d}" ${h?'checked':''}> ${L(n[0],n[1])}</label><input type="time" id="ws${d}" value="${h?h.start:'10:00'}"><input type="time" id="we${d}" value="${h?h.end:'20:00'}">`; }).join('')}</div></div>
+    <div class="fld"><label>${L('أيام أو ساعات مش متاح فيها','Days/times off')}</label><div id="boList"></div>
+      <div class="acts"><button onclick="addBo()">＋ ${L('إضافة','Add')}</button></div></div>
+    <div class="acts"><button class="ok" onclick="saveSettings()">${L('حفظ','Save')}</button></div><div class="msg" id="sMsg"></div>`;
+  (s.blackouts||[]).forEach(b=>addBo(b));
+  $('ovSet').classList.add('open');
+};
+window.addBo=(b)=>{ b=b||{}; const row=document.createElement('div'); row.className='bo';
+  row.innerHTML=`<input type="date" class="bd" value="${esc(b.day||'')}"><span>${L('من','from')}</span><input type="time" class="bs" value="${esc(b.start||'')}"><span>${L('لـ','to')}</span><input type="time" class="be" value="${esc(b.end||'')}"><input class="bn" placeholder="${L('ملاحظة','note')}" value="${esc(b.note||'')}" style="flex:1;min-width:90px"><button class="mx" onclick="this.parentElement.remove()">×</button>`;
+  $('boList').appendChild(row); };
+window.saveSettings=async()=>{
+  const hours=WD.filter(([d])=>$('wd'+d).checked).map(([d])=>({weekday:d,start:$('ws'+d).value,end:$('we'+d).value}));
+  if(!hours.length){ $('sMsg').className='msg err'; $('sMsg').textContent=L('اختار يوم واحد على الأقل — ولو هتقفل فترة استخدم «أيام مش متاح فيها».','Pick at least one day — use days off to close a period.'); return; }
+  if(hours.some(h=>!h.start||!h.end||h.end<=h.start)){ $('sMsg').className='msg err'; $('sMsg').textContent=L('راجع المواعيد: النهاية لازم بعد البداية.','End must be after start.'); return; }
+  const blackouts=[...document.querySelectorAll('#boList .bo')].map(r=>({day:r.querySelector('.bd').value,start:r.querySelector('.bs').value,end:r.querySelector('.be').value,note:r.querySelector('.bn').value}))
+    .filter(b=>b.day).map(b=>(b.start&&b.end)?b:{day:b.day,start:'',end:'',note:b.note});
+  try{ await HZ.sbAuth('/rpc/appt_save_settings',S.token,'POST',{p:{daily_limit:+$('sLimit').value,slot_minutes:+$('sSlot').value,
+      pending_hold_hours:+$('sHold').value,min_notice_hours:+$('sNotice').value,horizon_days:30,hours,blackouts}});
+    $('sMsg').className='msg ok'; $('sMsg').textContent=L('اتحفظ ✓','Saved ✓'); setTimeout(()=>closeOv('ovSet'),900);
+  }catch(e){ $('sMsg').className='msg err'; $('sMsg').textContent=L('تعذّر الحفظ: ','Could not save: ')+(e.message||e); }
+};
+boot();
+</script>
+</body>
+</html>

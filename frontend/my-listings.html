@@ -67,7 +67,14 @@
   .ucard .acts button.share{background:#1877F2; color:#fff; border-color:#1877F2;}
   .mod-note{margin-top:8px; font-size:12.5px; font-weight:700; line-height:1.6; background:#FFF4E5; color:#8a4b00; border-radius:9px; padding:7px 10px;}
   .mod-note.rej{background:#FDECEC; color:#B42318;}
-  .sh-body > *{flex:none;} /* the scrolling column must not squash the card / text box */
+  .sh-body > *{flex:none;}
+  .oa summary{cursor:pointer;font-weight:800;color:var(--navy);font-size:14px;}
+  .oa-hint{font-size:12.5px;color:var(--muted);margin:8px 0 6px;line-height:1.6;}
+  .oa-week{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;align-items:center;font-size:13px;}
+  .oa-week input[type=time],.oa-b input{padding:6px;border:1.5px solid var(--line-2);border-radius:8px;font-family:"Cairo",sans-serif;font-size:13px;}
+  .oa-b{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;font-size:13px;}
+  .oa-b .x{border:none;background:var(--cream);border-radius:7px;width:28px;height:28px;cursor:pointer;}
+  .oa-add{border:1.5px dashed var(--line-2);background:#fff;border-radius:9px;padding:7px 11px;font-family:"Cairo",sans-serif;font-weight:800;font-size:12.5px;cursor:pointer;color:var(--navy);} /* the scrolling column must not squash the card / text box */
   .sh-row{display:flex; gap:8px; flex-wrap:wrap;}
   .sh{flex:1 1 120px; font-family:"Cairo",sans-serif; font-weight:800; font-size:13.5px; border-radius:11px; padding:10px 12px; cursor:pointer; text-align:center; text-decoration:none; border:1.5px solid var(--line-2); background:#fff; color:var(--navy);}
   .sh.fb{background:#1877F2; border-color:#1877F2; color:#fff;} .sh.wa{background:#22C55E; border-color:#22C55E; color:#fff;}
@@ -196,6 +203,14 @@
         <div class="fld"><label data-ar="الدور" data-en="Floor">الدور</label><input class="in" id="fFloor" type="number" inputmode="numeric" placeholder="4" /></div>
       </div>
       <div class="fld"><label data-ar="الوصف" data-en="Description">الوصف</label><textarea class="in" id="fDesc" placeholder="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…" data-ph-ar="تفاصيل الوحدة، التشطيب، المميزات، طريقة الدفع…" data-ph-en="Unit details, finishing, features, payment…"></textarea></div>
+      <details class="fld oa" id="ownerAvail">
+        <summary data-ar="🕑 مواعيد المعاينة المتاحة عند المالك (اختياري)" data-en="🕑 Owner's viewing availability (optional)">🕑 مواعيد المعاينة المتاحة عند المالك (اختياري)</summary>
+        <div class="oa-hint" data-ar="لو سبتها فاضية، المعاينات هتمشي على مواعيد شغلك بس. لو حددت أيام، العميل هيشوف بس الأوقات اللي المالك وإنت متاحين فيها الاتنين." data-en="Leave empty to follow your own hours only. If you set days, clients only see times when both the owner and you are free.">لو سبتها فاضية، المعاينات هتمشي على مواعيد شغلك بس. لو حددت أيام، العميل هيشوف بس الأوقات اللي المالك وإنت متاحين فيها الاتنين.</div>
+        <div class="oa-week" id="oaWeek"></div>
+        <div class="oa-hint" data-ar="أيام أو ساعات المالك مش متاح فيها:" data-en="Dates/times the owner is unavailable:">أيام أو ساعات المالك مش متاح فيها:</div>
+        <div id="oaBlack"></div>
+        <button type="button" class="oa-add" onclick="oaAddBlack()" data-ar="＋ إضافة يوم/وقت مستثنى" data-en="＋ Add an unavailable date/time">＋ إضافة يوم/وقت مستثنى</button>
+      </details>
       <div class="fld"><label data-ar="الصور" data-en="Photos">الصور</label>
         <div class="thumbs" id="fThumbs"></div>
         <label class="upl" data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device"><span data-ar="📷 اختار صور من جهازك" data-en="📷 Choose photos from your device">📷 اختار صور من جهازك</span><input type="file" id="fFiles" accept="image/*" multiple onchange="pickImages(event)" /></label>
@@ -410,7 +425,25 @@ window.openForm=()=>{
   EDIT_ID=null; NEW_FILES=[]; NEW_360=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
   $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft';
-  $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open'); };
+  $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; oaRender({hours:[],blackouts:[]}); $('formOv').classList.add('open'); };
+/* ---- owner viewing availability (saved per listing; enforced by the booking engine) ---- */
+const OA_DAYS=[[6,['السبت','Sat']],[0,['الأحد','Sun']],[1,['الاتنين','Mon']],[2,['التلات','Tue']],[3,['الأربع','Wed']],[4,['الخميس','Thu']],[5,['الجمعة','Fri']]];
+function oaRender(av){
+  const h={}; (av.hours||[]).forEach(x=>{ if(!h[x.weekday]) h[x.weekday]=x; });
+  $('oaWeek').innerHTML=OA_DAYS.map(([d,n])=>`<label><input type="checkbox" id="oad${d}" ${h[d]?'checked':''}> ${L(n[0],n[1])}</label>
+    <input type="time" id="oas${d}" value="${h[d]?h[d].start:'10:00'}"><input type="time" id="oae${d}" value="${h[d]?h[d].end:'20:00'}">`).join('');
+  $('oaBlack').innerHTML=''; (av.blackouts||[]).forEach(b=>oaAddBlack(b));
+  $('ownerAvail').open=!!((av.hours||[]).length||(av.blackouts||[]).length);
+}
+window.oaAddBlack=(b)=>{ b=b||{}; const r=document.createElement('div'); r.className='oa-b';
+  r.innerHTML=`<input type="date" class="d" value="${esc(b.day||'')}"><span>${L('من','from')}</span><input type="time" class="s" value="${esc(b.start||'')}"><span>${L('لـ','to')}</span><input type="time" class="e" value="${esc(b.end||'')}"><button type="button" class="x" onclick="this.parentElement.remove()">×</button>`;
+  $('oaBlack').appendChild(r); };
+function oaCollect(){
+  const hours=OA_DAYS.filter(([d])=>$('oad'+d).checked).map(([d])=>({weekday:d,start:$('oas'+d).value,end:$('oae'+d).value}));
+  const blackouts=[...document.querySelectorAll('#oaBlack .oa-b')].map(r=>({day:r.querySelector('.d').value,start:r.querySelector('.s').value,end:r.querySelector('.e').value}))
+    .filter(b=>b.day).map(b=>(b.start&&b.end)?b:{day:b.day,start:'',end:''});
+  return {hours,blackouts};
+}
 window.previewListing=()=>{
   const box=$('listingPreview');
   if($('fTitleTxt').value.trim().length<4){fmsg(L('اكتب عنوان واضح للإعلان.','Write a clear listing title.'));return;}
@@ -430,7 +463,8 @@ window.editListing=(id)=>{
   $('fBaths').value=l.bathrooms||''; $('fFloor').value=l.floor||''; $('fDesc').value=l.description||'';
   $('fStatus').value=l.status||'active';
   KEEP_MEDIA=(l.listing_media||[]).slice().sort((a,b)=>(a.sort||0)-(b.sort||0)).map(m=>({url:m.url,is_360:!!m.is_360}));
-  renderThumbs(); fmsg(''); $('listingPreview').hidden=true; $('formOv').classList.add('open');
+  renderThumbs(); fmsg(''); $('listingPreview').hidden=true; oaRender({hours:[],blackouts:[]}); $('formOv').classList.add('open');
+  api('/rpc/appt_get_listing_availability',{method:'POST',body:JSON.stringify({p_listing:id})}).then(av=>{ if(av&&EDIT_ID===id) oaRender(av); }).catch(()=>{});
 };
 function fmsg(t,ok){ const e=$('fMsg'); e.textContent=t; e.className='msg '+(ok?'ok':'err'); }
 window.pickImages=async (e)=>{
@@ -521,6 +555,9 @@ window.saveListing=async (status)=>{
     if(finalMedia.length){
       await api('/listing_media', {method:'POST', body:JSON.stringify(finalMedia.map((m,i)=>({listing_id:id, url:m.url, sort:i, is_360:!!m.is_360})))});
     }
+    const oa=oaCollect();
+    if(oa.hours.some(h=>!h.start||!h.end||h.end<=h.start)) throw new Error(L('مواعيد المالك: النهاية لازم بعد البداية.','Owner hours: end must be after start.'));
+    await api('/rpc/appt_save_listing_availability',{method:'POST',body:JSON.stringify({p_listing:id,p_hours:oa.hours,p_blackouts:oa.blackouts})});
     if(status==='active')await api('/listings?id=eq.'+id,{method:'PATCH',body:JSON.stringify({status:'active'})});
     closeForm(); loadMine();
     if(status==='active') reviewNow();
