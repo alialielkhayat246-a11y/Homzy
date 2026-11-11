@@ -880,6 +880,25 @@ def my_bookings_page():
     return FileResponse(config.FRONTEND_DIR / "my-bookings.html")
 
 
+@app.get("/owner-report/{token}")
+def owner_report_page(token: str):
+    """Private per-listing report a broker sends the property owner (secret link)."""
+    return FileResponse(config.FRONTEND_DIR / "owner-report.html",
+                        headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
+
+
+@app.get("/broker/{bid}")
+def broker_page(bid: str):
+    """Public broker profile: rating, completed viewings, active listings."""
+    try:
+        page = seo.render_broker(bid)
+    except Exception:
+        page = None
+    if not page:
+        return HTMLResponse(_not_found_html(), status_code=404)
+    return HTMLResponse(page, headers=_EDGE_CACHE_PAGE)
+
+
 @app.post("/api/stays/cron")
 async def stays_cron(req: Request):
     """Daily Homzy Stays maintenance: complete past-checkout bookings and publish

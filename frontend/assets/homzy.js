@@ -607,6 +607,16 @@ function addRec(rec){
   }
   const d=document.createElement('div'); d.className='rec-card'; d.dir=ar?'rtl':'ltr';
   d.innerHTML=`<span class="badge">${market}</span><div class="t">${HZ.esc(name)}</div>${area?`<div class="a">${HZ.esc(area)}</div>`:''}${price?`<div class="pr">${HZ.esc(price)}</div>`:''}<div class="meta">${beds}${size}${dev}</div>${wa}`;
+  // Units brokers posted on Homzy can be booked for a viewing right from the chat.
+  if(rec.source==='marketplace' && rec.listing_id && !(HZ.isBroker && HZ.mode==='broker')){
+    const bk=document.createElement('button'); bk.className='rec-pdf';
+    bk.textContent='📅 '+(ar?'احجز معاينة':'Book a viewing');
+    bk.onclick=()=>HZ.bookViewing(rec.listing_id, name);
+    const pg=document.createElement('a'); pg.className='rec-pdf'; pg.href='/listing/'+encodeURIComponent(rec.listing_id); pg.target='_blank';
+    pg.style.cssText='display:block;text-align:center;text-decoration:none;margin-top:6px';
+    pg.textContent='🏠 '+(ar?'صفحة الوحدة والصور':'Photos & details');
+    d.appendChild(bk); d.appendChild(pg);
+  }
   // Broker sales tool: generate a branded PDF offer for the client.
   if(HZ.isBroker && HZ.mode==='broker'){
     const b=document.createElement('button'); b.className='rec-pdf';
@@ -624,6 +634,26 @@ function addRec(rec){
   }
   log.scrollTop=log.scrollHeight;
 }
+// Booking sheet opened from a chat recommendation (loads the booking widget on demand).
+HZ.bookViewing = async function(listingId, title){
+  const ar=HZ.lang==='ar';
+  if(!window.HZBook){
+    await new Promise((ok,fail)=>{ const s=document.createElement('script'); s.src='/assets/booking.js?v=2'; s.onload=ok; s.onerror=fail; document.head.appendChild(s); }).catch(()=>{});
+    if(!window.HZBook){ location.href='/listing/'+encodeURIComponent(listingId)+'#book'; return; }
+  }
+  let ov=document.getElementById('hzBookOv');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='hzBookOv';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(11,29,54,.55);z-index:10000;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto';
+    ov.innerHTML='<div style="background:#fff;width:min(520px,100%);border-radius:18px;margin:auto;overflow:hidden"><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #eee"><b id="hzBookT" style="color:#0D1B2A"></b><button type="button" id="hzBookX" style="width:32px;height:32px;border:none;background:#F4EFE9;border-radius:8px;font-size:18px;cursor:pointer">×</button></div><div id="hzBookBox" style="padding:14px"></div></div>';
+    ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+    document.getElementById('hzBookX').onclick=()=>ov.remove();
+  }
+  document.getElementById('hzBookT').textContent=(ar?'📅 حجز معاينة — ':'📅 Book a viewing — ')+(title||'');
+  HZBook.mount(document.getElementById('hzBookBox'),{listingId, mode:'book'});
+  HZ.trackBehavior?.('booking_opened', listingId);
+};
 HZ.requestContact = async function(btn){
   const ar=HZ.lang==='ar', s=HZ.session();
   if(!s){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }

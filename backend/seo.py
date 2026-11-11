@@ -512,7 +512,7 @@ def render_project(pid: str) -> str | None:
 # ---------------------------------------------------------------------------
 def render_listing(lid: str) -> str | None:
     sel = ("id,title,description,purpose,type,price,currency,area,address,"
-           "bedrooms,bathrooms,size_sqm,status,updated_at,listing_media(url,sort)")
+           "bedrooms,bathrooms,size_sqm,status,updated_at,owner_id,listing_media(url,sort)")
     rows = _get(f"/listings?select={sel}&id=eq.{lid}&status=eq.active&limit=1")
     if not rows:
         return None
@@ -579,7 +579,9 @@ def render_listing(lid: str) -> str | None:
         contact_html = (
             '<div class="sp-sec" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;'
             'background:#fff;border:1px solid var(--line,#EBE5DE);border-radius:16px;padding:16px">'
-            + (f'<span style="font-weight:800;margin-inline-end:auto">🏢 {who}</span>' if who else
+            + (f'<a href="/broker/{_esc(l.get("owner_id"))}" style="font-weight:800;margin-inline-end:auto;color:inherit">🏢 {who} ←</a>'
+               if who and l.get("owner_id") else
+               f'<span style="font-weight:800;margin-inline-end:auto">🏢 {who}</span>' if who else
                '<span style="font-weight:800;margin-inline-end:auto">تواصل مع المعلن</span>')
             + f'<a target="_blank" rel="noopener" href="https://wa.me/{wa}?text={wtext}" '
             'style="background:#22C55E;color:#fff;font-weight:800;padding:11px 18px;border-radius:12px;text-decoration:none">💬 واتساب</a>'
@@ -604,9 +606,90 @@ def render_listing(lid: str) -> str | None:
     {contact_html}
     <div id="book" style="margin-top:16px"></div>
     <script src="/assets/booking.js?v=2"></script>
-    <script>document.addEventListener('DOMContentLoaded',function(){{ HZBook.mount(document.getElementById('book'),{{listingId:'{lid}'}}); if(location.hash==='#book') document.getElementById('book').scrollIntoView(); }});</script>
+    <script>document.addEventListener('DOMContentLoaded',function(){{ HZBook.mount(document.getElementById('book'),{{listingId:'{lid}'}}); if(location.hash==='#book') document.getElementById('book').scrollIntoView();
+      // one view per visitor session, for the owner report (the page itself is edge-cached)
+      try{{ var k='hzv_{lid}'; if(!sessionStorage.getItem(k)){{ sessionStorage.setItem(k,'1');
+        var s=HZ.session&&HZ.session(), src=(document.referrer&&!document.referrer.startsWith(location.origin))?new URL(document.referrer).hostname:'direct';
+        fetch(window.SB_URL+'/rest/v1/rpc/listing_view_ping',{{method:'POST',headers:{{apikey:window.SB_KEY,Authorization:'Bearer '+((s&&s.token)||window.SB_KEY),'Content-Type':'application/json'}},body:JSON.stringify({{p_listing:'{lid}',p_source:src}})}}).catch(function(){{}}); }} }}catch(e){{}} }});</script>
     """
     return _page(title, desc, canonical, share_img, jsonld, body, og_size=(1200, 630))
+
+
+# ---------------------------------------------------------------------------
+# Broker public profile (/broker/{id}) — the link a broker puts in their bio.
+# ---------------------------------------------------------------------------
+def render_broker(bid: str) -> str | None:
+    if not re.fullmatch(r"[0-9a-fA-F-]{36}", bid or ""):
+        return None
+    b = _rpc("broker_public_profile", {"p_id": bid})
+    if not b:
+        return None
+    name = b.get("company") or b.get("name") or "بروكر"
+    person = b.get("name") if b.get("company") and b.get("name") != b.get("company") else ""
+    rating = b.get("rating") or {}
+    listings = b.get("listings") or []
+    areas_txt = "، ".join(a for a in (b.get("work_areas") or []) if a)
+    since = str(b.get("since") or "")[:4]
+    canonical = f"{SEO_BASE}/broker/{bid}"
+    title = f"{name} — بروكر عقارات على Homzy"
+    facts = [f"{b.get('listings_count') or 0} وحدة متاحة"]
+    if rating.get("n"):
+        facts.append(f"تقييم {rating.get('avg')}/5 من {rating.get('n')} عميل")
+    if b.get("viewings_done"):
+        facts.append(f"{b['viewings_done']} معاينة تمّت")
+    desc = _clip(" · ".join(facts) + (f" · {areas_txt}" if areas_txt else ""), 160)
+    img = b.get("logo") or b.get("avatar") or next((x["cover"] for x in listings if x.get("cover")), "")
+    jsonld = {"@context": "https://schema.org", "@type": "RealEstateAgent", "name": name, "url": canonical}
+    if img:
+        jsonld["image"] = img
+    if rating.get("n"):
+        jsonld["aggregateRating"] = {"@type": "AggregateRating", "ratingValue": rating.get("avg"),
+                                     "reviewCount": rating.get("n"), "bestRating": 5}
+
+    wa = _intl_phone(b.get("phone") or "")
+    stars = lambda n: "★" * int(n or 0) + "☆" * (5 - int(n or 0))
+    stat = lambda v, lbl: (f'<div style="flex:1;min-width:110px;background:#fff;border:1px solid var(--line);border-radius:14px;'
+                           f'padding:12px;text-align:center"><b style="display:block;font-size:22px;color:var(--navy)">{v}</b>'
+                           f'<span style="font-size:12.5px;color:var(--muted);font-weight:700">{lbl}</span></div>')
+    cards = "".join(
+        f'<a class="devchip" href="/listing/{_esc(x["id"])}" style="padding:0;overflow:hidden">'
+        f'<div style="height:120px;background:#e9e2da {("url(" + chr(39) + _esc(x["cover"]) + chr(39) + ")") if x.get("cover") else ""} center/cover no-repeat"></div>'
+        f'<div style="padding:9px 11px"><b>{_esc(x.get("title") or "وحدة")}</b>'
+        f'<span>{_esc(x.get("area") or "")}{(" · " + str(x["bedrooms"]) + " غرف") if x.get("bedrooms") else ""}</span>'
+        f'<span style="color:var(--teal-d);font-weight:800">{_money(x.get("price")) if x.get("price") else ""}'
+        f'{" / شهر" if x.get("purpose") == "rent" and x.get("price") else ""}</span></div></a>'
+        for x in listings)
+    reviews = "".join(
+        f'<div style="border-bottom:1px solid var(--line);padding:8px 0;font-size:14px">'
+        f'<span style="color:#F59E0B">{stars(r.get("rating"))}</span> — {_esc(r.get("comment"))}</div>'
+        for r in (b.get("reviews") or []))
+    logo = (f'<img src="{_esc(img)}" alt="" style="width:76px;height:76px;border-radius:18px;object-fit:cover;'
+            f'border:1px solid var(--line);background:#fff">' if img else
+            '<div style="width:76px;height:76px;border-radius:18px;background:var(--navy);color:#fff;display:flex;'
+            f'align-items:center;justify-content:center;font-size:30px;font-weight:900">{_esc(name[:1])}</div>')
+    body = f"""
+    <nav class="sp-crumb"><a href="/">Homzy</a> › <a href="/app">سوق العقارات</a> › {_esc(name)}</nav>
+    <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      {logo}
+      <div style="flex:1;min-width:200px"><h1 style="margin:0">{_esc(name)}{' <span title="رقم موبايل متأكد منه" style="font-size:16px;color:#1E8E5A">✔︎</span>' if b.get('verified') else ''}</h1>
+        <div class="sp-sub">{_esc(person)}{' · ' if person and since else ''}{('على Homzy من ' + since) if since else ''}</div>
+        {('<div class="sp-sub" style="margin-top:2px">📍 ' + _esc(areas_txt) + '</div>') if areas_txt else ''}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+      {stat((str(rating.get('avg')) + '/5') if rating.get('n') else '—', ('تقييم ' + str(rating.get('n')) + ' عميل بعد المعاينة') if rating.get('n') else 'لسه مفيش تقييمات')}
+      {stat(b.get('viewings_done') or 0, 'معاينة تمّت على Homzy')}
+      {stat(b.get('listings_count') or 0, 'وحدة متاحة دلوقتي')}
+    </div>
+    {('<div class="sp-top-cta" style="margin-top:14px">'
+      + f'<a class="btn" target="_blank" rel="noopener" href="https://wa.me/{wa}?text={quote("أهلاً، شفت صفحتك على Homzy")}" style="background:#22C55E;color:#fff">💬 واتساب</a>'
+      + f'<a class="btn" href="tel:+{wa}" style="background:#0B1D36;color:#fff">📞 اتصال</a></div>') if wa else ''}
+    {_share_bar(canonical, title)}
+    {('<div class="sp-sec"><h2>آراء العملاء بعد المعاينة</h2>' + reviews + '</div>') if reviews else ''}
+    <div class="sp-sec"><h2>الوحدات المتاحة ({b.get('listings_count') or 0})</h2>
+      {('<div class="devgrid">' + cards + '</div>') if cards else '<p>مفيش وحدات منشورة دلوقتي.</p>'}
+      <p style="font-size:13px;margin-top:10px">تقدر تحجز معاينة من صفحة أي وحدة — هتختار ميعاد من المواعيد المتاحة فعلاً.</p></div>
+    """
+    return _page(title, desc, canonical, img, jsonld, body)
 
 
 # ---------------------------------------------------------------------------

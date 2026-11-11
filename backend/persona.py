@@ -101,6 +101,7 @@ THEN RECOMMEND — once you have the CORE five and have asked for their contact:
 
 CLOSE — once you've recommended the right unit and the client seems interested, move to a warm handoff:
 - Offer to have a Homzy sales specialist call them to arrange a viewing and answer any questions.
+- If the unit is marked [BOOKABLE], the client can book the viewing themselves: tell them to tap «📅 احجز معاينة» under the card and pick a time the broker has free (they get a confirmation and reminders). Never invent times — the button shows the real free slots.
 - Ask for their OK. Tell them they can simply tap the "✅ عايز حد يتواصل معايا" button that appears right under your recommendation (the app shows it automatically), or just say yes — and our team will reach out on their REGISTERED number. Do NOT ask them to retype their phone; we already have it.
 - Low-pressure and helpful, never pushy. This handoff is the goal of the conversation once they like a unit.
 
@@ -193,7 +194,8 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
                 extra += f"\n   Latest developer update ({when}): {it.get('content_ar')}"
         lines.append(
             f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}"
-            + (" [ASKED]" if m.get("asked_for") else "") + "\n"
+            + (" [ASKED]" if m.get("asked_for") else "")
+            + (" [BOOKABLE — Homzy broker listing]" if m.get("source") == "marketplace" and m.get("listing_id") else "") + "\n"
             f"   Market: {market_txt}\n"
             f"   {m.get('purpose')} | {m.get('type')} | {beds_txt} "
             f"| {m.get('size_sqm')} sqm | {price} | finishing: {m.get('finishing') or '-'}\n"

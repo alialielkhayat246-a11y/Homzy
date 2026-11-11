@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Homzy — تقرير وحدتك</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/homzy.css?v=7">
+<style>
+  .wrap2{max-width:760px;margin:0 auto;padding:20px 14px 48px;}
+  .hero{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;}
+  .hero .im{height:190px;background:linear-gradient(135deg,var(--navy),#0B5563) center/cover no-repeat;}
+  .hero .in{padding:14px 16px;} .hero h1{font-size:21px;margin:0;color:var(--navy);} .hero .m{color:var(--muted);font-size:14px;margin-top:4px;}
+  .hero .pr{color:var(--teal-d);font-weight:900;font-size:18px;margin-top:6px;}
+  .tag{display:inline-block;font-size:12px;font-weight:800;border-radius:100px;padding:3px 10px;background:#E1F4F1;color:#0B5563;margin-top:8px;}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;} @media(max-width:600px){.grid{grid-template-columns:1fr 1fr;}}
+  .k{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;}
+  .k b{display:block;font-size:24px;color:var(--navy);font-family:'Poppins',var(--ff);} .k span{font-size:12.5px;color:var(--muted);font-weight:700;}
+  .sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:14px;}
+  .sec h2{font-size:16px;margin:0 0 10px;color:var(--navy);}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:130px;direction:ltr;}
+  .bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--muted);}
+  .bars i{display:block;width:100%;background:var(--teal);border-radius:6px 6px 0 0;min-height:3px;}
+  .bars em{font-style:normal;font-weight:800;color:var(--navy);font-size:12px;}
+  .cm{border-bottom:1px solid var(--line);padding:8px 0;font-size:14px;} .cm:last-child{border:none;} .stars{color:#F59E0B;}
+  .broker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .broker img{width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid var(--line);}
+  .broker a.wa{margin-inline-start:auto;background:#22C55E;color:#fff;font-weight:800;padding:9px 16px;border-radius:11px;text-decoration:none;}
+  .empty{color:var(--muted);text-align:center;padding:40px 10px;}
+  .note{font-size:12px;color:var(--muted);margin-top:14px;text-align:center;}
+</style>
+</head>
+<body data-mode="client">
+<div id="hz-header"></div>
+<div class="wrap2" id="app"><div class="empty">…</div></div>
+<div id="hz-footer"></div>
+<script src="/assets/homzy.js?v=18"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>(s==null?'':''+s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=n=>Number(n||0).toLocaleString('ar-EG');
+const stars=n=>'★'.repeat(n||0)+'☆'.repeat(5-(n||0));
+async function boot(){
+  const tok=(location.pathname.split('/').pop()||'').replace(/[^a-f0-9]/gi,'');
+  let r=null; try{ r=await HZ.rpc('owner_report',{p_token:tok}); }catch(e){}
+  if(!r||!r.listing){ $('app').innerHTML='<div class="empty"><h2>اللينك ده مش شغال</h2><p>ممكن يكون البروكر عمل لينك جديد. اطلب منه يبعتهولك تاني.</p></div>'; return; }
+  const l=r.listing, v=r.views||{}, a=r.viewings||{}, it=r.interest||{}, b=r.broker||{};
+  const live=l.status==='active';
+  // last 8 weeks (Saturday-agnostic: weeks as Postgres returns them, oldest first)
+  const wk=(v.weekly||[]).slice(-8), max=Math.max(1,...wk.map(w=>w.n));
+  const wa=String(b.phone||'').replace(/\D/g,'').replace(/^0/,'20');
+  $('app').innerHTML=`
+    <div class="hero"><div class="im" style="${l.cover?`background-image:url('${esc(l.cover)}')`:''}"></div>
+      <div class="in"><h1>${esc(l.title||'')}</h1>
+        <div class="m">📍 ${esc(l.area||'')}${l.size_sqm?' · '+esc(l.size_sqm)+' م²':''}${l.bedrooms?' · '+esc(l.bedrooms)+' غرف':''}</div>
+        ${l.price?`<div class="pr">${num(l.price)} ج.م${l.purpose==='rent'?' / شهر':''}</div>`:''}
+        <span class="tag" style="${live?'':'background:#F1F1F1;color:#6b7280'}">${live?'✅ منشورة على Homzy من '+new Date(l.created_at).toLocaleDateString('ar-EG',{day:'numeric',month:'long'}):'⏸️ مش منشورة دلوقتي'}</span>
+        ${live?` <a class="tag" style="background:#EEF2FF;color:#3949AB;text-decoration:none" href="/listing/${esc(l.id)}" target="_blank">شوف الإعلان ←</a>`:''}</div></div>
+    <div class="grid">
+      <div class="k"><b>${num(v.total)}</b><span>مشاهدة للإعلان</span></div>
+      <div class="k"><b>${num(v.d7)}</b><span>مشاهدة آخر 7 أيام</span></div>
+      <div class="k"><b>${num(r.saves)}</b><span>حفظوها في المفضلة</span></div>
+      <div class="k"><b>${num(a.requests)}</b><span>طلب معاينة</span></div>
+      <div class="k"><b>${num(a.completed)}</b><span>معاينة تمّت</span></div>
+      <div class="k"><b>${num(a.upcoming)}</b><span>معاينة جاية</span></div>
+      <div class="k"><b>${it.n?esc(it.avg)+'/5':'—'}</b><span>إعجاب العملاء بعد المعاينة</span></div>
+      <div class="k"><b>${num(a.video)}</b><span>معاينة بالفيديو</span></div>
+    </div>
+    <div class="sec"><h2>📈 المشاهدات أسبوع بأسبوع</h2>
+      ${wk.length?`<div class="bars">${wk.map(w=>`<div><em>${num(w.n)}</em><i style="height:${Math.round(100*w.n/max)}%"></i>${esc(new Date(w.week+'T12:00:00').toLocaleDateString('ar-EG',{day:'numeric',month:'short'}))}</div>`).join('')}</div>`
+        :'<div style="color:var(--muted);font-size:14px">لسه مفيش مشاهدات مسجّلة — العدّ بدأ من وقت ما اتعمل التقرير.</div>'}</div>
+    <div class="sec"><h2>💬 آراء اللي عاينوا</h2>
+      ${(r.comments||[]).length?r.comments.map(c=>`<div class="cm"><span class="stars">${stars(c.interest)}</span> — ${esc(c.comment)}<br><small style="color:var(--muted)">${esc(new Date(c.at).toLocaleDateString('ar-EG',{day:'numeric',month:'long'}))}</small></div>`).join('')
+        :'<div style="color:var(--muted);font-size:14px">لسه مفيش تعليقات. العملاء بيقيّموا بعد المعاينة مباشرة.</div>'}</div>
+    <div class="sec"><h2>البروكر المسؤول عن وحدتك</h2>
+      <div class="broker">${b.logo?`<img src="${esc(b.logo)}" alt="">`:''}<div><b>${esc(b.name||'')}</b>${b.person&&b.person!==b.name?`<br><small style="color:var(--muted)">${esc(b.person)}</small>`:''}</div>
+        ${wa?`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent('بخصوص تقرير وحدتي "'+(l.title||'')+'" على Homzy')}">💬 كلّمه واتساب</a>`:''}</div></div>
+    <div class="note">التقرير بيتحدّث لوحده · آخر تحديث ${esc(new Date(r.generated_at).toLocaleString('ar-EG',{dateStyle:'medium',timeStyle:'short'}))} · مفيش فيه أي بيانات شخصية للعملاء.</div>`;
+}
+boot();
+</script>
+</body>
+</html>

@@ -128,7 +128,11 @@
   <div class="wrap">
     <div class="head">
       <div><h1 data-ar="وحداتي" data-en="My units">وحداتي</h1><div class="n" id="count"></div></div>
-      <button class="btn btn-teal" onclick="openForm()" data-ar="＋ أضف وحدة" data-en="＋ Add unit">＋ أضف وحدة</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a class="btn" style="background:#fff;border:1.5px solid var(--line-2);color:var(--navy)" href="#" onclick="event.preventDefault();openBrokerPage()" data-ar="👤 صفحتي العامة" data-en="👤 My public page">👤 صفحتي العامة</a>
+        <button class="btn" style="background:#fff;border:1.5px solid var(--line-2);color:var(--navy)" onclick="copyBrokerPage(this)" data-ar="🔗 نسخ لينك صفحتي" data-en="🔗 Copy my page link">🔗 نسخ لينك صفحتي</button>
+        <button class="btn btn-teal" onclick="openForm()" data-ar="＋ أضف وحدة" data-en="＋ Add unit">＋ أضف وحدة</button>
+      </div>
     </div>
     <div id="listingStats" class="stats"></div>
     <div class="workspace-toolbar"><input id="listingSearch" type="search" aria-label="ابحث في وحداتك" placeholder="ابحث بالعنوان أو المنطقة…" data-ph-ar="ابحث بالعنوان أو المنطقة…" data-ph-en="Search by title or area…" oninput="renderListings()"><select id="listingStatus" aria-label="حالة الوحدة" onchange="renderListings()"><option value="" data-ar="كل الوحدات" data-en="All units">كل الوحدات</option><option value="active" data-ar="منشورة" data-en="Published">منشورة</option><option value="draft" data-ar="مسودات" data-en="Drafts">مسودات</option></select></div>
@@ -227,7 +231,7 @@
 </div>
 
 <div id="hz-footer"></div>
-<script src="/assets/homzy.js?v=17"></script>
+<script src="/assets/homzy.js?v=18"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SB_URL='https://ceoqtkbpdxnkuptnnwjg.supabase.co';
@@ -347,6 +351,7 @@ function render(){
         ${on?`<div class="acts">
           <button class="share" onclick="openShare('${l.id}')">📣 ${L('انشر على السوشيال','Share on social')}</button>
           <button onclick="copyUnitLink('${l.id}',this)">🔗 ${L('نسخ اللينك','Copy link')}</button>
+          <button onclick="ownerReport('${l.id}',this)">📊 ${L('تقرير للمالك','Owner report')}</button>
         </div>`:''}
       </div>
     </div>`;
@@ -359,6 +364,22 @@ const unitUrl=id=>location.origin+'/listing/'+id;
 window.copyUnitLink=async(id,btn)=>{ const t=btn.textContent;
   try{ await navigator.clipboard.writeText(unitUrl(id)); btn.textContent='✓ '+L('اتنسخ','Copied'); setTimeout(()=>btn.textContent=t,1500); }
   catch(e){ prompt(L('انسخ اللينك:','Copy the link:'), unitUrl(id)); } };
+// Owner report: a private link (views, viewing requests, client feedback — no client names)
+// the broker sends the property owner on WhatsApp.
+window.ownerReport=async(id,btn)=>{
+  const l=LISTINGS.find(x=>x.id===id)||{}, t=btn.textContent; btn.disabled=true;
+  try{ const tok=await api('/rpc/owner_report_link',{method:'POST',body:JSON.stringify({p_listing:id})});
+    const url=location.origin+'/owner-report/'+tok;
+    const msg=L(`أهلاً 👋 ده تقرير وحدتك "${l.title||''}" على Homzy — عدد المشاهدات وطلبات المعاينة وآراء العملاء بعد ما عاينوا، وبيتحدّث لوحده:\n${url}`,
+                `Hi 👋 here is the live report for your property "${l.title||''}" on Homzy — views, viewing requests and client feedback:\n${url}`);
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+    try{ await navigator.clipboard.writeText(url); btn.textContent='✓ '+L('اتنسخ اللينك','Link copied'); setTimeout(()=>btn.textContent=t,1800); }catch(e){}
+  }catch(e){ alert(L('تعذّر عمل التقرير.','Could not create the report.')); }
+  btn.disabled=false; };
+window.openBrokerPage=()=>window.open('/broker/'+UID,'_blank');
+window.copyBrokerPage=async(btn)=>{ const url=location.origin+'/broker/'+UID, t=btn.textContent;
+  try{ await navigator.clipboard.writeText(url); btn.textContent='✓ '+L('اتنسخ','Copied'); setTimeout(()=>btn.textContent=t,1500); }
+  catch(e){ prompt(L('انسخ اللينك:','Copy the link:'), url); } };
 // ---- share kit ----
 let SHARE_ID=null;
 const cardUrl=(l,sq)=>location.origin+'/og/listing/'+l.id+'.jpg?v='+String(l.updated_at||'').replace(/\D/g,'').slice(0,14)+(sq?'&sq=1':'');
