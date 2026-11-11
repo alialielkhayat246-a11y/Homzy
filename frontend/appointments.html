@@ -55,7 +55,7 @@
   .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;text-decoration:none;border:none;}
   /* week / day / list */
   .week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
-  @media(max-width:760px){.week{grid-template-columns:1fr;}}
+  @media(max-width:760px){.week{grid-template-columns:1fr;gap:4px;}.wcol{min-height:0;padding:6px 8px;}.wcol h4{margin-bottom:3px;}}
   .wcol{background:var(--cream);border-radius:12px;padding:7px;min-height:120px;}
   .wcol.today{outline:2px solid var(--teal);background:#E8F6F4;}
   .wcol h4{margin:0 0 6px;font-size:12.5px;color:var(--navy);}
