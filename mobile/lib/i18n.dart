@@ -107,6 +107,19 @@ const Map<String, Map<String, String>> _strings = {
     'ar': 'الدخول بحساب Google غير متاح. جرّب رقم الموبايل.'
   },
   'password_min': {'en': 'At least 6 characters', 'ar': '٦ حروف على الأقل'},
+  'name_required': {'en': 'Enter your full name', 'ar': 'اكتب اسمك بالكامل'},
+  'auth_wrong_login': {
+    'en': 'Wrong mobile number or password.',
+    'ar': 'رقم الموبايل أو كلمة السر غلط.'
+  },
+  'auth_already_registered': {
+    'en': 'This number already has an account — sign in instead.',
+    'ar': 'الرقم ده عليه حساب بالفعل — سجّل دخول.'
+  },
+  'auth_generic_error': {
+    'en': 'Something went wrong. Try again.',
+    'ar': 'حصلت مشكلة، جرّب تاني.'
+  },
 
   // Profile
   'profile': {'en': 'Profile', 'ar': 'حسابي'},
