@@ -239,7 +239,7 @@ function productSwitcherHTML(){
   const target = cur==='stays' ? {ic:SVG.home, nm:HZ.t('prodHomzy')} : {ic:SVG.stays, nm:HZ.t('prodStays')};
   return `<div class="hz-prod" id="hzProd">
     <button class="hz-prod-btn" id="hzProdBtn" aria-haspopup="menu" aria-expanded="false" onclick="HZ.toggleProd(event)">
-      <span class="pi">${target.ic}</span><span class="pn">${target.nm}</span>${cur==='homzy'?`<span class="hz-soon" style="display:inline-block;margin-inline-start:4px;padding:1px 7px;border-radius:99px;background:#FDF0D5;color:#9A5B00;font-size:10.5px;font-weight:800;line-height:1.6;vertical-align:middle">${HZ.t('soon')}</span>`:''}${SVG.chevron}</button>
+      <span class="pi">${target.ic}</span><span class="pn">${target.nm}</span>${SVG.chevron}</button>
     <div class="hz-menu hz-prod-menu" id="hzProdMenu" role="menu" aria-label="${HZ.t('switchProduct')}">
       <a class="hz-menu-row${cur==='homzy'?' on':''}" role="menuitem" href="/">
         <span class="ri">${SVG.home}</span><span class="rt"><b>${HZ.t('prodHomzy')}</b><small>${HZ.t('prodHomzyDesc')}</small></span>${cur==='homzy'?'<span class="dot" aria-hidden="true"></span>':''}</a>
