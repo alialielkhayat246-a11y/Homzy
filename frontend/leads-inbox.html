@@ -150,7 +150,8 @@ async function boot(){
   // is this account an admin?
   let prof=[];
   try{ prof=await api('/profiles?select=full_name,is_admin&id=eq.'+session.user.id); }catch(e){}
-  if(!prof[0] || !prof[0].is_admin){ showGate('الحساب ده مش أدمن. لو المفروض يكون أدمن، بلّغني بإيميلك.'); await sb.auth.signOut(); return; }
+  // non-admins just see the notice — signing out here would log them out of the whole site
+  if(!prof[0] || !prof[0].is_admin){ showGate('الحساب ده مش أدمن. لو المفروض يكون أدمن، بلّغني بإيميلك.'); return; }
   $('whoami').textContent=prof[0].full_name||session.user.email||'';
   showApp();
   loadLeads();

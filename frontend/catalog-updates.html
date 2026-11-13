@@ -47,6 +47,8 @@
   table.u{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
   table.u th,table.u td{border-bottom:1px solid var(--line,#E6DDCF); padding:6px 8px; text-align:right;}
   table.u th{color:var(--muted,#66717F); font-weight:700; font-size:12px;}
+  /* phones: the price table scrolls sideways inside its card instead of widening the page */
+  @media(max-width:600px){ table.u{display:block; overflow-x:auto; white-space:nowrap;} }
   .media{margin-top:8px; font-size:12.5px; font-weight:700; color:#B42318;}
   .raw{display:none; margin-top:10px; background:#F7F3EC; border-radius:10px; padding:10px 12px; white-space:pre-wrap; font-size:13px; line-height:1.7; color:#40506a;}
   .raw.open{display:block;}
