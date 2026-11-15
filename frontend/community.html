@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <script>/* auth gate */
 (function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search));}}catch(e){location.replace('/login');}})();</script>
 <title>Homzy — مجتمع البروكرز</title>
@@ -13,60 +13,90 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/homzy.css?v=7">
 <style>
-  .cm{max-width:860px;margin:0 auto;padding:18px 14px 70px;}
-  .cm h1{font-size:22px;margin:0 0 4px;color:var(--navy);} .cm .sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;}
-  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--cream);border-radius:13px;padding:4px;margin-bottom:14px;}
+  .cm{max-width:860px;margin:0 auto;padding:14px 12px 24px;}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--cream);border-radius:13px;padding:4px;margin-bottom:10px;}
   .tabs button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:13.5px;line-height:1.35;padding:8px 6px;border-radius:10px;cursor:pointer;color:var(--navy);position:relative;}
-  @media(max-width:520px){ .tabs button{font-size:12.5px;} }
   .tabs button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);}
   .tabs .dot{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:100px;background:#E5484D;color:#fff;font-size:11px;padding:0 5px;margin-inline-start:4px;}
-  .newrow{display:flex;gap:8px;margin-bottom:12px;}
-  .newrow button{flex:1;border:none;border-radius:13px;padding:12px 10px;font-family:var(--ff);font-weight:900;font-size:14.5px;cursor:pointer;}
-  .newrow .nr{background:#FFF4D6;color:#7A4E00;border:1.5px solid #F3D48A;} .newrow .nu{background:var(--teal);color:#fff;}
-  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
-  .seg{display:inline-flex;background:var(--cream);border-radius:11px;padding:3px;}
-  .seg button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:12.5px;padding:7px 11px;border-radius:9px;cursor:pointer;color:var(--navy);white-space:nowrap;}
-  .seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);}
-  .bar select,.bar input{border:1.5px solid var(--line-2);border-radius:11px;padding:8px 11px;font-family:var(--ff);font-size:13px;background:#fff;}
-  .bar input{flex:1;min-width:140px;} .bar input[type=checkbox]{flex:none;min-width:0;width:16px;height:16px;}
-  .note{background:var(--teal-l);color:var(--teal-d);border-radius:12px;padding:10px 13px;font-size:13px;font-weight:700;margin-bottom:12px;}
-  .note a{color:inherit;}
-  .pc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:11px;}
-  .pc.request{border-inline-start:4px solid #F0B429;} .pc.unit{border-inline-start:4px solid var(--teal);}
-  .pc.closed,.pc.expired{opacity:.72;}
-  .ph{display:flex;gap:9px;align-items:center;}
-  .av{width:38px;height:38px;border-radius:11px;background:var(--navy) center/cover no-repeat;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid var(--line);}
-  .who{flex:1;min-width:0;} .who a{font-weight:800;color:var(--navy);text-decoration:none;font-size:14px;}
-  .who small{display:block;color:var(--muted);font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .kb{font-size:11.5px;font-weight:900;border-radius:100px;padding:3px 10px;white-space:nowrap;}
-  .kb.request{background:#FFF4D6;color:#7A4E00;} .kb.unit{background:var(--teal-l);color:var(--teal-d);}
-  .facts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
-  .facts span{background:var(--cream);border-radius:9px;padding:4px 9px;font-size:12.5px;font-weight:700;color:#40506a;}
-  .facts .money{background:#E6F6EC;color:#137a3e;}
-  .body{margin-top:9px;font-size:14.5px;color:#26313f;white-space:pre-wrap;line-height:1.7;}
-  .lst{display:flex;gap:10px;margin-top:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;}
-  .lst .im{width:96px;min-height:72px;background:#e9e2da center/cover no-repeat;flex:none;}
-  .lst div{padding:7px 4px;font-size:13px;} .lst b{display:block;color:var(--navy);}
-  .pill{display:block;width:100%;text-align:start;margin-top:10px;border:1.5px dashed #9ED9CF;background:#F2FBF9;color:var(--teal-d);font-family:var(--ff);font-weight:800;font-size:13px;border-radius:11px;padding:8px 11px;cursor:pointer;}
-  .mlist{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
-  .mrow{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:13px;}
-  .mrow .im{width:46px;height:38px;border-radius:7px;background:#e9e2da center/cover no-repeat;flex:none;}
+  @media(max-width:520px){ .tabs button{font-size:12.5px;} }
+  /* ---- chat (WhatsApp-style group) ---- */
+  .chat{display:flex;flex-direction:column;height:calc(100dvh - 170px);min-height:440px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#EFE7DD;}
+  .chead{display:flex;gap:10px;align-items:center;background:#0B5563;color:#fff;padding:9px 12px;}
+  .gav{width:38px;height:38px;border-radius:50%;background:#fff2;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;}
+  .chead b{display:block;font-size:15px;} .chead small{display:block;font-size:11.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .chead .t{flex:1;min-width:0;}
+  .cfil{display:flex;gap:6px;overflow-x:auto;padding:7px 10px;background:#F7F3EE;border-bottom:1px solid #E4DCD2;}
+  .cfil button{flex:none;border:1px solid #DDD3C7;background:#fff;border-radius:100px;padding:4px 11px;font-family:var(--ff);font-weight:800;font-size:12px;cursor:pointer;color:var(--navy);}
+  .cfil button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .cbody{flex:1;overflow-y:auto;padding:10px 10px 6px;display:flex;flex-direction:column;gap:3px;position:relative;
+    background-image:radial-gradient(#e2d8cb 1px,transparent 1px);background-size:18px 18px;}
+  .day{align-self:center;background:#E1F2F6;color:#3d5560;font-size:11.5px;font-weight:800;border-radius:8px;padding:3px 10px;margin:8px 0 4px;box-shadow:0 1px 1px #0001;}
+  .older{align-self:center;border:none;background:#fff;border-radius:100px;padding:5px 14px;font-family:var(--ff);font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 1px 2px #0002;margin-bottom:4px;}
+  .b{position:relative;max-width:82%;background:#fff;border-radius:10px;padding:6px 9px 4px;box-shadow:0 1px 1px #0000001f;font-size:14.5px;line-height:1.6;align-self:flex-start;word-wrap:break-word;overflow-wrap:anywhere;}
+  .b.me{align-self:flex-end;background:#D9FDD3;}
+  .b.first{margin-top:6px;} .b.first:not(.me){border-top-right-radius:2px;} .b.first.me{border-top-left-radius:2px;}
+  .b.card{max-width:92%;width:340px;}
+  .b .nm{font-size:12.5px;font-weight:900;margin-bottom:1px;display:flex;gap:5px;align-items:center;}
+  .b .nm a{color:inherit;text-decoration:none;} .b .nm small{color:var(--muted);font-weight:700;font-size:11px;}
+  .b .tx{white-space:pre-wrap;color:#111b21;}
+  .b .tm{float:left;margin:6px 8px 0 0;font-size:10.5px;color:#667781;direction:ltr;}
+  .b .more{position:absolute;top:2px;inset-inline-end:2px;border:none;background:transparent;color:#8696a0;font-size:15px;cursor:pointer;width:24px;height:22px;border-radius:6px;opacity:.75;}
+  .b .more:hover{background:#0000000d;opacity:1;}
+  .b.del .tx{color:#8696a0;font-style:italic;}
+  .q{display:block;border-inline-start:4px solid #06A77D;background:#0000000a;border-radius:6px;padding:4px 8px;margin:2px 0 4px;font-size:12.5px;cursor:pointer;color:#3b4a54;}
+  .q b{display:block;color:#06A77D;font-size:12px;}
+  .b.hl{animation:hl 2.4s ease;} @keyframes hl{0%{box-shadow:0 0 0 3px #F0B429}100%{box-shadow:0 1px 1px #0000001f}}
+  .kb{display:inline-block;font-size:11.5px;font-weight:900;border-radius:7px;padding:2px 8px;margin:2px 0 4px;}
+  .kb.request{background:#FFF1C9;color:#7A4E00;} .kb.unit{background:#D7F0EC;color:#0B5563;}
+  .facts{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 4px;}
+  .facts span{background:#F0F2F5;border-radius:7px;padding:2px 8px;font-size:12px;font-weight:700;color:#3b4a54;}
+  .b.me .facts span{background:#ffffff99;} .facts .money{background:#E6F6EC !important;color:#137a3e;}
+  .lst{display:flex;gap:8px;margin:4px 0;border-radius:9px;overflow:hidden;text-decoration:none;color:inherit;background:#F0F2F5;}
+  .b.me .lst{background:#ffffff99;}
+  .lst .im{width:76px;min-height:60px;background:#d9d2c9 center/cover no-repeat;flex:none;}
+  .lst div{padding:5px 2px;font-size:12.5px;} .lst b{display:block;color:var(--navy);}
+  .pill{display:block;width:100%;text-align:start;margin:5px 0 2px;border:1.5px dashed #6CC3B5;background:#F2FBF9;color:#0B5563;font-family:var(--ff);font-weight:800;font-size:12.5px;border-radius:9px;padding:6px 9px;cursor:pointer;}
+  .mlist{margin-top:5px;display:flex;flex-direction:column;gap:5px;}
+  .mrow{display:flex;gap:7px;align-items:center;background:#F7F8FA;border-radius:9px;padding:5px 7px;font-size:12.5px;}
+  .mrow .im{width:40px;height:34px;border-radius:6px;background:#d9d2c9 center/cover no-repeat;flex:none;}
   .mrow .t{flex:1;min-width:0;} .mrow .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .st{display:inline-block;margin-top:8px;font-size:12px;font-weight:800;border-radius:9px;padding:3px 9px;background:#F1F1F1;color:#6b7280;}
-  .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;}
-  .acts button,.acts a{font-family:var(--ff);font-size:12.5px;font-weight:800;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
-  .acts .go{background:var(--teal);border-color:var(--teal);color:#fff;} .acts .wait{background:#FFF4E5;border-color:#F3D48A;color:#9A5B00;}
-  .acts .ok{background:#E6F6EC;border-color:#BDE5CB;color:#137a3e;} .acts .mute{color:var(--muted);margin-inline-start:auto;}
-  .cmts{margin-top:10px;background:var(--cream);border-radius:12px;padding:8px 10px;}
-  .cmt{font-size:13.5px;padding:6px 2px;border-bottom:1px solid var(--line);} .cmt:last-of-type{border:none;}
-  .cmt b{color:var(--navy);font-size:12.5px;} .cmt small{color:var(--muted);font-size:11px;}
-  .cform{display:flex;gap:6px;margin-top:6px;} .cform input{flex:1;border:1.5px solid var(--line-2);border-radius:100px;padding:8px 13px;font-family:var(--ff);font-size:13.5px;}
-  .cform button{border:none;border-radius:100px;background:var(--teal);color:#fff;font-weight:800;padding:0 14px;font-family:var(--ff);cursor:pointer;}
+  .mrow button{border:none;background:var(--teal);color:#fff;border-radius:7px;padding:4px 8px;font-family:var(--ff);font-weight:800;font-size:11.5px;cursor:pointer;}
+  .st{display:inline-block;font-size:11.5px;font-weight:800;border-radius:7px;padding:2px 8px;background:#F1F1F1;color:#6b7280;margin:3px 0;}
+  .bacts{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid #0000000f;}
+  .bacts button{flex:1;min-width:max-content;font-family:var(--ff);font-size:12px;font-weight:800;border-radius:8px;padding:6px 9px;border:none;background:#F0F2F5;cursor:pointer;color:#0B5563;}
+  .bacts .go{background:#0B5563;color:#fff;} .bacts .wait{background:#FFF4E5;color:#9A5B00;} .bacts .ok{background:#E6F6EC;color:#137a3e;}
+  .newbtn{position:sticky;bottom:6px;align-self:center;border:none;background:#0B5563;color:#fff;border-radius:100px;padding:6px 14px;font-family:var(--ff);font-weight:800;font-size:12.5px;cursor:pointer;box-shadow:0 2px 6px #0003;}
+  .cempty{margin:auto;text-align:center;background:#fffd;border-radius:12px;padding:16px 18px;font-size:13.5px;color:#3b4a54;max-width:300px;}
+  .cbar{background:#F0F2F5;padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-top:1px solid #E4DCD2;}
+  .rprev{display:flex;gap:8px;align-items:center;background:#fff;border-radius:9px;padding:5px 8px;margin-bottom:6px;font-size:12.5px;border-inline-start:4px solid #06A77D;}
+  .rprev div{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .rprev b{color:#06A77D;}
+  .rprev button{border:none;background:none;font-size:17px;cursor:pointer;color:#667781;}
+  .crow{display:flex;gap:6px;align-items:flex-end;}
+  .crow textarea{flex:1;resize:none;border:none;border-radius:20px;padding:9px 14px;font-family:var(--ff);font-size:14.5px;line-height:1.45;max-height:120px;outline:none;background:#fff;}
+  .crow .plus,.crow .send{flex:none;width:42px;height:42px;border:none;border-radius:50%;cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center;}
+  .crow .plus{background:#fff;color:#0B5563;font-size:24px;font-weight:700;} .crow .send{background:#0B5563;color:#fff;}
+  .pmenu{position:absolute;bottom:58px;inset-inline-start:8px;background:#fff;border-radius:12px;box-shadow:0 6px 20px #0003;padding:6px;display:none;z-index:5;min-width:190px;}
+  .pmenu.open{display:block;}
+  .pmenu button{display:block;width:100%;text-align:start;border:none;background:none;font-family:var(--ff);font-weight:800;font-size:14px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--navy);}
+  .pmenu button:hover{background:var(--cream);}
+  .amenu{position:fixed;background:#fff;border-radius:10px;box-shadow:0 6px 20px #0003;padding:5px;z-index:120;min-width:150px;display:none;}
+  .amenu.open{display:block;}
+  .amenu button{display:block;width:100%;text-align:start;border:none;background:none;font-family:var(--ff);font-weight:700;font-size:13.5px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--navy);}
+  .amenu button:hover{background:var(--cream);} .amenu .red{color:#B42318;}
+  .cbwrap{position:relative;}
+  .note{background:#FFF8E1;color:#7A4E00;font-size:12px;font-weight:700;padding:6px 10px;text-align:center;}
+  .note a{color:inherit;}
+  /* ---- collaborations / developer updates ---- */
   .empty{text-align:center;color:var(--muted);padding:38px 16px;background:#fff;border:1px solid var(--line);border-radius:16px;}
-  .more{display:block;margin:6px auto 0;border:1.5px solid var(--line-2);background:#fff;border-radius:11px;padding:9px 18px;font-family:var(--ff);font-weight:800;cursor:pointer;}
+  .more2{display:block;margin:6px auto 0;border:1.5px solid var(--line-2);background:#fff;border-radius:11px;padding:9px 18px;font-family:var(--ff);font-weight:800;cursor:pointer;}
   .sec h3{font-size:15px;color:var(--navy);margin:16px 0 8px;}
   .cb{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:9px;font-size:13.5px;}
-  .cb .ctx{color:var(--muted);font-size:12.5px;margin-top:4px;}
+  .cb .ctx{color:var(--muted);font-size:12.5px;margin-top:4px;} .cb .body{margin-top:6px;white-space:pre-wrap;}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .acts button,.acts a{font-family:var(--ff);font-size:12.5px;font-weight:800;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
+  .acts .go{background:var(--teal);border-color:var(--teal);color:#fff;} .acts .ok{background:#E6F6EC;border-color:#BDE5CB;color:#137a3e;}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  .bar input{flex:1;min-width:140px;border:1.5px solid var(--line-2);border-radius:11px;padding:8px 11px;font-family:var(--ff);font-size:13px;background:#fff;}
   .du{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:9px;}
   .du .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted);}
   .du .h a{font-weight:900;color:var(--navy);text-decoration:none;font-size:14px;}
@@ -76,6 +106,8 @@
   .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;}
   .chips button{flex:none;border:1.5px solid var(--line-2);background:#fff;border-radius:100px;padding:6px 12px;font-family:var(--ff);font-weight:800;font-size:12.5px;cursor:pointer;color:var(--navy);}
   .chips button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .unote{background:#EEF2FF;color:#3949AB;border-radius:12px;padding:10px 13px;font-size:13px;font-weight:700;margin-bottom:12px;}
+  /* ---- dialogs ---- */
   .ov{position:fixed;inset:0;background:rgba(11,29,54,.55);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:16px;overflow:auto;}
   .ov.open{display:flex;} .ovc{background:#fff;border-radius:18px;max-width:480px;width:100%;padding:18px;margin:auto;}
   .ovc h3{margin:0 0 12px;font-size:17px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
@@ -85,14 +117,17 @@
   .row2{display:flex;gap:8px;} .msg{font-weight:800;font-size:13px;margin:6px 0;} .msg.err{color:#B42318;} .msg.ok{color:#137a3e;}
   .btnp{width:100%;border:none;border-radius:12px;padding:12px;background:var(--teal);color:#fff;font-family:var(--ff);font-weight:900;font-size:15px;cursor:pointer;}
   .notbroker{padding:60px 20px;text-align:center;}
-  .hl{animation:hl 2.4s ease;} @keyframes hl{0%{box-shadow:0 0 0 3px #F0B429}100%{box-shadow:none}}
+  body.chatmode #hz-footer{display:none;}
+  /* the site-wide assistant buttons would sit on top of the send button */
+  body.chatmode #hzChatFab, body.chatmode .chat-fab, body.chatmode .hz-asst-fab{display:none !important;}
+  .cfil{scrollbar-width:none;} .cfil::-webkit-scrollbar{display:none;}
 </style>
 </head>
 <body data-mode="broker">
 <div id="hz-header"></div>
 <div class="cm" id="app"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
 
-<!-- new post -->
+<!-- new request / unit -->
 <div class="ov" id="ovPost" onclick="if(event.target===this)closeOv('ovPost')"><div class="ovc">
   <h3><span id="pTitle"></span><button onclick="closeOv('ovPost')">×</button></h3>
   <div id="pBody"></div>
@@ -102,6 +137,7 @@
   <h3><span>🤝 اعرض تعاون</span><button onclick="closeOv('ovCollab')">×</button></h3>
   <div id="cBody"></div>
 </div></div>
+<div class="amenu" id="amenu"></div>
 
 <div id="hz-footer"></div>
 <script src="/assets/homzy.js?v=19"></script>
@@ -115,18 +151,23 @@ const GRP={cairo:'القاهرة',giza:'الجيزة',alex:'الإسكندرية
 const CATS=[['','الكل'],['price','💰 أسعار'],['launch','🚀 إطلاقات'],['new_phase','🏗️ مراحل جديدة'],['offer','🎁 عروض'],['payment_plan','📅 أنظمة سداد'],
   ['delivery','🔑 تسليم'],['construction','👷 إنشاءات'],['inventory','📦 متاح'],['event','📣 أحداث'],['brochure','📄 بروشورات'],['other','أخرى']];
 const CAT_AR=Object.fromEntries(CATS.filter(c=>c[0]));
-const ERR={brokers_only:'الكميونتي للبروكرز بس.',too_many:'وصلت للحد اليومي (15 مشاركة). جرّب بكرة.',area_required:'اختار المنطقة.',
+const ERR={brokers_only:'الكميونتي للبروكرز بس.',too_many:'وصلت للحد اليومي. جرّب بكرة.',area_required:'اختار المنطقة.',
   body_required:'اكتب التفاصيل.',listing_not_yours:'الوحدة دي مش منشورة باسمك.',already:'إنت بعت طلب تعاون على ده قبل كده.',
   own_post:'ده بوستك.',not_open:'البوست ده اتقفل.',bad_status:'الحالة اتغيّرت — حدّث الصفحة.',forbidden:'مش مسموح.'};
+const NAME_COLORS=['#06A77D','#E5484D','#3949AB','#C2410C','#7C3AED','#0E7490','#B45309','#BE185D'];
 
-let S=null, AREAS=[], AREA_LABEL={}, MY_AREAS=[], MY_LISTINGS=[], TAB='feed';
-let F={kind:'',areas:'mine',q:'',mine:false,closed:false}, POSTS=[], BEFORE=null, DONE=false, FOCUS=null;
+let S=null, AREAS=[], AREA_LABEL={}, MY_AREAS=[], MY_LISTINGS=[], TAB='chat', FOCUS=null;
+let CF='all', MSGS=[], OLDEST=null, NO_MORE=false, LAST=null, REPLY=null;
 let DU={cat:'',q:''}, DUS=[], DU_BEFORE=null, DU_DONE=false, COLLABS=[];
 
 const call=(fn,args)=>HZ.sbAuth('/rpc/'+fn,S.token,'POST',args||{});
 const ago=t=>{ const s=(Date.now()-new Date(t))/1000; if(s<60) return 'دلوقتي'; if(s<3600) return 'من '+Math.floor(s/60)+' د';
   if(s<86400) return 'من '+Math.floor(s/3600)+' س'; if(s<86400*7) return 'من '+Math.floor(s/86400)+' يوم';
   return new Date(t).toLocaleDateString('ar-EG',{day:'numeric',month:'short'}); };
+const hm=t=>new Date(t).toLocaleTimeString('ar-EG-u-nu-latn',{hour:'numeric',minute:'2-digit'});
+const dayKey=t=>new Date(t).toLocaleDateString('en-CA');
+const dayLabel=t=>{ const k=dayKey(t), today=dayKey(Date.now()), y=dayKey(Date.now()-864e5);
+  return k===today?'النهارده':(k===y?'امبارح':new Date(t).toLocaleDateString('ar-EG-u-nu-latn',{weekday:'long',day:'numeric',month:'long'})); };
 // 5 → 5 مليون, 750 → 750 ألف, "٥ مليون", "2.5m", "800k"
 function parseMoney(v){
   let s=String(v||'').trim().replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[,،\s]/g,'').toLowerCase(); if(!s) return null;
@@ -139,6 +180,7 @@ const money=n=>{ if(n==null) return ''; n=+n; if(n>=1e6) return (Math.round(n/1e
   if(n>=1e3) return Math.round(n/1e3).toLocaleString('en-US')+' ألف'; return n.toLocaleString('en-US'); };
 const waNum=p=>{ let d=String(p||'').replace(/\D/g,''); if(d.startsWith('00')) d=d.slice(2); if(d.startsWith('0')) d='2'+d; else if(d.length===10&&d.startsWith('1')) d='20'+d; return d; };
 const areaOptions=sel=>Object.keys(GRP).map(g=>`<optgroup label="${GRP[g]}">`+AREAS.filter(a=>a.grp===g).map(a=>`<option value="${a.slug}" ${a.slug===sel?'selected':''}>${esc(a.label_ar)}</option>`).join('')+'</optgroup>').join('');
+const nameColor=id=>NAME_COLORS[[...String(id)].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7)%NAME_COLORS.length];
 window.closeOv=id=>$(id).classList.remove('open');
 
 async function boot(){
@@ -149,126 +191,150 @@ async function boot(){
   AREAS.forEach(a=>AREA_LABEL[a.slug]=a.label_ar);
   try{ MY_AREAS=await call('community_my_areas')||[]; }catch(e){}
   try{ MY_LISTINGS=await HZ.sbAuth('/listings?select=id,title,price,area,type,purpose,bedrooms&owner_id=eq.'+S.uid+'&status=eq.active&order=created_at.desc',S.token)||[]; }catch(e){}
-  // old /community/<area> links and ?post= / ?tab= deep links
-  const qs=new URLSearchParams(location.search), seg=location.pathname.split('/').filter(Boolean)[1];
-  if(seg&&AREA_LABEL[seg]) F.areas=seg; else if(!MY_AREAS.length) F.areas='';
+  const qs=new URLSearchParams(location.search);
   FOCUS=qs.get('post'); if(qs.get('tab')==='collabs') TAB='collabs'; else if(qs.get('tab')==='updates') TAB='updates';
   render(); live();
+  document.addEventListener('click',e=>{ if(!e.target.closest('.amenu')&&!e.target.closest('.more')) $('amenu').classList.remove('open');
+    if(!e.target.closest('.pmenu')&&!e.target.closest('.plus')){ const m=$('pmenu'); if(m) m.classList.remove('open'); } });
 }
 
 function render(){
-  $('app').innerHTML=`<h1>💬 مجتمع البروكرز</h1>
-    <div class="sub">اعرض طلب عميلك أو وحدة عندك — Homzy بيوصّلها تلقائي للبروكرز اللي عندهم المناسب.</div>
-    <div class="tabs">
-      <button class="${TAB==='feed'?'on':''}" onclick="setTab('feed')">📋 الطلبات والوحدات</button>
+  document.body.classList.toggle('chatmode',TAB==='chat');
+  $('app').innerHTML=`<div class="tabs">
+      <button class="${TAB==='chat'?'on':''}" onclick="setTab('chat')">💬 جروب البروكرز</button>
       <button class="${TAB==='collabs'?'on':''}" onclick="setTab('collabs')">🤝 تعاوناتي<span id="cbDot"></span></button>
       <button class="${TAB==='updates'?'on':''}" onclick="setTab('updates')">📢 تحديثات المطورين</button>
     </div><div id="pane"></div>`;
-  if(TAB==='feed') renderFeedShell(); else if(TAB==='collabs') loadCollabs(); else renderUpdatesShell();
+  if(TAB==='chat') renderChat(); else if(TAB==='collabs') loadCollabs(); else renderUpdatesShell();
   refreshCollabDot();
 }
-window.setTab=t=>{ TAB=t; history.replaceState(null,'','/community'+(t==='feed'?'':'?tab='+t)); render(); };
+window.setTab=t=>{ TAB=t; history.replaceState(null,'','/community'+(t==='chat'?'':'?tab='+t)); render(); };
 
-/* ---------------- feed ---------------- */
-function renderFeedShell(){
-  const areaSel=`<select onchange="F.areas=this.value;loadFeed(true)">
-      ${MY_AREAS.length?`<option value="mine" ${F.areas==='mine'?'selected':''}>📍 مناطق شغلي</option>`:''}
-      <option value="" ${!F.areas?'selected':''}>🌍 كل المناطق</option>${areaOptions(F.areas==='mine'?'':F.areas)}</select>`;
-  $('pane').innerHTML=`
-    <div class="newrow"><button class="nr" onclick="openPost('request')">🔔 طلب عميل</button><button class="nu" onclick="openPost('unit')">🏠 وحدة متاحة</button></div>
-    ${!MY_AREAS.length?`<div class="note">📍 اختار <a href="/broker-setup">مناطق شغلك</a> عشان توصلك الطلبات الجديدة فيها أول بأول.</div>`:''}
-    <div class="bar"><div class="seg">${[['','الكل'],['request','طلبات'],['unit','وحدات'],['mine','مشاركاتي']].map(([k,t])=>
-        `<button class="${(k==='mine'?F.mine:(!F.mine&&F.kind===k))?'on':''}" onclick="setKind('${k}')">${t}</button>`).join('')}</div>${areaSel}</div>
-    <div class="bar"><input id="fq" placeholder="ابحث في الطلبات والوحدات…" value="${esc(F.q)}" onkeydown="if(event.key==='Enter'){F.q=this.value.trim();loadFeed(true)}">
-      <label style="font-size:12.5px;font-weight:700;display:flex;gap:5px;align-items:center"><input type="checkbox" ${F.closed?'checked':''} onchange="F.closed=this.checked;loadFeed(true)"> اللي اتقفلوا</label></div>
-    <div id="focus"></div><div id="feed"><div class="empty">…</div></div>`;
-  loadFeed(true);
+/* ---------------- group chat ---------------- */
+function renderChat(){
+  const fil=[['all','الكل'],['request','🔔 الطلبات'],['unit','🏠 الوحدات']].concat(MY_AREAS.length?[['areas','📍 مناطق شغلي']]:[]);
+  $('pane').innerHTML=`<div class="chat">
+    <div class="chead"><span class="gav">🏘️</span><div class="t"><b>جروب بروكرز Homzy</b><small>اتكلم مع البروكرز، واعرض طلب عميل أو وحدة من زرار ＋</small></div></div>
+    <div class="cfil">${fil.map(([k,t])=>`<button class="${CF===k?'on':''}" onclick="setFilter('${k}')">${t}</button>`).join('')}</div>
+    ${!MY_AREAS.length?`<div class="note">📍 اختار <a href="/broker-setup">مناطق شغلك</a> عشان توصلك الطلبات الجديدة فيها.</div>`:''}
+    <div class="cbody" id="cbody"><div class="cempty">…</div></div>
+    <div class="cbwrap"><div class="pmenu" id="pmenu"><button onclick="openPost('request')">🔔 طلب عميل</button><button onclick="openPost('unit')">🏠 وحدة متاحة</button></div>
+      <div class="cbar"><div id="rprev"></div><div class="crow">
+        <button class="plus" title="طلب أو وحدة" onclick="$('pmenu').classList.toggle('open')">＋</button>
+        <textarea id="cin" rows="1" maxlength="1500" placeholder="اكتب رسالة…" oninput="grow(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!matchMedia('(pointer:coarse)').matches){event.preventDefault();sendMsg()}"></textarea>
+        <button class="send" title="إرسال" onclick="sendMsg()">➤</button></div></div></div></div>`;
+  loadChat();
 }
-window.setKind=k=>{ if(k==='mine'){ F.mine=true; F.kind=''; } else { F.mine=false; F.kind=k; } renderFeedShell(); };
-const feedAreas=()=>F.areas==='mine'?MY_AREAS:(F.areas?[F.areas]:null);
-async function loadFeed(reset){
-  if(reset){ POSTS=[]; BEFORE=null; DONE=false; }
-  let rows=[]; try{ rows=await call('community_feed',{p_kind:F.kind||null,p_areas:feedAreas(),p_q:F.q||null,p_mine:F.mine,p_closed:F.closed,p_before:BEFORE,p_limit:25})||[]; }catch(e){}
-  POSTS=POSTS.concat(rows); DONE=rows.length<25; if(rows.length) BEFORE=rows[rows.length-1].created_at;
-  $('feed').innerHTML=POSTS.length?POSTS.map(card).join('')+(DONE?'':`<button class="more" onclick="loadFeed(false)">عرض أكتر</button>`)
-    :`<div class="empty"><div style="font-size:32px">📭</div><b>${F.mine?'لسه مانزّلتش حاجة':'مفيش حاجة هنا لسه'}</b><div style="font-size:13px;margin-top:4px">${F.areas?'جرّب «كل المناطق» أو ':''}كن أول واحد ينزّل طلب عميل أو وحدة.</div></div>`;
-  if(FOCUS&&reset) showFocus();
+window.grow=t=>{ t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px'; };
+window.setFilter=k=>{ CF=k; renderChat(); };
+const chatArgs=()=>({p_kinds:CF==='request'||CF==='unit'?[CF]:(CF==='areas'?['request','unit']:null),p_areas:CF==='areas'?MY_AREAS:null});
+const nearBottom=()=>{ const b=$('cbody'); return !b||b.scrollHeight-b.scrollTop-b.clientHeight<140; };
+const toBottom=()=>{ const b=$('cbody'); if(b) b.scrollTop=b.scrollHeight; };
+function track(rows){ rows.forEach(r=>{ const t=r.updated_at>r.created_at?r.updated_at:r.created_at; if(!LAST||t>LAST) LAST=t; }); }
+async function loadChat(){
+  MSGS=[]; OLDEST=null; NO_MORE=false; LAST=null;
+  let rows=[]; try{ rows=await call('community_chat',{...chatArgs(),p_limit:50})||[]; }catch(e){}
+  MSGS=rows.reverse(); NO_MORE=rows.length<50; if(MSGS.length) OLDEST=MSGS[0].created_at; track(MSGS);
+  if(FOCUS){ for(let i=0;i<6&&!MSGS.some(m=>m.id===FOCUS)&&!NO_MORE;i++) await older(true); }
+  drawChat(); if(FOCUS) jump(FOCUS); else toBottom(); FOCUS=null;
 }
-async function showFocus(){
-  let r=[]; try{ r=await call('community_feed',{p_post:FOCUS})||[]; }catch(e){}
-  if(!r.length){ FOCUS=null; return; }
-  $('focus').innerHTML=`<div style="font-size:12.5px;font-weight:800;color:var(--muted);margin-bottom:6px">من التنبيه:</div>`+card(r[0],true);
-  const el=$('focus').firstElementChild.nextElementSibling; el.classList.add('hl'); el.scrollIntoView({behavior:'smooth',block:'center'});
-  toggleComments(r[0].id,true);
+window.older=async(silent)=>{ const b=$('cbody'), h=b?b.scrollHeight:0;
+  let rows=[]; try{ rows=await call('community_chat',{...chatArgs(),p_before:OLDEST,p_limit:50})||[]; }catch(e){}
+  NO_MORE=rows.length<50; if(rows.length){ MSGS=rows.reverse().concat(MSGS); OLDEST=MSGS[0].created_at; }
+  if(silent!==true){ drawChat(); if(b) b.scrollTop=b.scrollHeight-h; } };
+async function pullNew(scroll){
+  if(TAB!=='chat'||!$('cbody')) return; const stick=scroll||nearBottom();
+  let rows=[]; try{ rows=await call('community_chat',{...chatArgs(),p_after:LAST,p_limit:100})||[]; }catch(e){ return; }
+  if(!rows.length) return; track(rows); let added=0;
+  rows.reverse().forEach(r=>{ const i=MSGS.findIndex(m=>m.id===r.id); if(i>=0) MSGS[i]=r; else { MSGS.push(r); added++; } });
+  MSGS.sort((a,b)=>a.created_at<b.created_at?-1:1);
+  const top=$('cbody').scrollTop; drawChat();
+  if(stick) toBottom(); else { $('cbody').scrollTop=top; if(added&&!$('newbtn')) $('cbody').insertAdjacentHTML('beforeend',`<button class="newbtn" id="newbtn" onclick="this.remove();toBottom()">⬇ رسايل جديدة</button>`); }
 }
-function card(p,focus){
-  const a=p.author||{}, name=a.company||a.name||'بروكر';
-  const facts=[`📍 ${esc(p.area_label)}`, TYPE_AR[p.prop_type]?esc(TYPE_AR[p.prop_type]):'', p.purpose==='rent'?'إيجار':'بيع',
-    p.bedrooms!=null?`🛏 ${p.bedrooms} غرف`:'', p.delivery==='ready'?'🔑 استلام فوري':(p.delivery==='under_construction'?'🏗️ تحت الإنشاء':'')].filter(Boolean).map(x=>`<span>${x}</span>`).join('');
-  const budget=p.kind==='request'?((p.budget_min||p.budget_max)?`<span class="money">💰 ${p.budget_min?'من '+money(p.budget_min)+' ':''}${p.budget_max?'لحد '+money(p.budget_max):''}</span>`:'')
-    :(p.price?`<span class="money">💰 ${money(p.price)}</span>`:'');
-  const st=p.status==='closed'?`<span class="st">✔︎ اتقفل${p.closed_reason?' — '+esc(p.closed_reason):''}</span>`:(p.status==='hidden'?`<span class="st" style="background:#FDECEC;color:#B42318">مخفي بعد بلاغات — مستني مراجعة</span>`:(p.expired?`<span class="st">انتهى — جدّده لو لسه متاح</span>`:''));
-  const l=p.listing;
-  const lst=l?`<a class="lst" href="/listing/${p.listing_id}" target="_blank"><span class="im" style="${l.cover?`background-image:url('${esc(l.cover)}')`:''}"></span><div><b>${esc(l.title||'')}</b>${l.price?money(l.price)+' ج':''}${l.size?' · '+esc(l.size)+' م²':''}<br><span style="color:var(--teal-d);font-weight:800">شوف الصور والتفاصيل ←</span></div></a>`:'';
+function drawChat(){
+  const b=$('cbody'); if(!b) return;
+  if(!MSGS.length){ b.innerHTML=`<div class="cempty"><div style="font-size:30px">👋</div><b>${CF==='all'?'لسه محدش كتب في الجروب':'مفيش حاجة بالفلتر ده'}</b><div style="margin-top:4px">${CF==='all'?'ابدأ إنت: اكتب رسالة، أو دوس ＋ واعرض طلب عميل أو وحدة.':'جرّب «الكل».'}</div></div>`; return; }
+  let html=NO_MORE?'':`<button class="older" onclick="older()">⬆ رسايل أقدم</button>`, prev=null;
+  MSGS.forEach(m=>{
+    if(!prev||dayKey(prev.created_at)!==dayKey(m.created_at)) html+=`<div class="day">${dayLabel(m.created_at)}</div>`;
+    const first=!prev||prev.author.id!==m.author.id||dayKey(prev.created_at)!==dayKey(m.created_at)||(new Date(m.created_at)-new Date(prev.created_at))>5*60e3||m.kind!=='message'||prev.kind!=='message';
+    html+=bubble(m,first); prev=m;
+  });
+  b.innerHTML=html;
+}
+function bubble(m,first){
+  const a=m.author||{}, name=a.company||a.name||'بروكر', card=m.kind!=='message';
+  const head=(!m.mine&&(first||card))?`<div class="nm" style="color:${nameColor(a.id)}"><a href="/broker/${a.id}" target="_blank">${esc(name)}</a>${a.verified?'<span title="رقم متأكد منه" style="color:#1E8E5A">✔︎</span>':''}${a.collabs_won>0?`<small>🤝 ${a.collabs_won}</small>`:''}</div>`:'';
+  const quote=m.reply?`<span class="q" onclick="jump('${m.reply.id}')"><b>${m.reply.mine?'إنت':esc(m.reply.name||'بروكر')}</b>${m.reply.body==null?'🚫 رسالة اتمسحت':(m.reply.kind==='request'?'🔔 ':m.reply.kind==='unit'?'🏠 ':'')+esc(m.reply.body)}</span>`:'';
+  const tm=`<span class="tm">${hm(m.created_at)}</span>`;
+  const more=m.status==='deleted'?'':`<button class="more" onclick="menu(event,'${m.id}')">⌄</button>`;
+  const cls=`b ${m.mine?'me':''} ${first?'first':''} ${card?'card':''} ${m.status==='deleted'?'del':''}`;
+  if(m.status==='deleted') return `<div class="${cls}" id="m-${m.id}">${head}<div class="tx">🚫 ${m.mine?'إنت مسحت الرسالة دي':'الرسالة دي اتمسحت'}</div>${tm}<div style="clear:both"></div></div>`;
+  if(m.status==='hidden') return `<div class="${cls}" id="m-${m.id}">${head}<div class="tx" style="color:#B42318">⚑ اتخفت بعد بلاغات — مستنية مراجعة</div>${tm}<div style="clear:both"></div></div>`;
+  if(!card) return `<div class="${cls}" id="m-${m.id}">${more}${head}${quote}<div class="tx">${esc(m.body)}</div>${tm}<div style="clear:both"></div></div>`;
+  // request / unit card inside the chat
+  const facts=[m.area_label?`📍 ${esc(m.area_label)}`:'', TYPE_AR[m.prop_type]?esc(TYPE_AR[m.prop_type]):'', m.purpose==='rent'?'إيجار':'بيع',
+    m.bedrooms!=null?`${m.bedrooms} غرف`:'', m.delivery==='ready'?'🔑 فوري':(m.delivery==='under_construction'?'🏗️ تحت الإنشاء':'')].filter(Boolean).map(x=>`<span>${x}</span>`).join('');
+  const budget=m.kind==='request'?((m.budget_min||m.budget_max)?`<span class="money">💰 ${m.budget_min?'من '+money(m.budget_min)+' ':''}${m.budget_max?'لحد '+money(m.budget_max):''}</span>`:'')
+    :(m.price?`<span class="money">💰 ${money(m.price)}</span>`:'');
+  const l=m.listing;
+  const lst=l?`<a class="lst" href="/listing/${m.listing_id}" target="_blank"><span class="im" style="${l.cover?`background-image:url('${esc(l.cover)}')`:''}"></span><div><b>${esc(l.title||'')}</b>${l.price?money(l.price)+' ج':''}${l.size?' · '+esc(l.size)+' م²':''}<br><span style="color:#0B5563;font-weight:800">الصور والتفاصيل ←</span></div></a>`:'';
+  const open=m.status==='open'&&!m.expired;
+  const st=m.status==='closed'?`<span class="st">✔︎ اتقفل${m.closed_reason?' — '+esc(m.closed_reason):''}</span>`:(m.expired?`<span class="st">انتهت مدته</span>`:'');
   let pill='';
-  if(p.kind==='request'&&p.my_matches>0) pill=`<button class="pill" onclick="toggleMatches('${p.id}')">🎯 عندك ${p.my_matches} ${p.my_matches==1?'وحدة تناسب':'وحدات تناسب'} الطلب ده — شوفها واعرض تعاون</button>`;
-  else if(p.mine&&p.kind==='request'&&p.total_matches>0) pill=`<button class="pill" onclick="toggleMatches('${p.id}')">🎯 Homzy لقى ${p.total_matches} ${p.total_matches==1?'وحدة مناسبة':'وحدات مناسبة'} عند بروكرز تانيين — اتبعتلهم تنبيه</button>`;
-  const open=p.status==='open'&&!p.expired;
-  let acts=`<button onclick="toggleComments('${p.id}')">💬 ${p.comments>0?p.comments+' تعليق':'علّق'}</button>`;
-  if(p.mine){
-    if(p.collab_pending>0) acts+=`<button class="wait" onclick="setTab('collabs')">🤝 ${p.collab_pending} طلب تعاون</button>`;
-    acts+=open?`<button onclick="postAct('${p.id}','close')">✔︎ اتقفل</button>`:`<button onclick="postAct('${p.id}','renew')">🔄 ${p.status==='closed'?'افتحه تاني':'جدّده 30 يوم'}</button>`;
+  if(m.kind==='request'&&m.my_matches>0) pill=`<button class="pill" onclick="toggleMatches('${m.id}')">🎯 عندك ${m.my_matches} ${m.my_matches==1?'وحدة تناسب':'وحدات تناسب'} الطلب ده</button>`;
+  else if(m.mine&&m.kind==='request'&&m.total_matches>0) pill=`<button class="pill" onclick="toggleMatches('${m.id}')">🎯 Homzy لقى ${m.total_matches} ${m.total_matches==1?'وحدة مناسبة':'وحدات مناسبة'} وبلّغ أصحابها</button>`;
+  let acts=`<button onclick="replyTo('${m.id}')">↩️ رد</button>`;
+  if(m.mine){
+    if(m.collab_pending>0) acts+=`<button class="wait" onclick="setTab('collabs')">🤝 ${m.collab_pending} طلب تعاون</button>`;
+    acts+=open?`<button onclick="postAct('${m.id}','close')">✔︎ اتقفل</button>`:`<button onclick="postAct('${m.id}','renew')">🔄 ${m.status==='closed'?'افتحه تاني':'جدّده'}</button>`;
   } else if(open){
-    acts+=p.my_collab==='pending'?`<button class="wait" onclick="setTab('collabs')">⏳ مستني موافقته</button>`
-      :(p.my_collab==='accepted'||p.my_collab==='won')?`<button class="ok" onclick="setTab('collabs')">✅ اتفقتوا — رقمه عندك</button>`
-      :`<button class="go" onclick="openCollab('${p.id}')">🤝 اعرض تعاون</button>`;
+    acts+=m.my_collab==='pending'?`<button class="wait" onclick="setTab('collabs')">⏳ مستني موافقته</button>`
+      :(m.my_collab==='accepted'||m.my_collab==='won')?`<button class="ok" onclick="setTab('collabs')">✅ اتفقتوا</button>`
+      :`<button class="go" onclick="openCollab('${m.id}')">🤝 اعرض تعاون</button>`;
   }
-  if(!p.mine) acts+=`<button class="mute" onclick="report('${p.id}')">⚑ بلّغ</button>`;
-  return `<div class="pc ${p.kind} ${p.status} ${p.expired?'expired':''}" id="p-${p.id}${focus?'-f':''}">
-    <div class="ph"><span class="av" style="${a.logo?`background-image:url('${esc(a.logo)}');color:transparent`:''}">${esc(name.slice(0,1))}</span>
-      <div class="who"><a href="/broker/${a.id}" target="_blank">${esc(name)}</a>${a.verified?' <span title="رقم متأكد منه" style="color:#1E8E5A">✔︎</span>':''}
-        <small>${a.rating?'⭐ '+a.rating+' · ':''}${a.collabs_won>0?'🤝 '+a.collabs_won+' تعاون ناجح · ':''}${ago(p.created_at)}</small></div>
-      <span class="kb ${p.kind}">${p.kind==='request'?'🔔 طلب عميل':'🏠 وحدة متاحة'}</span></div>
-    <div class="facts">${facts}${budget}</div>${lst}
-    ${p.body&&(!l||p.body!==l.title)?`<div class="body">${esc(p.body)}</div>`:''}
-    ${st}${pill}<div class="mlist" id="m-${p.id}${focus?'-f':''}" hidden></div>
-    <div class="acts">${acts}</div><div class="cmts" id="c-${p.id}${focus?'-f':''}" hidden></div></div>`;
+  return `<div class="${cls}" id="m-${m.id}">${more}${head}${quote}<span class="kb ${m.kind}">${m.kind==='request'?'🔔 طلب عميل':'🏠 وحدة متاحة'}</span>
+    <div class="facts">${facts}${budget}</div>${lst}${m.body&&(!l||m.body!==l.title)?`<div class="tx">${esc(m.body)}</div>`:''}
+    ${st}${pill}<div class="mlist" id="ml-${m.id}" hidden></div><div class="bacts">${acts}</div>${tm}<div style="clear:both"></div></div>`;
 }
-const boxes=(pre,id)=>[...document.querySelectorAll(`#${pre}-${id},#${pre}-${id}-f`)];
+window.jump=id=>{ const el=$('m-'+id); if(!el) return; el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl'); };
+window.menu=(e,id)=>{ e.stopPropagation(); const m=MSGS.find(x=>x.id===id); if(!m) return; const am=$('amenu');
+  am.innerHTML=`<button onclick="replyTo('${id}')">↩️ رد</button><button onclick="copyMsg('${id}')">📋 نسخ</button>`
+    +(m.mine?`<button class="red" onclick="delMsg('${id}')">🗑️ امسح</button>`:`<button class="red" onclick="report('${id}')">⚑ بلّغ</button>`);
+  const r=e.currentTarget.getBoundingClientRect(); am.style.top=Math.min(r.bottom+4,innerHeight-160)+'px';
+  am.style.left=Math.max(8,Math.min(r.left-120,innerWidth-170))+'px'; am.classList.add('open'); };
+window.copyMsg=id=>{ $('amenu').classList.remove('open'); const m=MSGS.find(x=>x.id===id); if(m) navigator.clipboard.writeText(m.body||'').catch(()=>{}); };
+window.replyTo=id=>{ $('amenu').classList.remove('open'); const m=MSGS.find(x=>x.id===id); if(!m) return; REPLY=m;
+  $('rprev').innerHTML=`<div class="rprev"><div><b>${m.mine?'إنت':esc(m.author.company||m.author.name||'بروكر')}</b> · ${m.kind==='request'?'🔔 ':m.kind==='unit'?'🏠 ':''}${esc((m.body||'').slice(0,90))}</div><button onclick="REPLY=null;$('rprev').innerHTML=''">×</button></div>`;
+  $('cin').focus(); };
+window.sendMsg=async()=>{ const t=$('cin'), v=t.value.trim(); if(!v) return; t.value=''; grow(t);
+  const rp=REPLY; REPLY=null; $('rprev').innerHTML='';
+  try{ const r=await call('community_post_create',{p:{kind:'message',body:v,reply_to:rp?rp.id:null}});
+    if(!r||!r.ok){ alert(ERR[r&&r.error]||'الرسالة ماتبعتتش.'); t.value=v; return; } }catch(e){ alert('الرسالة ماتبعتتش.'); t.value=v; return; }
+  pullNew(true); };
+window.delMsg=async id=>{ $('amenu').classList.remove('open'); if(!confirm('تمسح الرسالة للكل؟')) return;
+  try{ const r=await call('community_post_set',{p_id:id,p_action:'delete'}); if(!r||!r.ok) alert(ERR[r&&r.error]||'تعذّر المسح.'); }catch(e){ alert('تعذّر المسح.'); }
+  pullNew(false); };
 window.toggleMatches=async id=>{
-  const bs=boxes('m',id); if(!bs.length) return; const show=bs[0].hidden;
-  if(!show){ bs.forEach(b=>b.hidden=true); return; }
+  const box=$('ml-'+id); if(!box) return; if(!box.hidden){ box.hidden=true; return; }
   let rows=[]; try{ rows=await call('community_post_matches',{p_post:id})||[]; }catch(e){}
-  const html=rows.length?rows.map(r=>`<div class="mrow"><span class="im" style="${r.cover?`background-image:url('${esc(r.cover)}')`:''}"></span>
-      <div class="t"><b>${esc(r.title||'وحدة')}</b>${r.price?money(r.price)+' ج · ':''}${esc(r.area||'')}${r.mine?' · <span style="color:var(--teal-d);font-weight:800">وحدتك</span>':' · '+esc(r.broker||'')}</div>
-      ${r.listing_id?`<a href="/listing/${r.listing_id}" target="_blank" style="font-weight:800;font-size:12.5px">فتح</a>`:''}
-      ${r.mine?`<button onclick="openCollab('${id}','${r.listing_id||''}')" style="border:none;background:var(--teal);color:#fff;border-radius:8px;padding:5px 9px;font-family:var(--ff);font-weight:800;font-size:12px;cursor:pointer">اعرضها</button>`:''}</div>`).join('')
-    :'<div style="color:var(--muted);font-size:13px">مفيش وحدات مناسبة متاحة دلوقتي.</div>';
-  bs.forEach(b=>{ b.innerHTML=html; b.hidden=false; });
-};
-window.toggleComments=async(id,force)=>{
-  const bs=boxes('c',id); if(!bs.length) return;
-  if(!force&&!bs[0].hidden){ bs.forEach(b=>b.hidden=true); return; }
-  let rows=[]; try{ rows=await call('community_comments_list',{p_post:id})||[]; }catch(e){}
-  const html=rows.map(c=>`<div class="cmt"><b>${esc(c.author.company||c.author.name||'بروكر')}</b> <small>${ago(c.created_at)}</small><div>${esc(c.body)}</div></div>`).join('')
-    +`<form class="cform" onsubmit="event.preventDefault();addComment('${id}',this)"><input maxlength="800" placeholder="اكتب تعليق أو سؤال…" required><button>إرسال</button></form>`;
-  bs.forEach(b=>{ b.innerHTML=html; b.hidden=false; });
-};
-window.addComment=async(id,form)=>{ const v=form.querySelector('input').value.trim(); if(!v) return;
-  form.querySelector('button').disabled=true;
-  try{ const r=await call('community_comment_add',{p_post:id,p_body:v}); if(!r||!r.ok){ alert(ERR[r&&r.error]||'تعذّر الإرسال.'); } }catch(e){ alert('تعذّر الإرسال.'); }
-  await toggleComments(id,true); const p=POSTS.find(x=>x.id===id); if(p){ p.comments=(+p.comments||0)+1; } };
+  box.innerHTML=rows.length?rows.map(r=>`<div class="mrow"><span class="im" style="${r.cover?`background-image:url('${esc(r.cover)}')`:''}"></span>
+      <div class="t"><b>${esc(r.title||'وحدة')}</b>${r.price?money(r.price)+' ج · ':''}${esc(r.area||'')}${r.mine?' · <span style="color:#0B5563;font-weight:800">وحدتك</span>':' · '+esc(r.broker||'')}</div>
+      ${r.listing_id?`<a href="/listing/${r.listing_id}" target="_blank" style="font-weight:800;font-size:12px">فتح</a>`:''}
+      ${r.mine?`<button onclick="openCollab('${id}','${r.listing_id||''}')">اعرضها</button>`:''}</div>`).join('')
+    :'<div style="color:var(--muted);font-size:12.5px">مفيش وحدات مناسبة متاحة دلوقتي.</div>';
+  box.hidden=false; };
 window.postAct=async(id,act)=>{ let reason=null;
   if(act==='close'){ reason=prompt('اتقفل إزاي؟ (اختياري — مثلاً: اتباعت / العميل لقى)',''); if(reason===null) return; }
   try{ const r=await call('community_post_set',{p_id:id,p_action:act,p_reason:reason}); if(!r||!r.ok) alert(ERR[r&&r.error]||'تعذّر التنفيذ.'); }catch(e){ alert('تعذّر التنفيذ.'); }
-  loadFeed(true); };
-window.report=async id=>{ const why=prompt('إيه المشكلة في البوست ده؟ (سبام، معلومة غلط، كلام مش لائق…)',''); if(why===null) return;
-  try{ await call('community_report',{p_post:id,p_reason:why||null}); alert('شكراً — البلاغ وصل. لو 3 بروكرز بلّغوا البوست بيتخفى لحد المراجعة.'); }catch(e){ alert('تعذّر الإرسال.'); } };
+  pullNew(false); };
+window.report=async id=>{ $('amenu').classList.remove('open'); const why=prompt('إيه المشكلة؟ (سبام، معلومة غلط، كلام مش لائق…)',''); if(why===null) return;
+  try{ await call('community_report',{p_post:id,p_reason:why||null}); alert('شكراً — البلاغ وصل. لو 3 بروكرز بلّغوا الرسالة بتتخفى لحد المراجعة.'); }catch(e){ alert('تعذّر الإرسال.'); } };
 
 /* ---------------- new post ---------------- */
 let PK='request';
-window.openPost=kind=>{ PK=kind; $('pTitle').textContent=kind==='request'?'🔔 طلب عميل جديد':'🏠 وحدة متاحة';
-  const defArea=(F.areas&&F.areas!=='mine')?F.areas:(MY_AREAS[0]||'');
+window.openPost=kind=>{ const pm=$('pmenu'); if(pm) pm.classList.remove('open'); PK=kind; $('pTitle').textContent=kind==='request'?'🔔 طلب عميل جديد':'🏠 وحدة متاحة';
+  const defArea=MY_AREAS[0]||'';
   const beds=`<option value="">أي عدد</option>`+[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}${n===6?'+':''}</option>`).join('');
   $('pBody').innerHTML=`
     ${kind==='unit'?`<div class="fld"><label>من وحداتك المنشورة (اختياري)</label><select id="pl" onchange="fillFromListing()"><option value="">— وحدة مش منشورة على Homzy —</option>
@@ -300,7 +366,7 @@ window.sendPost=async()=>{ const m=$('pmsg'), body=$('pbody').value.trim(), list
     m.textContent=PK==='request'
       ?(mt.brokers?`اتنشر ✓ — ${mt.brokers} بروكر عندهم ${mt.units} وحدة مناسبة وصلهم تنبيه.`:'اتنشر ✓')+(mt.area_brokers?` و${mt.area_brokers} بروكر شغالين في المنطقة.`:'')
       :(mt.brokers?`اتنشرت ✓ — ${mt.brokers} بروكر عندهم طلب مناسب وصلهم تنبيه.`:'اتنشرت ✓');
-    setTimeout(()=>{ closeOv('ovPost'); F.mine=false; F.kind=''; if(TAB!=='feed') setTab('feed'); else renderFeedShell(); },1600);
+    setTimeout(()=>{ closeOv('ovPost'); if(TAB!=='chat') setTab('chat'); else pullNew(true); },1500);
   }catch(e){ m.className='msg err'; m.textContent='تعذّر النشر.'; $('psend').disabled=false; } };
 
 /* ---------------- collaborations ---------------- */
@@ -313,7 +379,7 @@ window.openCollab=(id,listing)=>{
 window.sendCollab=async id=>{ const m=$('cmsg'); $('csend').disabled=true;
   try{ const r=await call('community_collab_request',{p_post:id,p_msg:$('cm').value.trim()||null,p_listing:($('cl')&&$('cl').value)||null});
     if(!r||!r.ok){ m.className='msg err'; m.textContent=ERR[r&&r.error]||'تعذّر الإرسال.'; $('csend').disabled=false; return; }
-    m.className='msg ok'; m.textContent='اتبعت ✓ — هنبلّغك أول ما يرد.'; setTimeout(()=>{ closeOv('ovCollab'); loadFeed(true); },1300);
+    m.className='msg ok'; m.textContent='اتبعت ✓ — هنبلّغك أول ما يرد.'; setTimeout(()=>{ closeOv('ovCollab'); pullNew(false); },1300);
   }catch(e){ m.className='msg err'; m.textContent='تعذّر الإرسال.'; $('csend').disabled=false; } };
 async function refreshCollabDot(){ try{ COLLABS=await call('community_collabs_mine')||[]; }catch(e){ COLLABS=[]; }
   const n=COLLABS.filter(c=>c.role==='owner'&&c.status==='pending').length; const d=$('cbDot'); if(d) d.innerHTML=n?`<span class="dot">${n}</span>`:''; }
@@ -340,7 +406,7 @@ window.collabSet=async(id,st)=>{ if((st==='declined'||st==='cancelled')&&!confir
 
 /* ---------------- developer updates (own tab, never mixed into the feed) ---------------- */
 function renderUpdatesShell(){
-  $('pane').innerHTML=`<div class="note" style="background:#EEF2FF;color:#3949AB">تحديثات المطورين من جروبات الواتساب — أسعار، إطلاقات، مراحل، عروض. اللي عليها «للبروكرز» ماتبعتهاش للعملاء.</div>
+  $('pane').innerHTML=`<div class="unote">تحديثات المطورين من جروبات الواتساب — أسعار، إطلاقات، مراحل، عروض. اللي عليها «للبروكرز» ماتبعتهاش للعملاء.</div>
     <div class="chips">${CATS.map(([k,t])=>`<button class="${DU.cat===k?'on':''}" onclick="DU.cat='${k}';renderUpdatesShell()">${t}</button>`).join('')}</div>
     <div class="bar"><input placeholder="ابحث بالمشروع أو المطور…" value="${esc(DU.q)}" onkeydown="if(event.key==='Enter'){DU.q=this.value.trim();loadUpdates(true)}"></div>
     <div id="dus"><div class="empty">…</div></div>`;
@@ -354,30 +420,23 @@ async function loadUpdates(reset){
       ${u.developer&&u.project?`<span>${esc(u.developer)}</span>`:''}${u.project_area?`<span>· ${esc(u.project_area)}</span>`:''}
       <span class="cat">${esc(CAT_AR[u.category]||u.category)}</span>${u.tier==='broker'?'<span class="cat broker">للبروكرز</span>':''}
       <span style="margin-inline-start:auto">${ago(u.observed_at)}</span></div><div class="c">${esc(u.content_ar)}</div></div>`).join('')
-      +(DU_DONE?'':`<button class="more" onclick="loadUpdates(false)">عرض أكتر</button>`)
+      +(DU_DONE?'':`<button class="more2" onclick="loadUpdates(false)">عرض أكتر</button>`)
     :'<div class="empty">مفيش تحديثات بالفلتر ده.</div>';
 }
 
-/* ---------------- live updates (Supabase realtime; falls back to a slow poll) ---------------- */
+/* ---------------- live updates (Supabase realtime; a slow poll as backup) ---------------- */
 let LIVE_T=null;
 function bump(){ clearTimeout(LIVE_T); LIVE_T=setTimeout(()=>{ if(document.hidden) return;
-  if(TAB==='collabs') return loadCollabs();
-  refreshCollabDot();
-  if(TAB!=='feed') return;
-  // don't yank the list from under someone reading comments or writing a post — offer a refresh instead
-  const busy=document.querySelector('.ov.open')||document.querySelector('.cmts:not([hidden])')||document.querySelector('.mlist:not([hidden])');
-  if(!busy) return loadFeed(true);
-  if(!$('newBanner')) $('feed').insertAdjacentHTML('beforebegin',`<button id="newBanner" class="more" style="margin:0 auto 10px;background:var(--navy);color:#fff;border-color:var(--navy)" onclick="this.remove();loadFeed(true)">🔄 فيه جديد — اعرض</button>`);
-  },900); }
+  if(TAB==='chat') pullNew(false); else if(TAB==='collabs') loadCollabs(); refreshCollabDot(); },500); }
 async function live(){
   try{ const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2.45.4');
     const sb=createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+S.token}}});
     sb.realtime.setAuth(S.token);
     sb.channel('community').on('postgres_changes',{event:'*',schema:'public',table:'community_posts'},bump)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'community_comments'},bump)
       .on('postgres_changes',{event:'*',schema:'public',table:'community_collabs'},bump).subscribe();
   }catch(e){}
-  setInterval(()=>{ if(!document.hidden) refreshCollabDot(); },60000);
+  setInterval(()=>{ if(document.hidden) return; if(TAB==='chat') pullNew(false); refreshCollabDot(); },20000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&TAB==='chat') pullNew(false); });
 }
 boot();
 </script>
