@@ -366,7 +366,7 @@ function render(){
 // main area (community_areas): used to match the unit with client requests in the broker community
 let REGIONS_LOADED=false;
 async function loadRegions(){ if(REGIONS_LOADED) return; REGIONS_LOADED=true;
-  let rows=[]; try{ rows=await api('/community_areas?select=slug,label_ar,grp&order=label_ar')||[]; }catch(e){ REGIONS_LOADED=false; return; }
+  let rows=[]; try{ rows=await api('/community_areas?select=slug,label_ar,grp&active=eq.true&order=label_ar')||[]; }catch(e){ REGIONS_LOADED=false; return; }
   const G={cairo:'القاهرة',giza:'الجيزة',alex:'الإسكندرية',coast:'الساحل'}, cur=$('fRegion').value;
   $('fRegion').innerHTML='<option value="">—</option>'+Object.keys(G).map(g=>`<optgroup label="${G[g]}">`+rows.filter(r=>r.grp===g).map(r=>`<option value="${r.slug}">${esc(r.label_ar)}</option>`).join('')+'</optgroup>').join('');
   $('fRegion').value=cur; }

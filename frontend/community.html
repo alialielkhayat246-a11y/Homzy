@@ -205,16 +205,19 @@ async function boot(){
   S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname+location.search); return; }
   let broker=false; try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; broker=p&&p.role==='broker'; }catch(e){}
   if(!broker){ $('app').innerHTML=`<div class="notbroker"><h2>مجتمع البروكرز</h2><p style="color:var(--muted);margin:12px 0 18px">الميزة دي للبروكرز بس. فعّل حساب بروكر عشان تعرض طلبات عملائك ووحداتك وتتعاون مع بروكرز تانيين.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>`; return; }
-  try{ AREAS=await HZ.sbAuth('/community_areas?select=slug,label_ar,grp,cluster&order=label_ar',S.token)||[]; }catch(e){}
+  try{ AREAS=await HZ.sbAuth('/community_areas?select=slug,label_ar,grp,room&active=eq.true&order=label_ar',S.token)||[]; }catch(e){}
   AREAS.forEach(a=>AREA_LABEL[a.slug]=a.label_ar);
+  try{ ROOM_DEFS=await HZ.sbAuth('/community_room_defs?select=slug,label_ar,grp&order=sort',S.token)||[]; }catch(e){}
+  ROOM_DEFS.forEach(r=>ROOM_LABEL[r.slug]=r.label_ar);
   try{ MY_AREAS=await call('community_my_areas')||[]; }catch(e){}
   try{ MY_LISTINGS=await HZ.sbAuth('/listings?select=id,title,price,area,type,purpose,bedrooms&owner_id=eq.'+S.uid+'&status=eq.active&order=created_at.desc',S.token)||[]; }catch(e){}
   const qs=new URLSearchParams(location.search);
   FOCUS=qs.get('post'); if(qs.get('tab')==='collabs') TAB='collabs'; else if(qs.get('tab')==='updates') TAB='updates';
   // which room: /community/<area>, ?room=all, the room of a notified post, or (on wide screens) the general room
   const seg=location.pathname.split('/').filter(Boolean)[1];
-  if(seg&&AREA_LABEL[seg]) ROOM=seg; else if(qs.get('room')==='all') ROOM='';
-  else if(FOCUS){ try{ const r=(await call('community_chat',{p_post:FOCUS}))[0]; ROOM=r&&r.kind==='message'&&r.area_slug?r.area_slug:''; }catch(e){ ROOM=''; } }
+  const segArea=AREAS.find(a=>a.slug===seg);
+  if(seg&&ROOM_LABEL[seg]) ROOM=seg; else if(segArea&&segArea.room) ROOM=segArea.room; else if(qs.get('room')==='all') ROOM='';
+  else if(FOCUS){ try{ const r=(await call('community_chat',{p_post:FOCUS}))[0]; ROOM=r&&r.kind==='message'&&r.room?r.room:''; }catch(e){ ROOM=''; } }
   else if(matchMedia('(min-width:761px)').matches) ROOM='';
   render(); live();
   document.addEventListener('click',e=>{ if(!e.target.closest('.amenu')&&!e.target.closest('.more')) $('amenu').classList.remove('open');
@@ -235,8 +238,8 @@ window.setTab=t=>{ TAB=t; history.replaceState(null,'','/community'+(t==='chat'?
 
 /* ---------------- group chat ---------------- */
 // chat list (general room + one room per area) next to the open room; on phones one at a time
-let ROOMS=[], ROOM=null, RQ='';
-const roomLabel=r=>r?(AREA_LABEL[r]||r):'كل البروكرز';
+let ROOMS=[], ROOM=null, RQ='', ROOM_DEFS=[], ROOM_LABEL={};
+const roomLabel=r=>r?(ROOM_LABEL[r]||r):'كل البروكرز';
 const roomPath=r=>r==null?'/community':(r?'/community/'+r:'/community?room=all');
 function renderChat(){
   $('pane').innerHTML=`<div class="cw ${ROOM!=null?'inroom':''}" id="cw">
@@ -248,22 +251,24 @@ function renderChat(){
 }
 async function loadRooms(){ try{ ROOMS=await call('community_rooms')||[]; }catch(e){ ROOMS=[]; } drawRooms(); }
 const AV_COLORS=['#0B5563','#06A77D','#3949AB','#C2410C','#7C3AED','#0E7490','#B45309','#BE185D'];
-function roomItem(r){ const on=ROOM!=null&&(r.room||'')===(ROOM||''), lbl=r.room?(AREA_LABEL[r.room]||r.label):'كل البروكرز';
+function roomItem(r){ const on=ROOM!=null&&(r.room||'')===(ROOM||''), lbl=r.room?(ROOM_LABEL[r.room]||r.label):'كل البروكرز';
   const av=r.room?`<span class="av2" style="background:${AV_COLORS[[...r.room].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,3)%AV_COLORS.length]}">${esc(lbl.replace(/^ال/,'').slice(0,1))}</span>`:'<span class="av2" style="background:#0B5563">🏘️</span>';
   const t=r.last_at?(dayKey(r.last_at)===dayKey(Date.now())?hm(r.last_at):(dayKey(r.last_at)===dayKey(Date.now()-864e5)?'امبارح':new Date(r.last_at).toLocaleDateString('ar-EG-u-nu-latn',{day:'numeric',month:'numeric'}))):'';
   return `<div class="ri ${on?'on':''} ${r.unread>0?'unread':''}" onclick="openRoom('${r.room||''}')">${av}
     <div class="mid"><b>${r.room?'📍 ':''}${esc(lbl)}</b><small>${r.last_text?`${esc(r.last_who||'')}: ${esc(r.last_text)}`:'لسه مفيش رسايل — ابدأ إنت'}</small></div>
     <div class="end"><span>${t}</span>${r.unread>0?`<span class="ub">${r.unread>99?'99+':r.unread}</span>`:''}</div></div>`; }
 function drawRooms(){ const box=$('rlist'); if(!box) return; const q=RQ;
-  const match=r=>!q||(r.room?(AREA_LABEL[r.room]||r.label):'كل البروكرز').includes(q);
+  // a search for an area inside a shared room (e.g. التجمع) finds that room
+  const inRoom=(room)=>AREAS.some(a=>a.room===room&&a.label_ar.includes(q));
+  const match=r=>!q||(r.room?(ROOM_LABEL[r.room]||r.label):'كل البروكرز').includes(q)||(r.room&&inRoom(r.room));
   const mine=ROOMS.filter(r=>r.pinned&&match(r)), act=ROOMS.filter(r=>!r.pinned&&match(r)), have=new Set(ROOMS.map(r=>r.room));
   // every other area can be opened too (search, or browse by governorate)
-  const others=AREAS.filter(a=>!have.has(a.slug)&&(!q||a.label_ar.includes(q)));
+  const others=ROOM_DEFS.filter(d=>!have.has(d.slug)&&(!q||d.label_ar.includes(q)||inRoom(d.slug)));
   let html=(mine.length?`<div class="rsec">جروباتك</div>`+mine.map(roomItem).join(''):'')
     +(act.length?`<div class="rsec">جروبات فيها نشاط</div>`+act.map(roomItem).join(''):'');
-  if(q) html+=others.length?`<div class="rsec">مناطق تانية</div>`+others.slice(0,40).map(a=>roomItem({room:a.slug,label:a.label_ar,unread:0})).join(''):'';
+  if(q) html+=others.length?`<div class="rsec">مناطق تانية</div>`+others.slice(0,40).map(d=>roomItem({room:d.slug,label:d.label_ar,unread:0})).join(''):'';
   else html+=`<div class="rsec">كل المناطق</div>`+Object.keys(GRP).map(g=>`<details><summary class="ri" style="font-weight:800;color:var(--navy);list-style:none">📂 ${GRP[g]} <small style="color:var(--muted);font-weight:700">(${others.filter(a=>a.grp===g).length})</small></summary>`
-      +others.filter(a=>a.grp===g).map(a=>roomItem({room:a.slug,label:a.label_ar,unread:0})).join('')+'</details>').join('');
+      +others.filter(d=>d.grp===g).map(d=>roomItem({room:d.slug,label:d.label_ar,unread:0})).join('')+'</details>').join('');
   if(!MY_AREAS.length&&!q) html=`<div class="note" style="text-align:start">📍 اختار <a href="/broker-setup">مناطق شغلك</a> عشان جروباتها تطلع فوق وتوصلك طلباتها.</div>`+html;
   box.innerHTML=html||'<div class="pickroom">مفيش منطقة بالاسم ده.</div>'; }
 window.openRoom=r=>{ ROOM=r; CF='all'; REPLY=null; history.replaceState(null,'',roomPath(r)); $('cw').classList.add('inroom'); drawRooms(); renderRoom(); };
@@ -273,7 +278,7 @@ function renderRoom(){
   const general=!ROOM;
   const fil=[['all','الكل'],['request','🔔 الطلبات'],['unit','🏠 الوحدات']].concat(general&&MY_AREAS.length?[['areas','📍 مناطق شغلي']]:[]);
   $('cv').innerHTML=`
-    <div class="chead"><button class="back" onclick="closeRoom()" title="رجوع">→</button><span class="gav">${general?'🏘️':'📍'}</span><div class="t"><b>${general?'كل البروكرز':'بروكرز '+esc(roomLabel(ROOM))}</b><small>${general?'الجروب العام — كل الطلبات والوحدات من كل المناطق':'كلام المنطقة + الطلبات والوحدات فيها وفي اللي جنبها'}</small></div></div>
+    <div class="chead"><button class="back" onclick="closeRoom()" title="رجوع">→</button><span class="gav">${general?'🏘️':'📍'}</span><div class="t"><b>${general?'كل البروكرز':'بروكرز '+esc(roomLabel(ROOM))}</b><small>${general?'الجروب العام — كل الطلبات والوحدات من كل المناطق':'كلام المنطقة + الطلبات والوحدات فيها'}</small></div></div>
     <div class="cfil">${fil.map(([k,t])=>`<button class="${CF===k?'on':''}" onclick="setFilter('${k}')">${t}</button>`).join('')}</div>
     <div class="cbody" id="cbody"><div class="cempty">…</div></div>
     <div class="cbwrap"><div class="pmenu" id="pmenu"><button onclick="openPost('request')">🔔 طلب عميل</button><button onclick="openPost('unit')">🏠 وحدة متاحة</button></div>
@@ -394,7 +399,7 @@ window.report=async id=>{ $('amenu').classList.remove('open'); const why=prompt(
 /* ---------------- new post ---------------- */
 let PK='request';
 window.openPost=kind=>{ const pm=$('pmenu'); if(pm) pm.classList.remove('open'); PK=kind; $('pTitle').textContent=kind==='request'?'🔔 طلب عميل جديد':'🏠 وحدة متاحة';
-  const defArea=ROOM||MY_AREAS[0]||'';
+  const defArea=(ROOM&&AREA_LABEL[ROOM])?ROOM:(ROOM?'':(MY_AREAS[0]||''));
   const beds=`<option value="">أي عدد</option>`+[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}${n===6?'+':''}</option>`).join('');
   $('pBody').innerHTML=`
     ${kind==='unit'?`<div class="fld"><label>من وحداتك المنشورة (اختياري)</label><select id="pl" onchange="fillFromListing()"><option value="">— وحدة مش منشورة على Homzy —</option>
