@@ -195,6 +195,9 @@
       <div class="fld"><label data-ar="عنوان الإعلان" data-en="Listing title">عنوان الإعلان</label><input class="in" id="fTitleTxt" placeholder="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" data-ph-ar="مثال: شقة ١٦٠م² بحديقة – التجمع الخامس" data-ph-en="e.g. 160m² apartment with garden – Fifth Settlement" maxlength="120" /></div>
       <div class="row2">
         <div class="fld"><label data-ar="المنطقة" data-en="Area">المنطقة</label><input class="in" id="fArea" placeholder="التجمع الخامس" data-ph-ar="التجمع الخامس" data-ph-en="Fifth Settlement" /></div>
+        <div class="fld"><label data-ar="المنطقة الرئيسية" data-en="Main area">المنطقة الرئيسية</label><select class="in" id="fRegion"><option value="">—</option></select></div>
+      </div>
+      <div class="row2">
         <div class="fld"><label data-ar="العنوان التفصيلي (اختياري)" data-en="Detailed address (optional)">العنوان التفصيلي (اختياري)</label><input class="in" id="fAddress" placeholder="الحي / الكمبوند" data-ph-ar="الحي / الكمبوند" data-ph-en="District / compound" /></div>
       </div>
       <div class="row2">
@@ -316,6 +319,7 @@ window.loadMine=async ()=>{
   $('grid').innerHTML=`<div class="empty">${L('…بحمّل','Loading…')}</div>`;
   try{
     LISTINGS=await api('/listings?select=*,listing_media(url,sort,is_360)&owner_id=eq.'+UID+'&order=created_at.desc');
+    loadRegions();
     render();
   }catch(e){ $('grid').innerHTML=`<div class="empty">${L('تعذّر تحميل وحداتك.','Could not load your units.')}</div>`; }
 };
@@ -359,6 +363,13 @@ function render(){
   $('grid').innerHTML=html;
 }
 
+// main area (community_areas): used to match the unit with client requests in the broker community
+let REGIONS_LOADED=false;
+async function loadRegions(){ if(REGIONS_LOADED) return; REGIONS_LOADED=true;
+  let rows=[]; try{ rows=await api('/community_areas?select=slug,label_ar,grp&order=label_ar')||[]; }catch(e){ REGIONS_LOADED=false; return; }
+  const G={cairo:'القاهرة',giza:'الجيزة',alex:'الإسكندرية',coast:'الساحل'}, cur=$('fRegion').value;
+  $('fRegion').innerHTML='<option value="">—</option>'+Object.keys(G).map(g=>`<optgroup label="${G[g]}">`+rows.filter(r=>r.grp===g).map(r=>`<option value="${r.slug}">${esc(r.label_ar)}</option>`).join('')+'</optgroup>').join('');
+  $('fRegion').value=cur; }
 // public unit page (server-rendered with photo/title/price for Facebook & WhatsApp previews)
 const unitUrl=id=>location.origin+'/listing/'+id;
 window.copyUnitLink=async(id,btn)=>{ const t=btn.textContent;
@@ -445,7 +456,7 @@ window.openForm=()=>{
   }
   EDIT_ID=null; NEW_FILES=[]; NEW_360=[]; KEEP_MEDIA=[]; $('fTitle').textContent=L('إضافة وحدة','Add unit');
   ['fTitleTxt','fArea','fAddress','fPrice','fSize','fBeds','fBaths','fFloor','fDesc'].forEach(id=>$(id).value='');
-  $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft';
+  $('fPurpose').value='sale'; $('fType').value='apartment'; $('fStatus').value='draft'; $('fRegion').value='';
   $('fThumbs').innerHTML=''; fmsg(''); $('listingPreview').hidden=true; oaRender({hours:[],blackouts:[]}); $('formOv').classList.add('open'); };
 /* ---- owner viewing availability (saved per listing; enforced by the booking engine) ---- */
 const OA_DAYS=[[6,['السبت','Sat']],[0,['الأحد','Sun']],[1,['الاتنين','Mon']],[2,['التلات','Tue']],[3,['الأربع','Wed']],[4,['الخميس','Thu']],[5,['الجمعة','Fri']]];
@@ -479,7 +490,7 @@ window.editListing=(id)=>{
   const l=LISTINGS.find(x=>x.id===id); if(!l) return;
   EDIT_ID=id; NEW_FILES=[]; NEW_360=[]; $('fTitle').textContent=L('تعديل الوحدة','Edit unit');
   $('fPurpose').value=l.purpose||'sale'; $('fType').value=l.type||'apartment';
-  $('fTitleTxt').value=l.title||''; $('fArea').value=l.area||''; $('fAddress').value=l.address||'';
+  $('fTitleTxt').value=l.title||''; $('fArea').value=l.area||''; $('fAddress').value=l.address||''; $('fRegion').value=l.region_slug||'';
   $('fPrice').value=l.price||''; $('fSize').value=l.size_sqm||''; $('fBeds').value=l.bedrooms||'';
   $('fBaths').value=l.bathrooms||''; $('fFloor').value=l.floor||''; $('fDesc').value=l.description||'';
   $('fStatus').value=l.status||'active';
@@ -538,7 +549,7 @@ window.saveListing=async (status)=>{
   const price=$('fPrice').value?Number($('fPrice').value):null;
   const rec={
     owner_id:UID, purpose:$('fPurpose').value, type:$('fType').value, title,
-    area:$('fArea').value.trim()||null, address:$('fAddress').value.trim()||null,
+    area:$('fArea').value.trim()||null, address:$('fAddress').value.trim()||null, region_slug:$('fRegion').value||null,
     price, currency:'EGP', size_sqm:$('fSize').value?Number($('fSize').value):null,
     bedrooms:$('fBeds').value?Number($('fBeds').value):null,
     bathrooms:$('fBaths').value?Number($('fBaths').value):null,

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <script>/* auth gate */
-(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname));}}catch(e){location.replace('/login');}})();</script>
+(function(){try{var k=Object.keys(localStorage).find(function(x){return /sb-.*-auth-token/.test(x)});var t=k?JSON.parse(localStorage.getItem(k)):null;var ok=t&&t.access_token&&(!t.expires_at||t.expires_at*1000>Date.now());if(!ok){location.replace('/login?next='+encodeURIComponent(location.pathname+location.search));}}catch(e){location.replace('/login');}})();</script>
 <title>Homzy — مجتمع البروكرز</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -13,201 +13,371 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/homzy.css?v=7">
 <style>
-  .cm{max-width:900px;margin:0 auto;padding:18px 16px 90px;}
-  .cm-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
-  .cm-top h1{font-size:22px;} .cm-top .sp{flex:1;}
-  .back{display:inline-flex;align-items:center;gap:5px;color:var(--teal-d);font-weight:800;font-size:13.5px;text-decoration:none;margin-bottom:6px;}
-  .areasel{border:1.5px solid var(--line-2);border-radius:12px;padding:9px 12px;font-family:var(--ff);font-weight:700;background:#fff;}
-  .hint{background:var(--teal-l);color:var(--teal-d);border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:700;margin-bottom:12px;}
-  .log{display:flex;flex-direction:column;gap:10px;min-height:46vh;}
-  .m{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
-  .m.req{border:2px solid var(--amber);background:#FFFDF5;}
-  .m.mine{background:var(--teal-l);border-color:var(--teal-l);}
-  .m .h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-  .m .who{font-weight:800;font-size:14px;} .m .co{color:var(--muted);font-weight:600;font-size:12px;}
-  .m .t{color:#33404f;margin-top:6px;font-size:14.5px;white-space:pre-wrap;}
-  .m .tm{color:var(--muted);font-size:11px;}
-  .m .badge{background:var(--amber);color:#3a2c00;font-size:11px;font-weight:800;padding:3px 9px;border-radius:100px;}
-  .m .wa{display:inline-block;margin-top:8px;background:var(--green);color:#fff;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:9px;text-decoration:none;}
-  .composer{position:fixed;inset-inline:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
-  .composer .row{max-width:900px;margin:0 auto;display:flex;gap:8px;align-items:center;}
-  .composer input{flex:1;border:1.5px solid var(--line-2);border-radius:100px;padding:11px 16px;font-family:var(--ff);outline:none;}
-  .composer button{flex:none;border:none;border-radius:50%;width:46px;height:46px;background:var(--teal);color:#fff;cursor:pointer;font-size:18px;}
-  .composer .reqbtn{width:auto;border-radius:12px;padding:0 14px;background:var(--amber);color:#3a2c00;font-weight:800;font-size:13px;}
+  .cm{max-width:860px;margin:0 auto;padding:18px 14px 70px;}
+  .cm h1{font-size:22px;margin:0 0 4px;color:var(--navy);} .cm .sub{color:var(--muted);font-size:13.5px;margin-bottom:12px;}
+  .tabs{display:flex;gap:6px;background:var(--cream);border-radius:13px;padding:4px;margin-bottom:14px;overflow-x:auto;}
+  .tabs button{flex:1;white-space:nowrap;border:none;background:none;font-family:var(--ff);font-weight:800;font-size:13.5px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--navy);position:relative;}
+  .tabs button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .tabs .dot{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:100px;background:#E5484D;color:#fff;font-size:11px;padding:0 5px;margin-inline-start:4px;}
+  .newrow{display:flex;gap:8px;margin-bottom:12px;}
+  .newrow button{flex:1;border:none;border-radius:13px;padding:12px 10px;font-family:var(--ff);font-weight:900;font-size:14.5px;cursor:pointer;}
+  .newrow .nr{background:#FFF4D6;color:#7A4E00;border:1.5px solid #F3D48A;} .newrow .nu{background:var(--teal);color:#fff;}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  .seg{display:inline-flex;background:var(--cream);border-radius:11px;padding:3px;}
+  .seg button{border:none;background:none;font-family:var(--ff);font-weight:800;font-size:12.5px;padding:7px 11px;border-radius:9px;cursor:pointer;color:var(--navy);white-space:nowrap;}
+  .seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .bar select,.bar input{border:1.5px solid var(--line-2);border-radius:11px;padding:8px 11px;font-family:var(--ff);font-size:13px;background:#fff;}
+  .bar input{flex:1;min-width:140px;}
+  .note{background:var(--teal-l);color:var(--teal-d);border-radius:12px;padding:10px 13px;font-size:13px;font-weight:700;margin-bottom:12px;}
+  .note a{color:inherit;}
+  .pc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:11px;}
+  .pc.request{border-inline-start:4px solid #F0B429;} .pc.unit{border-inline-start:4px solid var(--teal);}
+  .pc.closed,.pc.expired{opacity:.72;}
+  .ph{display:flex;gap:9px;align-items:center;}
+  .av{width:38px;height:38px;border-radius:11px;background:var(--navy) center/cover no-repeat;color:#fff;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid var(--line);}
+  .who{flex:1;min-width:0;} .who a{font-weight:800;color:var(--navy);text-decoration:none;font-size:14px;}
+  .who small{display:block;color:var(--muted);font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .kb{font-size:11.5px;font-weight:900;border-radius:100px;padding:3px 10px;white-space:nowrap;}
+  .kb.request{background:#FFF4D6;color:#7A4E00;} .kb.unit{background:var(--teal-l);color:var(--teal-d);}
+  .facts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .facts span{background:var(--cream);border-radius:9px;padding:4px 9px;font-size:12.5px;font-weight:700;color:#40506a;}
+  .facts .money{background:#E6F6EC;color:#137a3e;}
+  .body{margin-top:9px;font-size:14.5px;color:#26313f;white-space:pre-wrap;line-height:1.7;}
+  .lst{display:flex;gap:10px;margin-top:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;}
+  .lst .im{width:96px;min-height:72px;background:#e9e2da center/cover no-repeat;flex:none;}
+  .lst div{padding:7px 4px;font-size:13px;} .lst b{display:block;color:var(--navy);}
+  .pill{display:block;width:100%;text-align:start;margin-top:10px;border:1.5px dashed #9ED9CF;background:#F2FBF9;color:var(--teal-d);font-family:var(--ff);font-weight:800;font-size:13px;border-radius:11px;padding:8px 11px;cursor:pointer;}
+  .mlist{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+  .mrow{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:13px;}
+  .mrow .im{width:46px;height:38px;border-radius:7px;background:#e9e2da center/cover no-repeat;flex:none;}
+  .mrow .t{flex:1;min-width:0;} .mrow .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .st{display:inline-block;margin-top:8px;font-size:12px;font-weight:800;border-radius:9px;padding:3px 9px;background:#F1F1F1;color:#6b7280;}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;border-top:1px solid var(--line);padding-top:10px;}
+  .acts button,.acts a{font-family:var(--ff);font-size:12.5px;font-weight:800;border-radius:9px;padding:7px 11px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;color:var(--navy);text-decoration:none;}
+  .acts .go{background:var(--teal);border-color:var(--teal);color:#fff;} .acts .wait{background:#FFF4E5;border-color:#F3D48A;color:#9A5B00;}
+  .acts .ok{background:#E6F6EC;border-color:#BDE5CB;color:#137a3e;} .acts .mute{color:var(--muted);margin-inline-start:auto;}
+  .cmts{margin-top:10px;background:var(--cream);border-radius:12px;padding:8px 10px;}
+  .cmt{font-size:13.5px;padding:6px 2px;border-bottom:1px solid var(--line);} .cmt:last-of-type{border:none;}
+  .cmt b{color:var(--navy);font-size:12.5px;} .cmt small{color:var(--muted);font-size:11px;}
+  .cform{display:flex;gap:6px;margin-top:6px;} .cform input{flex:1;border:1.5px solid var(--line-2);border-radius:100px;padding:8px 13px;font-family:var(--ff);font-size:13.5px;}
+  .cform button{border:none;border-radius:100px;background:var(--teal);color:#fff;font-weight:800;padding:0 14px;font-family:var(--ff);cursor:pointer;}
+  .empty{text-align:center;color:var(--muted);padding:38px 16px;background:#fff;border:1px solid var(--line);border-radius:16px;}
+  .more{display:block;margin:6px auto 0;border:1.5px solid var(--line-2);background:#fff;border-radius:11px;padding:9px 18px;font-family:var(--ff);font-weight:800;cursor:pointer;}
+  .sec h3{font-size:15px;color:var(--navy);margin:16px 0 8px;}
+  .cb{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:9px;font-size:13.5px;}
+  .cb .ctx{color:var(--muted);font-size:12.5px;margin-top:4px;}
+  .du{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px;margin-bottom:9px;}
+  .du .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted);}
+  .du .h a{font-weight:900;color:var(--navy);text-decoration:none;font-size:14px;}
+  .du .c{margin-top:6px;font-size:14px;line-height:1.75;color:#26313f;white-space:pre-wrap;}
+  .cat{font-size:11px;font-weight:900;border-radius:100px;padding:2px 9px;background:#EEF2FF;color:#3949AB;}
+  .cat.broker{background:#FDECEC;color:#B42318;}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;}
+  .chips button{flex:none;border:1.5px solid var(--line-2);background:#fff;border-radius:100px;padding:6px 12px;font-family:var(--ff);font-weight:800;font-size:12.5px;cursor:pointer;color:var(--navy);}
+  .chips button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .ov{position:fixed;inset:0;background:rgba(11,29,54,.55);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:16px;overflow:auto;}
+  .ov.open{display:flex;} .ovc{background:#fff;border-radius:18px;max-width:480px;width:100%;padding:18px;margin:auto;}
+  .ovc h3{margin:0 0 12px;font-size:17px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
+  .ovc h3 button{border:none;background:var(--cream);width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;}
+  .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;flex:1;} .fld label{font-size:12.5px;font-weight:800;color:#40506a;}
+  .fld input,.fld select,.fld textarea{border:1.5px solid var(--line-2);border-radius:10px;padding:9px 11px;font-family:var(--ff);font-size:14px;width:100%;box-sizing:border-box;background:#fff;}
+  .row2{display:flex;gap:8px;} .msg{font-weight:800;font-size:13px;margin:6px 0;} .msg.err{color:#B42318;} .msg.ok{color:#137a3e;}
+  .btnp{width:100%;border:none;border-radius:12px;padding:12px;background:var(--teal);color:#fff;font-family:var(--ff);font-weight:900;font-size:15px;cursor:pointer;}
   .notbroker{padding:60px 20px;text-align:center;}
-  /* hub */
-  .search{width:100%;border:1.5px solid var(--line-2);border-radius:12px;padding:11px 14px;font-family:var(--ff);font-size:14px;margin-bottom:16px;outline:none;}
-  .grp{margin-bottom:22px;}
-  .grp h2{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-  .acard{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 13px;text-decoration:none;color:var(--navy);position:relative;transition:border-color .15s,transform .1s;}
-  .acard:hover{border-color:var(--teal);transform:translateY(-1px);}
-  .acard .nm{font-weight:800;font-size:14px;}
-  .acard .go{color:var(--muted);font-size:12px;}
-  .acard .cbadge{position:absolute;inset-inline-start:10px;top:10px;background:var(--teal);color:#fff;font-size:11px;font-weight:800;min-width:18px;height:18px;padding:0 5px;border-radius:100px;display:flex;align-items:center;justify-content:center;}
-  .ov{position:fixed;inset:0;background:rgba(11,29,54,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:18px;}
-  .ov.open{display:flex;} .ovc{background:#fff;border-radius:18px;max-width:420px;width:100%;padding:22px;}
-  .ovc .fld{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;} .ovc label{font-size:13px;font-weight:700;color:#40506a;}
-  .ovc input,.ovc select,.ovc textarea{border:1.5px solid var(--line-2);border-radius:10px;padding:9px 11px;font-family:var(--ff);}
+  .hl{animation:hl 2.4s ease;} @keyframes hl{0%{box-shadow:0 0 0 3px #F0B429}100%{box-shadow:none}}
 </style>
 </head>
 <body data-mode="broker">
 <div id="hz-header"></div>
 <div class="cm" id="app"><div style="padding:50px;text-align:center;color:var(--muted)">…</div></div>
 
-<div class="ov" id="reqOv"><div class="ovc">
-  <h2 style="font-size:19px">🔔 اعرض ريكوست على البروكرز</h2>
-  <p style="color:var(--muted);font-size:13px;margin:6px 0 14px">اكتب طلب عميلك — البروكرز في المنطقة هيشوفوه ويقدروا يقفلوا معاك.</p>
-  <div style="display:flex;gap:10px"><div class="fld" style="flex:1"><label>النوع</label><select id="rqType"><option value="apartment">شقة</option><option value="villa">فيلا</option><option value="duplex">دوبلكس</option><option value="chalet">شاليه</option><option value="office">مكتب</option><option value="shop">محل</option><option value="other">أخرى</option></select></div>
-  <div class="fld" style="flex:1"><label>الميزانية</label><input id="rqBudget" placeholder="مثلاً 5 مليون"></div></div>
-  <div class="fld"><label>التفاصيل</label><textarea id="rqBody" rows="3" placeholder="عميل عايز شقة 3 غرف استلام فوري…"></textarea></div>
-  <div id="rqMsg" style="font-weight:800;margin-bottom:8px"></div>
-  <div style="display:flex;gap:10px"><button class="btn btn-teal" style="flex:1" onclick="postRequest()">اعرض الريكوست</button><button class="btn btn-ghost" onclick="document.getElementById('reqOv').classList.remove('open')">إلغاء</button></div>
+<!-- new post -->
+<div class="ov" id="ovPost" onclick="if(event.target===this)closeOv('ovPost')"><div class="ovc">
+  <h3><span id="pTitle"></span><button onclick="closeOv('ovPost')">×</button></h3>
+  <div id="pBody"></div>
+</div></div>
+<!-- collaboration request -->
+<div class="ov" id="ovCollab" onclick="if(event.target===this)closeOv('ovCollab')"><div class="ovc">
+  <h3><span>🤝 اعرض تعاون</span><button onclick="closeOv('ovCollab')">×</button></h3>
+  <div id="cBody"></div>
 </div></div>
 
 <div id="hz-footer"></div>
-<script src="/assets/eg-areas.js"></script>
 <script src="/assets/homzy.js?v=19"></script>
 <script>
-const ar=()=>HZ.lang==='ar';
-const AREA_LABEL={};
-(window.EG_AREA_GROUPS||[]).forEach(([g])=>(EG_AREAS[g]||[]).forEach(([s,nm])=>AREA_LABEL[s]=nm));
-function areaOptions(){
-  return (window.EG_AREA_GROUPS||[]).map(([g,gname])=>
-    `<optgroup label="${gname}">`+(EG_AREAS[g]||[]).map(a=>`<option value="${a[0]}" ${a[0]===AREA?'selected':''}>${a[1]}</option>`).join('')+`</optgroup>`
-  ).join('');
-}
-// area from the URL path (/community/<slug>) or ?area=, resolved to a known area.
-// Falls back to a normalized match (HZ.normArea) so slugs coming from the SEO
-// area pages (e.g. "6th-of-october") still land on the right chat ("6-october").
-function resolveArea(raw){
-  if(!raw) return '';
-  raw = decodeURIComponent(raw);
-  if(AREA_LABEL[raw]) return raw;                       // exact slug
-  const norm = s => (window.HZ && HZ.normArea) ? HZ.normArea(String(s).replace(/-/g,' ')) : String(s).toLowerCase().replace(/-/g,' ').trim();
-  const target = norm(raw);
-  // try matching the normalized slug OR the Arabic/English label of each area
-  for(const [g] of (window.EG_AREA_GROUPS||[])){
-    for(const a of (EG_AREAS[g]||[])){
-      if(norm(a[0])===target || norm(a[1])===target) return a[0];
-    }
-  }
-  return '';
-}
-function areaFromUrl(){
-  const parts=location.pathname.split('/').filter(Boolean);
-  const raw = (parts[0]==='community' && parts[1]) ? parts[1] : (new URLSearchParams(location.search).get('area')||'');
-  return resolveArea(raw);
-}
-let S=null, ISBROKER=false, AREA=areaFromUrl(), TIMER=null, COUNTS={};
+const $=id=>document.getElementById(id);
+const esc=s=>(s==null?'':''+s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TYPES=[['apartment','شقة'],['villa','فيلا'],['townhouse','تاون هاوس'],['twinhouse','توين هاوس'],['duplex','دوبلكس'],['penthouse','بنتهاوس'],
+  ['studio','ستوديو'],['chalet','شاليه'],['office','مكتب'],['shop','محل'],['clinic','عيادة'],['land','أرض'],['other','أخرى']];
+const TYPE_AR=Object.fromEntries(TYPES);
+const GRP={cairo:'القاهرة',giza:'الجيزة',alex:'الإسكندرية',coast:'الساحل والمدن الساحلية'};
+const CATS=[['','الكل'],['price','💰 أسعار'],['launch','🚀 إطلاقات'],['new_phase','🏗️ مراحل جديدة'],['offer','🎁 عروض'],['payment_plan','📅 أنظمة سداد'],
+  ['delivery','🔑 تسليم'],['construction','👷 إنشاءات'],['inventory','📦 متاح'],['event','📣 أحداث'],['brochure','📄 بروشورات'],['other','أخرى']];
+const CAT_AR=Object.fromEntries(CATS.filter(c=>c[0]));
+const ERR={brokers_only:'الكميونتي للبروكرز بس.',too_many:'وصلت للحد اليومي (15 مشاركة). جرّب بكرة.',area_required:'اختار المنطقة.',
+  body_required:'اكتب التفاصيل.',listing_not_yours:'الوحدة دي مش منشورة باسمك.',already:'إنت بعت طلب تعاون على ده قبل كده.',
+  own_post:'ده بوستك.',not_open:'البوست ده اتقفل.',bad_status:'الحالة اتغيّرت — حدّث الصفحة.',forbidden:'مش مسموح.'};
 
-function fmtTime(t){ const d=new Date(t); const now=new Date(); const sameDay=d.toDateString()===now.toDateString();
-  return sameDay ? d.toLocaleTimeString(ar()?'ar-EG':'en-US',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString(ar()?'ar-EG':'en-US',{day:'numeric',month:'short'}); }
-function waNum(p){ let d=(p||'').replace(/\D/g,''); if(!d) return ''; if(d.startsWith('00'))d=d.slice(2); else if(d.startsWith('0'))d='2'+d; else if(!d.startsWith('2'))d='2'+d; return d; }
+let S=null, AREAS=[], AREA_LABEL={}, MY_AREAS=[], MY_LISTINGS=[], TAB='feed';
+let F={kind:'',areas:'mine',q:'',mine:false,closed:false}, POSTS=[], BEFORE=null, DONE=false, FOCUS=null;
+let DU={cat:'',q:''}, DUS=[], DU_BEFORE=null, DU_DONE=false, COLLABS=[];
 
-/* ---------- HUB: a page listing every area (Cairo/Giza/Alex) ---------- */
-async function loadCounts(){
-  try{ const rows=await HZ.sbAuth('/broker_area_chat?select=area_slug', S.token)||[];
-    COUNTS={}; rows.forEach(r=>{ COUNTS[r.area_slug]=(COUNTS[r.area_slug]||0)+1; });
-  }catch(e){ COUNTS={}; }
+const call=(fn,args)=>HZ.sbAuth('/rpc/'+fn,S.token,'POST',args||{});
+const ago=t=>{ const s=(Date.now()-new Date(t))/1000; if(s<60) return 'دلوقتي'; if(s<3600) return 'من '+Math.floor(s/60)+' د';
+  if(s<86400) return 'من '+Math.floor(s/3600)+' س'; if(s<86400*7) return 'من '+Math.floor(s/86400)+' يوم';
+  return new Date(t).toLocaleDateString('ar-EG',{day:'numeric',month:'short'}); };
+// 5 → 5 مليون, 750 → 750 ألف, "٥ مليون", "2.5m", "800k"
+function parseMoney(v){
+  let s=String(v||'').trim().replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[,،\s]/g,'').toLowerCase(); if(!s) return null;
+  const n=parseFloat(s.replace(/[^\d.]/g,'')); if(!isFinite(n)||n<=0) return null;
+  if(/مليون|m/.test(s)) return Math.round(n*1e6); if(/ألف|الف|k/.test(s)) return Math.round(n*1e3);
+  // bare numbers: 5 / 7.5 = millions, 750 = thousands, 15000 / 4200000 = as written
+  return n<100?Math.round(n*1e6):(n<1000?Math.round(n*1e3):Math.round(n));
 }
-function renderHub(){
-  stopArea();
-  const q=(document.getElementById('hubQ')?document.getElementById('hubQ').value:'').trim();
-  const grid=(window.EG_AREA_GROUPS||[]).map(([g,gname])=>{
-    const areas=(EG_AREAS[g]||[]).filter(a=>!q || a[1].includes(q) || a[0].includes(q.toLowerCase()));
-    if(!areas.length) return '';
-    return `<div class="grp"><h2>📍 ${gname}</h2><div class="grid">`+areas.map(a=>{
-      const c=COUNTS[a[0]]||0;
-      return `<a class="acard" href="/community/${a[0]}">${c?`<span class="cbadge">${c>99?'99+':c}</span>`:''}
-        <span class="nm">${HZ.esc(a[1])}</span><span class="go">${c?(ar()?c+' رسالة':c+' msgs'):(ar()?'ابدأ الشات →':'Start chat →')}</span></a>`;
-    }).join('')+`</div></div>`;
-  }).join('');
-  document.getElementById('app').innerHTML=`
-    <h1 style="font-size:22px">💬 ${ar()?'مجتمع البروكرز حسب المنطقة':'Brokers community by area'}</h1>
-    <div class="hint" style="margin:10px 0 14px">${ar()?'اختر منطقتك عشان تشوف شات البروكرز فيها — اعرض طلب عميلك أو اقفل ديل مع بروكر عنده الوحدة.':'Pick your area to open its live broker chat — post a client request or co-broke a deal.'}</div>
-    <input class="search" id="hubQ" oninput="renderHub()" placeholder="${ar()?'ابحث عن منطقة…':'Search area…'}" value="${HZ.esc(q)}">
-    ${grid || `<div style="color:var(--muted);text-align:center;padding:30px">${ar()?'مفيش منطقة بالاسم ده':'No area matches'}</div>`}`;
-  const inp=document.getElementById('hubQ'); if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length,inp.value.length); }
-}
+const money=n=>{ if(n==null) return ''; n=+n; if(n>=1e6) return (Math.round(n/1e5)/10).toLocaleString('ar-EG')+' مليون';
+  if(n>=1e3) return Math.round(n/1e3).toLocaleString('ar-EG')+' ألف'; return n.toLocaleString('ar-EG'); };
+const waNum=p=>{ let d=String(p||'').replace(/\D/g,''); if(d.startsWith('00')) d=d.slice(2); if(d.startsWith('0')) d='2'+d; else if(d.length===10&&d.startsWith('1')) d='20'+d; return d; };
+const areaOptions=sel=>Object.keys(GRP).map(g=>`<optgroup label="${GRP[g]}">`+AREAS.filter(a=>a.grp===g).map(a=>`<option value="${a.slug}" ${a.slug===sel?'selected':''}>${esc(a.label_ar)}</option>`).join('')+'</optgroup>').join('');
+window.closeOv=id=>$(id).classList.remove('open');
 
-/* ---------- AREA: the live chat for one area ---------- */
-async function loadMsgs(){
-  if(!ISBROKER || !AREA) return;
-  let rows=[]; try{ rows=await HZ.sbAuth('/broker_area_chat?area_slug=eq.'+AREA+'&select=*&order=created_at.desc&limit=80', S.token)||[]; }catch(e){}
-  rows.reverse();
-  const log=document.getElementById('log'); if(!log) return;
-  const atBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 120;
-  log.innerHTML = rows.length ? rows.map(m=>{
-    const mine=m.sender_id===S.uid;
-    const wa = (!mine && m.sender_phone) ? `<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(m.sender_phone)}?text=${encodeURIComponent('بخصوص طلبك في مجتمع Homzy')}">💬 كلّمه</a>` : '';
-    const meta = m.meta||{};
-    const reqLine = m.kind==='request' ? `<div class="co">${[meta.type,meta.budget].filter(Boolean).map(HZ.esc).join(' · ')}</div>` : '';
-    return `<div class="m ${m.kind==='request'?'req':''} ${mine?'mine':''}">
-      <div class="h"><div><span class="who">${HZ.esc(m.sender_name||(ar()?'بروكر':'Broker'))}</span> ${m.sender_company?`<span class="co">· ${HZ.esc(m.sender_company)}</span>`:''}</div>
-        <div style="display:flex;gap:8px;align-items:center">${m.kind==='request'?`<span class="badge">🔔 ${ar()?'ريكوست':'Request'}</span>`:''}<span class="tm">${fmtTime(m.created_at)}</span></div></div>
-      ${reqLine}<div class="t">${HZ.esc(m.body)}</div>${wa}</div>`;
-  }).join('') : `<div style="text-align:center;color:var(--muted);padding:44px 20px">
-      <div style="font-size:34px">💬</div>
-      <div style="font-weight:800;margin-top:8px">${ar()?'لسه محدش كتب في '+AREA_LABEL[AREA]:'No messages in '+AREA_LABEL[AREA]+' yet'}</div>
-      <div style="font-size:13px;margin-top:4px">${ar()?'كن أول بروكر يعرض طلب عميل أو وحدة متاحة 👇':'Be the first broker to post a request or a unit 👇'}</div></div>`;
-  if(atBottom) log.scrollTop=log.scrollHeight;
-}
-function renderArea(){
-  document.title='Homzy — بروكرز '+(AREA_LABEL[AREA]||'');
-  document.getElementById('app').innerHTML=`
-    <a class="back" href="/community">← ${ar()?'كل المناطق':'All areas'}</a>
-    <div class="cm-top"><h1>💬 ${ar()?'بروكرز':'Brokers'} · ${HZ.esc(AREA_LABEL[AREA]||'')}</h1><span class="sp"></span>
-      <select class="areasel" onchange="pickArea(this.value)">${areaOptions()}</select></div>
-    <div class="hint">${ar()?'اعرض طلب عميلك على بروكرز المنطقة، أو اقفل ديل مع حد عنده الوحدة المناسبة. كل بروكر بيظهر باسمه ورقمه للتواصل.':'Post your client\'s request to area brokers, or close a deal with whoever has the right unit.'}</div>
-    <div class="log" id="log"><div style="text-align:center;color:var(--muted);padding:40px">…</div></div>`;
-  loadMsgs(); composer();
-  if(TIMER) clearInterval(TIMER); TIMER=setInterval(loadMsgs, 4000);
-}
-function stopArea(){ if(TIMER){ clearInterval(TIMER); TIMER=null; } const c=document.getElementById('cmComposer'); if(c) c.remove(); }
-// switching area from the dropdown navigates to that area's page (shareable URL)
-window.pickArea=(a)=>{ if(a && a!==AREA){ location.href='/community/'+a; } };
-
-function composer(){
-  if(document.getElementById('cmComposer')) return;
-  const c=document.createElement('div'); c.className='composer'; c.id='cmComposer';
-  c.innerHTML=`<form class="row" id="cmForm"><button type="button" class="reqbtn" onclick="document.getElementById('reqOv').classList.add('open')">🔔 ${ar()?'ريكوست':'Request'}</button>
-    <input id="cmInput" autocomplete="off" placeholder="${ar()?'اكتب رسالة لبروكرز '+(AREA_LABEL[AREA]||''):'Message brokers…'}"><button type="submit">➤</button></form>`;
-  document.body.appendChild(c);
-  document.getElementById('cmForm').addEventListener('submit', async e=>{
-    e.preventDefault(); const inp=document.getElementById('cmInput'); const body=(inp.value||'').trim(); if(!body) return; inp.value='';
-    try{ await HZ.sbAuth('/rpc/post_area_msg', S.token,'POST',{p_area:AREA,p_body:body,p_kind:'message',p_meta:null}); }catch(e){}
-    loadMsgs();
-  });
-}
-window.postRequest=async()=>{
-  const body=(document.getElementById('rqBody').value||'').trim(); const msg=document.getElementById('rqMsg');
-  if(body.length<3){ msg.style.color='#B42318'; msg.textContent='اكتب تفاصيل الطلب'; return; }
-  const meta={type:document.getElementById('rqType').options[document.getElementById('rqType').selectedIndex].text, budget:(document.getElementById('rqBudget').value||'').trim()};
-  try{ await HZ.sbAuth('/rpc/post_area_msg', S.token,'POST',{p_area:AREA,p_body:body,p_kind:'request',p_meta:meta}); }catch(e){}
-  document.getElementById('reqOv').classList.remove('open'); document.getElementById('rqBody').value=''; document.getElementById('rqBudget').value='';
-  loadMsgs();
-};
-
-function draw(){
-  if(!ISBROKER){
-    stopArea();
-    document.getElementById('app').innerHTML=`<div class="notbroker"><h2>${ar()?'مجتمع البروكرز':'Brokers community'}</h2>
-      <p style="color:var(--muted);margin:12px 0 18px">${ar()?'الميزة دي للبروكرز فقط. فعّل حساب بروكر عشان تتواصل وتقفل ديلز مع بروكرز تانيين.':'This is for brokers only. Become a broker to connect and co-broke deals.'}</p>
-      <a class="btn btn-navy" href="/account">${ar()?'ابقى بروكر':'Become a broker'}</a></div>`;
-    return;
-  }
-  if(AREA) renderArea(); else renderHub();
-}
 async function boot(){
-  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname); return; }
-  try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid, S.token))[0]; ISBROKER = p&&p.role==='broker'; }catch(e){ ISBROKER=false; }
-  if(ISBROKER && !AREA){ await loadCounts(); }
-  draw();
-  HZ.applyLang();
+  S=HZ.session(); if(!S){ location.href='/login?next='+encodeURIComponent(location.pathname+location.search); return; }
+  let broker=false; try{ const p=(await HZ.sbAuth('/profiles?select=role&id=eq.'+S.uid,S.token))[0]; broker=p&&p.role==='broker'; }catch(e){}
+  if(!broker){ $('app').innerHTML=`<div class="notbroker"><h2>مجتمع البروكرز</h2><p style="color:var(--muted);margin:12px 0 18px">الميزة دي للبروكرز بس. فعّل حساب بروكر عشان تعرض طلبات عملائك ووحداتك وتتعاون مع بروكرز تانيين.</p><a class="btn btn-navy" href="/account">ابقى بروكر</a></div>`; return; }
+  try{ AREAS=await HZ.sbAuth('/community_areas?select=slug,label_ar,grp,cluster&order=label_ar',S.token)||[]; }catch(e){}
+  AREAS.forEach(a=>AREA_LABEL[a.slug]=a.label_ar);
+  try{ MY_AREAS=await call('community_my_areas')||[]; }catch(e){}
+  try{ MY_LISTINGS=await HZ.sbAuth('/listings?select=id,title,price,area,type,purpose,bedrooms&owner_id=eq.'+S.uid+'&status=eq.active&order=created_at.desc',S.token)||[]; }catch(e){}
+  // old /community/<area> links and ?post= / ?tab= deep links
+  const qs=new URLSearchParams(location.search), seg=location.pathname.split('/').filter(Boolean)[1];
+  if(seg&&AREA_LABEL[seg]) F.areas=seg; else if(!MY_AREAS.length) F.areas='';
+  FOCUS=qs.get('post'); if(qs.get('tab')==='collabs') TAB='collabs'; else if(qs.get('tab')==='updates') TAB='updates';
+  render(); live();
 }
-document.addEventListener('hz:lang', ()=>{ draw(); });
-window.addEventListener('beforeunload', ()=>{ if(TIMER) clearInterval(TIMER); });
+
+function render(){
+  $('app').innerHTML=`<h1>💬 مجتمع البروكرز</h1>
+    <div class="sub">اعرض طلب عميلك أو وحدة عندك — Homzy بيوصّلها تلقائي للبروكرز اللي عندهم المناسب.</div>
+    <div class="tabs">
+      <button class="${TAB==='feed'?'on':''}" onclick="setTab('feed')">📋 الطلبات والوحدات</button>
+      <button class="${TAB==='collabs'?'on':''}" onclick="setTab('collabs')">🤝 تعاوناتي<span id="cbDot"></span></button>
+      <button class="${TAB==='updates'?'on':''}" onclick="setTab('updates')">📢 تحديثات المطورين</button>
+    </div><div id="pane"></div>`;
+  if(TAB==='feed') renderFeedShell(); else if(TAB==='collabs') loadCollabs(); else renderUpdatesShell();
+  refreshCollabDot();
+}
+window.setTab=t=>{ TAB=t; history.replaceState(null,'','/community'+(t==='feed'?'':'?tab='+t)); render(); };
+
+/* ---------------- feed ---------------- */
+function renderFeedShell(){
+  const areaSel=`<select onchange="F.areas=this.value;loadFeed(true)">
+      ${MY_AREAS.length?`<option value="mine" ${F.areas==='mine'?'selected':''}>📍 مناطق شغلي</option>`:''}
+      <option value="" ${!F.areas?'selected':''}>🌍 كل المناطق</option>${areaOptions(F.areas==='mine'?'':F.areas)}</select>`;
+  $('pane').innerHTML=`
+    <div class="newrow"><button class="nr" onclick="openPost('request')">🔔 طلب عميل</button><button class="nu" onclick="openPost('unit')">🏠 وحدة متاحة</button></div>
+    ${!MY_AREAS.length?`<div class="note">📍 اختار <a href="/broker-setup">مناطق شغلك</a> عشان توصلك الطلبات الجديدة فيها أول بأول.</div>`:''}
+    <div class="bar"><div class="seg">${[['','الكل'],['request','طلبات'],['unit','وحدات'],['mine','مشاركاتي']].map(([k,t])=>
+        `<button class="${(k==='mine'?F.mine:(!F.mine&&F.kind===k))?'on':''}" onclick="setKind('${k}')">${t}</button>`).join('')}</div>${areaSel}</div>
+    <div class="bar"><input id="fq" placeholder="ابحث في الطلبات والوحدات…" value="${esc(F.q)}" onkeydown="if(event.key==='Enter'){F.q=this.value.trim();loadFeed(true)}">
+      <label style="font-size:12.5px;font-weight:700;display:flex;gap:5px;align-items:center"><input type="checkbox" ${F.closed?'checked':''} onchange="F.closed=this.checked;loadFeed(true)"> اللي اتقفلوا</label></div>
+    <div id="focus"></div><div id="feed"><div class="empty">…</div></div>`;
+  loadFeed(true);
+}
+window.setKind=k=>{ if(k==='mine'){ F.mine=true; F.kind=''; } else { F.mine=false; F.kind=k; } renderFeedShell(); };
+const feedAreas=()=>F.areas==='mine'?MY_AREAS:(F.areas?[F.areas]:null);
+async function loadFeed(reset){
+  if(reset){ POSTS=[]; BEFORE=null; DONE=false; }
+  let rows=[]; try{ rows=await call('community_feed',{p_kind:F.kind||null,p_areas:feedAreas(),p_q:F.q||null,p_mine:F.mine,p_closed:F.closed,p_before:BEFORE,p_limit:25})||[]; }catch(e){}
+  POSTS=POSTS.concat(rows); DONE=rows.length<25; if(rows.length) BEFORE=rows[rows.length-1].created_at;
+  $('feed').innerHTML=POSTS.length?POSTS.map(card).join('')+(DONE?'':`<button class="more" onclick="loadFeed(false)">عرض أكتر</button>`)
+    :`<div class="empty"><div style="font-size:32px">📭</div><b>${F.mine?'لسه مانزّلتش حاجة':'مفيش حاجة هنا لسه'}</b><div style="font-size:13px;margin-top:4px">${F.areas?'جرّب «كل المناطق» أو ':''}كن أول واحد ينزّل طلب عميل أو وحدة.</div></div>`;
+  if(FOCUS&&reset) showFocus();
+}
+async function showFocus(){
+  let r=[]; try{ r=await call('community_feed',{p_post:FOCUS})||[]; }catch(e){}
+  if(!r.length){ FOCUS=null; return; }
+  $('focus').innerHTML=`<div style="font-size:12.5px;font-weight:800;color:var(--muted);margin-bottom:6px">من التنبيه:</div>`+card(r[0],true);
+  const el=$('focus').firstElementChild.nextElementSibling; el.classList.add('hl'); el.scrollIntoView({behavior:'smooth',block:'center'});
+  toggleComments(r[0].id,true);
+}
+function card(p,focus){
+  const a=p.author||{}, name=a.company||a.name||'بروكر';
+  const facts=[`📍 ${esc(p.area_label)}`, TYPE_AR[p.prop_type]?esc(TYPE_AR[p.prop_type]):'', p.purpose==='rent'?'إيجار':'بيع',
+    p.bedrooms!=null?`🛏 ${p.bedrooms} غرف`:'', p.delivery==='ready'?'🔑 استلام فوري':(p.delivery==='under_construction'?'🏗️ تحت الإنشاء':'')].filter(Boolean).map(x=>`<span>${x}</span>`).join('');
+  const budget=p.kind==='request'?((p.budget_min||p.budget_max)?`<span class="money">💰 ${p.budget_min?'من '+money(p.budget_min)+' ':''}${p.budget_max?'لحد '+money(p.budget_max):''}</span>`:'')
+    :(p.price?`<span class="money">💰 ${money(p.price)}</span>`:'');
+  const st=p.status==='closed'?`<span class="st">✔︎ اتقفل${p.closed_reason?' — '+esc(p.closed_reason):''}</span>`:(p.status==='hidden'?`<span class="st" style="background:#FDECEC;color:#B42318">مخفي بعد بلاغات — مستني مراجعة</span>`:(p.expired?`<span class="st">انتهى — جدّده لو لسه متاح</span>`:''));
+  const l=p.listing;
+  const lst=l?`<a class="lst" href="/listing/${p.listing_id}" target="_blank"><span class="im" style="${l.cover?`background-image:url('${esc(l.cover)}')`:''}"></span><div><b>${esc(l.title||'')}</b>${l.price?money(l.price)+' ج':''}${l.size?' · '+esc(l.size)+' م²':''}<br><span style="color:var(--teal-d);font-weight:800">شوف الصور والتفاصيل ←</span></div></a>`:'';
+  let pill='';
+  if(p.kind==='request'&&p.my_matches>0) pill=`<button class="pill" onclick="toggleMatches('${p.id}')">🎯 عندك ${p.my_matches} ${p.my_matches==1?'وحدة تناسب':'وحدات تناسب'} الطلب ده — شوفها واعرض تعاون</button>`;
+  else if(p.mine&&p.kind==='request'&&p.total_matches>0) pill=`<button class="pill" onclick="toggleMatches('${p.id}')">🎯 Homzy لقى ${p.total_matches} ${p.total_matches==1?'وحدة مناسبة':'وحدات مناسبة'} عند بروكرز تانيين — اتبعتلهم تنبيه</button>`;
+  const open=p.status==='open'&&!p.expired;
+  let acts=`<button onclick="toggleComments('${p.id}')">💬 ${p.comments>0?p.comments+' تعليق':'علّق'}</button>`;
+  if(p.mine){
+    if(p.collab_pending>0) acts+=`<button class="wait" onclick="setTab('collabs')">🤝 ${p.collab_pending} طلب تعاون</button>`;
+    acts+=open?`<button onclick="postAct('${p.id}','close')">✔︎ اتقفل</button>`:`<button onclick="postAct('${p.id}','renew')">🔄 ${p.status==='closed'?'افتحه تاني':'جدّده 30 يوم'}</button>`;
+  } else if(open){
+    acts+=p.my_collab==='pending'?`<button class="wait" onclick="setTab('collabs')">⏳ مستني موافقته</button>`
+      :(p.my_collab==='accepted'||p.my_collab==='won')?`<button class="ok" onclick="setTab('collabs')">✅ اتفقتوا — رقمه عندك</button>`
+      :`<button class="go" onclick="openCollab('${p.id}')">🤝 اعرض تعاون</button>`;
+  }
+  if(!p.mine) acts+=`<button class="mute" onclick="report('${p.id}')">⚑ بلّغ</button>`;
+  return `<div class="pc ${p.kind} ${p.status} ${p.expired?'expired':''}" id="p-${p.id}${focus?'-f':''}">
+    <div class="ph"><span class="av" style="${a.logo?`background-image:url('${esc(a.logo)}');color:transparent`:''}">${esc(name.slice(0,1))}</span>
+      <div class="who"><a href="/broker/${a.id}" target="_blank">${esc(name)}</a>${a.verified?' <span title="رقم متأكد منه" style="color:#1E8E5A">✔︎</span>':''}
+        <small>${a.rating?'⭐ '+a.rating+' · ':''}${a.collabs_won>0?'🤝 '+a.collabs_won+' تعاون ناجح · ':''}${ago(p.created_at)}</small></div>
+      <span class="kb ${p.kind}">${p.kind==='request'?'🔔 طلب عميل':'🏠 وحدة متاحة'}</span></div>
+    <div class="facts">${facts}${budget}</div>${lst}
+    ${p.body&&(!l||p.body!==l.title)?`<div class="body">${esc(p.body)}</div>`:''}
+    ${st}${pill}<div class="mlist" id="m-${p.id}${focus?'-f':''}" hidden></div>
+    <div class="acts">${acts}</div><div class="cmts" id="c-${p.id}${focus?'-f':''}" hidden></div></div>`;
+}
+const boxes=(pre,id)=>[...document.querySelectorAll(`#${pre}-${id},#${pre}-${id}-f`)];
+window.toggleMatches=async id=>{
+  const bs=boxes('m',id); if(!bs.length) return; const show=bs[0].hidden;
+  if(!show){ bs.forEach(b=>b.hidden=true); return; }
+  let rows=[]; try{ rows=await call('community_post_matches',{p_post:id})||[]; }catch(e){}
+  const html=rows.length?rows.map(r=>`<div class="mrow"><span class="im" style="${r.cover?`background-image:url('${esc(r.cover)}')`:''}"></span>
+      <div class="t"><b>${esc(r.title||'وحدة')}</b>${r.price?money(r.price)+' ج · ':''}${esc(r.area||'')}${r.mine?' · <span style="color:var(--teal-d);font-weight:800">وحدتك</span>':' · '+esc(r.broker||'')}</div>
+      ${r.listing_id?`<a href="/listing/${r.listing_id}" target="_blank" style="font-weight:800;font-size:12.5px">فتح</a>`:''}
+      ${r.mine?`<button onclick="openCollab('${id}','${r.listing_id||''}')" style="border:none;background:var(--teal);color:#fff;border-radius:8px;padding:5px 9px;font-family:var(--ff);font-weight:800;font-size:12px;cursor:pointer">اعرضها</button>`:''}</div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px">مفيش وحدات مناسبة متاحة دلوقتي.</div>';
+  bs.forEach(b=>{ b.innerHTML=html; b.hidden=false; });
+};
+window.toggleComments=async(id,force)=>{
+  const bs=boxes('c',id); if(!bs.length) return;
+  if(!force&&!bs[0].hidden){ bs.forEach(b=>b.hidden=true); return; }
+  let rows=[]; try{ rows=await call('community_comments_list',{p_post:id})||[]; }catch(e){}
+  const html=rows.map(c=>`<div class="cmt"><b>${esc(c.author.company||c.author.name||'بروكر')}</b> <small>${ago(c.created_at)}</small><div>${esc(c.body)}</div></div>`).join('')
+    +`<form class="cform" onsubmit="event.preventDefault();addComment('${id}',this)"><input maxlength="800" placeholder="اكتب تعليق أو سؤال…" required><button>إرسال</button></form>`;
+  bs.forEach(b=>{ b.innerHTML=html; b.hidden=false; });
+};
+window.addComment=async(id,form)=>{ const v=form.querySelector('input').value.trim(); if(!v) return;
+  form.querySelector('button').disabled=true;
+  try{ const r=await call('community_comment_add',{p_post:id,p_body:v}); if(!r||!r.ok){ alert(ERR[r&&r.error]||'تعذّر الإرسال.'); } }catch(e){ alert('تعذّر الإرسال.'); }
+  await toggleComments(id,true); const p=POSTS.find(x=>x.id===id); if(p){ p.comments=(+p.comments||0)+1; } };
+window.postAct=async(id,act)=>{ let reason=null;
+  if(act==='close'){ reason=prompt('اتقفل إزاي؟ (اختياري — مثلاً: اتباعت / العميل لقى)',''); if(reason===null) return; }
+  try{ const r=await call('community_post_set',{p_id:id,p_action:act,p_reason:reason}); if(!r||!r.ok) alert(ERR[r&&r.error]||'تعذّر التنفيذ.'); }catch(e){ alert('تعذّر التنفيذ.'); }
+  loadFeed(true); };
+window.report=async id=>{ const why=prompt('إيه المشكلة في البوست ده؟ (سبام، معلومة غلط، كلام مش لائق…)',''); if(why===null) return;
+  try{ await call('community_report',{p_post:id,p_reason:why||null}); alert('شكراً — البلاغ وصل. لو 3 بروكرز بلّغوا البوست بيتخفى لحد المراجعة.'); }catch(e){ alert('تعذّر الإرسال.'); } };
+
+/* ---------------- new post ---------------- */
+let PK='request';
+window.openPost=kind=>{ PK=kind; $('pTitle').textContent=kind==='request'?'🔔 طلب عميل جديد':'🏠 وحدة متاحة';
+  const defArea=(F.areas&&F.areas!=='mine')?F.areas:(MY_AREAS[0]||'');
+  const beds=`<option value="">أي عدد</option>`+[1,2,3,4,5,6].map(n=>`<option value="${n}">${n}${n===6?'+':''}</option>`).join('');
+  $('pBody').innerHTML=`
+    ${kind==='unit'?`<div class="fld"><label>من وحداتك المنشورة (اختياري)</label><select id="pl" onchange="fillFromListing()"><option value="">— وحدة مش منشورة على Homzy —</option>
+      ${MY_LISTINGS.map(l=>`<option value="${l.id}">${esc(l.title||'وحدة')}${l.price?' — '+money(l.price):''}</option>`).join('')}</select></div>`:''}
+    <div class="fld"><label>المنطقة *</label><select id="pa"><option value="">اختار المنطقة</option>${areaOptions(defArea)}</select></div>
+    <div class="row2"><div class="fld"><label>النوع</label><select id="pt">${TYPES.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select></div>
+      <div class="fld"><label>الغرض</label><select id="pp"><option value="sale">بيع</option><option value="rent">إيجار</option></select></div></div>
+    ${kind==='request'?`<div class="row2"><div class="fld"><label>الميزانية من</label><input id="pbmin" inputmode="decimal" placeholder="مثلاً 3 مليون"></div>
+      <div class="fld"><label>لحد</label><input id="pbmax" inputmode="decimal" placeholder="مثلاً 5 مليون"></div></div>`
+     :`<div class="fld"><label>السعر</label><input id="ppr" inputmode="decimal" placeholder="مثلاً 4.2 مليون"></div>`}
+    <div class="row2"><div class="fld"><label>الغرف</label><select id="pb">${beds}</select></div>
+      <div class="fld"><label>الاستلام</label><select id="pd"><option value="">أي</option><option value="ready">فوري</option><option value="under_construction">تحت الإنشاء</option></select></div></div>
+    <div class="fld"><label>${kind==='request'?'تفاصيل الطلب *':'تفاصيل الوحدة'}</label><textarea id="pbody" rows="3" maxlength="1500" placeholder="${kind==='request'?'عميل جاهز، عايز دور متوسط، قريب من الخدمات…':'المساحة، الدور، التشطيب، المقدم والقسط…'}"></textarea></div>
+    <div class="msg" id="pmsg"></div><button class="btnp" id="psend" onclick="sendPost()">انشر</button>`;
+  $('ovPost').classList.add('open'); };
+window.fillFromListing=()=>{ const l=MY_LISTINGS.find(x=>x.id===$('pl').value); if(!l) return;
+  if(l.type&&TYPE_AR[l.type]) $('pt').value=l.type; if(l.purpose) $('pp').value=l.purpose;
+  if(l.price) $('ppr').value=l.price; if(l.bedrooms) $('pb').value=Math.min(l.bedrooms,6); };
+window.sendPost=async()=>{ const m=$('pmsg'), body=$('pbody').value.trim(), listing=PK==='unit'?$('pl').value:'';
+  if(!$('pa').value&&!listing){ m.className='msg err'; m.textContent='اختار المنطقة.'; return; }
+  if(PK==='request'&&body.length<3){ m.className='msg err'; m.textContent='اكتب تفاصيل الطلب.'; return; }
+  const p={kind:PK,area:$('pa').value,purpose:$('pp').value,prop_type:$('pt').value,bedrooms:$('pb').value,delivery:$('pd').value,body,listing_id:listing};
+  if(PK==='request'){ p.budget_min=parseMoney($('pbmin').value); p.budget_max=parseMoney($('pbmax').value);
+    if(p.budget_min&&p.budget_max&&p.budget_min>p.budget_max){ m.className='msg err'; m.textContent='الميزانية «من» أكبر من «لحد».'; return; } }
+  else p.price=parseMoney($('ppr').value);
+  $('psend').disabled=true;
+  try{ const r=await call('community_post_create',{p}); if(!r||!r.ok){ m.className='msg err'; m.textContent=ERR[r&&r.error]||'تعذّر النشر.'; $('psend').disabled=false; return; }
+    const mt=r.match||{}; m.className='msg ok';
+    m.textContent=PK==='request'
+      ?(mt.brokers?`اتنشر ✓ — ${mt.brokers} بروكر عندهم ${mt.units} وحدة مناسبة وصلهم تنبيه.`:'اتنشر ✓')+(mt.area_brokers?` و${mt.area_brokers} بروكر شغالين في المنطقة.`:'')
+      :(mt.brokers?`اتنشرت ✓ — ${mt.brokers} بروكر عندهم طلب مناسب وصلهم تنبيه.`:'اتنشرت ✓');
+    setTimeout(()=>{ closeOv('ovPost'); F.mine=false; F.kind=''; if(TAB!=='feed') setTab('feed'); else renderFeedShell(); },1600);
+  }catch(e){ m.className='msg err'; m.textContent='تعذّر النشر.'; $('psend').disabled=false; } };
+
+/* ---------------- collaborations ---------------- */
+window.openCollab=(id,listing)=>{
+  $('cBody').innerHTML=`<div style="font-size:13px;color:var(--muted);margin-bottom:10px">صاحب البوست هيوصله طلبك، ولما يوافق أرقامكم هتظهر لبعض في «تعاوناتي».</div>
+    ${MY_LISTINGS.length?`<div class="fld"><label>وحدة من وحداتك (اختياري)</label><select id="cl"><option value="">—</option>${MY_LISTINGS.map(l=>`<option value="${l.id}" ${l.id===listing?'selected':''}>${esc(l.title||'وحدة')}${l.price?' — '+money(l.price):''}</option>`).join('')}</select></div>`:''}
+    <div class="fld"><label>رسالة قصيرة</label><textarea id="cm" rows="3" maxlength="500" placeholder="عندي شقة 3 غرف في نفس الكمبوند تناسب ميزانية عميلك…"></textarea></div>
+    <div class="msg" id="cmsg"></div><button class="btnp" id="csend" onclick="sendCollab('${id}')">ابعت طلب التعاون</button>`;
+  $('ovCollab').classList.add('open'); };
+window.sendCollab=async id=>{ const m=$('cmsg'); $('csend').disabled=true;
+  try{ const r=await call('community_collab_request',{p_post:id,p_msg:$('cm').value.trim()||null,p_listing:($('cl')&&$('cl').value)||null});
+    if(!r||!r.ok){ m.className='msg err'; m.textContent=ERR[r&&r.error]||'تعذّر الإرسال.'; $('csend').disabled=false; return; }
+    m.className='msg ok'; m.textContent='اتبعت ✓ — هنبلّغك أول ما يرد.'; setTimeout(()=>{ closeOv('ovCollab'); loadFeed(true); },1300);
+  }catch(e){ m.className='msg err'; m.textContent='تعذّر الإرسال.'; $('csend').disabled=false; } };
+async function refreshCollabDot(){ try{ COLLABS=await call('community_collabs_mine')||[]; }catch(e){ COLLABS=[]; }
+  const n=COLLABS.filter(c=>c.role==='owner'&&c.status==='pending').length; const d=$('cbDot'); if(d) d.innerHTML=n?`<span class="dot">${n}</span>`:''; }
+async function loadCollabs(){
+  $('pane').innerHTML='<div class="empty">…</div>'; await refreshCollabDot();
+  const ctx=c=>{ const p=c.post; return `${p.kind==='request'?'🔔 طلب':'🏠 وحدة'}: ${esc(TYPE_AR[p.prop_type]||'')} في ${esc(p.area)}${p.budget_max?' — لحد '+money(p.budget_max):''}${p.price?' — '+money(p.price):''}`+(c.listing?`<br>🏠 <a href="/listing/${c.listing.id}" target="_blank">${esc(c.listing.title||'وحدة')}</a>`:''); };
+  const who=c=>`<b>${esc(c.other.company||c.other.name||'بروكر')}</b>${c.other.verified?' <span style="color:#1E8E5A">✔︎</span>':''} · <a href="/broker/${c.other.id}" target="_blank" style="font-size:12px">صفحته</a>`;
+  const phone=c=>{ const w=waNum(c.other.phone); return w?`<div class="acts" style="border:none;padding-top:6px"><a class="go" target="_blank" rel="noopener" href="https://wa.me/${w}?text=${encodeURIComponent('أهلاً، بخصوص التعاون على Homzy')}">💬 واتساب</a><a href="tel:+${w}">📞 ${esc(c.other.phone)}</a></div>`:''; };
+  const sec=(t,list,f)=>list.length?`<div class="sec"><h3>${t} (${list.length})</h3>${list.map(f).join('')}</div>`:'';
+  const inc=COLLABS.filter(c=>c.role==='owner'&&c.status==='pending'), act=COLLABS.filter(c=>c.status==='accepted'),
+        out=COLLABS.filter(c=>c.role==='requester'&&c.status==='pending'), old=COLLABS.filter(c=>['won','lost','declined','cancelled'].includes(c.status));
+  const ST={won:'🎉 اتقفل بصفقة',lost:'اتقفل من غير صفقة',declined:'اتعتذر',cancelled:'اتلغى'};
+  $('pane').innerHTML=(sec('📥 طلبات مستنية موافقتك',inc,c=>`<div class="cb">${who(c)} عايز يتعاون معاك<div class="ctx">${ctx(c)}</div>${c.message?`<div class="body" style="font-size:13.5px">«${esc(c.message)}»</div>`:''}
+        <div class="acts"><button class="go" onclick="collabSet('${c.id}','accepted')">✅ موافق — اظهر رقمي له</button><button onclick="collabSet('${c.id}','declined')">اعتذر</button></div></div>`)
+    +sec('🤝 شغالين مع بعض',act,c=>`<div class="cb">${who(c)}<div class="ctx">${ctx(c)}</div>${phone(c)}
+        <div class="acts"><button class="ok" onclick="collabSet('${c.id}','won')">🎉 اتقفلت بصفقة</button><button onclick="collabSet('${c.id}','lost')">ماتمّتش</button></div></div>`)
+    +sec('📤 طلباتك المبعوتة',out,c=>`<div class="cb">مستني رد ${who(c)}<div class="ctx">${ctx(c)}</div><div class="acts"><button onclick="collabSet('${c.id}','cancelled')">إلغاء الطلب</button></div></div>`)
+    +sec('🗂️ اللي خلص',old,c=>`<div class="cb">${who(c)} — <b>${ST[c.status]}</b><div class="ctx">${ctx(c)}</div>${c.status==='won'||c.status==='lost'?phone(c):''}</div>`))
+    ||`<div class="empty"><div style="font-size:32px">🤝</div><b>مفيش تعاونات لسه</b><div style="font-size:13px;margin-top:4px">اعرض تعاون على أي طلب أو وحدة في الفيد — الرقم بيظهر بس لما الطرفين يوافقوا.</div></div>`;
+}
+window.collabSet=async(id,st)=>{ if((st==='declined'||st==='cancelled')&&!confirm('متأكد؟')) return;
+  try{ const r=await call('community_collab_set',{p_id:id,p_status:st}); if(!r||!r.ok) alert(ERR[r&&r.error]||'تعذّر التنفيذ.'); }catch(e){ alert('تعذّر التنفيذ.'); }
+  loadCollabs(); };
+
+/* ---------------- developer updates (own tab, never mixed into the feed) ---------------- */
+function renderUpdatesShell(){
+  $('pane').innerHTML=`<div class="note" style="background:#EEF2FF;color:#3949AB">تحديثات المطورين من جروبات الواتساب — أسعار، إطلاقات، مراحل، عروض. اللي عليها «للبروكرز» ماتبعتهاش للعملاء.</div>
+    <div class="chips">${CATS.map(([k,t])=>`<button class="${DU.cat===k?'on':''}" onclick="DU.cat='${k}';renderUpdatesShell()">${t}</button>`).join('')}</div>
+    <div class="bar"><input placeholder="ابحث بالمشروع أو المطور…" value="${esc(DU.q)}" onkeydown="if(event.key==='Enter'){DU.q=this.value.trim();loadUpdates(true)}"></div>
+    <div id="dus"><div class="empty">…</div></div>`;
+  loadUpdates(true);
+}
+async function loadUpdates(reset){
+  if(reset){ DUS=[]; DU_BEFORE=null; DU_DONE=false; }
+  let rows=[]; try{ rows=await call('community_dev_updates',{p_category:DU.cat||null,p_q:DU.q||null,p_before:DU_BEFORE,p_limit:30})||[]; }catch(e){}
+  DUS=DUS.concat(rows); DU_DONE=rows.length<30; if(rows.length) DU_BEFORE=rows[rows.length-1].observed_at;
+  $('dus').innerHTML=DUS.length?DUS.map(u=>`<div class="du"><div class="h">${u.project_id?`<a href="/project/${u.project_id}" target="_blank">${esc(u.project||'')}</a>`:`<b style="color:var(--navy)">${esc(u.project||u.developer||'')}</b>`}
+      ${u.developer&&u.project?`<span>${esc(u.developer)}</span>`:''}${u.project_area?`<span>· ${esc(u.project_area)}</span>`:''}
+      <span class="cat">${esc(CAT_AR[u.category]||u.category)}</span>${u.tier==='broker'?'<span class="cat broker">للبروكرز</span>':''}
+      <span style="margin-inline-start:auto">${ago(u.observed_at)}</span></div><div class="c">${esc(u.content_ar)}</div></div>`).join('')
+      +(DU_DONE?'':`<button class="more" onclick="loadUpdates(false)">عرض أكتر</button>`)
+    :'<div class="empty">مفيش تحديثات بالفلتر ده.</div>';
+}
+
+/* ---------------- live updates (Supabase realtime; falls back to a slow poll) ---------------- */
+let LIVE_T=null;
+function bump(){ clearTimeout(LIVE_T); LIVE_T=setTimeout(()=>{ if(document.hidden) return;
+  if(TAB==='collabs') return loadCollabs();
+  refreshCollabDot();
+  if(TAB!=='feed') return;
+  // don't yank the list from under someone reading comments or writing a post — offer a refresh instead
+  const busy=document.querySelector('.ov.open')||document.querySelector('.cmts:not([hidden])')||document.querySelector('.mlist:not([hidden])');
+  if(!busy) return loadFeed(true);
+  if(!$('newBanner')) $('feed').insertAdjacentHTML('beforebegin',`<button id="newBanner" class="more" style="margin:0 auto 10px;background:var(--navy);color:#fff;border-color:var(--navy)" onclick="this.remove();loadFeed(true)">🔄 فيه جديد — اعرض</button>`);
+  },900); }
+async function live(){
+  try{ const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2.45.4');
+    const sb=createClient(window.SB_URL,window.SB_KEY,{auth:{persistSession:false,autoRefreshToken:false},global:{headers:{Authorization:'Bearer '+S.token}}});
+    sb.realtime.setAuth(S.token);
+    sb.channel('community').on('postgres_changes',{event:'*',schema:'public',table:'community_posts'},bump)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'community_comments'},bump)
+      .on('postgres_changes',{event:'*',schema:'public',table:'community_collabs'},bump).subscribe();
+  }catch(e){}
+  setInterval(()=>{ if(!document.hidden) refreshCollabDot(); },60000);
+}
 boot();
 </script>
 </body>

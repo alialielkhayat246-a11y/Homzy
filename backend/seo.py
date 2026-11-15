@@ -679,6 +679,7 @@ def render_broker(bid: str) -> str | None:
       {stat((str(rating.get('avg')) + '/5') if rating.get('n') else '—', ('تقييم ' + str(rating.get('n')) + ' عميل بعد المعاينة') if rating.get('n') else 'لسه مفيش تقييمات')}
       {stat(b.get('viewings_done') or 0, 'معاينة تمّت على Homzy')}
       {stat(b.get('listings_count') or 0, 'وحدة متاحة دلوقتي')}
+      {stat(b.get('collabs_won'), 'تعاون ناجح مع بروكرز') if b.get('collabs_won') else ''}
     </div>
     {('<div class="sp-top-cta" style="margin-top:14px">'
       + f'<a class="btn" target="_blank" rel="noopener" href="https://wa.me/{wa}?text={quote("أهلاً، شفت صفحتك على Homzy")}" style="background:#22C55E;color:#fff">💬 واتساب</a>'
