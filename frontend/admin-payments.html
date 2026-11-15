@@ -47,7 +47,7 @@ const money=n=>Number(n||0).toLocaleString('ar-EG');
 const rpc=(fn,a)=>HZ.sbAuth('/rpc/'+fn, S.token, 'POST', a||{});
 const esc=HZ.esc;
 const WAY={instapay:'InstaPay',wallet:'محفظة موبايل',bank:'تحويل بنكي'};
-const PLAN={pro:'احترافي',team:'فريق',business:'شركة'};
+const PLAN={basic:'أساسي',pro:'احترافي',team:'فريق',business:'شركة'};
 
 function what(r){
   if(r.kind==='ai_credits') return 'شحن رسايل AI ('+esc(r.ref.pack||'')+')';
