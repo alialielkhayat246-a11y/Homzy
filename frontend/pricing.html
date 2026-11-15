@@ -113,7 +113,7 @@ const ar=()=>!(window.HZ&&HZ.lang==='en');
 const L=(a,e)=>ar()?a:e;
 const money=n=>Number(n).toLocaleString(ar()?'ar-EG':'en-US');
 const cur=()=>L('ج.م','EGP');
-const li=t=>`<li><span class="ic">✓</span><span>${t}</span></li>`;
+const li=t=>t.startsWith('<span')?`<li><span class="ic" style="background:#F1F1F1;color:#9aa0a6">✕</span>${t}</li>`:`<li><span class="ic">✓</span><span>${t}</span></li>`;
 // What each plan really includes (kept in sync with the database plan_limits row).
 function feats(p){
   const common=[L('أسعار ومخزون +900 مشروع بمتابعة يومية من المطورين','Prices & inventory of 900+ projects, tracked daily from developers'),
@@ -123,6 +123,10 @@ function feats(p){
     L('أوامر صوتية في الـCRM','Voice commands in the CRM'),
     L('استضافة Homzy Stays (قريباً)','Homzy Stays hosting (soon)')];
   if(p.plan==='pro') return [L('مساعد AI: '+money(p.ai_daily_messages)+' رسالة في اليوم','AI assistant: '+p.ai_daily_messages+' messages/day'),...common,L('تحليلات أداءك','Your performance insights')];
+  // Basic: the same tools as Pro, minus everything that runs on AI
+  if(p.features&&p.features.ai===false) return [...common.filter(t=>!/صوتية|Voice/.test(t)),
+    L('مجتمع البروكرز ومواعيد المعاينة وتقرير المالك','Broker community, viewing bookings and owner reports'),L('تحليلات أداءك','Your performance insights'),
+    `<span style="color:var(--muted)">${L('من غير ذكاء اصطناعي: لا مساعد AI ولا أوامر صوتية ولا تحليل عملاء — تقدر ترقّي لاحترافي في أي وقت','No AI: no AI assistant, voice commands or client analysis — upgrade to Pro anytime')}</span>`];
   const team=[L(money(p.team_seats)+(p.team_seats<=10?' مقاعد':' مقعد')+' للفريق (مدير + سيلز)',p.team_seats+' team seats (manager + sales)'),
     L('رصيد AI مشترك للفريق: '+money(p.ai_monthly_per_seat)+' رسالة لكل مقعد في الشهر','Shared team AI: '+p.ai_monthly_per_seat+' messages per seat/month'),
     L('وكالة باسم شركتك + أدوار وصلاحيات','Your agency workspace + roles & permissions'),
@@ -133,7 +137,7 @@ function feats(p){
     L('كل مزايا باقة شركة','Everything in Company'),L('تدريب لفريقك على Homzy','Training for your team')];
   return [...team, L('كل مزايا احترافي:','Everything in Pro:'), ...common];
 }
-const forTxt={pro:['للبروكر المستقل','For the independent broker'],team:['للمكاتب الصغيرة','For small offices'],business:['للشركات المتوسطة','For mid-size companies'],enterprise:['للشركات الكبيرة','For large companies']};
+const forTxt={basic:['للبروكر اللي عايز الأدوات من غير AI','For brokers who want the tools without AI'],pro:['للبروكر المستقل','For the independent broker'],team:['للمكاتب الصغيرة','For small offices'],business:['للشركات المتوسطة','For mid-size companies'],enterprise:['للشركات الكبيرة','For large companies']};
 function seatsOf(p){ return Math.max(p.team_seats, SEATS[p.plan]||p.team_seats); }
 function priceOf(p){
   const base = CYC==='yearly' ? p.price_yearly : p.price_monthly;
@@ -169,7 +173,8 @@ function planCard(p){
 function render(){ document.getElementById('plans').innerHTML = PLANS.map(planCard).join(''); renderTopup(); }
 function renderTopup(){
   const box=document.getElementById('topup'); const pk=PACKS[0];
-  if(!pk){ box.hidden=true; return; }
+  const cp=PLANS.find(x=>x.plan===CURRENT);
+  if(!pk||(cp&&cp.features&&cp.features.ai===false)){ box.hidden=true; return; }
   const btn = (PAY_ON||MANUAL) ? `<button class="btn btn-teal" onclick="buyPack('${pk.key}')">${L('اشحن الآن','Top up now')} · ${money(pk.price)} ${cur()}</button>`
                      : `<span style="color:var(--muted);font-size:13px">${L('الشحن بيتفعّل مع بوابة الدفع قريبًا','Top-ups open with the payment gateway soon')}</span>`;
   box.innerHTML = `<div><b>⚡ ${L('شحن رسايل ذكاء اصطناعي','AI message top-up')}: ${money(pk.messages)} ${L('رسالة بـ','messages for')} ${money(pk.price)} ${cur()}</b>
@@ -183,14 +188,14 @@ window.subscribe=async(plan)=>{
   const tp=PLANS.find(x=>x.plan===plan), isTeam=plan==='team'||plan==='business';
   let r; try{ r=await HZ.sbAuth('/rpc/start_trial', s.token,'POST',{p_plan:plan, p_seats: isTeam&&tp ? seatsOf(tp) : null}); }catch(e){ r={ok:false}; }
   const name=(PLANS.find(p=>p.plan===plan)||{})[ar()?'name_ar':'name_en']||plan;
-  if(r&&r.ok){ alert(r.switched?L('تم تحويل تجربتك لباقة '+name+' — بنفس معاد الانتهاء.','Your trial now uses the '+name+' plan — same end date.'):L('تم تفعيل تجربتك المجانية 14 يوم لباقة '+name+' 🎉','Your 14-day free trial of '+name+' is active 🎉')); location.href=(plan==='pro'?'/my-listings':'/team'); }
+  if(r&&r.ok){ alert(r.switched?L('تم تحويل تجربتك لباقة '+name+' — بنفس معاد الانتهاء.','Your trial now uses the '+name+' plan — same end date.'):L('تم تفعيل تجربتك المجانية 14 يوم لباقة '+name+' 🎉','Your 14-day free trial of '+name+' is active 🎉')); location.href=(plan==='pro'||plan==='basic'?'/my-listings':'/team'); }
   else{
     const m=ar()?{already_subscribed:'عندك اشتراك فعّال بالفعل.',trial_used:'استخدمت التجربة المجانية قبل كده — اشترك عشان تكمل.',not_authenticated:'سجّل دخولك الأول.'}
                 :{already_subscribed:'You already have an active subscription.',trial_used:'You already used the free trial — subscribe to continue.',not_authenticated:'Please sign in first.'};
     alert(m[r&&r.error]||L('تعذّر التفعيل — حاول تاني.','Could not activate — try again.'));
   }
 };
-const payErr=r=>{ const e=(r&&r.error)||''; return ({subscription_required:L('الشحن متاح للباقات المدفوعة بس.','Top-ups need an active plan.'),bad_seats:L('عدد المقاعد مش صحيح.','Invalid seat count.')})[e]||e; };
+const payErr=r=>{ const e=(r&&r.error)||''; return ({subscription_required:L('الشحن متاح للباقات المدفوعة بس.','Top-ups need an active plan.'),ai_not_in_plan:L('الباقة الأساسية من غير ذكاء اصطناعي — رقّي لاحترافي عشان تشحن رسايل.','Basic has no AI — upgrade to Pro to buy messages.'),bad_seats:L('عدد المقاعد مش صحيح.','Invalid seat count.')})[e]||e; };
 window.payPlan=async(plan)=>{
   const p=PLANS.find(x=>x.plan===plan); const ref={plan,cycle:CYC};
   if(plan==='team'||plan==='business') ref.seats=seatsOf(p);

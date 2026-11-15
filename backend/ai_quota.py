@@ -16,7 +16,9 @@ LIMIT_AR = "خلصت رسايل الذكاء الاصطناعي بتاعة ال�
 LIMIT_EN = "You've used today's AI messages ({limit} on your plan). They reset at midnight Cairo time — or top up 500 messages for 199 EGP on the pricing page."
 POOL_AR = "رصيد الذكاء الاصطناعي الشهري لفريقك خلص ({limit} رسالة). بيتجدد أول الشهر — أو مدير الحساب يشحن 500 رسالة بـ 199 ج من صفحة الأسعار."
 POOL_EN = "Your team's monthly AI messages are used up ({limit}). They reset on the 1st — or the account owner can top up 500 messages for 199 EGP on the pricing page."
-TRIAL_AR = "تجربتك المجانية انتهت — اشترك من صفحة الأسعار عشان تكمل تستخدم الذكاء الاصطناعي."
+NO_AI_AR = "باقتك (أساسي) من غير ذكاء اصطناعي. رقّي لباقة احترافي من صفحة الأسعار عشان تستخدم المساعد الذكي والأوامر الصوتية وتحليل العملاء."
+NO_AI_EN = "Your Basic plan doesn't include AI. Upgrade to Pro on the pricing page to use the AI assistant, voice commands and client analysis."
+TRIAL_AR ="تجربتك المجانية انتهت — اشترك من صفحة الأسعار عشان تكمل تستخدم الذكاء الاصطناعي."
 TRIAL_EN = "Your free trial has ended — subscribe on the pricing page to keep using the AI."
 
 
@@ -42,6 +44,8 @@ def blocked(q: dict[str, Any] | None) -> bool:
 
 def limit_text(q: dict[str, Any], language: str = "ar") -> str:
     en = language == "en"
+    if q.get("no_ai"):
+        return NO_AI_EN if en else NO_AI_AR
     if q.get("trial_ended"):
         return TRIAL_EN if en else TRIAL_AR
     if q.get("pool"):

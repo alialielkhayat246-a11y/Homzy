@@ -134,7 +134,7 @@ def _amount_for(kind: str, ref: dict, user: dict, token: str) -> tuple[float, st
         return float(b["total_amount"]), b.get("currency") or "EGP", "حجز Homzy Stays"
     if kind == "subscription":
         plan = ref.get("plan"); cycle = ref.get("cycle") or "monthly"
-        if plan not in ("pro", "team", "business") or cycle not in ("monthly", "yearly"):
+        if plan not in ("basic", "pro", "team", "business") or cycle not in ("monthly", "yearly"):
             raise ValueError("bad_plan")
         r = requests.get(base + "/plan_limits",
                          params={"plan": "eq." + plan,
@@ -171,6 +171,11 @@ def _amount_for(kind: str, ref: dict, user: dict, token: str) -> tuple[float, st
                            headers={**hdr, "Content-Type": "application/json"}, timeout=15)
         if not cp.ok or cp.json() == "free":
             raise ValueError("subscription_required")
+        # plans without AI (Basic) can't buy AI messages — they upgrade instead
+        has_ai = requests.post(base + "/rpc/_plan_has_ai", json={"p_plan": cp.json()},
+                               headers={**hdr, "Content-Type": "application/json"}, timeout=15)
+        if has_ai.ok and has_ai.json() is False:
+            raise ValueError("ai_not_in_plan")
         return float(rows[0]["price"]), "EGP", rows[0].get("name_ar") or "رسائل ذكاء اصطناعي"
     if kind == "wallet":
         amt = float(ref.get("amount") or 0)
