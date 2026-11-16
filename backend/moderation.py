@@ -94,20 +94,35 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
         cfg = dict(payload["generationConfig"])
         if model.startswith("gemini-2.5"):
             cfg["thinkingConfig"] = {"thinkingBudget": 0}
-        try:
-            resp = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                headers={"x-goog-api-key": config.GEMINI_API_KEY, "Content-Type": "application/json"},
-                json={**payload, "generationConfig": cfg}, timeout=40)
-        except Exception as exc:
-            WHY.append(f"{model}: {exc}")
+        body = {**payload, "generationConfig": cfg}
+        resp = None
+        # A 400 means this model refused the request as written — most often the BLOCK_NONE
+        # safety settings, which not every model accepts. Retrying without them is worth one
+        # call: the reviewer still sees the listing, it just gets Google's default filtering,
+        # and a listing the filter blocks is sent to a human anyway (see below).
+        for plain in (False, True):
+            if plain:
+                body = {k: v for k, v in body.items() if k != "safetySettings"}
+            try:
+                resp = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                    headers={"x-goog-api-key": config.GEMINI_API_KEY, "Content-Type": "application/json"},
+                    json=body, timeout=40)
+            except Exception as exc:
+                WHY.append(f"{model}: {exc}")
+                resp = None
+                break
+            if resp.status_code == 400 and not plain:
+                WHY.append(f"{model}: HTTP 400 {resp.text[:120]} - retrying without safetySettings")
+                continue
+            break
+        if resp is None:
             continue
-        if resp.status_code in (404, 429, 500, 503):
-            WHY.append(f"{model}: HTTP {resp.status_code}")
-            continue
+        # Every failing status moves to the next model. Stopping the whole chain on one model's
+        # refusal is what left five AXIS ONE listings queued all day on 16 Nov 2026.
         if resp.status_code != 200:
-            WHY.append(f"{model}: HTTP {resp.status_code} {resp.text[:200]}")
-            return None
+            WHY.append(f"{model}: HTTP {resp.status_code} {resp.text[:160]}")
+            continue
         data = resp.json()
         # Gemini refusing to even look at the content is itself a signal: a person checks it
         if (data.get("promptFeedback") or {}).get("blockReason"):
@@ -122,7 +137,7 @@ def review(title: str, description: str, photos: list[str]) -> dict[str, Any] | 
             out = json.loads(text[text.find("{"): text.rfind("}") + 1])
         except Exception:
             WHY.append(f"{model}: unreadable reply {text[:120]!r}")
-            return None
+            continue
         verdict = out.get("verdict") if out.get("verdict") in ("ok", "reject", "review") else "review"
         issues = [i for i in (out.get("issues") or []) if isinstance(i, dict)][:6]
         reason = "؛ ".join(f"{_where_ar(i.get('where'))}: {_CAT_AR.get(i.get('category'), 'محتوى غير مناسب')}"
