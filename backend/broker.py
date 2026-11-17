@@ -449,6 +449,11 @@ def _prepare(session: dict[str, Any], message: str,
         for m in matches:
             if m.get("project_id") in intel:
                 m["intel"] = intel[m["project_id"]][:6]
+    # 3d) market pulse: the newest developer updates in the client's area (or all of
+    #     Egypt), so the advisor knows what changed even outside this turn's matches.
+    pulse = catalog.market_pulse(req.get("area"), user_token)
+    if pulse:
+        session["_knowledge"] = "\n\n".join(x for x in (session.get("_knowledge"), pulse) if x)
     return language, history, req, matches
 
 

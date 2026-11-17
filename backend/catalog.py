@@ -123,7 +123,7 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
 _SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
            "installment_years,payment_plan,finishing,delivery,"
            "project:projects!inner(id,developer_id,name,name_ar,area,description,description_ar,amenities,amenities_ar,"
-           "location,delivery,status,cover_image_url,project_media(kind,url),"
+           "location,country,delivery,status,cover_image_url,project_media(kind,url),"
            "developer:developers(name,name_ar,phone,website,about,about_ar,track_record,track_record_ar))")
 
 
@@ -142,6 +142,9 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
             "select": _SELECT,
             "limit": str(n),
             "order": "price_from.asc.nullslast",
+            # Homzy sells Egypt: the catalog import also holds Dubai projects (see the
+            # location audit) whose prices are not EGP — never offer them here
+            "project.country": "eq.EG",
         }
         # Area is matched (and relaxed) in Python via the shared alias helper,
         # so a request in an area with no stock still surfaces the same type
@@ -223,7 +226,7 @@ def _project_names() -> list[tuple[str, list[str]]]:
     rows, start = [], 0
     while True:   # PostgREST pages at 1000 rows
         r = requests.get(config.SUPABASE_URL.rstrip("/") + "/rest/v1/projects",
-                         params={"select": "id,name,name_ar", "order": "id"},
+                         params={"select": "id,name,name_ar", "order": "id", "country": "eq.EG"},
                          headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}",
                                   "Range": f"{start}-{start + 999}"}, timeout=8)
         r.raise_for_status()
@@ -266,6 +269,7 @@ def units_for_projects(project_ids: list[str], n: int = 12) -> list[dict[str, An
         r = requests.get(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
             params={"select": _SELECT, "project_id": "in.(" + ",".join(project_ids) + ")",
+                    "project.country": "eq.EG",
                     "order": "price_from.asc.nullslast", "limit": str(n)},
             headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}"},
             timeout=8)
@@ -353,7 +357,7 @@ def developer_profile(dev_id: str, user_token: str | None = None) -> str:
             "select": "name,name_ar,website,about,about_ar,track_record,track_record_ar", "id": f"eq.{dev_id}"}).json()[0]
         ps = requests.get(base + "/projects", headers=h, timeout=8, params={
             "select": "name,name_ar,area,delivery,status,unit_types(price_from,type)",
-            "developer_id": f"eq.{dev_id}", "limit": "40"}).json()
+            "developer_id": f"eq.{dev_id}", "country": "eq.EG", "limit": "40"}).json()
     except Exception:
         return ""
     lines = [f"DEVELOPER: {d.get('name')}" + (f" ({d['name_ar']})" if d.get("name_ar") else "")]
@@ -416,6 +420,7 @@ def developer_projects(developer: str | None, exclude: str | None = None,
                 params={
                     "select": "name,name_ar,area,developer:developers!inner(name)",
                     "developer.name": f"eq.{developer}",
+                    "country": "eq.EG",
                     "order": "updated_at.desc",
                     "limit": "40",
                 },
@@ -455,10 +460,10 @@ def listings() -> list[dict[str, Any]]:
         url = config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types"
         select = ("id,type,bedrooms,size_from,size_to,price_from,price_to,"
                   "down_payment,installment_years,payment_plan,finishing,delivery,"
-                  "project:projects(name,area,description,developer:developers(name))")
+                  "project:projects!inner(name,area,description,developer:developers(name))")
         r = requests.get(
             url,
-            params={"select": select},
+            params={"select": select, "project.country": "eq.EG"},
             headers={"apikey": config.SUPABASE_KEY,
                      "Authorization": f"Bearer {config.SUPABASE_KEY}"},
             timeout=10,
@@ -497,3 +502,54 @@ def project_intel(project_ids: list[str], user_token: str | None = None) -> dict
     for row in rows if isinstance(rows, list) else []:
         out.setdefault(row.get("project_id"), []).append(row)
     return out
+
+
+_CAT_EN = {"price": "price", "payment_plan": "payment plan", "offer": "offer", "launch": "launch",
+           "new_phase": "new phase", "delivery": "delivery", "construction": "construction progress",
+           "inventory": "availability", "event": "event", "brochure": "brochure", "other": "update"}
+_PULSE: dict[tuple, tuple[float, str]] = {}
+
+
+def market_pulse(area: str | None = None, user_token: str | None = None, limit: int = 14) -> str:
+    """The newest developer updates from the WhatsApp groups — for the client's area
+    when we know it, otherwise across Egypt — so the advisor knows what changed in the
+    market even for projects that aren't in this turn's matches. The database filters
+    the tiers by the caller (clients: public only). Cached 10 min per area + caller."""
+    if not config.SUPABASE_URL or not config.SUPABASE_KEY:
+        return ""
+    names = [c for c in areas_mod.candidates(area or "") if c.isascii()] if area else []
+    key = (tuple(sorted(names)), user_token or "")
+    hit = _PULSE.get(key)
+    if hit and time.time() - hit[0] < 600:
+        return hit[1]
+    try:
+        import requests
+        r = requests.post(
+            config.SUPABASE_URL.rstrip("/") + "/rest/v1/rpc/market_pulse_for_ai",
+            json={"p_areas": names or None, "p_days": 45, "p_limit": limit},
+            headers={"apikey": config.SUPABASE_KEY, "Content-Type": "application/json",
+                     "Authorization": f"Bearer {user_token or config.SUPABASE_KEY}"},
+            timeout=8)
+        rows = r.json() if r.ok else []
+    except Exception:
+        return hit[1] if hit else ""
+    lines = []
+    for it in rows if isinstance(rows, list) else []:
+        when = (it.get("observed_at") or "")[:10]
+        cat = _CAT_EN.get(it.get("category"), "update")
+        where = " · ".join(x for x in (it.get("area"), it.get("location")) if x)
+        who = (it.get("project") or "") + (f" / {it['project_ar']}" if it.get("project_ar") else "")
+        who = who or f"developer {it.get('developer') or ''}".strip()
+        if it.get("project") and it.get("developer"):
+            who += f" — {it['developer']}"
+        tag = {"broker": " [broker-only]", "ai": " [internal — do NOT quote]"}.get(it.get("tier"), "")
+        lines.append(f"- [{when} · {cat}]{tag} {who}" + (f" ({where})" if where else "") + f": {it.get('content_ar')}")
+    text = ""
+    if lines:
+        scope = f"in {area}" if names else "across Egypt"
+        text = (f"LATEST DEVELOPER UPDATES {scope} (from the developers' WhatsApp groups, newest first, dated):\n"
+                + "\n".join(lines))
+    if len(_PULSE) > 300:      # one entry per area x broker token; keep it bounded
+        _PULSE.clear()
+    _PULSE[key] = (time.time(), text)
+    return text

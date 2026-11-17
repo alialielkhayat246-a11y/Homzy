@@ -465,6 +465,25 @@ async def moderation_run(limit: int = 1):
     return {"reviewed": done}
 
 
+@app.post("/api/catalog/audit-locations")
+async def audit_locations(request: Request, limit: int = 1, project_id: str | None = None):
+    """Location audit worker (see backend/location_audit.py). Costs Gemini calls,
+    so only the scheduler / admin script with the cron key may run it."""
+    import hmac
+    from . import location_audit
+    key = request.headers.get("x-cron-key") or ""
+    if not config.PUSH_CRON_TOKEN or not hmac.compare_digest(key, config.PUSH_CRON_TOKEN):
+        raise HTTPException(status_code=403, detail="forbidden")
+    done = await run_in_threadpool(location_audit.run, max(1, min(limit, 3)), project_id)
+    return {"checked": done}
+
+
+@app.get("/admin/locations")
+def admin_locations_page():
+    """Project locations the audit wasn't sure about."""
+    return FileResponse(config.FRONTEND_DIR / "admin-locations.html")
+
+
 @app.get("/admin/listings")
 def admin_listings_page():
     """Listings the automatic review flagged or wasn't sure about."""
