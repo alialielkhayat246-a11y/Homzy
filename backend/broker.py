@@ -679,7 +679,9 @@ def parse_command(text: str) -> dict[str, Any]:
 
 
 def _recommendation(req, matches):
-    if not persona._missing(req) and matches:
+    # Delivery timing only refines the ranking — once the rest is known the advisor
+    # names a unit, so the card (photos + payment terms) has to come with it.
+    if matches and not [k for k in persona._missing(req) if k != "delivery_pref"]:
         return listings_mod.public(matches[0])
     return None
 

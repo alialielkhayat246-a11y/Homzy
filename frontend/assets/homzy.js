@@ -587,7 +587,12 @@ function addMsg(text,who){
   const log=document.getElementById('hzCpLog');
   const d=document.createElement('div'); d.className='msg '+who;
   d.style.direction=isAr(text)?'rtl':'ltr'; d.style.textAlign=isAr(text)?'right':'left';
-  d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+  setMsgText(d,text,who); log.appendChild(d); log.scrollTop=log.scrollHeight; return d;
+}
+// The assistant writes **bold** for names and numbers — show it bold instead of the raw asterisks.
+function setMsgText(el,text,who){
+  if(who!=='bot'){ el.textContent=text; return; }
+  el.innerHTML=HZ.esc(text).replace(/\*\*([^*\n]+?)\*\*/g,'<b>$1</b>').replace(/\*\*/g,'');
 }
 function addRec(rec){
   const ar=HZ.lang==='ar', log=document.getElementById('hzCpLog');
@@ -870,7 +875,7 @@ async function sendMsg(text){
         let evt; try{ evt=JSON.parse(line); }catch(e){ continue; }
         if(evt.type==='token'){
           if(!bubble){ if(t.parentNode)t.remove(); bubble=addMsg('','bot'); }
-          reply+=evt.text; bubble.textContent=reply;
+          reply+=evt.text; setMsgText(bubble,reply,'bot');
           bubble.style.direction=isAr(reply)?'rtl':'ltr'; bubble.style.textAlign=isAr(reply)?'right':'left';
           const log=document.getElementById('hzCpLog'); log.scrollTop=log.scrollHeight;
         } else if(evt.type==='done'){ done=evt; }
