@@ -274,7 +274,7 @@ def decide(item: dict[str, Any], out: dict[str, Any]) -> dict[str, Any]:
     return res
 
 
-def run(limit: int = 1, project_id: str | None = None) -> list[dict[str, Any]]:
+def run(limit: int = 1, project_id: str | None = None, shard: int = 0, mod: int = 1) -> list[dict[str, Any]]:
     import requests
     WHY.clear()
     if not (config.SUPABASE_URL and config.SUPABASE_KEY and config.PUSH_CRON_TOKEN and _key_ok()):
@@ -283,7 +283,8 @@ def run(limit: int = 1, project_id: str | None = None) -> list[dict[str, Any]]:
     h = {"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}",
          "Content-Type": "application/json"}
     q = requests.post(base + "project_location_queue", headers=h, timeout=15,
-                      json={"p_key": config.PUSH_CRON_TOKEN, "p_limit": limit, "p_project": project_id}).json()
+                      json={"p_key": config.PUSH_CRON_TOKEN, "p_limit": limit, "p_project": project_id,
+                            "p_shard": shard, "p_mod": mod}).json()
     done = []
     for item in q if isinstance(q, list) else []:
         out = _ask(item)

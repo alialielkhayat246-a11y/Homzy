@@ -466,7 +466,8 @@ async def moderation_run(limit: int = 1):
 
 
 @app.post("/api/catalog/audit-locations")
-async def audit_locations(request: Request, limit: int = 1, project_id: str | None = None):
+async def audit_locations(request: Request, limit: int = 1, project_id: str | None = None,
+                          shard: int = 0, mod: int = 1):
     """Location audit worker (see backend/location_audit.py). Costs Gemini calls,
     so only the scheduler / admin script with the cron key may run it."""
     import hmac
@@ -474,7 +475,8 @@ async def audit_locations(request: Request, limit: int = 1, project_id: str | No
     key = request.headers.get("x-cron-key") or ""
     if not config.PUSH_CRON_TOKEN or not hmac.compare_digest(key, config.PUSH_CRON_TOKEN):
         raise HTTPException(status_code=403, detail="forbidden")
-    done = await run_in_threadpool(location_audit.run, max(1, min(limit, 3)), project_id)
+    done = await run_in_threadpool(location_audit.run, max(1, min(limit, 3)), project_id,
+                                 max(0, shard), max(1, mod))
     return {"checked": done}
 
 
