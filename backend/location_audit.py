@@ -47,6 +47,12 @@ _EXTRA = {"6 october": "6th of October", "october": "6th of October", "zayed": "
           "hadayek october": "October Gardens", "el gouna": "El Gouna", "gouna": "El Gouna",
           "sidi abdel rahman": "North Coast", "el alamein": "New Alamein", "alamein": "New Alamein"}
 
+# precise area -> the broader name it is often marketed under
+_PARENT = {"Ras El Hekma": "North Coast", "New Alamein": "North Coast", "Mostakbal City": "New Cairo",
+           "New Zayed": "Sheikh Zayed", "October Gardens": "6th of October", "New October": "6th of October",
+           "Zahraa El Maadi": "Maadi", "New Heliopolis": "Heliopolis", "El Gouna": "Hurghada",
+           "Sahl Hasheesh": "Hurghada", "Makadi Bay": "Hurghada", "Soma Bay": "Hurghada"}
+
 _SYSTEM = (
     "You verify WHERE a real-estate project is, for an Egyptian property platform. You get the project's "
     "name, developer, the area we currently have on file, its description, WhatsApp updates from brokers, "
@@ -171,7 +177,12 @@ def _delete_file(name: str | None) -> None:
 
 def canon(area: str | None) -> str | None:
     a = (area or "").strip()
-    if not a or a.upper().startswith("OTHER"):
+    if a.upper().startswith("OTHER"):
+        # "OTHER: 6th Settlement Extension" / "OTHER: Sidi Heneish" still name a known area
+        a = a.split(":", 1)[-1].strip()
+        ex = areas_mod.extract(a) if a and "not" not in a.lower() else None
+        return ex if ex in CANONICAL else None
+    if not a:
         return None
     low = a.lower()
     if low in _CANON_LOWER:
@@ -270,6 +281,10 @@ def decide(item: dict[str, Any], out: dict[str, Any]) -> dict[str, Any]:
     # only what is literally written moves a project: "10 minutes to Mall of Arabia" is a
     # clue, not a location, so it goes to a person instead
     literal = _named_in(f"{out.get('quote') or ''} {res['location_ar']} {res['location_en']}", found)
+    # developers market a district by its bigger name ("Mostakbal City, New Cairo", "Sahel"
+    # for Ras El Hekma): that confirms the precise area on file, it doesn't replace it
+    if old and _PARENT.get(old) == found:
+        found = res["area"] = old
     if old and found == old:
         res["action"] = "same"
     elif not old:
