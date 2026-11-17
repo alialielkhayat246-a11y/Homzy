@@ -176,9 +176,12 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
         for x in items:
             over = _afford(x, dp_have, monthly_have)
             if over is not None:
-                checked.append((over, _score(x, budget_max, bedrooms, delivery_pref), x))
+                # monthly amount still unknown → lighter installments first
+                light = 0 if monthly_have else ((plan_numbers(x) or {}).get("monthly_est") or x.get("price") or 0)
+                checked.append((over, light, _score(x, budget_max, bedrooms, delivery_pref), x))
         if checked:
-            checked.sort(key=lambda t: (t[0] > 0.05, t[0], t[1]))
+            checked.sort(key=lambda t: (t[0] > 0.05, t[0], t[1], t[2]))
+            checked = [(o, s, x) for o, _, s, x in checked]
             out = []
             for over, _, x in checked[:n]:
                 x = dict(x)

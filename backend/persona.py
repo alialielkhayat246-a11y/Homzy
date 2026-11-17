@@ -317,7 +317,8 @@ def _missing(req: dict[str, Any]) -> list[str]:
     if req.get("type") in _COMMERCIAL:
         ess = [k for k in ess if k != "bedrooms"]
     # An installment buyer's down payment / monthly amount stands in for a total budget.
-    if req.get("down_payment") or req.get("monthly_max"):
+    # (both numbers: a down payment alone can't tell a 3M flat from a 20M one with a 5% plan)
+    if req.get("down_payment") and req.get("monthly_max"):
         ess = [k for k in ess if k != "budget_max"]
     # Treat 0 as provided (a studio has 0 bedrooms).
     return [k for k in ess if req.get(k) in (None, "")]
