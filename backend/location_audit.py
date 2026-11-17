@@ -265,13 +265,30 @@ def decide(item: dict[str, Any], out: dict[str, Any]) -> dict[str, Any]:
     if not found:
         res["action"] = "review" if (out.get("area") and explicit) else "no_evidence"
         return res
+    # only what is literally written moves a project: "10 minutes to Mall of Arabia" is a
+    # clue, not a location, so it goes to a person instead
+    literal = _named_in(f"{out.get('quote') or ''} {res['location_ar']} {res['location_en']}", found)
     if old and found == old:
         res["action"] = "same"
     elif not old:
-        res["action"] = "applied" if explicit and conf >= 0.8 and src != "name" else "review"
+        res["action"] = "applied" if explicit and conf >= 0.8 and literal and src != "name" else "review"
+    elif strong and literal and conf >= 0.9:
+        res["action"] = "changed"
     else:
-        res["action"] = "changed" if strong and conf >= 0.9 else "review"
+        res["action"] = "review"
+        # the evidence clearly says it is NOT where we have it: take the wrong area off
+        # (so the chat stops offering it there) until an admin decides
+        res["clear_area"] = bool(explicit and conf >= 0.85 and src != "whatsapp")
     return res
+
+
+def _named_in(text: str, area: str) -> bool:
+    """Is `area` (or one of its spellings, Arabic or English) written in `text`?"""
+    if not text or not area:
+        return False
+    low = text.lower()
+    names = set(areas_mod.candidates(area)) | {area} | {k for k, v in _EXTRA.items() if v == area}
+    return any((n.lower() in low) if n.isascii() else (n in text) for n in names if len(n) >= 3)
 
 
 def run(limit: int = 1, project_id: str | None = None, shard: int = 0, mod: int = 1) -> list[dict[str, Any]]:

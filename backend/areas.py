@@ -11,6 +11,9 @@ _AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
 # Canonical area -> aliases (English + Arabic). Specific names first so e.g.
 # "New Cairo" wins over a bare "Cairo".
 AREA_ALIASES: dict[str, list[str]] = {
+    # more specific names that contain a broader one go first
+    "New October": ["new october", "أكتوبر الجديدة", "اكتوبر الجديدة", "اكتوبر الجديده"],
+    "Zahraa El Maadi": ["zahraa el maadi", "zahraa maadi", "زهراء المعادي"],
     "New Capital": ["new capital", "administrative capital", "capital gardens",
                     "العاصمة الادارية", "العاصمة الإدارية", "العاصمة", "كابيتال"],
     "New Cairo": ["new cairo", "5th settlement", "fifth settlement", "north teseen",
@@ -33,6 +36,23 @@ AREA_ALIASES: dict[str, list[str]] = {
     "Maadi": ["maadi", "المعادي"],
     "Dreamland": ["dreamland", "dream land", "دريم لاند"],
     "New Heliopolis": ["new heliopolis", "هليوبوليس الجديدة", "مصر الجديدة الجديدة"],
+    # after New Heliopolis, whose names contain these
+    "Heliopolis": ["heliopolis", "مصر الجديدة", "هليوبوليس"],
+    "Badr City": ["badr city", "مدينة بدر"],
+    "Nasr City": ["nasr city", "naser city", "مدينة نصر"],
+    "Mokattam": ["mokattam", "mokatam", "المقطم"],
+    "Sheraton": ["sheraton", "شيراتون"],
+    "Old Cairo": ["old cairo", "مصر القديمة"],
+    "Alexandria": ["alexandria", "الإسكندرية", "الاسكندرية", "اسكندرية", "إسكندرية"],
+    "Ras Sudr": ["ras sudr", "ras sedr", "راس سدر", "رأس سدر"],
+    "Hurghada": ["hurghada", "الغردقة", "الغردقه"],
+    "El Gouna": ["gouna", "الجونة", "الجونه"],
+    "Sahl Hasheesh": ["sahl hasheesh", "sahl hashish", "سهل حشيش"],
+    "Soma Bay": ["soma bay", "سوما باي"],
+    "Makadi Bay": ["makadi", "مكادي"],
+    "Sharm El Sheikh": ["sharm el sheikh", "sharm", "شرم الشيخ"],
+    "Marsa Alam": ["marsa alam", "مرسى علم", "مرسي علم"],
+    "Red Sea": ["red sea", "البحر الأحمر", "البحر الاحمر"],
 }
 
 
