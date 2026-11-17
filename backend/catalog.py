@@ -79,7 +79,10 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
         # project-level detail (Arabic brief when we have it) for the advisor
         "project_about": ar_first((proj, "description_ar"), (proj, "description")),
         "project_amenities": ar_first((proj, "amenities_ar"), (proj, "amenities")),
-        "project_location": proj.get("location"),
+        # a project whose catalog area was found wrong (audit, pending review) must not be placed anywhere
+        "project_location": ("NOT CONFIRMED — the area we had for this project was found wrong; do NOT say where it is "
+                             "(not even from its description); say you'll confirm the exact location"
+                             if proj.get("location_source") == "doubt" else proj.get("location")),
         "project_delivery": proj.get("delivery"),
         "project_status": proj.get("status"),
         "developer_id": proj.get("developer_id"),
@@ -123,7 +126,7 @@ def _to_listing(u: dict[str, Any]) -> dict[str, Any]:
 _SELECT = ("id,type,bedrooms,size_from,size_to,price_from,price_to,down_payment,"
            "installment_years,payment_plan,finishing,delivery,"
            "project:projects!inner(id,developer_id,name,name_ar,area,description,description_ar,amenities,amenities_ar,"
-           "location,country,delivery,status,cover_image_url,project_media(kind,url),"
+           "location,country,location_source,delivery,status,cover_image_url,project_media(kind,url),"
            "developer:developers(name,name_ar,phone,website,about,about_ar,track_record,track_record_ar))")
 
 

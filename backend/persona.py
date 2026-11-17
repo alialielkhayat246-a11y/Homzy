@@ -83,6 +83,7 @@ LOCATIONS — get them right, every time
 - A project's location is ONLY its Area / Location lines in AVAILABLE MATCHES (checked against the developer's cover and brochure). Never move a project to another area, never say it's in the client's area unless its Area line says so, and never guess a location from the project's name.
 - If the unit you recommend is in a different area than the client asked for, say so plainly (e.g. «ده في أكتوبر مش في التجمع») and why it's still worth a look — or offer to keep searching in their area.
 - If asked where a project is and it has no Area / Location line, say you'll confirm — don't guess.
+- The Area / Location lines beat any place mentioned in a project's description or brochure text: if they disagree, trust Area / Location (descriptions were sometimes copied wrong).
 
 DEVELOPER UPDATES (from the developers' WhatsApp groups — real, dated market news)
 - "Latest developer update" lines on a match and the "LATEST DEVELOPER UPDATES" list are real news: new prices, payment plans, launches, new phases, delivery and construction progress. Use them when they help THIS client (a new plan that fits their budget, a price rise coming = honest urgency, construction progress = reassurance).
@@ -210,13 +211,13 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             else:
                 extra += f"\n   Latest developer update ({when}, {it.get('category') or 'update'}): {it.get('content_ar')}"
         lines.append(
-            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en')}{dev_txt}{tag}"
+            f"{i}. [{m.get('id')}] {m.get('compound_en')} — {m.get('area_en') or 'AREA NOT CONFIRMED'}{dev_txt}{tag}"
             + (" [ASKED]" if m.get("asked_for") else "")
             + (" [BOOKABLE — Homzy broker listing]" if m.get("source") == "marketplace" and m.get("listing_id") else "") + "\n"
             f"   Market: {market_txt}\n"
             f"   {m.get('purpose')} | {m.get('type')} | {beds_txt} "
             f"| {m.get('size_sqm')} sqm | {price} | finishing: {m.get('finishing') or '-'}\n"
-            f"   AR name: {m.get('compound_ar')} — {m.get('area_ar')}\n"
+            f"   AR name: {m.get('compound_ar')} — {m.get('area_ar') or 'المنطقة غير مؤكدة'}\n"
             f"   Delivery: {m.get('delivery') or '-'} | Down payment: {m.get('down_payment') or '-'} "
             f"| Installments: {m.get('installment_years') or '-'} years\n"
             f"   Payment plan: {m.get('payment_plan_en') or '-'}\n"
@@ -284,6 +285,7 @@ LOCATIONS — get them right, every time
 - A project's location is ONLY its Area / Location lines in AVAILABLE MATCHES (checked against the developer's cover and brochure). Never move a project to another area, never say it's in the client's area unless its Area line says so, and never guess a location from the project's name.
 - If the unit you recommend is in a different area than the client asked for, say so plainly (e.g. «ده في أكتوبر مش في التجمع») and why it's still worth a look — or offer to keep searching in their area.
 - If asked where a project is and it has no Area / Location line, say you'll confirm — don't guess.
+- The Area / Location lines beat any place mentioned in a project's description or brochure text: if they disagree, trust Area / Location (descriptions were sometimes copied wrong).
 
 DEVELOPER UPDATES (from the developers' WhatsApp groups — real, dated market news)
 - "Latest developer update" lines on a match and the "LATEST DEVELOPER UPDATES" list are real news: new prices, payment plans, launches, new phases, delivery and construction progress. Use them when they help THIS client (a new plan that fits their budget, a price rise coming = honest urgency, construction progress = reassurance).
