@@ -606,7 +606,14 @@ function addRec(rec){
     if(num) wa=`<a class="wa" target="_blank" rel="noopener" href="https://wa.me/${num}?text=${encodeURIComponent((ar?'مهتم بـ ':'Interested in ')+name+' — Homzy')}">🟢 ${ar?'واتساب':'WhatsApp'}</a>`;
   }
   const d=document.createElement('div'); d.className='rec-card'; d.dir=ar?'rtl':'ltr';
-  d.innerHTML=`<span class="badge">${market}</span><div class="t">${HZ.esc(name)}</div>${area?`<div class="a">${HZ.esc(area)}</div>`:''}${price?`<div class="pr">${HZ.esc(price)}</div>`:''}<div class="meta">${beds}${size}${dev}</div>${wa}`;
+  // installment math from the unit's own plan (approximate: equal installments on the starting price)
+  const pn=rec.plan_numbers, fmt=n=>Math.round(n).toLocaleString('en-US');
+  const plan=pn?`<div class="pay" style="margin-top:8px;background:#F2FBF9;border:1px solid #CDEDE6;border-radius:10px;padding:7px 9px;font-size:12.5px;line-height:1.7">
+      <div><b>${ar?'المقدم':'Down payment'}:</b> ${fmt(pn.dp_amount)} ${ar?'ج':'EGP'} (${pn.dp_pct}%)</div>
+      <div><b>${ar?'القسط الشهري':'Monthly'}:</b> ≈ ${fmt(pn.monthly_est)} ${ar?'ج':'EGP'} ${ar?'على '+pn.years+' سنين':'over '+pn.years+' yrs'}</div>
+      ${pn.delivery_pct?`<div><b>${ar?'عند الاستلام':'On delivery'}:</b> ${fmt(pn.delivery_amount)} ${ar?'ج':'EGP'} (${pn.delivery_pct}%)</div>`:''}
+      <div style="color:#5b6b7a;font-size:11px">${ar?'تقريبي — أقساط متساوية على سعر البداية حسب نظام السداد المعلن':'Approximate — equal installments on the starting price, per the published plan'}</div></div>`:'';
+  d.innerHTML=`<span class="badge">${market}</span><div class="t">${HZ.esc(name)}</div>${area?`<div class="a">${HZ.esc(area)}</div>`:''}${price?`<div class="pr">${HZ.esc(price)}</div>`:''}<div class="meta">${beds}${size}${dev}</div>${plan}${wa}`;
   // Units brokers posted on Homzy can be booked for a viewing right from the chat.
   if(rec.source==='marketplace' && rec.listing_id && !(HZ.isBroker && HZ.mode==='broker')){
     const bk=document.createElement('button'); bk.className='rec-pdf';

@@ -70,6 +70,52 @@ def _score(listing: dict[str, Any], budget_max, bedrooms, delivery_pref=None) ->
     return s
 
 
+# ---------------------------------------------------------------------------
+# Paying in installments: the client says how much down payment they have and
+# what they can pay a month; each unit's real payment plan decides if it fits.
+# ---------------------------------------------------------------------------
+_PCT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+_DELIVERY_PCT = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*(?:on|at|upon|عند|ع)\s*(?:the\s*)?(?:delivery|handover|الاستلام|استلام)", re.I)
+
+
+def plan_numbers(listing: dict[str, Any]) -> dict[str, Any] | None:
+    """Down payment / delivery payment / equal monthly installment for a unit,
+    from its own plan (down_payment %, installment_years, payment_plan text).
+    None when the plan data isn't there — we never guess a plan."""
+    price = listing.get("price")
+    years = listing.get("installment_years")
+    m = _PCT.search(str(listing.get("down_payment") or ""))
+    if not price or not years or not m:
+        return None
+    dp_pct = float(m.group(1)) / 100
+    plan = str(listing.get("payment_plan_en") or "").split(" or ")[0]   # first option when a plan lists alternatives
+    d = _DELIVERY_PCT.search(plan)
+    del_pct = float(d.group(1)) / 100 if d else 0.0
+    rest = price * (1 - dp_pct - del_pct)
+    if rest < 0 or int(years) <= 0:
+        return None
+    return {"dp_pct": round(dp_pct * 100, 1), "dp_amount": round(price * dp_pct, -3),
+            "delivery_pct": round(del_pct * 100, 1), "delivery_amount": round(price * del_pct, -3),
+            "years": int(years), "monthly_est": round(rest / (int(years) * 12), -2)}
+
+
+def _afford(listing: dict[str, Any], dp_have, monthly_have) -> float | None:
+    """How far a unit is over the client's down payment / monthly capacity
+    (0 = fits). Cash/resale units fit only if the down payment covers the price."""
+    pn = plan_numbers(listing)
+    if pn is None:
+        price = listing.get("price")
+        if dp_have and price and listing.get("market") != "primary":
+            return max(0.0, (price - dp_have) / dp_have)
+        return None
+    over = 0.0
+    if dp_have:
+        over += max(0.0, (pn["dp_amount"] - dp_have) / dp_have)
+    if monthly_have:
+        over += max(0.0, (pn["monthly_est"] - monthly_have) / monthly_have)
+    return over
+
+
 def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     """Return up to `n` listings that best match the requirements.
 
@@ -122,6 +168,24 @@ def search(req: dict[str, Any], n: int = 4) -> list[dict[str, Any]]:
     budget_max = req.get("budget_max")
     bedrooms = req.get("bedrooms")
     delivery_pref = req.get("delivery_pref")
+    dp_have, monthly_have = req.get("down_payment"), req.get("monthly_max")
+    if (dp_have or monthly_have) and req.get("purpose") != "rent":
+        # Installment buyer: keep units whose real plan we can check, best fit first
+        # (units that fit both numbers come before the closest ones over them).
+        checked = []
+        for x in items:
+            over = _afford(x, dp_have, monthly_have)
+            if over is not None:
+                checked.append((over, _score(x, budget_max, bedrooms, delivery_pref), x))
+        if checked:
+            checked.sort(key=lambda t: (t[0] > 0.05, t[0], t[1]))
+            out = []
+            for over, _, x in checked[:n]:
+                x = dict(x)
+                x["plan_numbers"] = plan_numbers(x)
+                x["plan_fits"] = over <= 0.05
+                out.append(x)
+            return out
     items = sorted(items, key=lambda x: _score(x, budget_max, bedrooms, delivery_pref))
     return items[:n]
 
@@ -151,6 +215,8 @@ def public(listing: dict[str, Any]) -> dict[str, Any]:
         "installment_years": listing.get("installment_years"),
         "delivery": listing.get("delivery"),
         "payment_plan": listing.get("payment_plan_en"),
+        "plan_numbers": listing.get("plan_numbers") or plan_numbers(listing),
+        "plan_fits": listing.get("plan_fits"),
         "brochure_url": listing.get("brochure_url"),
         "images": listing.get("images") or [],
         "cover_image": listing.get("cover_image"),

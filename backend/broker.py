@@ -134,6 +134,54 @@ def _extract_budget(text: str):
     return int(max(amounts)) if amounts else None
 
 
+_AMT = r"(\d+(?:\.\d+)?)\s*(m|mn|million|مليون|k|ألف|الف|thousand)?"
+# amounts said in words: "مليون", "نص مليون", "مليون ونص", "مليونين", "ربع مليون"
+_WORD_AMT = {"مليون ونص": 1_500_000, "مليون و نص": 1_500_000, "نص مليون": 500_000, "ربع مليون": 250_000,
+             "مليونين": 2_000_000, "مليون": 1_000_000}
+_FILL = r"\s*(?:(?:حوالي|حوالى|تقريبا|تقريباً|بتاعي|بتاعى|عندي|عندى|معايا|يعني|قد|ب|بـ|:|=)\s*)*"
+
+
+def _amount(num: str, unit: str | None) -> int:
+    v = float(num)
+    if unit in ("m", "mn", "million", "مليون"):
+        v *= 1_000_000
+    elif unit in ("k", "ألف", "الف", "thousand"):
+        v *= 1_000
+    return int(v)
+
+
+def _amount_after(low: str, keys: str) -> int | None:
+    """The amount right after one of `keys` (digits or a word amount)."""
+    m = re.search("(?:" + keys + ")" + _FILL + _AMT, low)
+    if m:
+        return _amount(m.group(1), m.group(2))
+    for w, v in _WORD_AMT.items():
+        if re.search("(?:" + keys + ")" + _FILL + w, low):
+            return v
+    return None
+
+
+def _extract_payment(text: str) -> dict[str, Any]:
+    """Installment buyers talk in two numbers: the down payment they have
+    ("معايا مقدم 500 ألف") and what they can pay a month ("أقدر أدفع 20 ألف في الشهر")."""
+    low = _norm(text).lower().replace(",", "")
+    out: dict[str, Any] = {}
+    v = _amount_after(low, r"مقدم|مقدّم|المقدم|down\s*payment|downpayment|deposit")
+    if v is None:
+        m = re.search(_AMT + r"\s*(?:ج|جنيه|egp)?\s*(?:ك|كـ)?\s*(?:مقدم|down\s*payment)", low)
+        v = _amount(m.group(1), m.group(2)) if m else None
+    if v and v >= 10_000:
+        out["down_payment"] = v
+    v = _amount_after(low, r"قسط(?:\s*شهري)?|القسط(?:\s*الشهري)?|اقساط|أقساط|installment|monthly")
+    if v is None:
+        m = (re.search(_AMT + r"\s*(?:ج|جنيه|egp)?\s*(?:في|فى|كل|a|per)\s*(?:ال)?(?:شهر|month)", low)
+             or re.search(_AMT + r"\s*(?:ج|جنيه|egp)?\s*(?:شهري|شهريا|شهرياً|monthly)", low))
+        v = _amount(m.group(1), m.group(2)) if m else None
+    if v and 1_000 <= v <= 1_000_000:
+        out["monthly_max"] = v
+    return out
+
+
 def _heuristic_extract(text: str) -> dict[str, Any]:
     low = _norm(text).lower()
     out: dict[str, Any] = {}
@@ -195,8 +243,11 @@ def _heuristic_extract(text: str) -> dict[str, Any]:
     if area:
         out["area"] = area
 
+    pay = _extract_payment(text)
+    out.update(pay)
     budget = _extract_budget(text)
-    if budget is not None:
+    # an installment amount isn't the total budget (it still is for a rental)
+    if budget is not None and budget not in pay.values():
         out["budget_max"] = budget
 
     return out
@@ -244,7 +295,7 @@ def _history_to_text(history: list[dict[str, str]]) -> str:
 
 def _merge(req: dict[str, Any], found: dict[str, Any]) -> None:
     for key in ("purpose", "type", "area", "bedrooms", "budget_max",
-                "budget_min", "delivery_pref", "market_pref"):
+                "budget_min", "delivery_pref", "market_pref", "down_payment", "monthly_max"):
         val = found.get(key)
         if val not in (None, "", []):
             req[key] = val
@@ -327,6 +378,16 @@ def _prepare(session: dict[str, Any], message: str,
     #    recommendation turns are a single LLM round trip (≈2× faster).
     if config.LLM_EXTRACT and persona._missing(req):
         _merge(req, _llm_extract(_history_to_text(history), _model_for(coach)))
+
+    # a rental's "per month" is its budget; for buying it's the installment
+    if req.get("purpose") == "rent":
+        req.pop("down_payment", None)
+        if req.get("monthly_max") and not req.get("budget_max"):
+            req["budget_max"] = req["monthly_max"]
+        req.pop("monthly_max", None)
+    elif (req.get("down_payment") or req.get("monthly_max")) and \
+            req.get("budget_max") in (req.get("down_payment"), req.get("monthly_max")):
+        req.pop("budget_max", None)
 
     # 3) find real listings
     matches = listings_mod.search(req, config.MAX_RESULTS)

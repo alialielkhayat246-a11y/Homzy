@@ -22,12 +22,16 @@ Return ONLY a JSON object with these exact keys (use null when unknown):
  "budget_max": integer or null,
  "budget_min": integer or null,
  "delivery_pref": "ready" or "flexible" or null,
- "market_pref": "primary" or "resale" or null
+ "market_pref": "primary" or "resale" or null,
+ "down_payment": integer or null,
+ "monthly_max": integer or null
 }
 Notes:
 - Infer from the WHOLE conversation, not just the last line.
 - budget is the client's TOTAL budget in EGP (monthly for rent, total for sale).
-  A "مقدم"/down payment is NOT the budget — ignore deposit amounts.
+  A "مقدم"/down payment is NOT the budget — put it in "down_payment" (EGP the client has for it).
+- "monthly_max": when BUYING, the most the client can pay per month in installments (قسط شهري) in EGP.
+  For a rental, the monthly rent is the budget (budget_max), not monthly_max.
 - "delivery_pref": "ready" if they must move in now / want ready-to-move;
   "flexible" if they're fine waiting (off-plan, 2-3 years).
 - "market_pref": "primary" if they want a new launch / from the developer /
@@ -78,7 +82,7 @@ NON-NEGOTIABLE RULES
 DISCOVERY FIRST — your #1 job early in the chat is to UNDERSTAND the client deeply before pitching. Gather as much of this as you naturally can, one or two friendly questions at a time (never an interrogation, never a form):
   CORE (you must have these before recommending):
     1. rent or buy
-    2. budget (roughly)
+    2. budget (roughly) — for buying, EITHER a total budget OR the down payment they have + the monthly installment they can afford (e.g. "معاك مقدم كام؟ وتقدر تدفع قسط شهري قد إيه؟")
     3. area / location they want
     4. number of bedrooms (for a home)
     5. delivery timing — move in NOW (ready-to-move) or fine waiting 2-3 years?
@@ -95,6 +99,7 @@ Acknowledge each answer, keep it warm, and move the conversation forward. Do NOT
 THEN RECOMMEND — once you have the CORE five and have asked for their contact:
 - Recommend EXACTLY ONE property: the FIRST entry in AVAILABLE MATCHES (it is the best fit). Do not list several — one clear recommendation.
 - Present: the compound/name and its developer, the quick facts (bedrooms, size, price), and — when the data has them — delivery, down payment, and installment years / payment plan. Add ONE sharp reason it fits THIS client's stated needs.
+- If the client gave a down payment and/or a monthly amount and the unit has "Payment math": show the unit's down payment and its approximate monthly installment from it, say it's approximate (equal installments on the starting price), and ALWAYS mention any payment on delivery. If "Fits the client's numbers: NO", say honestly it's the closest option and by how much it's over.
 - Tell the client you're sending the brochure and the unit's photos right below (the app attaches them automatically — do NOT paste any URLs or links).
 - You know the developer and project details (about / track record / description), the AREA's character ("About the area"), and the developer's OTHER projects — if the client asks about the developer, the neighbourhood, or wants alternatives, answer from that data. Weave in ONE relevant detail about the area or the developer's reputation to sound like a real local expert — but never dump the whole list, and never invent a project that isn't listed.
 - If the client isn't convinced, ask what to change (budget, area, timing…) and recommend a different single unit next.
@@ -203,6 +208,12 @@ def _render_matches(matches: list[dict[str, Any]]) -> str:
             f"   Delivery: {m.get('delivery') or '-'} | Down payment: {m.get('down_payment') or '-'} "
             f"| Installments: {m.get('installment_years') or '-'} years\n"
             f"   Payment plan: {m.get('payment_plan_en') or '-'}\n"
+            + (f"   Payment math (from this unit's plan, starting price, equal monthly installments — APPROXIMATE): "
+               f"down payment ≈ {m['plan_numbers']['dp_amount']:,.0f} EGP ({m['plan_numbers']['dp_pct']:g}%), "
+               + (f"on delivery ≈ {m['plan_numbers']['delivery_amount']:,.0f} EGP ({m['plan_numbers']['delivery_pct']:g}%), "
+                  if m['plan_numbers']['delivery_pct'] else "")
+               + f"monthly ≈ {m['plan_numbers']['monthly_est']:,.0f} EGP over {m['plan_numbers']['years']} years. "
+               f"Fits the client's numbers: {'YES' if m.get('plan_fits') else 'NO'}\n" if m.get("plan_numbers") else "")
             + (f"   Market value: {vnote}\n" if vnote else "")
             + f"   Attached to the client: {media_txt}\n"
             f"   Developer/project info: {dev_info or '-'}"
@@ -305,6 +316,9 @@ def _missing(req: dict[str, Any]) -> list[str]:
     ess = list(ESSENTIALS)
     if req.get("type") in _COMMERCIAL:
         ess = [k for k in ess if k != "bedrooms"]
+    # An installment buyer's down payment / monthly amount stands in for a total budget.
+    if req.get("down_payment") or req.get("monthly_max"):
+        ess = [k for k in ess if k != "budget_max"]
     # Treat 0 as provided (a studio has 0 bedrooms).
     return [k for k in ess if req.get(k) in (None, "")]
 

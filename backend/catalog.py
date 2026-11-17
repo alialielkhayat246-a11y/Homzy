@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from . import config
+from . import areas as areas_mod, config
 
 _CACHE: list[dict[str, Any]] | None = None
 _CACHE_AT = 0.0
@@ -153,8 +153,29 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
         # But drop absurdly-cheap outliers (< half budget) so we never recommend
         # a mispriced/tiny unit to a serious buyer.
         bmax = req.get("budget_max")
+        dp, monthly = req.get("down_payment"), req.get("monthly_max")
         if bmax:
             params["price_from"] = f"gte.{int(bmax) // 2}"
+        elif dp or monthly:
+            # Installment buyer with no total budget: the dearest unit they could carry
+            # (a 5% down payment, or 10 years of their monthly amount), then let
+            # listings.search check each unit's real plan. Most expensive first.
+            caps = []
+            if dp:
+                caps.append(int(dp) / 0.05)
+            if monthly:
+                caps.append((int(monthly) * 12 * 10 + int(dp or 0)) / 0.85)
+            params["price_from"] = f"lte.{int(min(caps))}"
+            params["down_payment"] = "not.is.null"
+            params["installment_years"] = "not.is.null"
+            params["order"] = "price_from.desc.nullslast"
+            params["limit"] = str(max(n, 80))
+            if req.get("bedrooms"):
+                params["bedrooms"] = f"eq.{int(req['bedrooms'])}"
+            # look in the requested area first (the cap above spans all of Egypt)
+            names = [c for c in areas_mod.candidates(req.get("area") or "") if c.isascii()]
+            if names:
+                params["project.area"] = "in.(" + ",".join(f'"{c}"' for c in names) + ")"
         r = requests.get(
             config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types",
             params=params,
@@ -163,7 +184,15 @@ def search(req: dict[str, Any], n: int = 24) -> list[dict[str, Any]]:
             timeout=8,
         )
         r.raise_for_status()
-        return [_to_listing(x) for x in r.json()]
+        rows = r.json()
+        if not rows and "project.area" in params:
+            # nothing in that area within reach — widen to everywhere (still checked unit by unit)
+            params.pop("project.area")
+            r = requests.get(config.SUPABASE_URL.rstrip("/") + "/rest/v1/unit_types", params=params,
+                             headers={"apikey": config.SUPABASE_KEY, "Authorization": f"Bearer {config.SUPABASE_KEY}"},
+                             timeout=8)
+            rows = r.json() if r.ok else []
+        return [_to_listing(x) for x in rows]
     except Exception:
         return []
 
