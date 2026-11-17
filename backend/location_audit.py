@@ -210,7 +210,9 @@ def _ask(item: dict[str, Any]) -> dict[str, Any] | None:
                    "contents": [{"role": "user", "parts": parts}],
                    "generationConfig": {"temperature": 0, "responseMimeType": "application/json",
                                         "maxOutputTokens": 4096}}
-        for model in dict.fromkeys(("gemini-flash-latest", "gemini-flash-lite-latest", config.GEMINI_MODEL)):
+        # one model only: falling back to the chat's models spent the chat's daily quota
+        # on 17 Nov 2026. A 429 here just means "resume tomorrow".
+        for model in ("gemini-flash-latest",):
             cfg = dict(payload["generationConfig"])
             if model.startswith("gemini-2.5"):
                 cfg["thinkingConfig"] = {"thinkingBudget": 0}

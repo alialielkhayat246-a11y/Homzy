@@ -73,7 +73,9 @@ class GeminiClient:
     _BASE = "https://generativelanguage.googleapis.com/v1beta"
     # Tried in order — if the primary is rate-limited (429/503), fall through to
     # another current free-tier model before giving up (separate quotas).
-    _FALLBACKS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash"]
+    # flash-lite is last-but-one so a broker still gets an answer when the bigger
+    # models' daily quota is spent (happened 17 Nov 2026).
+    _FALLBACKS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.0-flash"]
 
     def __init__(self) -> None:
         if not config.GEMINI_API_KEY:
